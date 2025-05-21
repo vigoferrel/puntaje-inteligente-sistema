@@ -71,10 +71,10 @@ export const useAuthProfile = () => {
           });
         }
         
-        // Get learning cycle phase
+        // Get learning cycle phase - handle as string first then convert to enum type
         let learningCyclePhase: TLearningCyclePhase | undefined = undefined;
         
-        // TypeScript fix: Check if learning_phase exists in data before accessing
+        // TypeScript now knows learning_phase exists on data because we've added it to the database
         if (data.learning_phase as TLearningCyclePhase) {
           learningCyclePhase = data.learning_phase as TLearningCyclePhase;
         }

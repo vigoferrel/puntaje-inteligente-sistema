@@ -468,6 +468,7 @@ export type Database = {
           email: string | null
           id: string
           last_active_at: string | null
+          learning_phase: string | null
           name: string | null
           preferred_study_time: string | null
           study_start_date: string | null
@@ -480,6 +481,7 @@ export type Database = {
           email?: string | null
           id: string
           last_active_at?: string | null
+          learning_phase?: string | null
           name?: string | null
           preferred_study_time?: string | null
           study_start_date?: string | null
@@ -492,6 +494,7 @@ export type Database = {
           email?: string | null
           id?: string
           last_active_at?: string | null
+          learning_phase?: string | null
           name?: string | null
           preferred_study_time?: string | null
           study_start_date?: string | null
