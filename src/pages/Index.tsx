@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useUserData } from "@/hooks/use-user-data";
 import { LEARNING_CYCLE_PHASES_ORDER, TLearningCyclePhase, TPAESHabilidad } from "@/types/system-types";
@@ -9,6 +9,9 @@ import { TopSkills } from "@/components/dashboard/top-skills";
 import { StudyPlan } from "@/components/dashboard/study-plan";
 import { AIFeatures } from "@/components/dashboard/ai-features";
 import { LearningCycle } from "@/components/dashboard/learning-cycle";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { MessageCircleQuestion, BookOpen, BarChart3 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -94,7 +97,7 @@ const Index = () => {
     <AppLayout>
       <div className="p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-stp-dark">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             {!loading && user ? `Bienvenido, ${user.name}` : 'Cargando...'}
           </h1>
           <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -113,6 +116,55 @@ const Index = () => {
             loading={loading}
             onPhaseSelect={handlePhaseSelect}
           />
+        </div>
+        
+        <div className="mb-8">
+          <Card className="border-border bg-card/50 backdrop-blur-sm animated-gradient bg-opacity-10">
+            <CardHeader>
+              <CardTitle className="text-2xl text-gradient">LectoGuía AI - Nuevo</CardTitle>
+              <CardDescription>Tu asistente personalizado para mejorar en la PAES</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="md:w-2/3">
+                  <p className="text-foreground/80 mb-4">
+                    LectoGuía es un tutor inteligente especializado en comprensión lectora que te ayudará a mejorar tus habilidades
+                    a través de ejercicios personalizados, análisis de tu desempeño y recomendaciones específicas.
+                  </p>
+                  <div className="flex flex-wrap gap-3 mb-6">
+                    <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full text-sm">
+                      <MessageCircleQuestion className="h-4 w-4 text-primary" />
+                      <span>Chat interactivo</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full text-sm">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      <span>Ejercicios personalizados</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full text-sm">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      <span>Análisis de progreso</span>
+                    </div>
+                  </div>
+                  <Button 
+                    className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
+                    onClick={() => navigate('/lectoguia')}
+                  >
+                    Probar ahora
+                  </Button>
+                </div>
+                <div className="md:w-1/3 flex items-center justify-center">
+                  <div className="relative w-32 h-32">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full pulse-animation"></div>
+                    <div className="absolute inset-2 bg-primary/30 rounded-full pulse-animation animation-delay-150"></div>
+                    <div className="absolute inset-4 bg-primary/40 rounded-full pulse-animation animation-delay-300"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <MessageCircleQuestion className="h-12 w-12 text-primary" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

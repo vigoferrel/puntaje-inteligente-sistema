@@ -40,11 +40,11 @@ const NavItem = ({ to, icon: Icon, label, active }: NavItemProps) => (
       <Link 
         to={to} 
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-          active ? "bg-stp-light text-stp-primary font-medium" : "hover:bg-gray-100"
+          "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-300",
+          active ? "bg-primary/20 text-primary font-medium" : "hover:bg-secondary text-muted-foreground hover:text-foreground"
         )}
       >
-        <Icon size={18} className={active ? "text-stp-primary" : "text-gray-500"} />
+        <Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
         <span>{label}</span>
       </Link>
     </SidebarMenuButton>
@@ -67,19 +67,19 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-gray-200">
+    <Sidebar className="border-r border-border bg-sidebar">
       <SidebarHeader className="px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="bg-gradient-to-r from-stp-primary to-stp-secondary p-1.5 rounded-md">
+          <div className="primary-gradient p-1.5 rounded-md flex items-center justify-center">
             <GraduationCap className="h-6 w-6 text-white" />
           </div>
-          <div className="font-bold text-xl text-stp-dark">SubeTuPuntaje</div>
+          <div className="font-bold text-xl text-foreground">SubeTuPuntaje</div>
         </div>
       </SidebarHeader>
       
       <SidebarContent className="px-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <SidebarGroupLabel className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Principal
           </SidebarGroupLabel>
           
@@ -87,6 +87,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <NavItem to="/" icon={Home} label="Inicio" active={currentPath === "/"} />
               <NavItem to="/diagnostico" icon={BarChart3} label="Diagnóstico" active={currentPath === "/diagnostico"} />
+              <NavItem to="/lectoguia" icon={MessageCircleQuestion} label="LectoGuía AI" active={currentPath === "/lectoguia"} />
               <NavItem to="/biblioteca" icon={BookOpen} label="Biblioteca" active={currentPath === "/biblioteca"} />
               <NavItem to="/planes" icon={BookText} label="Planes de estudio" active={currentPath.startsWith("/planes")} />
               <NavItem to="/simuladores" icon={Calculator} label="Simuladores" active={currentPath.startsWith("/simuladores")} />
@@ -95,7 +96,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <SidebarGroupLabel className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Recursos
           </SidebarGroupLabel>
           
@@ -109,16 +110,16 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="px-3 py-3 mt-auto border-t border-gray-200">
+      <SidebarFooter className="px-3 py-3 mt-auto border-t border-border">
         <SidebarMenu>
           <NavItem to="/perfil" icon={User} label="Perfil" active={currentPath === "/perfil"} />
           <NavItem to="/configuracion" icon={Settings} label="Configuración" active={currentPath === "/configuracion"} />
           <SidebarMenuItem>
             <SidebarMenuButton 
-              className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-red-500 hover:bg-red-50 w-full"
+              className="flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-300 text-red-400 hover:bg-red-500/10 hover:text-red-500 w-full"
               onClick={handleSignOut}
             >
-              <LogOut size={18} className="text-red-500" />
+              <LogOut size={18} className="text-red-400" />
               <span>Cerrar Sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
