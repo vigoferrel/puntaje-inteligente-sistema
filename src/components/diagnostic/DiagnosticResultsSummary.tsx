@@ -5,7 +5,7 @@ import { SkillProgress } from "@/components/skill-progress";
 import { TPAESHabilidad } from "@/types/system-types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer } from "@/components/ui/chart";
 
 interface DiagnosticResultsSummaryProps {
   results: Record<TPAESHabilidad, number>;
@@ -89,19 +89,20 @@ export const DiagnosticResultsSummary = ({ results }: DiagnosticResultsSummaryPr
                 }
               }}
             >
-              <BarChart data={chartData}>
-                <XAxis 
-                  dataKey="skill" 
-                  tickFormatter={(value) => value.substring(0, 3).toUpperCase()} 
-                />
-                <YAxis domain={[0, 100]} />
-                <Bar dataKey="level" fill="var(--color-skill)" />
-                <ChartTooltip
-                  content={(props) => (
-                    <ChartTooltipContent formatter={(value, name) => [`${value}%`, name]} {...props} />
-                  )}
-                />
-              </BarChart>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <XAxis 
+                    dataKey="skill" 
+                    tickFormatter={(value) => value.substring(0, 3).toUpperCase()} 
+                  />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip 
+                    formatter={(value) => [`${value}%`, 'Nivel']}
+                    labelFormatter={(label) => `Habilidad: ${label}`}
+                  />
+                  <Bar dataKey="level" fill="var(--color-skill)" />
+                </BarChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </div>
         </CardContent>
