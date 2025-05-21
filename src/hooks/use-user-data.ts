@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { TPAESHabilidad, TLearningCyclePhase } from "../types/system-types";
 import { useAuth } from "@/contexts/AuthContext";
