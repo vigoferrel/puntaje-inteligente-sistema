@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   DiagnosticTest, 
@@ -7,9 +6,8 @@ import {
 } from "@/types/diagnostic";
 import {
   fetchDiagnosticTests as fetchTests,
-  fetchDiagnosticQuestions,
-  submitDiagnosticResult as submitResult,
   fetchDiagnosticResults as fetchResults,
+  submitDiagnosticResult as submitResult,
 } from "@/services/diagnostic";
 
 // Re-export types for convenience
