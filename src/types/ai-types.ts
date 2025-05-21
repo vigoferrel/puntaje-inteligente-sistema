@@ -9,6 +9,7 @@ export interface Exercise {
   context?: string; // Text content for the exercise
   skill?: string;
   difficulty?: string;
+  prueba?: string;
 }
 
 export interface AIAnalysis {

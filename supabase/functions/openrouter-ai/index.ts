@@ -19,14 +19,31 @@ serve(async (req) => {
   }
   
   try {
+    // Verificar la existencia de la API Key al inicio
     if (!OPENROUTER_API_KEY) {
       console.error("OpenRouter API key is not configured");
-      throw new Error('OpenRouter API key is not configured');
+      return new Response(
+        JSON.stringify({ error: 'OpenRouter API key no está configurado. Por favor, configura la clave en los secretos de Supabase.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const { action, payload } = await req.json();
-    console.log(`Processing ${action} request with payload:`, JSON.stringify(payload));
+    // Extraer action y payload del request
+    let action, payload;
+    try {
+      const requestData = await req.json();
+      action = requestData.action;
+      payload = requestData.payload;
+      console.log(`Processing ${action} request with payload:`, JSON.stringify(payload));
+    } catch (jsonError) {
+      console.error("Error parsing request JSON:", jsonError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
+    // Procesar la acción solicitada
     switch (action) {
       case 'generate_exercise':
         return await generateExercise(payload);
@@ -37,7 +54,7 @@ serve(async (req) => {
       default:
         console.error(`Invalid action specified: ${action}`);
         return new Response(
-          JSON.stringify({ error: 'Invalid action specified' }),
+          JSON.stringify({ error: `Acción inválida: ${action}` }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }
@@ -61,7 +78,7 @@ async function generateExercise({ skill, prueba, difficulty, previousExercises =
   1. A context passage for reading comprehension (approximately 150-200 words)
   2. A clear question
   3. Four options for multiple choice (only one correct)
-  4. The correct answer
+  4. The correct answer (which must exactly match one of the options)
   5. A brief explanation of the solution
   
   Return your response in JSON format like:
@@ -208,20 +225,20 @@ async function callOpenRouter(systemPrompt, userPrompt) {
     
     const content = data.choices?.[0]?.message?.content || null;
     
-    // Try to parse JSON if content is available
+    // Intentar extraer JSON de la respuesta
     let parsedContent;
     if (content) {
       try {
-        // First check if it's already a JSON object
+        // Primero verificar si ya es un objeto JSON
         if (typeof content === 'object') {
           parsedContent = content;
         } else {
-          // Try to extract JSON from string (handles cases where AI might add explanations)
+          // Intentar extraer JSON de la cadena (maneja casos donde la IA podría agregar explicaciones)
           const jsonMatch = content.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             parsedContent = JSON.parse(jsonMatch[0]);
           } else {
-            parsedContent = content; // Just use as-is if not JSON
+            parsedContent = content; // Usar tal cual si no es JSON
           }
         }
       } catch (e) {

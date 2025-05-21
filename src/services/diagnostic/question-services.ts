@@ -14,7 +14,7 @@ export const fetchDiagnosticQuestions = async (
 ): Promise<DiagnosticQuestion[]> => {
   try {
     // Intentar obtener datos reales desde la base de datos usando RPC
-    const { data, error } = await supabase.rpc<DiagnosticQuestion[], { p_diagnostic_id: string }>(
+    const { data, error } = await supabase.rpc(
       'get_diagnostic_questions', 
       { 
         p_diagnostic_id: diagnosticId 

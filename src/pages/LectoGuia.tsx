@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { ChatInterface, ChatMessage } from "@/components/ai/ChatInterface";
@@ -22,16 +23,6 @@ Puedo ayudarte con:
 
 ¿En qué puedo ayudarte hoy?`;
 
-interface ExerciseInterface {
-  id: string;
-  text: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  skill: string;
-  difficulty: string;
-}
-
 // Componente principal de LectoGuía
 const LectoGuia = () => {
   // Estado para gestionar la pestaña activa
@@ -53,7 +44,7 @@ const LectoGuia = () => {
   const [isTyping, setIsTyping] = useState(false);
   
   // Estado del ejercicio actual
-  const [currentExercise, setCurrentExercise] = useState<ExerciseInterface | null>(null);
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -86,24 +77,33 @@ const LectoGuia = () => {
         });
 
         if (exercise) {
+          console.log("Ejercicio generado:", exercise);
+          
           // Cambiar a la pestaña de ejercicios
           setTimeout(() => setActiveTab("exercise"), 500);
           
           // Crear un objeto de ejercicio a partir de la respuesta
-          const generatedExercise: ExerciseInterface = {
-            id: uuidv4(),
-            text: exercise.context || "En países más dichosos, los poetas, obviamente, quieren ser publicados, leídos y entendidos, pero ya no hacen nada o casi nada en su vida cotidiana para destacar entre la gente. Sin embargo, hace poco, en las primeras décadas de nuestro siglo, a los poetas les gustaba escandalizar con su ropa extravagante y con un comportamiento excéntrico. Aquellos no eran más que espectáculos para el público, ya que siempre tenía que llegar el momento en que el poeta cerraba la puerta, se quitaba toda esa parafernalia: capas y oropeles, y se detenía en el silencio, en espera de sí mismo frente a una hoja de papel en blanco, que en el fondo es lo único que importa.",
-            question: exercise.question || "¿Cuál es la idea principal del texto?",
-            options: exercise.options || [
-              "Los poetas disfrutan ser reconocidos en público",
-              "La verdadera creación poética ocurre en soledad",
-              "La poesía moderna es muy diferente a la antigua",
-              "En el pasado los poetas eran más excéntricos"
-            ],
-            correctAnswer: exercise.options?.indexOf(exercise.correctAnswer) || 1,
-            skill: "Interpretar-Relacionar",
-            difficulty: "Intermedio"
+          const generatedExercise: Exercise = {
+            ...exercise,
+            id: exercise.id || uuidv4(),
+            text: exercise.context || exercise.text || "",
+            correctAnswer: exercise.correctAnswer || "",
+            explanation: exercise.explanation || "No se proporcionó explicación."
           };
+          
+          // Asegurar que todos los campos necesarios estén presentes
+          if (!generatedExercise.options || generatedExercise.options.length === 0) {
+            generatedExercise.options = [
+              "Opción A",
+              "Opción B", 
+              "Opción C",
+              "Opción D"
+            ];
+          }
+          
+          if (!generatedExercise.correctAnswer) {
+            generatedExercise.correctAnswer = generatedExercise.options[0];
+          }
           
           // Actualizar estado del ejercicio
           setCurrentExercise(generatedExercise);
@@ -114,7 +114,7 @@ const LectoGuia = () => {
           const botMessage: ChatMessage = {
             id: uuidv4(),
             role: "assistant",
-            content: `He preparado un ejercicio de comprensión lectora para ti. Es un ejercicio de dificultad ${generatedExercise.difficulty} que evalúa la habilidad de ${generatedExercise.skill}. Puedes resolverlo en la pestaña de Ejercicios.`,
+            content: `He preparado un ejercicio de comprensión lectora para ti. Es un ejercicio de dificultad ${generatedExercise.difficulty || "intermedia"} que evalúa la habilidad de ${generatedExercise.skill || "Interpretar-Relacionar"}. Puedes resolverlo en la pestaña de Ejercicios.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           
@@ -171,13 +171,18 @@ const LectoGuia = () => {
       setShowFeedback(true);
       
       // Guardar el intento de ejercicio si el usuario está logueado
-      if (currentExercise) {
-        const isCorrect = index === currentExercise.correctAnswer;
+      if (currentExercise && currentExercise.id) {
+        const correctAnswerIndex = currentExercise.options.findIndex(
+          option => option === currentExercise.correctAnswer
+        );
+        
+        const isCorrect = index === (correctAnswerIndex >= 0 ? correctAnswerIndex : 0);
+        
         saveExerciseAttempt(
-          currentExercise as unknown as Exercise,
+          currentExercise,
           index,
           isCorrect,
-          'INTERPRET_RELATE'
+          currentExercise.skill || 'INTERPRET_RELATE'
         );
       }
     }, 300);
