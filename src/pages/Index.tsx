@@ -74,7 +74,11 @@ const Index = () => {
             <AIFeatures />
           </div>
           <div>
-            <TopSkills topSkills={topSkills} loading={loading} />
+            <TopSkills 
+              topSkills={topSkills} 
+              loading={loading} 
+              skillLevels={skillLevels}
+            />
           </div>
         </div>
       </div>
