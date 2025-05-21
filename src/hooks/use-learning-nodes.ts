@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TLearningNode, TLearningCyclePhase, TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { toast } from "@/components/ui/use-toast";
 import { useCallback } from "react";
-import { mapSkillToEnum, mapTestToEnum } from "@/utils/supabase-mappers";
+import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/supabase-mappers";
 
 export interface NodeProgress {
   nodeId: string;
@@ -46,8 +46,8 @@ export const useLearningNodes = () => {
           id: node.id,
           title: node.title,
           description: node.description || '',
-          skill: mapSkillToEnum(node.skill_id),
-          prueba: mapTestToEnum(node.test_id),
+          skill: mapSkillIdToEnum(node.skill_id),
+          prueba: mapTestIdToEnum(node.test_id),
           difficulty: node.difficulty,
           position: node.position,
           dependsOn: node.depends_on || [],
