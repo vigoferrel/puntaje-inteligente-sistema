@@ -27,7 +27,10 @@ export const useDiagnosticController = () => {
     testStarted,
     currentTest: executionState.currentTest,
     setTestStarted,
-    setSelectedTestId
+    setSelectedTestId,
+    currentQuestionIndex: executionState.currentQuestionIndex,
+    answers: executionState.answers,
+    timeStarted: executionState.timeStarted
   });
   
   const resultState = useDiagnosticResults({
