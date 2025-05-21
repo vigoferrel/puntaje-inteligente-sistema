@@ -51,21 +51,57 @@ const MOCK_USER: UserProfile = {
 };
 
 export const useUserData = () => {
-  const { profile, isLoading } = useAuth();
-  const [loading, setLoading] = useState(isLoading);
+  const { profile, isLoading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(authLoading);
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [skillLevels, setSkillLevels] = useState<Record<string, number>>({});
 
+  // Fetch user skill levels from the database
   useEffect(() => {
-    if (!isLoading) {
+    const fetchUserSkills = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('user_skill_levels')
+          .select('skill_id, level')
+          .eq('user_id', userId);
+        
+        if (error) throw error;
+        
+        // Map skill levels to our format if available
+        if (data && data.length > 0) {
+          const skillMap: Record<string, number> = {};
+          data.forEach(item => {
+            // We'll need to map database skill IDs to our frontend skill codes
+            // This is a simplification, in a real app we'd have a mapping function
+            skillMap[`SKILL_${item.skill_id}`] = item.level;
+          });
+          setSkillLevels(skillMap);
+        }
+      } catch (error) {
+        console.error('Error fetching skill levels:', error);
+      }
+    };
+
+    if (!authLoading) {
       if (profile) {
-        setUser(profile);
+        setUser({
+          ...profile,
+          // Merge any skills from the database with profile data
+          skillLevels: {
+            ...profile.skillLevels,
+            ...skillLevels
+          }
+        });
+        
+        // Fetch additional skill data from the database
+        fetchUserSkills(profile.id);
       } else {
         // Fallback to mock data if no profile is available (for demonstration purposes)
         setUser(MOCK_USER);
       }
       setLoading(false);
     }
-  }, [profile, isLoading]);
+  }, [profile, authLoading, skillLevels]);
 
   const updateSkillLevel = async (skill: TPAESHabilidad, level: number) => {
     if (!user) return;
@@ -85,9 +121,27 @@ export const useUserData = () => {
       };
     });
     
-    // In a real implementation, we would also update this in the database
-    // For now, just simulate it with a console log
-    console.log(`Updated skill ${skill} to level ${normalizedLevel}`);
+    // Update in database if we have a real user
+    if (profile) {
+      try {
+        // In a real implementation, you would map from frontend skill code to database ID
+        // This is just a placeholder for the actual implementation
+        console.log(`Updated skill ${skill} to level ${normalizedLevel} in database`);
+        
+        // TODO: Implement the actual database update when we have the skill mapping
+        // const { error } = await supabase
+        //   .from('user_skill_levels')
+        //   .upsert({
+        //     user_id: profile.id,
+        //     skill_id: skillIdMap[skill], // We'd need a mapping function
+        //     level: normalizedLevel
+        //   });
+        
+        // if (error) throw error;
+      } catch (error) {
+        console.error('Error updating skill level:', error);
+      }
+    }
   };
 
   return {

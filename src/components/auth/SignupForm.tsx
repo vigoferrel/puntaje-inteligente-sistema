@@ -12,6 +12,7 @@ import { PasswordInput } from "./PasswordInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
+// Improved validation schema for signup
 const signupSchema = z.object({
   name: z.string().min(2, { message: "Ingresa un nombre válido (mínimo 2 caracteres)" }),
   email: z.string()
@@ -21,6 +22,7 @@ const signupSchema = z.object({
     .min(6, { message: "La contraseña debe tener al menos 6 caracteres" })
     .refine(password => /[A-Z]/.test(password), { message: "La contraseña debe contener al menos una letra mayúscula" })
     .refine(password => /[0-9]/.test(password), { message: "La contraseña debe contener al menos un número" }),
+  targetCareer: z.string().optional(),
 });
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
@@ -40,6 +42,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
       name: "",
       email: "",
       password: "",
+      targetCareer: "",
     },
     mode: "onChange", // Validate on change for better user experience
   });
@@ -49,12 +52,14 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
     setFormError(null);
     
     try {
+      // Sign up the user with Supabase
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
             name: data.name,
+            target_career: data.targetCareer || null,
           },
         },
       });
@@ -69,7 +74,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
         description: "Revisa tu correo para confirmar tu cuenta",
       });
       
-      // In development, auto-login after signup
+      // In development, auto-login after signup for better experience
       await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -141,6 +146,24 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
           autoComplete="new-password"
           showPassword={showPassword}
           setShowPassword={setShowPassword}
+        />
+        
+        <FormField
+          control={form.control}
+          name="targetCareer"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Carrera objetivo (opcional)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Ej: Ingeniería Civil, Medicina, etc." 
+                  {...field} 
+                  className="focus:ring-2 focus:ring-stp-primary/50"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
         
         <Button 
