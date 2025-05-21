@@ -1,12 +1,12 @@
 
 export interface Exercise {
-  id?: string;
+  id: string;
   text?: string;
+  context?: string; // Text content for the exercise
   question: string;
   options: string[];
   correctAnswer: string;
   explanation: string;
-  context?: string; // Text content for the exercise
   skill?: string;
   difficulty?: string;
   prueba?: string;
@@ -24,4 +24,5 @@ export interface AIFeedback {
   corrections: string;
   explanation: string;
   tip: string;
+  response?: string; // Added for direct text responses
 }

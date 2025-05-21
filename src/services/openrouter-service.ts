@@ -44,6 +44,14 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
           return data.result as unknown as T;
         }
         
+        // Para provide_feedback, asegurarse de que tenemos una respuesta
+        if (action === 'provide_feedback') {
+          if (typeof data.result === 'string') {
+            return { response: data.result } as unknown as T;
+          }
+          return data.result as unknown as T;
+        }
+        
         // Para otros casos, intentar parsear si es un string
         return typeof data.result === 'string'
           ? JSON.parse(data.result)

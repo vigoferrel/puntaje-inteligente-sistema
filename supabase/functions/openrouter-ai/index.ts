@@ -175,7 +175,7 @@ async function callOpenRouter(systemPrompt, userPrompt) {
       max_tokens: 1000
     });
     
-    console.log('Request body:', requestBody);
+    console.log('Request body:', requestBody.substring(0, 200) + '...');
     
     const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -207,7 +207,7 @@ async function callOpenRouter(systemPrompt, userPrompt) {
     }
 
     const responseText = await response.text();
-    console.log('Raw response text:', responseText);
+    console.log('Raw response text:', responseText.substring(0, 200) + '...');
     
     let data;
     try {
@@ -238,6 +238,7 @@ async function callOpenRouter(systemPrompt, userPrompt) {
           if (jsonMatch) {
             parsedContent = JSON.parse(jsonMatch[0]);
           } else {
+            // Si no es un JSON estructurado, devolver como respuesta de texto
             parsedContent = content; // Usar tal cual si no es JSON
           }
         }
