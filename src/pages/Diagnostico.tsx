@@ -4,18 +4,19 @@ import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useDiagnostic, DiagnosticTest, DiagnosticQuestion } from "@/hooks/use-diagnostic";
+import { useDiagnostic } from "@/hooks/use-diagnostic";
 import { useAuth } from "@/contexts/AuthContext";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUserData } from "@/hooks/use-user-data";
 import { toast } from "@/components/ui/use-toast";
-import { InfoIcon, AlertCircle, ArrowRightIcon, CheckCircle } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, CheckCircle, InfoIcon } from "lucide-react";
+import { DiagnosticSkeleton } from "@/components/diagnostic/DiagnosticSkeleton";
+import { DiagnosticCard } from "@/components/diagnostic/DiagnosticCard";
+import { QuestionView } from "@/components/diagnostic/QuestionView";
 
 const Diagnostico = () => {
-  const { user, loading: userLoading } = useUserData();
+  const { user, loading: userLoading, updateLearningPhase } = useUserData();
   const { profile } = useAuth();
   const navigate = useNavigate();
   const { 
@@ -33,6 +34,7 @@ const Diagnostico = () => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeStarted, setTimeStarted] = useState<Date | null>(null);
   const [resultSubmitted, setResultSubmitted] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   
   useEffect(() => {
     if (profile) {
@@ -50,6 +52,9 @@ const Diagnostico = () => {
       if (test) {
         setTestStarted(true);
         setTimeStarted(new Date());
+        setCurrentQuestionIndex(0);
+        setAnswers({});
+        setShowHint(false);
       }
     }
   };
@@ -60,10 +65,22 @@ const Diagnostico = () => {
       [questionId]: answer
     }));
   };
+
+  const handleRequestHint = () => {
+    setShowHint(true);
+  };
+  
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+      setShowHint(false);
+    }
+  };
   
   const handleNextQuestion = () => {
     if (currentTest && currentQuestionIndex < currentTest.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+      setShowHint(false);
     } else {
       handleFinishTest();
     }
@@ -89,11 +106,11 @@ const Diagnostico = () => {
       // Update user's learning phase to next phase
       if (user) {
         try {
-          // In a real implementation, we would update the user's learning phase
-          // We'll just show a toast notification for now
+          await updateLearningPhase("PERSONALIZED_PLAN");
+          
           toast({
             title: "Diagnóstico completado",
-            description: "Ahora puedes avanzar a la siguiente fase del ciclo de aprendizaje",
+            description: "Ahora puedes avanzar a la creación de tu plan de estudio personalizado",
           });
         } catch (error) {
           console.error("Error updating learning phase:", error);
@@ -109,6 +126,7 @@ const Diagnostico = () => {
     setTimeStarted(null);
     setResultSubmitted(false);
     setSelectedTestId(null);
+    setShowHint(false);
   };
   
   const currentQuestion = currentTest?.questions[currentQuestionIndex];
@@ -122,16 +140,7 @@ const Diagnostico = () => {
       <AppLayout>
         <div className="container py-8">
           <h1 className="text-3xl font-bold mb-6">Diagnóstico</h1>
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
-                <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-                  Cargando...
-                </span>
-              </div>
-              <p className="mt-2">Cargando diagnósticos...</p>
-            </div>
-          </div>
+          <DiagnosticSkeleton />
         </div>
       </AppLayout>
     );
@@ -144,49 +153,34 @@ const Diagnostico = () => {
         
         {!testStarted ? (
           <div className="space-y-6">
-            <Alert>
-              <InfoIcon className="h-4 w-4" />
-              <AlertTitle>Evaluación Diagnóstica</AlertTitle>
-              <AlertDescription>
+            <Alert className="bg-blue-50 border-blue-200">
+              <InfoIcon className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-700">Evaluación Diagnóstica</AlertTitle>
+              <AlertDescription className="text-blue-700">
                 Esta evaluación nos ayudará a determinar tu nivel actual de habilidades para crear un plan de estudio personalizado.
+                Selecciona una de las evaluaciones disponibles para comenzar.
               </AlertDescription>
             </Alert>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {tests.map((test) => (
-                <Card 
-                  key={test.id} 
-                  className={`cursor-pointer transition-all ${
-                    selectedTestId === test.id ? 'ring-2 ring-primary ring-offset-2' : ''
-                  } ${test.isCompleted ? 'bg-green-50' : ''}`}
-                  onClick={() => handleTestSelect(test.id)}
-                >
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg">{test.title}</CardTitle>
-                      {test.isCompleted && (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      )}
-                    </div>
-                    <CardDescription>{test.description}</CardDescription>
-                  </CardHeader>
-                  <CardFooter>
-                    <Button 
-                      variant={test.isCompleted ? "outline" : "default"}
-                      className="w-full"
-                      onClick={() => handleTestSelect(test.id)}
-                    >
-                      {test.isCompleted ? 'Ver resultados' : 'Seleccionar'}
-                    </Button>
-                  </CardFooter>
-                </Card>
+                <DiagnosticCard 
+                  key={test.id}
+                  test={test}
+                  selected={selectedTestId === test.id}
+                  onSelect={handleTestSelect}
+                />
               ))}
             </div>
             
             {selectedTestId && (
               <div className="flex justify-end mt-8">
-                <Button onClick={handleStartTest}>
-                  Comenzar diagnóstico <ArrowRightIcon className="ml-2 h-4 w-4" />
+                <Button 
+                  onClick={handleStartTest}
+                  className="group"
+                >
+                  Comenzar diagnóstico 
+                  <ArrowRightIcon className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
             )}
@@ -202,15 +196,15 @@ const Diagnostico = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex justify-center">
-                <div className="rounded-full bg-green-100 p-3">
+                <div className="rounded-full bg-green-100 p-6">
                   <CheckCircle className="h-12 w-12 text-green-600" />
                 </div>
               </div>
               
-              <Alert>
-                <InfoIcon className="h-4 w-4" />
-                <AlertTitle>Próximos pasos</AlertTitle>
-                <AlertDescription>
+              <Alert className="bg-blue-50 border-blue-200">
+                <InfoIcon className="h-4 w-4 text-blue-600" />
+                <AlertTitle className="text-blue-700">Próximos pasos</AlertTitle>
+                <AlertDescription className="text-blue-700">
                   Tu plan de estudio personalizado se está generando. Dirígete al dashboard para continuar tu preparación.
                 </AlertDescription>
               </Alert>
@@ -231,52 +225,46 @@ const Diagnostico = () => {
               <div className="space-y-2">
                 <CardTitle>{currentTest?.title}</CardTitle>
                 <Progress value={progress} className="h-2" />
-                <p className="text-sm text-gray-500">
-                  Pregunta {currentQuestionIndex + 1} de {currentTest?.questions.length}
-                </p>
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-gray-500">
+                    Pregunta {currentQuestionIndex + 1} de {currentTest?.questions.length}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {Math.round(progress)}% completado
+                  </p>
+                </div>
               </div>
             </CardHeader>
             
             {currentQuestion && (
               <CardContent className="space-y-6">
-                <div className="text-lg font-medium">{currentQuestion.question}</div>
-                
-                <RadioGroup 
-                  value={answers[currentQuestion.id] || ""} 
-                  onValueChange={(value) => handleAnswerSelect(currentQuestion.id, value)}
-                >
-                  {currentQuestion.options.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50">
-                      <RadioGroupItem value={option} id={`option-${index}`} />
-                      <Label htmlFor={`option-${index}`} className="flex-grow cursor-pointer">
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-                
-                {!canContinue && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Selecciona una respuesta</AlertTitle>
-                    <AlertDescription>
-                      Debes seleccionar una respuesta para continuar.
-                    </AlertDescription>
-                  </Alert>
-                )}
+                <QuestionView 
+                  question={currentQuestion}
+                  selectedAnswer={answers[currentQuestion.id] || ""}
+                  onAnswerSelect={handleAnswerSelect}
+                  showHint={showHint}
+                  onRequestHint={handleRequestHint}
+                />
               </CardContent>
             )}
             
-            <CardFooter>
-              <div className="w-full flex justify-end">
-                <Button 
-                  onClick={handleNextQuestion} 
-                  disabled={!canContinue}
-                >
-                  {currentQuestionIndex === (currentTest?.questions.length || 0) - 1 ? 'Finalizar' : 'Siguiente'}
-                  <ArrowRightIcon className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+            <CardFooter className="flex justify-between">
+              <Button 
+                variant="outline"
+                onClick={handlePreviousQuestion}
+                disabled={currentQuestionIndex === 0}
+              >
+                <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                Anterior
+              </Button>
+              
+              <Button 
+                onClick={handleNextQuestion} 
+                disabled={!canContinue}
+              >
+                {currentQuestionIndex === (currentTest?.questions.length || 0) - 1 ? 'Finalizar' : 'Siguiente'}
+                <ArrowRightIcon className="ml-2 h-4 w-4" />
+              </Button>
             </CardFooter>
           </Card>
         )}

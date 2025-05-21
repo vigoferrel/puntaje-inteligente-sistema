@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TLearningNode, TLearningCyclePhase, TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { toast } from "@/components/ui/use-toast";
 import { useCallback } from "react";
+import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/supabase-mappers";
 
 export interface NodeProgress {
   nodeId: string;
