@@ -1,6 +1,6 @@
 
 import React from "react";
-import { DiagnosticTest } from "@/hooks/use-diagnostic";
+import { DiagnosticTest } from "@/types/diagnostic";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, ClipboardList } from "lucide-react";

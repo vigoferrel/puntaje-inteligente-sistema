@@ -1,6 +1,6 @@
 
 import React from "react";
-import { DiagnosticQuestion } from "@/hooks/use-diagnostic"; 
+import { DiagnosticQuestion } from "@/types/diagnostic"; 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
