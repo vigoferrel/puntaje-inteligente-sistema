@@ -9,6 +9,8 @@ interface OpenRouterServiceOptions {
 
 export const openRouterService = async <T>({ action, payload }: OpenRouterServiceOptions): Promise<T | null> => {
   try {
+    console.log(`Calling OpenRouter service with action: ${action}`);
+    
     const { data, error } = await supabase.functions.invoke('openrouter-ai', {
       body: {
         action,
@@ -16,7 +18,22 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
       }
     });
     
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('Supabase functions error:', error);
+      throw new Error(error.message);
+    }
+    
+    console.log('OpenRouter response received:', data);
+    
+    if (!data) {
+      console.error('No data received from OpenRouter');
+      throw new Error('No data received from OpenRouter');
+    }
+    
+    if (data.error) {
+      console.error('OpenRouter error:', data.error);
+      throw new Error(data.error);
+    }
     
     if (data && data.result) {
       return typeof data.result === 'string'

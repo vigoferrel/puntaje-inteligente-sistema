@@ -11,6 +11,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("OpenRouter function called with method:", req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -18,6 +20,7 @@ serve(async (req) => {
   
   try {
     if (!OPENROUTER_API_KEY) {
+      console.error("OpenRouter API key is not configured");
       throw new Error('OpenRouter API key is not configured');
     }
 
@@ -61,11 +64,14 @@ async function generateExercise({ skill, prueba, difficulty, previousExercises =
   
   Return your response in JSON format like:
   {
+    "id": "unique-id-string",
     "context": "The reading passage...",
     "question": "Question text",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correctAnswer": "Option A",
-    "explanation": "Explanation text"
+    "explanation": "Explanation text",
+    "skill": "${skill}",
+    "difficulty": "${difficulty}"
   }`;
 
   const userPrompt = `Generate an original exercise that is not similar to these previous exercises: 
@@ -128,8 +134,13 @@ async function provideFeedback({ userMessage, context, exerciseAttempt, correctA
 
 async function callOpenRouter(systemPrompt, userPrompt) {
   try {
-    console.log('Calling OpenRouter with system prompt:', systemPrompt);
-    console.log('User prompt:', userPrompt);
+    console.log('Calling OpenRouter with system prompt:', systemPrompt.substring(0, 100) + '...');
+    console.log('User prompt:', userPrompt.substring(0, 100) + '...');
+    
+    if (!OPENROUTER_API_KEY) {
+      console.error('Missing OpenRouter API key');
+      throw new Error('OpenRouter API key is not configured');
+    }
     
     const requestStartTime = Date.now();
     const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
@@ -164,11 +175,36 @@ async function callOpenRouter(systemPrompt, userPrompt) {
     }
 
     const data = await response.json();
-    console.log('OpenRouter response content:', data.choices?.[0]?.message?.content?.substring(0, 50) + '...');
+    console.log('OpenRouter response received, first 200 chars of content:', 
+      data.choices?.[0]?.message?.content?.substring(0, 200) + '...');
+    
+    const content = data.choices?.[0]?.message?.content || null;
+    
+    // Try to parse JSON if content is available
+    let parsedContent;
+    if (content) {
+      try {
+        // First check if it's already a JSON object
+        if (typeof content === 'object') {
+          parsedContent = content;
+        } else {
+          // Try to extract JSON from string (handles cases where AI might add explanations)
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            parsedContent = JSON.parse(jsonMatch[0]);
+          } else {
+            parsedContent = content; // Just use as-is if not JSON
+          }
+        }
+      } catch (e) {
+        console.log('Could not parse content as JSON, returning raw content');
+        parsedContent = content;
+      }
+    }
     
     return new Response(
       JSON.stringify({ 
-        result: data.choices?.[0]?.message?.content || null 
+        result: parsedContent || content || null 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

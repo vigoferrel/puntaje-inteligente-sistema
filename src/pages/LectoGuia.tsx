@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { ChatInterface, ChatMessage } from "@/components/ai/ChatInterface";
@@ -269,7 +268,11 @@ const LectoGuia = () => {
                   <CardContent className="p-6">
                     <div className="h-[calc(100vh-280px)] min-h-[500px] overflow-auto custom-scrollbar">
                       <ProgressView 
-                        skillLevels={session.skillLevels}
+                        skillLevels={{
+                          'TRACK_LOCATE': session.skillLevels['TRACK_LOCATE'] || 0,
+                          'INTERPRET_RELATE': session.skillLevels['INTERPRET_RELATE'] || 0,
+                          'EVALUATE_REFLECT': session.skillLevels['EVALUATE_REFLECT'] || 0
+                        }}
                         onStartSimulation={handleStartSimulation}
                       />
                     </div>

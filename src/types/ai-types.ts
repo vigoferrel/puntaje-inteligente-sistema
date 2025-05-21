@@ -1,10 +1,14 @@
 
 export interface Exercise {
+  id?: string;
+  text?: string;
   question: string;
   options: string[];
   correctAnswer: string;
   explanation: string;
-  context?: string; // Optional text content for the exercise
+  context?: string; // Text content for the exercise
+  skill?: string;
+  difficulty?: string;
 }
 
 export interface AIAnalysis {
