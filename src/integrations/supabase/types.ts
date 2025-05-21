@@ -359,6 +359,63 @@ export type Database = {
           },
         ]
       }
+      lectoguia_exercise_attempts: {
+        Row: {
+          completed_at: string
+          exercise_id: string
+          id: string
+          is_correct: boolean
+          selected_option: number
+          skill_type: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          exercise_id: string
+          id?: string
+          is_correct: boolean
+          selected_option: number
+          skill_type: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          exercise_id?: string
+          id?: string
+          is_correct?: boolean
+          selected_option?: number
+          skill_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lectoguia_user_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          user_id: string
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          user_id: string
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
       node_content: {
         Row: {
           content: Json

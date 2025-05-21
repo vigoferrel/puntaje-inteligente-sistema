@@ -5,7 +5,6 @@ import { ChatInterface, ChatMessage } from "@/components/ai/ChatInterface";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpenRouter } from "@/hooks/use-openrouter";
-import { Button } from "@/components/ui/button";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/components/ui/use-toast";
 import { Exercise } from "@/types/ai-types";
@@ -34,8 +33,12 @@ interface ExerciseInterface {
   difficulty: string;
 }
 
+// Componente principal de LectoGuía
 const LectoGuia = () => {
+  // Estado para gestionar la pestaña activa
   const [activeTab, setActiveTab] = useState("chat");
+  
+  // Mensajes de chat
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: uuidv4(),
@@ -45,15 +48,19 @@ const LectoGuia = () => {
     }
   ]);
   
+  // Hooks para API y estado de la sesión
   const { callOpenRouter, loading } = useOpenRouter();
   const { session, saveExerciseAttempt } = useLectoGuiaSession();
   const [isTyping, setIsTyping] = useState(false);
   
+  // Estado del ejercicio actual
   const [currentExercise, setCurrentExercise] = useState<ExerciseInterface | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
+  // Manejar el envío de mensajes
   const handleSendMessage = async (message: string) => {
+    // Agregar mensaje del usuario a la conversación
     const userMessage: ChatMessage = {
       id: uuidv4(),
       role: "user",
@@ -65,13 +72,13 @@ const LectoGuia = () => {
     setIsTyping(true);
     
     try {
-      // Check if the user is asking for an exercise
+      // Detectar si el usuario está pidiendo un ejercicio
       const isExerciseRequest = message.toLowerCase().includes("ejercicio") || 
           message.toLowerCase().includes("practica") || 
           message.toLowerCase().includes("ejemplo");
       
       if (isExerciseRequest) {
-        // Use OpenRouter to generate an exercise
+        // Generar un ejercicio usando OpenRouter
         const exercise = await callOpenRouter<Exercise>("generate_exercise", {
           skill: "INTERPRET_RELATE",
           prueba: "COMPREHENSION_LECTORA",
@@ -80,29 +87,31 @@ const LectoGuia = () => {
         });
 
         if (exercise) {
-          // Switch to exercise tab
+          // Cambiar a la pestaña de ejercicios
           setTimeout(() => setActiveTab("exercise"), 500);
           
-          // Create an exercise from the OpenRouter response
+          // Crear un objeto de ejercicio a partir de la respuesta
           const generatedExercise: ExerciseInterface = {
             id: uuidv4(),
             text: exercise.context || "En países más dichosos, los poetas, obviamente, quieren ser publicados, leídos y entendidos, pero ya no hacen nada o casi nada en su vida cotidiana para destacar entre la gente. Sin embargo, hace poco, en las primeras décadas de nuestro siglo, a los poetas les gustaba escandalizar con su ropa extravagante y con un comportamiento excéntrico. Aquellos no eran más que espectáculos para el público, ya que siempre tenía que llegar el momento en que el poeta cerraba la puerta, se quitaba toda esa parafernalia: capas y oropeles, y se detenía en el silencio, en espera de sí mismo frente a una hoja de papel en blanco, que en el fondo es lo único que importa.",
-            question: exercise.question,
+            question: exercise.question || "¿Cuál es la idea principal del texto?",
             options: exercise.options || [
-              "Opción A",
-              "Opción B",
-              "Opción C",
-              "Opción D"
+              "Los poetas disfrutan ser reconocidos en público",
+              "La verdadera creación poética ocurre en soledad",
+              "La poesía moderna es muy diferente a la antigua",
+              "En el pasado los poetas eran más excéntricos"
             ],
-            correctAnswer: exercise.options?.indexOf(exercise.correctAnswer) || 0,
+            correctAnswer: exercise.options?.indexOf(exercise.correctAnswer) || 1,
             skill: "Interpretar-Relacionar",
             difficulty: "Intermedio"
           };
           
+          // Actualizar estado del ejercicio
           setCurrentExercise(generatedExercise);
           setSelectedOption(null);
           setShowFeedback(false);
           
+          // Agregar mensaje del asistente sobre el ejercicio generado
           const botMessage: ChatMessage = {
             id: uuidv4(),
             role: "assistant",
@@ -115,7 +124,7 @@ const LectoGuia = () => {
           throw new Error("No se pudo generar el ejercicio");
         }
       } else {
-        // Regular conversation using OpenRouter
+        // Conversación normal usando OpenRouter
         const response = await callOpenRouter<{ response: string }>("provide_feedback", {
           userMessage: message,
           context: "PAES preparation, reading comprehension"
@@ -135,8 +144,8 @@ const LectoGuia = () => {
         }
       }
     } catch (error) {
-      console.error("Error processing message:", error);
-      // Add fallback response in case of error
+      console.error("Error procesando mensaje:", error);
+      // Respuesta alternativa en caso de error
       const errorMessage: ChatMessage = {
         id: uuidv4(),
         role: "assistant",
@@ -156,12 +165,13 @@ const LectoGuia = () => {
     }
   };
 
+  // Manejar la selección de una opción en el ejercicio
   const handleOptionSelect = (index: number) => {
     setSelectedOption(index);
     setTimeout(() => {
       setShowFeedback(true);
       
-      // Save the exercise attempt if the user is logged in
+      // Guardar el intento de ejercicio si el usuario está logueado
       if (currentExercise) {
         const isCorrect = index === currentExercise.correctAnswer;
         saveExerciseAttempt(
@@ -174,6 +184,7 @@ const LectoGuia = () => {
     }, 300);
   };
 
+  // Manejar la solicitud de un nuevo ejercicio
   const handleNewExercise = () => {
     setActiveTab("chat");
     setSelectedOption(null);
@@ -189,9 +200,8 @@ const LectoGuia = () => {
     setMessages(prev => [...prev, botMessage]);
   };
   
+  // Manejar inicio de simulación
   const handleStartSimulation = () => {
-    // In a real implementation, this would navigate to a simulation page
-    // For now, we'll just show a toast
     toast({
       title: "Simulación",
       description: "Función en desarrollo. Estará disponible próximamente."

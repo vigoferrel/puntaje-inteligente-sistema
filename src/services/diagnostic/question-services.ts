@@ -4,32 +4,35 @@ import { DiagnosticQuestion } from "@/types/diagnostic";
 import { mapTestIdToEnum } from "@/utils/supabase-mappers";
 import { TPAESHabilidad } from "@/types/system-types";
 
-// Create a stored function or RPC for getting test questions
-// This solves the issue of direct table access to diagnostic_questions
+/**
+ * Función para obtener preguntas de diagnóstico por ID de prueba.
+ * Intenta obtener las preguntas desde Supabase, si no hay datos, genera preguntas de muestra.
+ */
 export const fetchDiagnosticQuestions = async (
   diagnosticId: string,
   testId: number
 ): Promise<DiagnosticQuestion[]> => {
   try {
-    // Call stored function or RPC - we're simulating this here
-    // In production, you would have this function defined in your database
-    const { data, error } = await supabase
-      .rpc('get_diagnostic_questions', { 
+    // Intentar obtener datos reales desde la base de datos usando RPC
+    const { data, error } = await supabase.rpc(
+      'get_diagnostic_questions', 
+      { 
         p_diagnostic_id: diagnosticId 
-      });
+      }
+    );
 
     if (error) {
-      console.error('Error fetching diagnostic questions:', error);
+      console.error('Error al obtener preguntas de diagnóstico:', error);
       throw error;
     }
 
-    // If no stored function exists, let's provide mock data for now
-    // This would be replaced with real data in production
+    // Si no hay datos o la función RPC no existe, usar datos de muestra
     if (!data || (Array.isArray(data) && data.length === 0)) {
-      // Generate mock questions based on test ID
+      console.log('No se encontraron preguntas, generando datos de muestra');
       return generateMockQuestions(diagnosticId, testId);
     }
 
+    // Mapear los datos al formato esperado
     if (Array.isArray(data)) {
       return data.map((q: any) => ({
         id: q.id,
@@ -42,24 +45,24 @@ export const fetchDiagnosticQuestions = async (
       }));
     }
 
-    // If we got here, we don't have the right data format
-    // Fall back to mock data
+    // Si llegamos aquí, el formato de datos no es el esperado
+    console.warn('Formato de datos inesperado, usando datos de muestra');
     return generateMockQuestions(diagnosticId, testId);
   } catch (error) {
-    console.error('Error in fetchDiagnosticQuestions:', error);
-    // Fallback to mock data on error
+    console.error('Error en fetchDiagnosticQuestions:', error);
+    // Fallback a datos de muestra en caso de error
     return generateMockQuestions(diagnosticId, testId);
   }
 };
 
-// Helper function to generate mock questions for testing
+// Función auxiliar para generar preguntas de muestra
 function generateMockQuestions(diagnosticId: string, testId: number): DiagnosticQuestion[] {
   const testType = mapTestIdToEnum(testId);
   const skills: TPAESHabilidad[] = [
     "TRACK_LOCATE", "INTERPRET_RELATE", "EVALUATE_REFLECT"
   ];
 
-  // Create 10 mock questions per diagnostic
+  // Crear 10 preguntas de muestra por diagnóstico
   return Array.from({ length: 10 }).map((_, index) => {
     const questionNumber = index + 1;
     const mockSkill = skills[index % skills.length];

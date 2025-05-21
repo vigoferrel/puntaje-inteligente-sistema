@@ -2,8 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import { Exercise } from '@/types/ai-types';
+import { ArrowRight, Award } from 'lucide-react';
 
 interface ExerciseViewProps {
   exercise: {
@@ -68,7 +67,11 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({
               key={index}
               className={`w-full text-left p-3 rounded-lg transition-all duration-300 ${
                 selectedOption === index 
-                  ? 'bg-primary/20 border border-primary/50' 
+                  ? showFeedback
+                    ? index === exercise.correctAnswer 
+                      ? 'bg-green-500/20 border border-green-500/50'
+                      : 'bg-red-500/20 border border-red-500/50'
+                    : 'bg-primary/20 border border-primary/50' 
                   : 'bg-secondary/30 border border-border hover:bg-secondary'
               }`}
               onClick={() => !showFeedback && onOptionSelect(index)}
@@ -76,9 +79,22 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({
             >
               <div className="flex items-start">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5 ${
-                  selectedOption === index ? 'bg-primary text-white' : 'border border-muted-foreground'
+                  selectedOption === index 
+                    ? showFeedback
+                      ? index === exercise.correctAnswer
+                        ? 'bg-green-500 text-white'
+                        : 'bg-red-500 text-white'
+                      : 'bg-primary text-white' 
+                    : exercise.correctAnswer === index && showFeedback
+                      ? 'bg-green-500 text-white'
+                      : 'border border-muted-foreground'
                 }`}>
-                  {selectedOption === index && <ArrowRight size={12} />}
+                  {showFeedback 
+                    ? (index === exercise.correctAnswer 
+                        ? <Award size={12} /> 
+                        : selectedOption === index ? '✗' : '')
+                    : selectedOption === index && <ArrowRight size={12} />
+                  }
                 </div>
                 <span>{option}</span>
               </div>
@@ -106,7 +122,7 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({
             </p>
             
             <div className="mt-4 flex justify-end">
-              <Button onClick={onContinue}>
+              <Button onClick={onContinue} className="bg-primary hover:bg-primary/90">
                 Continuar
               </Button>
             </div>
@@ -115,4 +131,4 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({
       </div>
     </div>
   );
-};
+}

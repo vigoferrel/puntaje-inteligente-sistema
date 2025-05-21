@@ -43,12 +43,12 @@ export function useLectoGuiaSession() {
     loading: true
   });
 
-  // Load user data when authenticated
+  // Cargar datos del usuario cuando está autenticado
   useEffect(() => {
     if (user?.id) {
       loadUserData(user.id);
     } else {
-      // Reset session when not authenticated
+      // Reiniciar sesión cuando no está autenticado
       setSession({
         userId: null,
         exerciseHistory: [],
@@ -67,7 +67,7 @@ export function useLectoGuiaSession() {
     try {
       setSession(prev => ({ ...prev, loading: true }));
       
-      // Fetch exercise history
+      // Consultar el historial de ejercicios - usando tablas personalizadas
       const { data: exerciseData, error: exerciseError } = await supabase
         .from('lectoguia_exercise_attempts')
         .select('*')
@@ -76,7 +76,7 @@ export function useLectoGuiaSession() {
       
       if (exerciseError) throw exerciseError;
       
-      // Fetch user preferences
+      // Consultar las preferencias del usuario - usando tablas personalizadas
       const { data: prefData, error: prefError } = await supabase
         .from('lectoguia_user_preferences')
         .select('key, value')
@@ -84,7 +84,7 @@ export function useLectoGuiaSession() {
         
       if (prefError) throw prefError;
       
-      // Fetch skill levels
+      // Consultar los niveles de habilidad
       const { data: skillData, error: skillError } = await supabase
         .from('user_skill_levels')
         .select('skill_id, level')
@@ -92,7 +92,7 @@ export function useLectoGuiaSession() {
         
       if (skillError) throw skillError;
       
-      // Process skill levels
+      // Procesar los niveles de habilidad
       const skillLevels: Record<string, number> = {
         'TRACK_LOCATE': 0,
         'INTERPRET_RELATE': 0, 
@@ -101,32 +101,42 @@ export function useLectoGuiaSession() {
       
       if (skillData) {
         skillData.forEach(skill => {
-          // Map skill IDs to skill codes (simplified mapping for now)
-          // In a real app, you'd have a proper mapping function
+          // Mapear IDs de habilidad a códigos de habilidad
           if (skill.skill_id === 1) skillLevels['TRACK_LOCATE'] = skill.level;
           if (skill.skill_id === 2) skillLevels['INTERPRET_RELATE'] = skill.level;
           if (skill.skill_id === 3) skillLevels['EVALUATE_REFLECT'] = skill.level;
         });
       }
       
-      // Process preferences
+      // Procesar las preferencias
       const preferences: Record<string, string> = {};
       if (prefData) {
-        prefData.forEach(pref => {
+        prefData.forEach((pref: UserPreference) => {
           preferences[pref.key] = pref.value;
         });
       }
+
+      // Mapear los intentos de ejercicios a nuestro formato interno
+      const exerciseAttempts: ExerciseAttempt[] = exerciseData ? exerciseData.map((attempt: any) => ({
+        id: attempt.id,
+        exerciseId: attempt.exercise_id,
+        userId: attempt.user_id,
+        selectedOption: attempt.selected_option,
+        isCorrect: attempt.is_correct,
+        skillType: attempt.skill_type,
+        completedAt: attempt.completed_at
+      })) : [];
       
       setSession({
         userId,
-        exerciseHistory: exerciseData || [],
+        exerciseHistory: exerciseAttempts,
         preferences,
         skillLevels,
         loading: false
       });
       
     } catch (error) {
-      console.error('Error loading LectoGuia user data:', error);
+      console.error('Error al cargar datos de LectoGuia:', error);
       toast({
         title: "Error",
         description: "No se pudo cargar los datos del usuario",
@@ -148,18 +158,37 @@ export function useLectoGuiaSession() {
     skill: string = 'INTERPRET_RELATE'
   ) => {
     if (!session.userId) {
-      // If not logged in, just return and don't save
-      console.log('User not logged in, exercise attempt not saved');
+      // Si no ha iniciado sesión, solo registrar y no guardar
+      console.log('Usuario no ha iniciado sesión, intento de ejercicio no guardado');
       return;
     }
     
     try {
       const attemptId = uuidv4();
-      const exerciseId = uuidv4(); // In a real app, exercise would have its own ID
+      const exerciseId = exercise.id || uuidv4(); // Usar el ID del ejercicio o generar uno
       
-      const attempt: ExerciseAttempt = {
+      // Preparar los datos para guardar
+      const attemptData = {
         id: attemptId,
-        exerciseId,
+        user_id: session.userId,
+        exercise_id: exerciseId,
+        selected_option: selectedOption,
+        is_correct: isCorrect,
+        skill_type: skill,
+        completed_at: new Date().toISOString()
+      };
+      
+      // Guardar en Supabase
+      const { error } = await supabase
+        .from('lectoguia_exercise_attempts')
+        .insert(attemptData);
+      
+      if (error) throw error;
+      
+      // Actualizar el estado local
+      const newAttempt: ExerciseAttempt = {
+        id: attemptId,
+        exerciseId: exerciseId,
         userId: session.userId,
         selectedOption,
         isCorrect,
@@ -167,32 +196,17 @@ export function useLectoGuiaSession() {
         completedAt: new Date().toISOString()
       };
       
-      const { error } = await supabase
-        .from('lectoguia_exercise_attempts')
-        .insert({
-          id: attemptId,
-          user_id: session.userId,
-          exercise_id: exerciseId,
-          selected_option: selectedOption,
-          is_correct: isCorrect,
-          skill_type: skill,
-          completed_at: new Date().toISOString()
-        });
-      
-      if (error) throw error;
-      
-      // Update local state with the new attempt
       setSession(prev => ({
         ...prev,
-        exerciseHistory: [attempt, ...prev.exerciseHistory]
+        exerciseHistory: [newAttempt, ...prev.exerciseHistory]
       }));
       
-      // Update skill level based on results
+      // Actualizar nivel de habilidad basado en resultados
       await updateSkillLevel(skill, isCorrect);
       
-      return attempt;
+      return newAttempt;
     } catch (error) {
-      console.error('Error saving exercise attempt:', error);
+      console.error('Error al guardar intento de ejercicio:', error);
       toast({
         title: "Error",
         description: "No se pudo guardar los resultados del ejercicio",
@@ -209,12 +223,12 @@ export function useLectoGuiaSession() {
     if (!skillId) return;
     
     try {
-      // Get current skill level
+      // Obtener nivel actual de habilidad
       const currentLevel = session.skillLevels[skillCode] || 0;
       
-      // Simple algorithm to adjust skill level:
-      // Correct answers increase level by 0.05 up to 1.0
-      // Incorrect answers decrease level by 0.03, but not below 0
+      // Algoritmo simple para ajustar el nivel de habilidad:
+      // Respuestas correctas aumentan el nivel en 0.05 hasta 1.0
+      // Respuestas incorrectas disminuyen el nivel en 0.03, pero no bajan de 0
       let newLevel = currentLevel;
       
       if (isCorrect) {
@@ -223,7 +237,7 @@ export function useLectoGuiaSession() {
         newLevel = Math.max(0, currentLevel - 0.03);
       }
       
-      // Update in database
+      // Actualizar en la base de datos
       const { error } = await supabase
         .from('user_skill_levels')
         .upsert({
@@ -234,7 +248,7 @@ export function useLectoGuiaSession() {
       
       if (error) throw error;
       
-      // Update local state
+      // Actualizar el estado local
       setSession(prev => ({
         ...prev,
         skillLevels: {
@@ -244,7 +258,7 @@ export function useLectoGuiaSession() {
       }));
       
     } catch (error) {
-      console.error('Error updating skill level:', error);
+      console.error('Error al actualizar nivel de habilidad:', error);
     }
   };
   
@@ -252,18 +266,21 @@ export function useLectoGuiaSession() {
     if (!session.userId) return;
     
     try {
-      // Update in database
+      // Datos para upsert
+      const preferenceData = {
+        user_id: session.userId,
+        key,
+        value
+      };
+      
+      // Actualizar en la base de datos
       const { error } = await supabase
         .from('lectoguia_user_preferences')
-        .upsert({
-          user_id: session.userId,
-          key,
-          value
-        });
+        .upsert(preferenceData);
       
       if (error) throw error;
       
-      // Update local state
+      // Actualizar el estado local
       setSession(prev => ({
         ...prev,
         preferences: {
@@ -273,7 +290,7 @@ export function useLectoGuiaSession() {
       }));
       
     } catch (error) {
-      console.error('Error setting preference:', error);
+      console.error('Error al guardar preferencia:', error);
       toast({
         title: "Error",
         description: "No se pudo guardar la preferencia",
@@ -282,7 +299,7 @@ export function useLectoGuiaSession() {
     }
   };
   
-  // Helper to map skill codes to IDs
+  // Función auxiliar para mapear códigos de habilidad a IDs
   const getSkillId = (skillCode: string): number | null => {
     switch (skillCode) {
       case 'TRACK_LOCATE': return 1;
