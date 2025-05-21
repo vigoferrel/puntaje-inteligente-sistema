@@ -1,8 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { TPAESHabilidad } from "../types/system-types";
+import { TPAESHabilidad, TLearningCyclePhase } from "../types/system-types";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthProfile } from "./use-auth-profile";
+import { useLearningNodes } from "./use-learning-nodes";
+import { toast } from "@/components/ui/use-toast";
 
 export interface UserProfile {
   id: string;
@@ -16,6 +19,7 @@ export interface UserProfile {
     correctExercises: number;
     totalTimeMinutes: number;
   };
+  learningCyclePhase?: TLearningCyclePhase;
 }
 
 // Mock data for demonstration
@@ -47,14 +51,17 @@ const MOCK_USER: UserProfile = {
     completedExercises: 45,
     correctExercises: 32,
     totalTimeMinutes: 180
-  }
+  },
+  learningCyclePhase: "DIAGNOSIS"
 };
 
 export const useUserData = () => {
   const { profile, isLoading: authLoading } = useAuth();
+  const { fetchProfile } = useAuthProfile();
   const [loading, setLoading] = useState(authLoading);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [skillLevels, setSkillLevels] = useState<Record<string, number>>({});
+  const { getLearningCyclePhase } = useLearningNodes();
 
   // Fetch user skill levels from the database
   useEffect(() => {
@@ -82,26 +89,101 @@ export const useUserData = () => {
       }
     };
 
-    if (!authLoading) {
-      if (profile) {
-        setUser({
-          ...profile,
-          // Merge any skills from the database with profile data
-          skillLevels: {
-            ...profile.skillLevels,
-            ...skillLevels
-          }
-        });
+    const fetchUserProgress = async (userId: string) => {
+      try {
+        // Get completed nodes
+        const { data: nodeData, error: nodeError } = await supabase
+          .from('user_node_progress')
+          .select('node_id')
+          .eq('user_id', userId)
+          .eq('status', 'completed');
         
-        // Fetch additional skill data from the database
-        fetchUserSkills(profile.id);
-      } else {
-        // Fallback to mock data if no profile is available (for demonstration purposes)
-        setUser(MOCK_USER);
+        if (nodeError) throw nodeError;
+        
+        // Get exercise attempts
+        const { data: exerciseData, error: exerciseError } = await supabase
+          .from('user_exercise_attempts')
+          .select('*')
+          .eq('user_id', userId);
+          
+        if (exerciseError) throw exerciseError;
+        
+        // Calculate progress metrics
+        const completedNodes = nodeData ? nodeData.map(item => item.node_id) : [];
+        const completedExercises = exerciseData ? exerciseData.length : 0;
+        const correctExercises = exerciseData ? exerciseData.filter(item => item.is_correct).length : 0;
+        
+        // Calculate total time spent
+        const { data: timeData, error: timeError } = await supabase
+          .from('user_node_progress')
+          .select('time_spent_minutes')
+          .eq('user_id', userId);
+          
+        if (timeError) throw timeError;
+        
+        const totalTimeMinutes = timeData ? 
+          timeData.reduce((sum, item) => sum + (item.time_spent_minutes || 0), 0) : 0;
+          
+        return {
+          completedNodes,
+          completedExercises,
+          correctExercises,
+          totalTimeMinutes
+        };
+      } catch (error) {
+        console.error('Error fetching user progress:', error);
+        return {
+          completedNodes: [],
+          completedExercises: 0,
+          correctExercises: 0,
+          totalTimeMinutes: 0
+        };
       }
-      setLoading(false);
-    }
-  }, [profile, authLoading, skillLevels]);
+    };
+
+    const loadUserData = async () => {
+      if (!authLoading) {
+        if (profile) {
+          try {
+            // Fetch profile data
+            const userProfile = await fetchProfile(profile.id);
+            
+            // Fetch user progress
+            const progressData = await fetchUserProgress(profile.id);
+            
+            // Determine learning cycle phase
+            const learningPhase = await getLearningCyclePhase(profile.id);
+            
+            if (userProfile) {
+              setUser({
+                ...userProfile,
+                progress: progressData,
+                learningCyclePhase: learningPhase
+              });
+            }
+            
+            // Fetch additional skill data from the database
+            fetchUserSkills(profile.id);
+          } catch (error) {
+            console.error("Error loading user data:", error);
+            toast({
+              title: "Error",
+              description: "No se pudo cargar los datos del usuario",
+              variant: "destructive"
+            });
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          // Fallback to mock data if no profile is available (for demonstration purposes)
+          setUser(MOCK_USER);
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadUserData();
+  }, [profile, authLoading, fetchProfile, getLearningCyclePhase]);
 
   const updateSkillLevel = async (skill: TPAESHabilidad, level: number) => {
     if (!user) return;
@@ -124,29 +206,85 @@ export const useUserData = () => {
     // Update in database if we have a real user
     if (profile) {
       try {
-        // In a real implementation, you would map from frontend skill code to database ID
-        // This is just a placeholder for the actual implementation
-        console.log(`Updated skill ${skill} to level ${normalizedLevel} in database`);
+        // Get the skill ID from the database based on the skill code
+        const { data: skillData, error: skillError } = await supabase
+          .from('paes_skills')
+          .select('id')
+          .eq('code', skill)
+          .single();
+          
+        if (skillError) throw skillError;
         
-        // TODO: Implement the actual database update when we have the skill mapping
-        // const { error } = await supabase
-        //   .from('user_skill_levels')
-        //   .upsert({
-        //     user_id: profile.id,
-        //     skill_id: skillIdMap[skill], // We'd need a mapping function
-        //     level: normalizedLevel
-        //   });
+        if (!skillData) {
+          console.error(`Skill ${skill} not found in database`);
+          return;
+        }
         
-        // if (error) throw error;
+        // Update or insert the skill level
+        const { error } = await supabase
+          .from('user_skill_levels')
+          .upsert({
+            user_id: profile.id,
+            skill_id: skillData.id,
+            level: normalizedLevel
+          });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Nivel actualizado",
+          description: "Tu nivel de habilidad ha sido actualizado",
+        });
       } catch (error) {
         console.error('Error updating skill level:', error);
+        toast({
+          title: "Error", 
+          description: "No se pudo actualizar el nivel de habilidad",
+          variant: "destructive"
+        });
       }
+    }
+  };
+
+  const updateLearningPhase = async (phase: TLearningCyclePhase) => {
+    if (!user || !profile) return;
+    
+    try {
+      // Update user profile with new learning phase
+      const { error } = await supabase
+        .from('profiles')
+        .update({ learning_phase: phase })
+        .eq('id', profile.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setUser(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          learningCyclePhase: phase
+        };
+      });
+      
+      toast({
+        title: "Fase actualizada",
+        description: `Ahora estás en la fase ${phase}`,
+      });
+    } catch (error) {
+      console.error('Error updating learning phase:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la fase de aprendizaje",
+        variant: "destructive"
+      });
     }
   };
 
   return {
     user,
     loading,
-    updateSkillLevel
+    updateSkillLevel,
+    updateLearningPhase
   };
 };

@@ -2,16 +2,20 @@
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useUserData } from "@/hooks/use-user-data";
-import { TPAESHabilidad } from "@/types/system-types";
+import { LEARNING_CYCLE_PHASES_ORDER, TLearningCyclePhase, TPAESHabilidad } from "@/types/system-types";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { SearchBar } from "@/components/dashboard/search-bar";
 import { TopSkills } from "@/components/dashboard/top-skills";
 import { StudyPlan } from "@/components/dashboard/study-plan";
 import { AIFeatures } from "@/components/dashboard/ai-features";
+import { LearningCycle } from "@/components/dashboard/learning-cycle";
+import { toast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const { user, loading } = useUserData();
+  const { user, loading, updateLearningPhase } = useUserData();
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const navigate = useNavigate();
   
   // Default skill levels to ensure they're never undefined
   const defaultSkillLevels: Record<TPAESHabilidad, number> = {
@@ -49,7 +53,42 @@ const Index = () => {
     .map(([skill, level]) => ({ skill: skill as TPAESHabilidad, level }))
     .sort((a, b) => b.level - a.level)
     .slice(0, 5)
-    .map(item => item.skill); // Extract just the skill names for the TopSkills component
+    .map(item => item.skill);
+
+  // Default to diagnosis phase if none is set
+  const currentPhase = user?.learningCyclePhase || "DIAGNOSIS";
+
+  const handlePhaseSelect = async (phase: TLearningCyclePhase) => {
+    // Check if the selected phase is available based on progress
+    const currentIndex = LEARNING_CYCLE_PHASES_ORDER.indexOf(currentPhase);
+    const selectedIndex = LEARNING_CYCLE_PHASES_ORDER.indexOf(phase);
+    
+    // Only allow selecting current phase or earlier phases
+    if (selectedIndex > currentIndex) {
+      toast({
+        title: "Fase no disponible",
+        description: "Debes completar la fase actual antes de avanzar",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Navigate to the appropriate page based on the phase
+    switch(phase) {
+      case "DIAGNOSIS":
+        navigate("/diagnostico");
+        break;
+      case "PERSONALIZED_PLAN":
+        navigate("/plan");
+        break;
+      default:
+        // For other phases that might not have pages yet
+        if (phase !== currentPhase) {
+          await updateLearningPhase(phase);
+        }
+        break;
+    }
+  };
 
   return (
     <AppLayout>
@@ -67,6 +106,14 @@ const Index = () => {
           accuracyPercentage={accuracyPercentage}
           totalTimeMinutes={totalTimeMinutes}
         />
+        
+        <div className="mb-8">
+          <LearningCycle 
+            currentPhase={currentPhase}
+            loading={loading}
+            onPhaseSelect={handlePhaseSelect}
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">

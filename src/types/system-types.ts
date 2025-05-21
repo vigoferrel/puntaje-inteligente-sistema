@@ -123,3 +123,52 @@ export const getPruebaDisplayName = (prueba: TPAESPrueba): string => {
   
   return displayNames[prueba] || prueba;
 };
+
+// Learning cycle phase display names
+export const getLearningCyclePhaseDisplayName = (phase: TLearningCyclePhase): string => {
+  const displayNames: Record<TLearningCyclePhase, string> = {
+    DIAGNOSIS: "Diagnóstico",
+    PERSONALIZED_PLAN: "Plan Personalizado",
+    SKILL_TRAINING: "Entrenamiento de Habilidades",
+    CONTENT_STUDY: "Estudio de Contenido",
+    PERIODIC_TESTS: "Evaluaciones Periódicas",
+    FEEDBACK_ANALYSIS: "Análisis y Retroalimentación",
+    REINFORCEMENT: "Reforzamiento",
+    FINAL_SIMULATIONS: "Simulaciones Finales"
+  };
+  
+  return displayNames[phase] || phase;
+};
+
+// Learning cycle phase descriptions
+export const getLearningCyclePhaseDescription = (phase: TLearningCyclePhase): string => {
+  const descriptions: Record<TLearningCyclePhase, string> = {
+    DIAGNOSIS: "Evaluación inicial para identificar tus fortalezas y áreas de mejora",
+    PERSONALIZED_PLAN: "Creación de un plan de estudio adaptado a tus necesidades",
+    SKILL_TRAINING: "Desarrollo de habilidades específicas para mejorar tu rendimiento",
+    CONTENT_STUDY: "Profundización en los contenidos más relevantes para la prueba",
+    PERIODIC_TESTS: "Evaluaciones periódicas para medir tu progreso",
+    FEEDBACK_ANALYSIS: "Análisis detallado de tus resultados para identificar patrones",
+    REINFORCEMENT: "Práctica adicional en las áreas que más necesitas mejorar",
+    FINAL_SIMULATIONS: "Simulaciones completas tipo PAES para estar preparado"
+  };
+  
+  return descriptions[phase] || "";
+};
+
+// Learning cycle phase order and progress
+export const LEARNING_CYCLE_PHASES_ORDER: TLearningCyclePhase[] = [
+  "DIAGNOSIS",
+  "PERSONALIZED_PLAN",
+  "SKILL_TRAINING",
+  "CONTENT_STUDY",
+  "PERIODIC_TESTS",
+  "FEEDBACK_ANALYSIS",
+  "REINFORCEMENT",
+  "FINAL_SIMULATIONS"
+];
+
+export const getLearningCyclePhaseProgress = (phase: TLearningCyclePhase): number => {
+  const index = LEARNING_CYCLE_PHASES_ORDER.indexOf(phase);
+  return index >= 0 ? (index + 1) / LEARNING_CYCLE_PHASES_ORDER.length : 0;
+};

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Diagnostico from "./pages/Diagnostico";
+import Plan from "./pages/Plan";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/protected-route";
@@ -23,7 +24,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/diagnostico" element={<ProtectedRoute><Diagnostico /></ProtectedRoute>} />
-            {/* Other routes would go here when implemented */}
+            <Route path="/plan" element={<ProtectedRoute><Plan /></ProtectedRoute>} />
+            {/* Other learning cycle routes will be added here */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
