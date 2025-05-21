@@ -17,6 +17,7 @@ interface TestRunnerProps {
   onPreviousQuestion: () => void;
   onNextQuestion: () => void;
   onPauseTest: () => void;
+  onFinishTest: () => void; // Add the missing prop
 }
 
 export const TestRunner = ({ 
@@ -28,7 +29,8 @@ export const TestRunner = ({
   onRequestHint,
   onPreviousQuestion,
   onNextQuestion,
-  onPauseTest
+  onPauseTest,
+  onFinishTest // Add to destructuring
 }: TestRunnerProps) => {
   const currentQuestion = currentTest?.questions[currentQuestionIndex];
   
@@ -60,6 +62,7 @@ export const TestRunner = ({
               canContinue={canContinue}
               onPreviousQuestion={onPreviousQuestion}
               onNextQuestion={onNextQuestion}
+              onFinishTest={onFinishTest} // Pass the prop to QuestionNavigation
               isLastQuestion={isLastQuestion}
             />
           )}
@@ -85,6 +88,7 @@ export const TestRunner = ({
           canContinue={canContinue}
           onPreviousQuestion={onPreviousQuestion}
           onNextQuestion={onNextQuestion}
+          onFinishTest={onFinishTest} // Pass the prop to QuestionNavigation
           isLastQuestion={isLastQuestion}
         />
       </CardFooter>

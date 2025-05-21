@@ -36,6 +36,7 @@ const Diagnostico = () => {
           handleRequestHint,
           handlePreviousQuestion,
           handleNextQuestion,
+          handleFinishTest, // Make sure we're using this
           handleRestartDiagnostic
         }) => (
           <div className="container py-8">
@@ -76,6 +77,7 @@ const Diagnostico = () => {
                 onPreviousQuestion={handlePreviousQuestion}
                 onNextQuestion={handleNextQuestion}
                 onPauseTest={handlePauseTest}
+                onFinishTest={handleFinishTest} // Pass the function
               />
             )}
 

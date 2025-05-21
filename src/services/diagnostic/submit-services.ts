@@ -11,11 +11,33 @@ import { updateUserSkillLevels } from "./skill-services";
 export const submitDiagnosticResult = async (
   userId: string,
   diagnosticId: string,
-  test: DiagnosticTest,
   answers: Record<string, string>,
   timeSpentMinutes: number
 ) => {
   try {
+    // Fetch the test to have access to questions and correct answers
+    const { data: testData, error: testError } = await supabase
+      .from('diagnostic_tests')
+      .select('*')
+      .eq('id', diagnosticId)
+      .single();
+      
+    if (testError) {
+      console.error("Error fetching test:", testError);
+      throw new Error("No se pudo recuperar la información del diagnóstico");
+    }
+    
+    // Fetch test questions
+    const { data: questionsData, error: questionsError } = await supabase
+      .from('diagnostic_questions')
+      .select('*')
+      .eq('diagnostic_id', diagnosticId);
+      
+    if (questionsError || !questionsData) {
+      console.error("Error fetching questions:", questionsError);
+      throw new Error("No se pudieron recuperar las preguntas del diagnóstico");
+    }
+    
     // Initialize default record with all skills at 0
     const defaultSkillResults: Record<TPAESHabilidad, { correct: number, total: number }> = {
       SOLVE_PROBLEMS: { correct: 0, total: 0 },
@@ -39,12 +61,14 @@ export const submitDiagnosticResult = async (
     // Calculate skill levels based on answers
     const skillResults = { ...defaultSkillResults };
     
-    test.questions.forEach(question => {
+    questionsData.forEach(question => {
       const skill = question.skill;
       
-      skillResults[skill].total += 1;
-      if (answers[question.id] === question.correctAnswer) {
-        skillResults[skill].correct += 1;
+      if (skill) {
+        skillResults[skill].total += 1;
+        if (answers[question.id] === question.correct_answer) {
+          skillResults[skill].correct += 1;
+        }
       }
     });
     

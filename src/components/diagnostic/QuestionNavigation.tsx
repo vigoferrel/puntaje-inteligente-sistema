@@ -10,6 +10,7 @@ interface QuestionNavigationProps {
   canContinue: boolean;
   onPreviousQuestion: () => void;
   onNextQuestion: () => void;
+  onFinishTest: () => void; // Add the prop
   isLastQuestion: boolean;
 }
 
@@ -19,9 +20,19 @@ export const QuestionNavigation = ({
   canContinue,
   onPreviousQuestion,
   onNextQuestion,
+  onFinishTest, // Add to destructuring
   isLastQuestion
 }: QuestionNavigationProps) => {
   const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+  
+  // Handle button click depending on whether it's the last question or not
+  const handleActionButtonClick = () => {
+    if (isLastQuestion) {
+      onFinishTest();
+    } else {
+      onNextQuestion();
+    }
+  };
   
   return (
     <div className="space-y-4">
@@ -46,7 +57,7 @@ export const QuestionNavigation = ({
         </Button>
         
         <Button 
-          onClick={onNextQuestion} 
+          onClick={handleActionButtonClick}
           disabled={!canContinue}
         >
           {isLastQuestion ? 'Finalizar' : 'Siguiente'}

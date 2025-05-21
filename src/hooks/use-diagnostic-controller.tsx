@@ -79,7 +79,7 @@ export const useDiagnosticController = () => {
     confirmPauseTest: progressState.confirmPauseTest,
     
     // Handlers from results hook
-    handleFinishTest: resultState.handleFinishTest,
+    handleFinishTest: resultState.handleFinishTest, // Ensure this is exposed
     handleRestartDiagnostic: resultState.handleRestartDiagnostic
   };
 };
