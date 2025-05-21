@@ -16,7 +16,7 @@ export const fetchDiagnosticQuestions = async (
     const { data, error } = await supabase
       .rpc('get_diagnostic_questions', { 
         p_diagnostic_id: diagnosticId 
-      } as any); // Use type assertion to bypass TypeScript error
+      } as Record<string, any>); // Type assertion to bypass TypeScript error
 
     if (error) {
       console.error('Error fetching diagnostic questions:', error);
