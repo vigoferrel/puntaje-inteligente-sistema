@@ -10,7 +10,7 @@ import {
   fetchDiagnosticQuestions,
   submitDiagnosticResult as submitResult,
   fetchDiagnosticResults as fetchResults,
-} from "@/services/diagnostic-service";
+} from "@/services/diagnostic";
 
 // Re-export types for convenience
 export type { DiagnosticTest, DiagnosticQuestion, DiagnosticResult } from "@/types/diagnostic";
