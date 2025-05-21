@@ -10,6 +10,7 @@ interface OpenRouterServiceOptions {
 export const openRouterService = async <T>({ action, payload }: OpenRouterServiceOptions): Promise<T | null> => {
   try {
     console.log(`Calling OpenRouter service with action: ${action}`);
+    console.log('Payload:', JSON.stringify(payload));
     
     const { data, error } = await supabase.functions.invoke('openrouter-ai', {
       body: {
@@ -36,9 +37,15 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
     }
     
     if (data && data.result) {
-      return typeof data.result === 'string'
-        ? JSON.parse(data.result)
-        : data.result;
+      try {
+        return typeof data.result === 'string'
+          ? JSON.parse(data.result)
+          : data.result;
+      } catch (parseError) {
+        console.error('Error parsing result:', parseError);
+        console.log('Raw result:', data.result);
+        return data.result as unknown as T;
+      }
     }
     
     return null;

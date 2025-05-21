@@ -52,6 +52,8 @@ serve(async (req) => {
 
 async function generateExercise({ skill, prueba, difficulty, previousExercises = [] }) {
   console.log(`Generating ${difficulty} exercise for skill: ${skill} in test: ${prueba}`);
+  console.log(`OpenRouter API key exists: ${!!OPENROUTER_API_KEY}`);
+  console.log(`API key length: ${OPENROUTER_API_KEY ? OPENROUTER_API_KEY.length : 0}`);
   
   const systemPrompt = `You are an expert education AI specialized in generating exercises for the Chilean PAES exam. 
   Create one exercise for the skill "${skill}" in the test "${prueba}" with difficulty level "${difficulty}".
@@ -76,6 +78,9 @@ async function generateExercise({ skill, prueba, difficulty, previousExercises =
 
   const userPrompt = `Generate an original exercise that is not similar to these previous exercises: 
   ${JSON.stringify(previousExercises)}`;
+
+  console.log('System prompt:', systemPrompt.substring(0, 100) + '...');
+  console.log('User prompt:', userPrompt.substring(0, 100) + '...');
 
   return await callOpenRouter(systemPrompt, userPrompt);
 }
@@ -143,6 +148,18 @@ async function callOpenRouter(systemPrompt, userPrompt) {
     }
     
     const requestStartTime = Date.now();
+    const requestBody = JSON.stringify({
+      model: 'google/gemini-2.0-flash-exp:free',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+    
+    console.log('Request body:', requestBody);
+    
     const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -151,30 +168,41 @@ async function callOpenRouter(systemPrompt, userPrompt) {
         'HTTP-Referer': 'https://settifboilityelprvjd.supabase.co',
         'X-Title': 'PAES Preparation Platform'
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      })
+      body: requestBody
     });
 
     const requestDuration = Date.now() - requestStartTime;
     console.log(`OpenRouter API call completed in ${requestDuration}ms with status: ${response.status}`);
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenRouter API error:', errorData);
+      const errorText = await response.text();
+      console.error('OpenRouter API error response:', errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { error: { message: errorText } };
+      }
       return new Response(
-        JSON.stringify({ error: `OpenRouter API error: ${errorData.error?.message || 'Unknown error'}` }),
+        JSON.stringify({ error: `OpenRouter API error: ${errorData.error?.message || errorText || 'Unknown error'}` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Error parsing JSON response:', e);
+      return new Response(
+        JSON.stringify({ error: `Error parsing JSON response: ${e.message}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     console.log('OpenRouter response received, first 200 chars of content:', 
       data.choices?.[0]?.message?.content?.substring(0, 200) + '...');
     
@@ -197,7 +225,7 @@ async function callOpenRouter(systemPrompt, userPrompt) {
           }
         }
       } catch (e) {
-        console.log('Could not parse content as JSON, returning raw content');
+        console.log('Could not parse content as JSON, returning raw content:', e);
         parsedContent = content;
       }
     }
