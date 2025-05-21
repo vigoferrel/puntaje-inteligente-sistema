@@ -3,42 +3,44 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
+import { mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
 
-export interface GeneratedExercise {
+interface Exercise {
   question: string;
   options: string[];
   correctAnswer: string;
   explanation: string;
 }
 
-export interface PerformanceAnalysis {
+interface AIAnalysis {
   strengths: string[];
-  weaknesses: string[];
+  areasForImprovement: string[];
   recommendations: string[];
   nextSteps: string[];
 }
 
-export interface ExerciseFeedback {
-  feedback: string;
-  correctApproach: string;
+interface AIFeedback {
+  positive: string;
+  corrections: string;
+  explanation: string;
   tip: string;
 }
 
 export const useAIFeatures = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
   const generateExercise = async (
     skill: TPAESHabilidad,
     prueba: TPAESPrueba,
-    difficulty: 'basic' | 'intermediate' | 'advanced',
-    previousExercises: string[] = []
-  ): Promise<GeneratedExercise | null> => {
+    difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED',
+    previousExercises: Exercise[] = []
+  ): Promise<Exercise | null> => {
     try {
       setLoading(true);
       setError(null);
-
-      const { data, error: invokeError } = await supabase.functions.invoke('openrouter-ai', {
+      
+      const { data, error } = await supabase.functions.invoke('openrouter-ai', {
         body: {
           action: 'generate_exercise',
           payload: {
@@ -49,35 +51,38 @@ export const useAIFeatures = () => {
           }
         }
       });
-
-      if (invokeError) throw invokeError;
       
-      if (!data.result) {
-        throw new Error('No se pudo generar el ejercicio');
-      }
-
-      // Parse the JSON string in the result
-      let exercise;
+      if (error) throw new Error(error.message);
+      
+      let exercise: Exercise | null = null;
+      
       try {
-        // The AI might return formatted JSON or just a JSON string
-        if (typeof data.result === 'string') {
-          exercise = JSON.parse(data.result);
-        } else {
-          exercise = data.result;
+        // Parse the result from the AI response
+        if (data && data.result) {
+          const parsedResult = typeof data.result === 'string'
+            ? JSON.parse(data.result)
+            : data.result;
+            
+          exercise = {
+            question: parsedResult.question,
+            options: parsedResult.options,
+            correctAnswer: parsedResult.correctAnswer,
+            explanation: parsedResult.explanation
+          };
         }
       } catch (parseError) {
-        console.error('Error parsing AI response:', parseError);
-        throw new Error('Error en el formato de respuesta AI');
+        console.error('Error parsing AI result:', parseError);
+        throw new Error('No se pudo interpretar la respuesta de la IA');
       }
-
-      return exercise as GeneratedExercise;
+      
+      return exercise;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
+      const message = err instanceof Error ? err.message : 'Error al generar ejercicio';
       console.error('Error generating exercise:', err);
       setError(message);
       toast({
         title: "Error",
-        description: `No se pudo generar el ejercicio: ${message}`,
+        description: message,
         variant: "destructive"
       });
       return null;
@@ -85,17 +90,17 @@ export const useAIFeatures = () => {
       setLoading(false);
     }
   };
-
+  
   const analyzePerformance = async (
     userId: string,
     skillLevels: Record<TPAESHabilidad, number>,
     exerciseResults: any[]
-  ): Promise<PerformanceAnalysis | null> => {
+  ): Promise<AIAnalysis | null> => {
     try {
       setLoading(true);
       setError(null);
-
-      const { data, error: invokeError } = await supabase.functions.invoke('openrouter-ai', {
+      
+      const { data, error } = await supabase.functions.invoke('openrouter-ai', {
         body: {
           action: 'analyze_performance',
           payload: {
@@ -105,30 +110,37 @@ export const useAIFeatures = () => {
           }
         }
       });
-
-      if (invokeError) throw invokeError;
       
-      if (!data.result) {
-        throw new Error('No se pudo analizar el rendimiento');
+      if (error) throw new Error(error.message);
+      
+      let analysis: AIAnalysis | null = null;
+      
+      try {
+        if (data && data.result) {
+          const parsedResult = typeof data.result === 'string'
+            ? JSON.parse(data.result)
+            : data.result;
+            
+          analysis = {
+            strengths: parsedResult.strengths || [],
+            areasForImprovement: parsedResult.areasForImprovement || [],
+            recommendations: parsedResult.recommendations || [],
+            nextSteps: parsedResult.nextSteps || []
+          };
+        }
+      } catch (parseError) {
+        console.error('Error parsing AI analysis:', parseError);
+        throw new Error('No se pudo interpretar el análisis de la IA');
       }
-
-      // Process the analysis result
-      // This would need parsing based on the actual AI response format
-      const analysis = {
-        strengths: extractListFromAnalysis(data.result, 'strengths'),
-        weaknesses: extractListFromAnalysis(data.result, 'areas for improvement'),
-        recommendations: extractListFromAnalysis(data.result, 'recommendations'),
-        nextSteps: extractListFromAnalysis(data.result, 'next steps')
-      };
-
+      
       return analysis;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
+      const message = err instanceof Error ? err.message : 'Error al analizar rendimiento';
       console.error('Error analyzing performance:', err);
       setError(message);
       toast({
         title: "Error",
-        description: `No se pudo analizar el rendimiento: ${message}`,
+        description: message,
         variant: "destructive"
       });
       return null;
@@ -136,17 +148,17 @@ export const useAIFeatures = () => {
       setLoading(false);
     }
   };
-
+  
   const provideFeedback = async (
     exerciseAttempt: { question: string; answer: string },
     correctAnswer: string,
     explanation: string
-  ): Promise<ExerciseFeedback | null> => {
+  ): Promise<AIFeedback | null> => {
     try {
       setLoading(true);
       setError(null);
-
-      const { data, error: invokeError } = await supabase.functions.invoke('openrouter-ai', {
+      
+      const { data, error } = await supabase.functions.invoke('openrouter-ai', {
         body: {
           action: 'provide_feedback',
           payload: {
@@ -156,31 +168,37 @@ export const useAIFeatures = () => {
           }
         }
       });
-
-      if (invokeError) throw invokeError;
       
-      if (!data.result) {
-        throw new Error('No se pudo generar la retroalimentación');
+      if (error) throw new Error(error.message);
+      
+      let feedback: AIFeedback | null = null;
+      
+      try {
+        if (data && data.result) {
+          const parsedResult = typeof data.result === 'string'
+            ? JSON.parse(data.result)
+            : data.result;
+            
+          feedback = {
+            positive: parsedResult.positive || '',
+            corrections: parsedResult.corrections || '',
+            explanation: parsedResult.explanation || '',
+            tip: parsedResult.tip || ''
+          };
+        }
+      } catch (parseError) {
+        console.error('Error parsing AI feedback:', parseError);
+        throw new Error('No se pudo interpretar la retroalimentación de la IA');
       }
-
-      // Simple processing of feedback response
-      const feedbackText = data.result as string;
-      const sections = feedbackText.split('\n\n');
-
-      const feedback: ExerciseFeedback = {
-        feedback: sections[0] || feedbackText,
-        correctApproach: sections.length > 1 ? sections[1] : '',
-        tip: sections.length > 2 ? sections[2] : ''
-      };
-
+      
       return feedback;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
+      const message = err instanceof Error ? err.message : 'Error al generar retroalimentación';
       console.error('Error providing feedback:', err);
       setError(message);
       toast({
         title: "Error",
-        description: `No se pudo generar la retroalimentación: ${message}`,
+        description: message,
         variant: "destructive"
       });
       return null;
@@ -188,43 +206,12 @@ export const useAIFeatures = () => {
       setLoading(false);
     }
   };
-
-  // Helper function to extract lists from AI response text
-  const extractListFromAnalysis = (text: string, section: string): string[] => {
-    try {
-      // This is a simple extraction that would need to be adjusted
-      // based on the actual format of the AI response
-      const lowerText = text.toLowerCase();
-      const lowerSection = section.toLowerCase();
-      
-      // Find the section
-      const sectionIndex = lowerText.indexOf(lowerSection);
-      if (sectionIndex === -1) return [];
-      
-      // Get the text after the section heading
-      const sectionStart = sectionIndex + lowerSection.length;
-      let sectionEnd = lowerText.indexOf(':', sectionStart + 1);
-      if (sectionEnd === -1) sectionEnd = text.length;
-      
-      // Extract the content
-      const sectionContent = text.substring(sectionStart, sectionEnd).trim();
-      
-      // Split by common list indicators and filter out empty items
-      return sectionContent
-        .split(/[\n\r]+|[•\-*]\s+|\d+\.\s+/)
-        .map(item => item.trim())
-        .filter(Boolean);
-    } catch (error) {
-      console.error('Error extracting list from analysis:', error);
-      return [];
-    }
-  };
-
+  
   return {
-    loading,
-    error,
     generateExercise,
     analyzePerformance,
-    provideFeedback
+    provideFeedback,
+    loading,
+    error
   };
 };
