@@ -36,7 +36,7 @@ const Diagnostico = () => {
           handleRequestHint,
           handlePreviousQuestion,
           handleNextQuestion,
-          handleFinishTest, // Make sure we're using this
+          handleFinishTest,
           handleRestartDiagnostic
         }) => (
           <div className="container py-8">
@@ -64,7 +64,7 @@ const Diagnostico = () => {
             ) : resultSubmitted ? (
               <TestResultView 
                 onRestartDiagnostic={handleRestartDiagnostic} 
-                results={testResults || undefined}
+                results={testResults ? testResults.results : undefined}
               />
             ) : (
               <TestRunner 
@@ -77,7 +77,7 @@ const Diagnostico = () => {
                 onPreviousQuestion={handlePreviousQuestion}
                 onNextQuestion={handleNextQuestion}
                 onPauseTest={handlePauseTest}
-                onFinishTest={handleFinishTest} // Pass the function
+                onFinishTest={handleFinishTest}
               />
             )}
 

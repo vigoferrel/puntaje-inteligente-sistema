@@ -25,20 +25,26 @@ export const fetchDiagnosticQuestions = async (
 
     // If no stored function exists, let's provide mock data for now
     // This would be replaced with real data in production
-    if (!data || data.length === 0) {
+    if (!data || (Array.isArray(data) && data.length === 0)) {
       // Generate mock questions based on test ID
       return generateMockQuestions(diagnosticId, testId);
     }
 
-    return data.map((q: any) => ({
-      id: q.id,
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.correct_answer,
-      skill: q.skill as TPAESHabilidad,
-      prueba: mapTestIdToEnum(testId),
-      explanation: q.explanation || undefined
-    }));
+    if (Array.isArray(data)) {
+      return data.map((q: any) => ({
+        id: q.id,
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correct_answer,
+        skill: q.skill as TPAESHabilidad,
+        prueba: mapTestIdToEnum(testId),
+        explanation: q.explanation || undefined
+      }));
+    }
+
+    // If we got here, we don't have the right data format
+    // Fall back to mock data
+    return generateMockQuestions(diagnosticId, testId);
   } catch (error) {
     console.error('Error in fetchDiagnosticQuestions:', error);
     // Fallback to mock data on error

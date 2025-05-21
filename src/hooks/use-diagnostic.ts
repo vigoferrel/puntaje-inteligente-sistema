@@ -23,10 +23,10 @@ export const useDiagnostic = () => {
   /**
    * Fetches all diagnostic tests for a user
    */
-  const fetchDiagnosticTests = async (userId: string) => {
+  const fetchTests = async (userId: string) => {
     try {
       setLoading(true);
-      const testsWithQuestions = await fetchTests(userId);
+      const testsWithQuestions = await fetchDiagnosticTests(userId);
       setTests(testsWithQuestions);
       return testsWithQuestions;
     } finally {
@@ -49,7 +49,7 @@ export const useDiagnostic = () => {
   /**
    * Submits results from a diagnostic test
    */
-  const submitDiagnosticResult = async (
+  const submitResult = async (
     userId: string,
     diagnosticId: string,
     answers: Record<string, string>,
@@ -59,8 +59,7 @@ export const useDiagnostic = () => {
       const test = tests.find(t => t.id === diagnosticId);
       if (!test) throw new Error("Test not found");
       
-      // Fixed argument count - removed the test parameter that was causing the error
-      const result = await submitResult(
+      const result = await submitDiagnosticResult(
         userId,
         diagnosticId,
         answers,
@@ -89,9 +88,9 @@ export const useDiagnostic = () => {
   /**
    * Fetches diagnostic results for a user
    */
-  const fetchDiagnosticResults = async (userId: string) => {
+  const fetchResults = async (userId: string) => {
     try {
-      const fetchedResults = await fetchResults(userId);
+      const fetchedResults = await fetchDiagnosticResults(userId);
       setResults(fetchedResults);
       return fetchedResults;
     } catch (error) {
@@ -105,9 +104,9 @@ export const useDiagnostic = () => {
     loading,
     currentTest,
     results,
-    fetchDiagnosticTests,
+    fetchDiagnosticTests: fetchTests,
     startDiagnosticTest,
-    submitDiagnosticResult,
-    fetchDiagnosticResults
+    submitDiagnosticResult: submitResult,
+    fetchDiagnosticResults: fetchResults
   };
 };
