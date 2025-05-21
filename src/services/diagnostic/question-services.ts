@@ -14,7 +14,7 @@ export const fetchDiagnosticQuestions = async (
 ): Promise<DiagnosticQuestion[]> => {
   try {
     // Intentar obtener datos reales desde la base de datos usando RPC
-    const { data, error } = await supabase.rpc<DiagnosticQuestion[], { p_diagnostic_id: string }>(
+    const { data, error } = await supabase.rpc(
       'get_diagnostic_questions', 
       { 
         p_diagnostic_id: diagnosticId 
@@ -27,21 +27,27 @@ export const fetchDiagnosticQuestions = async (
     }
 
     // Si no hay datos o la función RPC no existe, usar datos de muestra
-    if (!data || data.length === 0) {
+    if (!data || (Array.isArray(data) && data.length === 0)) {
       console.log('No se encontraron preguntas, generando datos de muestra');
       return generateMockQuestions(diagnosticId, testId);
     }
 
     // Mapear los datos al formato esperado
-    return data.map((q: any) => ({
-      id: q.id,
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.correct_answer,
-      skill: q.skill as TPAESHabilidad,
-      prueba: mapTestIdToEnum(testId),
-      explanation: q.explanation || undefined
-    }));
+    if (Array.isArray(data)) {
+      return data.map((q: any) => ({
+        id: q.id,
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correct_answer,
+        skill: q.skill as TPAESHabilidad,
+        prueba: mapTestIdToEnum(testId),
+        explanation: q.explanation || undefined
+      }));
+    }
+
+    // Si llegamos aquí, el formato de datos no es el esperado
+    console.warn('Formato de datos inesperado, usando datos de muestra');
+    return generateMockQuestions(diagnosticId, testId);
   } catch (error) {
     console.error('Error en fetchDiagnosticQuestions:', error);
     // Fallback a datos de muestra en caso de error
