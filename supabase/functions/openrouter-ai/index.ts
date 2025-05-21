@@ -1,9 +1,9 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+const APP_URL = "https://puntaje-inteligente-sistema.lovable.app";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -178,28 +178,58 @@ async function callOpenRouter(systemPrompt, userPrompt) {
     }
     
     const requestStartTime = Date.now();
-    const requestBody = JSON.stringify({
-      model: 'google/gemini-2.0-flash-exp:free',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
-    });
     
-    console.log('Request body:', requestBody.substring(0, 200) + '...');
+    // Usar una estrategia de modelos en cascada para manejar rate limiting
+    const models = [
+      'google/gemini-2.0-flash-exp:free',
+      'anthropic/claude-3-haiku:2024-04-29',
+      'meta-llama/llama-3-70b-instruct'
+    ];
     
-    const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://settifboilityelprvjd.supabase.co',
-        'X-Title': 'PAES Preparation Platform'
-      },
-      body: requestBody
-    });
+    let response;
+    let currentModel = models[0];
+    let attempts = 0;
+    const maxAttempts = models.length;
+    
+    while (attempts < maxAttempts) {
+      console.log(`Attempting with model: ${currentModel} (attempt ${attempts + 1}/${maxAttempts})`);
+      const requestBody = JSON.stringify({
+        model: currentModel,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      });
+      
+      console.log('Request body:', requestBody.substring(0, 200) + '...');
+      
+      response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': APP_URL,
+          'X-Title': 'PAES Preparation Platform'
+        },
+        body: requestBody
+      });
+      
+      if (response.ok) {
+        break;
+      } else if (response.status === 429) {
+        // Rate limit encountered, try next model
+        console.warn(`Rate limit hit for model ${currentModel}, trying next model...`);
+        attempts++;
+        if (attempts < maxAttempts) {
+          currentModel = models[attempts];
+        }
+      } else {
+        // Other error, break and handle below
+        break;
+      }
+    }
 
     const requestDuration = Date.now() - requestStartTime;
     console.log(`OpenRouter API call completed in ${requestDuration}ms with status: ${response.status}`);
@@ -213,8 +243,24 @@ async function callOpenRouter(systemPrompt, userPrompt) {
       } catch (e) {
         errorData = { error: { message: errorText } };
       }
+      
+      const errorMessage = errorData.error?.message || errorText || 'Unknown error';
+      const statusCode = response.status;
+      
+      if (statusCode === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: `Todos los modelos están experimentando rate limiting. Por favor, intenta de nuevo más tarde.`,
+            fallbackResponse: {
+              response: "Lo siento, estoy experimentando alta demanda en este momento. Por favor, intenta de nuevo en unos minutos."
+            }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: `OpenRouter API error: ${errorData.error?.message || errorText || 'Unknown error'}` }),
+        JSON.stringify({ error: `Error de OpenRouter (${statusCode}): ${errorMessage}` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -270,7 +316,12 @@ async function callOpenRouter(systemPrompt, userPrompt) {
   } catch (error) {
     console.error('Error calling OpenRouter:', error);
     return new Response(
-      JSON.stringify({ error: `Error calling OpenRouter: ${error.message}` }),
+      JSON.stringify({ 
+        error: `Error calling OpenRouter: ${error.message}`,
+        fallbackResponse: {
+          response: "Lo siento, estoy teniendo problemas para procesar tu solicitud en este momento. Por favor, intenta de nuevo."
+        }
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

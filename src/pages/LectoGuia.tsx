@@ -23,6 +23,8 @@ Puedo ayudarte con:
 
 ¿En qué puedo ayudarte hoy?`;
 
+const ERROR_RATE_LIMIT_MESSAGE = `Lo siento, estoy experimentando alta demanda en este momento. Por favor, intenta de nuevo en unos minutos.`;
+
 // Componente principal de LectoGuía
 const LectoGuia = () => {
   // Estado para gestionar la pestaña activa
@@ -154,11 +156,20 @@ const LectoGuia = () => {
       }
     } catch (error) {
       console.error("Error procesando mensaje:", error);
+      
+      // Comprobar si es un error de rate limiting
+      const errorMessage = error instanceof Error ? error.message : "Hubo un problema al procesar tu mensaje";
+      const isRateLimitError = errorMessage.toLowerCase().includes('rate limit') || 
+                              errorMessage.toLowerCase().includes('rate-limit') ||
+                              errorMessage.toLowerCase().includes('límite de tasa');
+      
       // Respuesta alternativa en caso de error
       const errorMessage: ChatMessage = {
         id: uuidv4(),
         role: "assistant",
-        content: "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo o pedir un ejercicio de práctica?",
+        content: isRateLimitError 
+          ? ERROR_RATE_LIMIT_MESSAGE
+          : "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo o pedir un ejercicio de práctica?",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       
@@ -166,7 +177,9 @@ const LectoGuia = () => {
       
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Hubo un problema al procesar tu mensaje",
+        description: isRateLimitError 
+          ? "El servicio está experimentando alta demanda. Por favor, intenta de nuevo más tarde."
+          : errorMessage,
         variant: "destructive"
       });
     } finally {

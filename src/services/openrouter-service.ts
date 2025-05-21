@@ -31,8 +31,16 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
       throw new Error('No se recibieron datos desde OpenRouter');
     }
     
+    // Si hay un error pero también hay una respuesta de fallback, usamos esa respuesta
     if (data.error) {
       console.error('OpenRouter error:', data.error);
+      
+      // Si tenemos una respuesta de fallback, la usamos
+      if (data.fallbackResponse) {
+        console.log('Using fallback response:', data.fallbackResponse);
+        return data.fallbackResponse as T;
+      }
+      
       throw new Error(`Error de OpenRouter: ${data.error}`);
     }
     
@@ -70,13 +78,18 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
     
     return null;
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error en la solicitud a OpenRouter';
+    const message = err instanceof Error 
+      ? err.message 
+      : 'Error en la solicitud a OpenRouter';
+    
     console.error('Error in OpenRouter service:', err);
+    
     toast({
       title: "Error",
       description: message,
       variant: "destructive"
     });
+    
     return null;
   }
 };
