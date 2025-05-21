@@ -14,7 +14,9 @@ export const fetchDiagnosticQuestions = async (
     // Call stored function or RPC - we're simulating this here
     // In production, you would have this function defined in your database
     const { data, error } = await supabase
-      .rpc('get_diagnostic_questions', { p_diagnostic_id: diagnosticId });
+      .rpc('get_diagnostic_questions', { 
+        p_diagnostic_id: diagnosticId 
+      });
 
     if (error) {
       console.error('Error fetching diagnostic questions:', error);
@@ -23,7 +25,7 @@ export const fetchDiagnosticQuestions = async (
 
     // If no stored function exists, let's provide mock data for now
     // This would be replaced with real data in production
-    if (!data) {
+    if (!data || data.length === 0) {
       // Generate mock questions based on test ID
       return generateMockQuestions(diagnosticId, testId);
     }

@@ -1,9 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { DiagnosticTest, DiagnosticResult } from "@/types/diagnostic";
+import { DiagnosticResult } from "@/types/diagnostic";
 import { TPAESHabilidad } from "@/types/system-types";
 import { updateUserSkillLevels } from "./skill-services";
+import { fetchDiagnosticQuestions } from "./question-services";
 
 /**
  * Submits diagnostic test results to Supabase
@@ -27,19 +28,12 @@ export const submitDiagnosticResult = async (
       throw new Error("No se pudo recuperar la información del diagnóstico");
     }
     
-    // Instead of directly accessing diagnostic_questions table, let's use the provided question data
-    // This resolves the issue with the table not being in the schema
+    // Instead of directly accessing diagnostic_questions table, use fetchDiagnosticQuestions
+    // which already handles question retrieval safely
+    const questions = await fetchDiagnosticQuestions(diagnosticId, testData.test_id);
     
-    // Get the test from local data
-    // We'll use the fetchDiagnosticQuestions function or equivalent to get questions
-    // This would be provided by question-services.ts which should already handle question retrieval
-    
-    const { data: questionsData } = await supabase.rpc('get_test_questions', {
-      p_diagnostic_id: diagnosticId
-    });
-    
-    if (!questionsData) {
-      console.error("Error fetching questions");
+    if (!questions || questions.length === 0) {
+      console.error("Error fetching questions: No questions found");
       throw new Error("No se pudieron recuperar las preguntas del diagnóstico");
     }
     
@@ -69,14 +63,14 @@ export const submitDiagnosticResult = async (
     // Instead of directly accessing question properties, we need to ensure 
     // we're working with the correct question model that includes skill and correct_answer
     Object.entries(answers).forEach(([questionId, userAnswer]) => {
-      // Find the matching question from our test
-      const question = questionsData.find((q: any) => q.id === questionId);
+      // Find the matching question from our questions array
+      const question = questions.find(q => q.id === questionId);
       
       if (question && question.skill) {
         const skill = question.skill as TPAESHabilidad;
         skillResults[skill].total += 1;
         
-        if (userAnswer === question.correct_answer) {
+        if (userAnswer === question.correctAnswer) {
           skillResults[skill].correct += 1;
         }
       }

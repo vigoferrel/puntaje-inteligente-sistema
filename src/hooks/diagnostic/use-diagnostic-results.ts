@@ -1,11 +1,9 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserData } from "@/hooks/use-user-data";
-import { useDiagnostic } from "@/hooks/use-diagnostic";
+import { DiagnosticTest, DiagnosticResult } from "@/types/diagnostic";
+import { submitDiagnosticResult } from "@/services/diagnostic";
 import { toast } from "@/components/ui/use-toast";
-import { clearTestProgress } from "@/utils/test-storage";
-import { DiagnosticTest } from "@/types/diagnostic";
 
 interface ResultsProps {
   currentTest: DiagnosticTest | null;
@@ -20,43 +18,32 @@ export const useDiagnosticResults = ({
   timeStarted,
   setTestStarted
 }: ResultsProps) => {
-  const { user, updateLearningPhase } = useUserData();
   const { profile } = useAuth();
-  const { submitDiagnosticResult } = useDiagnostic();
-  
   const [resultSubmitted, setResultSubmitted] = useState(false);
-  const [testResults, setTestResults] = useState<Record<string, number> | null>(null);
+  const [testResults, setTestResults] = useState<DiagnosticResult | null>(null);
   
-  const handleFinishTest = async () => {
-    if (!profile || !currentTest || !timeStarted) {
+  const handleFinishTest = useCallback(async () => {
+    if (!profile || !currentTest || !timeStarted) return;
+    
+    // Check if all questions have been answered
+    const unansweredQuestions = currentTest.questions.filter(
+      q => !answers[q.id]
+    );
+    
+    if (unansweredQuestions.length > 0) {
       toast({
-        title: "Error",
-        description: "No se pudo completar el diagnóstico debido a datos faltantes.",
-        variant: "destructive"
+        title: "Preguntas sin responder",
+        description: `Tienes ${unansweredQuestions.length} preguntas sin responder. ¿Estás seguro de querer finalizar?`,
+        variant: "default"
       });
-      return;
+      // We could add a confirmation dialog here, but for now let's proceed
     }
     
+    // Calculate time spent in minutes
+    const now = new Date();
+    const timeSpentMinutes = (now.getTime() - timeStarted.getTime()) / (1000 * 60);
+    
     try {
-      // Calculate time spent
-      const timeSpentMinutes = Math.floor((new Date().getTime() - timeStarted.getTime()) / 60000);
-      
-      // Make sure all questions have been answered
-      const questionsAnswered = currentTest.questions.every(
-        question => !!answers[question.id]
-      );
-      
-      if (!questionsAnswered) {
-        toast({
-          title: "Preguntas sin responder",
-          description: "Por favor responde todas las preguntas antes de finalizar el diagnóstico.",
-          // Change from "warning" to "destructive" which is a valid variant
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Submit results
       const result = await submitDiagnosticResult(
         profile.id,
         currentTest.id,
@@ -65,52 +52,28 @@ export const useDiagnosticResults = ({
       );
       
       if (result) {
+        setTestResults(result);
         setResultSubmitted(true);
-        setTestResults(result.results);
-        
-        // Clear any saved progress
-        clearTestProgress();
-        
-        // Update user's learning phase to next phase
-        if (user) {
-          try {
-            await updateLearningPhase("PERSONALIZED_PLAN");
-            
-            toast({
-              title: "Diagnóstico completado",
-              description: "Ahora puedes avanzar a la creación de tu plan de estudio personalizado",
-            });
-          } catch (error) {
-            console.error("Error updating learning phase:", error);
-            toast({
-              title: "Error",
-              description: "No se pudo actualizar tu fase de aprendizaje. Por favor, inténtalo de nuevo más tarde.",
-              variant: "destructive"
-            });
-          }
-        }
-      } else {
         toast({
-          title: "Error",
-          description: "No se pudo enviar los resultados del diagnóstico. Por favor, inténtalo de nuevo.",
-          variant: "destructive"
+          title: "Diagnóstico completado",
+          description: "Tus resultados han sido guardados correctamente",
         });
       }
     } catch (error) {
-      console.error("Error finishing test:", error);
+      console.error("Error submitting test results:", error);
       toast({
         title: "Error",
-        description: "Ocurrió un error al finalizar el diagnóstico. Por favor, inténtalo de nuevo más tarde.",
+        description: "No se pudieron guardar los resultados. Intenta nuevamente más tarde.",
         variant: "destructive"
       });
     }
-  };
+  }, [profile, currentTest, timeStarted, answers]);
   
-  const handleRestartDiagnostic = () => {
-    setTestStarted(false);
+  const handleRestartDiagnostic = useCallback(() => {
     setResultSubmitted(false);
     setTestResults(null);
-  };
+    setTestStarted(false);
+  }, [setTestStarted]);
   
   return {
     resultSubmitted,

@@ -6,9 +6,9 @@ import {
   DiagnosticResult 
 } from "@/types/diagnostic";
 import {
-  fetchDiagnosticTests as fetchTests,
-  fetchDiagnosticResults as fetchResults,
-  submitDiagnosticResult as submitResult,
+  fetchDiagnosticTests,
+  fetchDiagnosticResults,
+  submitDiagnosticResult
 } from "@/services/diagnostic";
 
 // Re-export types for convenience
