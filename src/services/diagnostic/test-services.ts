@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/use-toast";
 import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
 import { TPAESPrueba } from "@/types/system-types";
 import { mapTestIdToEnum } from "@/utils/supabase-mappers";
+import { fetchDiagnosticQuestions } from "./question-services";
 
 /**
  * Fetches all diagnostic tests from Supabase
