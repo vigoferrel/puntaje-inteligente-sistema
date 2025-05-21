@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   DiagnosticTest, 
@@ -58,10 +59,10 @@ export const useDiagnostic = () => {
       const test = tests.find(t => t.id === diagnosticId);
       if (!test) throw new Error("Test not found");
       
+      // Fixed argument count - removed the test parameter that was causing the error
       const result = await submitResult(
         userId,
         diagnosticId,
-        test,
         answers,
         timeSpentMinutes
       );

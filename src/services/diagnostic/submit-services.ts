@@ -27,14 +27,19 @@ export const submitDiagnosticResult = async (
       throw new Error("No se pudo recuperar la información del diagnóstico");
     }
     
-    // Fetch test questions
-    const { data: questionsData, error: questionsError } = await supabase
-      .from('diagnostic_questions')
-      .select('*')
-      .eq('diagnostic_id', diagnosticId);
-      
-    if (questionsError || !questionsData) {
-      console.error("Error fetching questions:", questionsError);
+    // Instead of directly accessing diagnostic_questions table, let's use the provided question data
+    // This resolves the issue with the table not being in the schema
+    
+    // Get the test from local data
+    // We'll use the fetchDiagnosticQuestions function or equivalent to get questions
+    // This would be provided by question-services.ts which should already handle question retrieval
+    
+    const { data: questionsData } = await supabase.rpc('get_test_questions', {
+      p_diagnostic_id: diagnosticId
+    });
+    
+    if (!questionsData) {
+      console.error("Error fetching questions");
       throw new Error("No se pudieron recuperar las preguntas del diagnóstico");
     }
     
@@ -61,12 +66,17 @@ export const submitDiagnosticResult = async (
     // Calculate skill levels based on answers
     const skillResults = { ...defaultSkillResults };
     
-    questionsData.forEach(question => {
-      const skill = question.skill;
+    // Instead of directly accessing question properties, we need to ensure 
+    // we're working with the correct question model that includes skill and correct_answer
+    Object.entries(answers).forEach(([questionId, userAnswer]) => {
+      // Find the matching question from our test
+      const question = questionsData.find((q: any) => q.id === questionId);
       
-      if (skill) {
+      if (question && question.skill) {
+        const skill = question.skill as TPAESHabilidad;
         skillResults[skill].total += 1;
-        if (answers[question.id] === question.correct_answer) {
+        
+        if (userAnswer === question.correct_answer) {
           skillResults[skill].correct += 1;
         }
       }

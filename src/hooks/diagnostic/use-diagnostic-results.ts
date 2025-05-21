@@ -50,7 +50,8 @@ export const useDiagnosticResults = ({
         toast({
           title: "Preguntas sin responder",
           description: "Por favor responde todas las preguntas antes de finalizar el diagnóstico.",
-          variant: "warning"
+          // Change from "warning" to "destructive" which is a valid variant
+          variant: "destructive"
         });
         return;
       }
