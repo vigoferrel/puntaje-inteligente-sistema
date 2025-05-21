@@ -3,6 +3,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/hooks/use-user-data";
+import { useAuthProfile } from "@/hooks/use-auth-profile";
+import { signOutUser } from "./auth-utils";
 
 interface AuthContextType {
   session: Session | null;
@@ -27,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { fetchProfile } = useAuthProfile();
 
   useEffect(() => {
     // Set up auth state listener
@@ -37,7 +40,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            fetchProfile(session.user.id).then(userProfile => {
+              setProfile(userProfile);
+            });
           }, 0);
         } else {
           setProfile(null);
@@ -51,7 +56,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id).then(userProfile => {
+          setProfile(userProfile);
+        });
       }
       
       setIsLoading(false);
@@ -60,59 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        // Map the database profile to our UserProfile type
-        // This is a simplified version as we'll need to handle the full UserProfile structure
-        const userProfile: UserProfile = {
-          id: data.id,
-          name: data.name || 'Usuario',
-          email: data.email || '',
-          targetCareer: data.target_career || undefined,
-          skillLevels: {
-            SOLVE_PROBLEMS: 0.3,
-            REPRESENT: 0.4,
-            MODEL: 0.5,
-            INTERPRET_RELATE: 0.35,
-            EVALUATE_REFLECT: 0.45,
-            TRACK_LOCATE: 0.6,
-            ARGUE_COMMUNICATE: 0.4,
-            IDENTIFY_THEORIES: 0.3,
-            PROCESS_ANALYZE: 0.5,
-            APPLY_PRINCIPLES: 0.45,
-            SCIENTIFIC_ARGUMENT: 0.3,
-            TEMPORAL_THINKING: 0.5,
-            SOURCE_ANALYSIS: 0.6,
-            MULTICAUSAL_ANALYSIS: 0.4,
-            CRITICAL_THINKING: 0.5,
-            REFLECTION: 0.45
-          },
-          progress: {
-            completedNodes: [],
-            completedExercises: 0,
-            correctExercises: 0,
-            totalTimeMinutes: 0
-          }
-        };
-        
-        setProfile(userProfile);
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
-  };
-
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await signOutUser();
     setProfile(null);
   };
 

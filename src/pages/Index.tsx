@@ -48,7 +48,8 @@ const Index = () => {
   const topSkills = Object.entries(skillLevels)
     .map(([skill, level]) => ({ skill: skill as TPAESHabilidad, level }))
     .sort((a, b) => b.level - a.level)
-    .slice(0, 5);
+    .slice(0, 5)
+    .map(item => item.skill); // Extract just the skill names for the TopSkills component
 
   return (
     <AppLayout>
