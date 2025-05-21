@@ -9,11 +9,18 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PasswordInput } from "./PasswordInput";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const signupSchema = z.object({
-  name: z.string().min(2, { message: "Ingresa un nombre válido" }),
-  email: z.string().email({ message: "Ingresa un correo electrónico válido" }),
-  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres" }),
+  name: z.string().min(2, { message: "Ingresa un nombre válido (mínimo 2 caracteres)" }),
+  email: z.string()
+    .email({ message: "Ingresa un correo electrónico válido" })
+    .refine(email => email.trim() !== "", { message: "El correo electrónico es obligatorio" }),
+  password: z.string()
+    .min(6, { message: "La contraseña debe tener al menos 6 caracteres" })
+    .refine(password => /[A-Z]/.test(password), { message: "La contraseña debe contener al menos una letra mayúscula" })
+    .refine(password => /[0-9]/.test(password), { message: "La contraseña debe contener al menos un número" }),
 });
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
@@ -25,6 +32,7 @@ interface SignupFormProps {
 export const SignupForm = ({ onSuccess }: SignupFormProps) => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [formError, setFormError] = React.useState<string | null>(null);
   
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -33,10 +41,13 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
       email: "",
       password: "",
     },
+    mode: "onChange", // Validate on change for better user experience
   });
 
   const handleSignup = async (data: SignupFormValues) => {
     setIsLoading(true);
+    setFormError(null);
+    
     try {
       const { error } = await supabase.auth.signUp({
         email: data.email,
@@ -48,7 +59,10 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        setFormError(error.message);
+        return;
+      }
 
       toast({
         title: "Registro exitoso",
@@ -63,11 +77,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
       
       onSuccess();
     } catch (error: any) {
-      toast({
-        title: "Error al registrarse",
-        description: error.message || "Ocurrió un error al registrar tu cuenta",
-        variant: "destructive",
-      });
+      setFormError(error.message || "Ocurrió un error al registrar tu cuenta");
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +86,13 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSignup)} className="space-y-4">
+        {formError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        )}
+        
         <FormField
           control={form.control}
           name="name"
@@ -88,6 +105,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
                   {...field} 
                   autoComplete="name"
                   className="focus:ring-2 focus:ring-stp-primary/50"
+                  aria-invalid={!!form.formState.errors.name}
                 />
               </FormControl>
               <FormMessage />
@@ -108,6 +126,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
                   type="email" 
                   autoComplete="email"
                   className="focus:ring-2 focus:ring-stp-primary/50"
+                  aria-invalid={!!form.formState.errors.email}
                 />
               </FormControl>
               <FormMessage />
