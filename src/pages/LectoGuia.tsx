@@ -2,14 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { ChatInterface, ChatMessage } from "@/components/ai/ChatInterface";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpenRouter } from "@/hooks/use-openrouter";
-import { BookOpen, Play, BarChart3, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/components/ui/use-toast";
 import { Exercise } from "@/types/ai-types";
+import { ExerciseView } from "@/components/lectoguia/ExerciseView";
+import { ProgressView } from "@/components/lectoguia/ProgressView";
+import { useLectoGuiaSession } from "@/hooks/use-lectoguia-session";
 
 const WELCOME_MESSAGE = `👋 ¡Hola! Soy LectoGuía, tu asistente personalizado para la preparación de la PAES.
 
@@ -44,6 +46,7 @@ const LectoGuia = () => {
   ]);
   
   const { callOpenRouter, loading } = useOpenRouter();
+  const { session, saveExerciseAttempt } = useLectoGuiaSession();
   const [isTyping, setIsTyping] = useState(false);
   
   const [currentExercise, setCurrentExercise] = useState<ExerciseInterface | null>(null);
@@ -157,6 +160,17 @@ const LectoGuia = () => {
     setSelectedOption(index);
     setTimeout(() => {
       setShowFeedback(true);
+      
+      // Save the exercise attempt if the user is logged in
+      if (currentExercise) {
+        const isCorrect = index === currentExercise.correctAnswer;
+        saveExerciseAttempt(
+          currentExercise as unknown as Exercise,
+          index,
+          isCorrect,
+          'INTERPRET_RELATE'
+        );
+      }
     }, 300);
   };
 
@@ -173,6 +187,15 @@ const LectoGuia = () => {
     };
     
     setMessages(prev => [...prev, botMessage]);
+  };
+  
+  const handleStartSimulation = () => {
+    // In a real implementation, this would navigate to a simulation page
+    // For now, we'll just show a toast
+    toast({
+      title: "Simulación",
+      description: "Función en desarrollo. Estará disponible próximamente."
+    });
   };
 
   return (
@@ -219,87 +242,13 @@ const LectoGuia = () => {
                 <Card className="border-border bg-card/50 backdrop-blur-sm">
                   <CardContent className="p-6">
                     <div className="h-[calc(100vh-280px)] min-h-[500px] overflow-auto custom-scrollbar">
-                      {currentExercise ? (
-                        <div className="space-y-6">
-                          <div>
-                            <div className="flex justify-between">
-                              <h3 className="text-lg font-semibold text-foreground mb-1">Lectura</h3>
-                              <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                                {currentExercise.skill}
-                              </span>
-                            </div>
-                            <div className="bg-secondary/30 p-4 rounded-lg text-foreground border border-border">
-                              {currentExercise.text}
-                            </div>
-                          </div>
-
-                          <div>
-                            <h3 className="text-lg font-semibold text-foreground mb-4">{currentExercise.question}</h3>
-                            
-                            <div className="space-y-3 mb-6">
-                              {currentExercise.options.map((option, index) => (
-                                <button
-                                  key={index}
-                                  className={`w-full text-left p-3 rounded-lg transition-all duration-300 ${
-                                    selectedOption === index 
-                                      ? 'bg-primary/20 border border-primary/50' 
-                                      : 'bg-secondary/30 border border-border hover:bg-secondary'
-                                  }`}
-                                  onClick={() => !showFeedback && handleOptionSelect(index)}
-                                  disabled={showFeedback}
-                                >
-                                  <div className="flex items-start">
-                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5 ${
-                                      selectedOption === index ? 'bg-primary text-white' : 'border border-muted-foreground'
-                                    }`}>
-                                      {selectedOption === index && <ArrowRight size={12} />}
-                                    </div>
-                                    <span>{option}</span>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                            
-                            {showFeedback && (
-                              <div className={`p-4 rounded-lg mt-4 ${
-                                selectedOption === currentExercise.correctAnswer 
-                                  ? 'bg-green-500/20 border border-green-500/30' 
-                                  : 'bg-red-500/20 border border-red-500/30'
-                              }`}>
-                                <h4 className="font-semibold mb-2">
-                                  {selectedOption === currentExercise.correctAnswer 
-                                    ? '¡Correcto!' 
-                                    : 'Incorrecto'
-                                  }
-                                </h4>
-                                <p>
-                                  {selectedOption === currentExercise.correctAnswer 
-                                    ? 'El texto indica claramente que las excentricidades de los poetas "no eran más que espectáculos para el público", contraponiendo esta actitud pública con el verdadero momento de creación poética que ocurre en soledad.' 
-                                    : `Respuesta incorrecta. La opción correcta es: "${currentExercise.options[currentExercise.correctAnswer]}". El texto menciona que "Aquellos no eran más que espectáculos para el público", contrastando esta actitud pública con el verdadero trabajo poético que ocurre en soledad.`
-                                  }
-                                </p>
-                                
-                                <div className="mt-4 flex justify-end">
-                                  <Button onClick={handleNewExercise}>
-                                    Continuar
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-                          <BookOpen className="h-16 w-16 text-muted-foreground" />
-                          <h3 className="text-xl font-medium text-foreground">No hay ejercicios activos</h3>
-                          <p className="text-muted-foreground max-w-md">
-                            Pídele a LectoGuía que te genere un ejercicio de comprensión lectora según tus necesidades.
-                          </p>
-                          <Button onClick={() => setActiveTab("chat")}>
-                            Ir al chat
-                          </Button>
-                        </div>
-                      )}
+                      <ExerciseView
+                        exercise={currentExercise}
+                        selectedOption={selectedOption}
+                        showFeedback={showFeedback}
+                        onOptionSelect={handleOptionSelect}
+                        onContinue={handleNewExercise}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -309,79 +258,10 @@ const LectoGuia = () => {
                 <Card className="border-border bg-card/50 backdrop-blur-sm">
                   <CardContent className="p-6">
                     <div className="h-[calc(100vh-280px)] min-h-[500px] overflow-auto custom-scrollbar">
-                      <h3 className="text-xl font-semibold mb-6">Tu progreso en Competencia Lectora</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div className="bg-secondary/30 p-4 rounded-lg border border-border">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Rastrear-Localizar</h4>
-                          <div className="w-full h-2 bg-secondary rounded-full overflow-hidden mb-2">
-                            <div className="h-full bg-green-500 rounded-full" style={{ width: '70%' }}></div>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Previo: 55%</span>
-                            <span className="text-green-400">Actual: 70%</span>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-secondary/30 p-4 rounded-lg border border-border">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Interpretar-Relacionar</h4>
-                          <div className="w-full h-2 bg-secondary rounded-full overflow-hidden mb-2">
-                            <div className="h-full bg-yellow-500 rounded-full" style={{ width: '45%' }}></div>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Previo: 30%</span>
-                            <span className="text-yellow-400">Actual: 45%</span>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-secondary/30 p-4 rounded-lg border border-border">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Evaluar-Reflexionar</h4>
-                          <div className="w-full h-2 bg-secondary rounded-full overflow-hidden mb-2">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: '60%' }}></div>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Previo: 40%</span>
-                            <span className="text-blue-400">Actual: 60%</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-6">
-                        <h3 className="text-lg font-semibold">Recomendaciones de LectoGuía</h3>
-                        
-                        <div className="bg-secondary/30 p-4 rounded-lg border border-border">
-                          <div className="flex items-start space-x-3">
-                            <div className="bg-yellow-500/20 p-2 rounded-full text-yellow-400">
-                              <BarChart3 className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-foreground mb-1">Enfócate en Interpretar-Relacionar</h4>
-                              <p className="text-sm text-muted-foreground">
-                                Esta es tu área con mayor oportunidad de mejora. Te recomiendo realizar más ejercicios 
-                                de inferencia textual y análisis de relaciones entre ideas.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-secondary/30 p-4 rounded-lg border border-border">
-                          <div className="flex items-start space-x-3">
-                            <div className="bg-green-500/20 p-2 rounded-full text-green-400">
-                              <Play className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-foreground mb-1">Próximo paso sugerido</h4>
-                              <p className="text-sm text-muted-foreground">
-                                Realiza el simulacro de Competencia Lectora que hemos preparado para ti. 
-                                Contiene 20 preguntas balanceadas según tus necesidades de mejora.
-                              </p>
-                              <Button variant="link" className="text-primary p-0 h-auto mt-2">
-                                Iniciar simulacro personalizado
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <ProgressView 
+                        skillLevels={session.skillLevels}
+                        onStartSimulation={handleStartSimulation}
+                      />
                     </div>
                   </CardContent>
                 </Card>

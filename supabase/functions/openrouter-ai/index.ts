@@ -22,6 +22,7 @@ serve(async (req) => {
     }
 
     const { action, payload } = await req.json();
+    console.log(`Processing ${action} request with payload:`, JSON.stringify(payload));
     
     switch (action) {
       case 'generate_exercise':
@@ -31,6 +32,7 @@ serve(async (req) => {
       case 'provide_feedback':
         return await provideFeedback(payload);
       default:
+        console.error(`Invalid action specified: ${action}`);
         return new Response(
           JSON.stringify({ error: 'Invalid action specified' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -46,6 +48,8 @@ serve(async (req) => {
 });
 
 async function generateExercise({ skill, prueba, difficulty, previousExercises = [] }) {
+  console.log(`Generating ${difficulty} exercise for skill: ${skill} in test: ${prueba}`);
+  
   const systemPrompt = `You are an expert education AI specialized in generating exercises for the Chilean PAES exam. 
   Create one exercise for the skill "${skill}" in the test "${prueba}" with difficulty level "${difficulty}".
   The exercise should include:
@@ -71,6 +75,8 @@ async function generateExercise({ skill, prueba, difficulty, previousExercises =
 }
 
 async function analyzePerformance({ userId, skillLevels, exerciseResults }) {
+  console.log(`Analyzing performance for user: ${userId}`);
+  
   const systemPrompt = `You are an educational analysis AI that specializes in identifying patterns in student performance.
   Analyze the given data about a student's performance and provide insights on:
   1. Strengths (skills where the student performs well)
@@ -86,6 +92,8 @@ async function analyzePerformance({ userId, skillLevels, exerciseResults }) {
 }
 
 async function provideFeedback({ userMessage, context, exerciseAttempt, correctAnswer, explanation }) {
+  console.log(`Providing feedback based on user message: ${userMessage?.substring(0, 30)}...`);
+  
   const systemPrompt = `You are LectoGuía, an educational AI assistant specializing in helping students prepare for the Chilean PAES exam, 
   particularly in reading comprehension. You provide helpful, encouraging feedback to students in Spanish.
   Your responses should be informative but concise, focusing on practical advice and encouragement.
@@ -106,10 +114,10 @@ async function provideFeedback({ userMessage, context, exerciseAttempt, correctA
   const response = await callOpenRouter(systemPrompt, userPrompt);
   
   if (response.error) {
+    console.error('Error in provideFeedback:', response.error);
     throw new Error(response.error);
   }
   
-  // Wrap the response in an object
   return new Response(
     JSON.stringify({ 
       result: { response: response.result || "Lo siento, no pude generar una respuesta adecuada." } 
@@ -123,6 +131,7 @@ async function callOpenRouter(systemPrompt, userPrompt) {
     console.log('Calling OpenRouter with system prompt:', systemPrompt);
     console.log('User prompt:', userPrompt);
     
+    const requestStartTime = Date.now();
     const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -142,6 +151,9 @@ async function callOpenRouter(systemPrompt, userPrompt) {
       })
     });
 
+    const requestDuration = Date.now() - requestStartTime;
+    console.log(`OpenRouter API call completed in ${requestDuration}ms with status: ${response.status}`);
+
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenRouter API error:', errorData);
@@ -152,7 +164,7 @@ async function callOpenRouter(systemPrompt, userPrompt) {
     }
 
     const data = await response.json();
-    console.log('OpenRouter response:', data);
+    console.log('OpenRouter response content:', data.choices?.[0]?.message?.content?.substring(0, 50) + '...');
     
     return new Response(
       JSON.stringify({ 
