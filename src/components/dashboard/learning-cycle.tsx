@@ -67,11 +67,10 @@ export const LearningCycle = ({ currentPhase, loading, onPhaseSelect }: Learning
             </div>
 
             <div className="pt-4 flex justify-end">
-              <Button 
-                as={Link} 
-                to={getPhaseRoute(currentPhase)}
-              >
-                Continuar {getLearningCyclePhaseDisplayName(currentPhase)}
+              <Button asChild>
+                <Link to={getPhaseRoute(currentPhase)}>
+                  Continuar {getLearningCyclePhaseDisplayName(currentPhase)}
+                </Link>
               </Button>
             </div>
           </div>

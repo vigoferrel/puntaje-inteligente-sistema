@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,7 +26,15 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/diagnostico" element={<ProtectedRoute><Diagnostico /></ProtectedRoute>} />
             <Route path="/plan" element={<ProtectedRoute><Plan /></ProtectedRoute>} />
-            {/* Other learning cycle routes will be added here */}
+            
+            {/* Learning cycle phase routes */}
+            <Route path="/entrenamiento" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+            <Route path="/contenido" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+            <Route path="/evaluaciones" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+            <Route path="/analisis" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+            <Route path="/reforzamiento" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+            <Route path="/simulaciones" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

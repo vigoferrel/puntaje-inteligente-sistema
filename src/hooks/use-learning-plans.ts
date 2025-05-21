@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -244,7 +243,7 @@ export const useLearningPlans = () => {
             nodeId: nodeData.node_id,
             position: nodeData.position,
             nodeName: node.title,
-            nodeSkill: node.skill.toString()
+            nodeSkill: node.skill_id ? node.skill_id.toString() : undefined
           });
         }
       }

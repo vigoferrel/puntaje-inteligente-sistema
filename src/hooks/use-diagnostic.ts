@@ -112,14 +112,31 @@ export const useDiagnostic = () => {
       const test = tests.find(t => t.id === diagnosticId);
       if (!test) throw new Error("Test not found");
       
+      // Initialize default record with all skills at 0
+      const defaultSkillResults: Record<TPAESHabilidad, { correct: number, total: number }> = {
+        SOLVE_PROBLEMS: { correct: 0, total: 0 },
+        REPRESENT: { correct: 0, total: 0 },
+        MODEL: { correct: 0, total: 0 },
+        INTERPRET_RELATE: { correct: 0, total: 0 },
+        EVALUATE_REFLECT: { correct: 0, total: 0 },
+        TRACK_LOCATE: { correct: 0, total: 0 },
+        ARGUE_COMMUNICATE: { correct: 0, total: 0 },
+        IDENTIFY_THEORIES: { correct: 0, total: 0 },
+        PROCESS_ANALYZE: { correct: 0, total: 0 },
+        APPLY_PRINCIPLES: { correct: 0, total: 0 },
+        SCIENTIFIC_ARGUMENT: { correct: 0, total: 0 },
+        TEMPORAL_THINKING: { correct: 0, total: 0 },
+        SOURCE_ANALYSIS: { correct: 0, total: 0 },
+        MULTICAUSAL_ANALYSIS: { correct: 0, total: 0 },
+        CRITICAL_THINKING: { correct: 0, total: 0 },
+        REFLECTION: { correct: 0, total: 0 }
+      };
+      
       // Calculate skill levels based on answers
-      const skillResults: Record<TPAESHabilidad, { correct: number, total: number }> = {};
+      const skillResults = { ...defaultSkillResults };
       
       test.questions.forEach(question => {
         const skill = question.skill;
-        if (!skillResults[skill]) {
-          skillResults[skill] = { correct: 0, total: 0 };
-        }
         
         skillResults[skill].total += 1;
         if (answers[question.id] === question.correctAnswer) {
@@ -127,8 +144,28 @@ export const useDiagnostic = () => {
         }
       });
       
+      // Initialize default results with all skills at 0
+      const defaultResults: Record<TPAESHabilidad, number> = {
+        SOLVE_PROBLEMS: 0,
+        REPRESENT: 0,
+        MODEL: 0,
+        INTERPRET_RELATE: 0,
+        EVALUATE_REFLECT: 0,
+        TRACK_LOCATE: 0,
+        ARGUE_COMMUNICATE: 0,
+        IDENTIFY_THEORIES: 0,
+        PROCESS_ANALYZE: 0,
+        APPLY_PRINCIPLES: 0,
+        SCIENTIFIC_ARGUMENT: 0,
+        TEMPORAL_THINKING: 0,
+        SOURCE_ANALYSIS: 0,
+        MULTICAUSAL_ANALYSIS: 0,
+        CRITICAL_THINKING: 0,
+        REFLECTION: 0
+      };
+      
       // Calculate level for each skill (0 to 1)
-      const results: Record<TPAESHabilidad, number> = {};
+      const results = { ...defaultResults };
       Object.entries(skillResults).forEach(([skill, data]) => {
         results[skill as TPAESHabilidad] = data.total > 0 ? data.correct / data.total : 0;
       });
@@ -159,11 +196,14 @@ export const useDiagnostic = () => {
       
       // Add result to results array
       if (data) {
+        // Cast data.results to the correct type
+        const resultData = data.results as unknown as Record<TPAESHabilidad, number>;
+        
         const newResult: DiagnosticResult = {
           id: data.id,
           userId: data.user_id,
           diagnosticId: data.diagnostic_id,
-          results: data.results,
+          results: resultData,
           completedAt: data.completed_at
         };
         
@@ -227,11 +267,32 @@ export const useDiagnostic = () => {
       if (error) throw error;
       
       if (data) {
+        // Initialize default results record
+        const defaultResults: Record<TPAESHabilidad, number> = {
+          SOLVE_PROBLEMS: 0,
+          REPRESENT: 0,
+          MODEL: 0,
+          INTERPRET_RELATE: 0,
+          EVALUATE_REFLECT: 0,
+          TRACK_LOCATE: 0,
+          ARGUE_COMMUNICATE: 0,
+          IDENTIFY_THEORIES: 0,
+          PROCESS_ANALYZE: 0,
+          APPLY_PRINCIPLES: 0,
+          SCIENTIFIC_ARGUMENT: 0,
+          TEMPORAL_THINKING: 0,
+          SOURCE_ANALYSIS: 0,
+          MULTICAUSAL_ANALYSIS: 0,
+          CRITICAL_THINKING: 0,
+          REFLECTION: 0
+        };
+        
         const mappedResults: DiagnosticResult[] = data.map(result => ({
           id: result.id,
           userId: result.user_id,
           diagnosticId: result.diagnostic_id,
-          results: result.results,
+          // Cast database results to our type or use default values
+          results: (result.results as unknown as Record<TPAESHabilidad, number>) || defaultResults,
           completedAt: result.completed_at
         }));
         

@@ -73,7 +73,9 @@ export const useAuthProfile = () => {
         
         // Get learning cycle phase
         let learningCyclePhase: TLearningCyclePhase | undefined = undefined;
-        if (data.learning_phase) {
+        
+        // TypeScript fix: Check if learning_phase exists in data before accessing
+        if (data.learning_phase as TLearningCyclePhase) {
           learningCyclePhase = data.learning_phase as TLearningCyclePhase;
         }
         

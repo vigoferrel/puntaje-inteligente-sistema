@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { TLearningNode, TLearningCyclePhase } from "@/types/system-types";
+import { TLearningNode, TLearningCyclePhase, TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { toast } from "@/components/ui/use-toast";
 import { useCallback } from "react";
 
@@ -11,6 +10,43 @@ export interface NodeProgress {
   progress: number;
   timeSpentMinutes: number;
 }
+
+// Helper function to map database skill_id to TPAESHabilidad
+const mapSkillIdToEnum = (skillId: number): TPAESHabilidad => {
+  const skillMap: Record<number, TPAESHabilidad> = {
+    1: "TRACK_LOCATE",
+    2: "INTERPRET_RELATE",
+    3: "EVALUATE_REFLECT",
+    4: "SOLVE_PROBLEMS",
+    5: "REPRESENT",
+    6: "MODEL",
+    7: "ARGUE_COMMUNICATE",
+    8: "IDENTIFY_THEORIES",
+    9: "PROCESS_ANALYZE",
+    10: "APPLY_PRINCIPLES",
+    11: "SCIENTIFIC_ARGUMENT",
+    12: "TEMPORAL_THINKING",
+    13: "SOURCE_ANALYSIS",
+    14: "MULTICAUSAL_ANALYSIS",
+    15: "CRITICAL_THINKING",
+    16: "REFLECTION"
+  };
+  
+  return skillMap[skillId] || "SOLVE_PROBLEMS"; // Default to SOLVE_PROBLEMS if mapping not found
+};
+
+// Helper function to map database test_id to TPAESPrueba
+const mapTestIdToEnum = (testId: number): TPAESPrueba => {
+  const testMap: Record<number, TPAESPrueba> = {
+    1: "COMPETENCIA_LECTORA",
+    2: "MATEMATICA_1",
+    3: "MATEMATICA_2",
+    4: "CIENCIAS",
+    5: "HISTORIA"
+  };
+  
+  return testMap[testId] || "MATEMATICA_1"; // Default to MATEMATICA_1 if mapping not found
+};
 
 export const useLearningNodes = () => {
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
@@ -46,8 +82,8 @@ export const useLearningNodes = () => {
           id: node.id,
           title: node.title,
           description: node.description || '',
-          skill: node.skill_id, // Note: We need to map this to our enum type
-          prueba: node.test_id, // Note: We need to map this to our enum type
+          skill: mapSkillIdToEnum(node.skill_id),
+          prueba: mapTestIdToEnum(node.test_id),
           difficulty: node.difficulty,
           position: node.position,
           dependsOn: node.depends_on || [],
