@@ -5,16 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle, InfoIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DiagnosticResultsSummary } from "@/components/diagnostic/DiagnosticResultsSummary";
+import { TPAESHabilidad } from "@/types/system-types";
 
 interface TestResultViewProps {
   onRestartDiagnostic: () => void;
+  results?: Record<TPAESHabilidad, number>;
 }
 
-export const TestResultView = ({ onRestartDiagnostic }: TestResultViewProps) => {
+export const TestResultView = ({ onRestartDiagnostic, results }: TestResultViewProps) => {
   const navigate = useNavigate();
   
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="text-center text-2xl">¡Diagnóstico completado!</CardTitle>
         <CardDescription className="text-center">
@@ -27,6 +30,19 @@ export const TestResultView = ({ onRestartDiagnostic }: TestResultViewProps) => 
             <CheckCircle className="h-12 w-12 text-green-600" />
           </div>
         </div>
+        
+        {/* Show results summary if available */}
+        {results && Object.keys(results).length > 0 ? (
+          <DiagnosticResultsSummary results={results} />
+        ) : (
+          <Alert className="bg-blue-50 border-blue-200">
+            <InfoIcon className="h-4 w-4 text-blue-600" />
+            <AlertTitle className="text-blue-700">Resultados pendientes</AlertTitle>
+            <AlertDescription className="text-blue-700">
+              Los resultados detallados de tu diagnóstico estarán disponibles en breve.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Alert className="bg-blue-50 border-blue-200">
           <InfoIcon className="h-4 w-4 text-blue-600" />

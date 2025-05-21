@@ -29,6 +29,7 @@ const Diagnostico = () => {
   const [timeStarted, setTimeStarted] = useState<Date | null>(null);
   const [resultSubmitted, setResultSubmitted] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [testResults, setTestResults] = useState<Record<string, number> | null>(null);
   
   useEffect(() => {
     if (profile) {
@@ -96,6 +97,7 @@ const Diagnostico = () => {
     
     if (result) {
       setResultSubmitted(true);
+      setTestResults(result.results);
       
       // Update user's learning phase to next phase
       if (user) {
@@ -121,6 +123,7 @@ const Diagnostico = () => {
     setResultSubmitted(false);
     setSelectedTestId(null);
     setShowHint(false);
+    setTestResults(null);
   };
   
   if (loading || userLoading) {
@@ -147,7 +150,10 @@ const Diagnostico = () => {
             onStartTest={handleStartTest}
           />
         ) : resultSubmitted ? (
-          <TestResultView onRestartDiagnostic={handleRestartDiagnostic} />
+          <TestResultView 
+            onRestartDiagnostic={handleRestartDiagnostic} 
+            results={testResults || undefined}
+          />
         ) : (
           <TestRunner 
             currentTest={currentTest}
