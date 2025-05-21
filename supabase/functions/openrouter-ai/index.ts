@@ -135,7 +135,7 @@ async function provideFeedback({ userMessage, context, exerciseAttempt, correctA
     The correct answer is: ${correctAnswer}
     Explanation: ${explanation}`;
   } else {
-    userPrompt = `Student message: ${userMessage}
+    userPrompt = `Student message: ${userMessage || "Hola"}
     Context: ${context || 'Chilean PAES exam preparation, focus on reading comprehension'}`;
   }
 
@@ -146,10 +146,23 @@ async function provideFeedback({ userMessage, context, exerciseAttempt, correctA
     throw new Error(response.error);
   }
   
+  // Comprobar si ya tenemos un objeto de respuesta o una cadena de texto
+  let responseData;
+  if (typeof response.result === 'string') {
+    responseData = { response: response.result };
+  } else if (response.result && typeof response.result === 'object') {
+    responseData = response.result;
+    // Asegurarnos de que tengamos una propiedad response
+    if (!responseData.response && typeof responseData !== 'string') {
+      responseData.response = "Lo siento, no pude generar una respuesta adecuada.";
+    }
+  } else {
+    // Fallback en caso de que no haya respuesta
+    responseData = { response: "Lo siento, no pude generar una respuesta adecuada." };
+  }
+  
   return new Response(
-    JSON.stringify({ 
-      result: { response: response.result || "Lo siento, no pude generar una respuesta adecuada." } 
-    }),
+    JSON.stringify({ result: responseData }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }

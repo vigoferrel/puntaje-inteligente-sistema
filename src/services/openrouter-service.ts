@@ -53,9 +53,14 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
         }
         
         // Para otros casos, intentar parsear si es un string
-        return typeof data.result === 'string'
-          ? JSON.parse(data.result)
-          : data.result;
+        if (typeof data.result === 'string') {
+          try {
+            return JSON.parse(data.result) as T;
+          } catch (e) {
+            return data.result as unknown as T;
+          }
+        }
+        return data.result as unknown as T;
       } catch (parseError) {
         console.error('Error parsing result:', parseError);
         console.log('Raw result:', data.result);

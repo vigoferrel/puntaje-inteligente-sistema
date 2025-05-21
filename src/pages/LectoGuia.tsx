@@ -50,6 +50,8 @@ const LectoGuia = () => {
 
   // Manejar el envío de mensajes
   const handleSendMessage = async (message: string) => {
+    if (!message.trim()) return;
+    
     // Agregar mensaje del usuario a la conversación
     const userMessage: ChatMessage = {
       id: uuidv4(),
@@ -84,26 +86,20 @@ const LectoGuia = () => {
           
           // Crear un objeto de ejercicio a partir de la respuesta
           const generatedExercise: Exercise = {
-            ...exercise,
             id: exercise.id || uuidv4(),
             text: exercise.context || exercise.text || "",
-            correctAnswer: exercise.correctAnswer || "",
-            explanation: exercise.explanation || "No se proporcionó explicación."
-          };
-          
-          // Asegurar que todos los campos necesarios estén presentes
-          if (!generatedExercise.options || generatedExercise.options.length === 0) {
-            generatedExercise.options = [
+            question: exercise.question || "¿Cuál es la idea principal del texto?",
+            options: exercise.options || [
               "Opción A",
               "Opción B", 
               "Opción C",
               "Opción D"
-            ];
-          }
-          
-          if (!generatedExercise.correctAnswer) {
-            generatedExercise.correctAnswer = generatedExercise.options[0];
-          }
+            ],
+            correctAnswer: exercise.correctAnswer || exercise.options?.[0] || "Opción A",
+            explanation: exercise.explanation || "No se proporcionó explicación.",
+            skill: exercise.skill || "INTERPRET_RELATE",
+            difficulty: exercise.difficulty || "INTERMEDIATE"
+          };
           
           // Actualizar estado del ejercicio
           setCurrentExercise(generatedExercise);
@@ -129,18 +125,32 @@ const LectoGuia = () => {
           context: "PAES preparation, reading comprehension"
         });
 
+        console.log("Response from OpenRouter:", response);
+
+        let botResponse = "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con ejercicios de comprensión lectora si lo deseas.";
+        
         if (response) {
-          const botMessage: ChatMessage = {
-            id: uuidv4(),
-            role: "assistant",
-            content: response.response || "Para mejorar tu comprensión lectora, es importante enfocarte en las tres habilidades principales que evalúa la PAES: Rastrear-Localizar, Interpretar-Relacionar y Evaluar-Reflexionar. ¿Te gustaría que trabajemos en alguna de ellas en específico?",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          
-          setMessages(prev => [...prev, botMessage]);
-        } else {
-          throw new Error("No se pudo obtener una respuesta");
+          // Asegurarnos de que tenemos una respuesta válida
+          if (typeof response === 'string') {
+            botResponse = response;
+          } else if (response.response) {
+            botResponse = response.response;
+          } else if (typeof response === 'object' && Object.keys(response).length > 0) {
+            // Intentar extraer alguna propiedad útil del objeto
+            const firstValue = Object.values(response)[0];
+            botResponse = typeof firstValue === 'string' ? firstValue : 
+              "Para mejorar tu comprensión lectora, es importante enfocarte en las tres habilidades principales que evalúa la PAES: Rastrear-Localizar, Interpretar-Relacionar y Evaluar-Reflexionar.";
+          }
         }
+        
+        const botMessage: ChatMessage = {
+          id: uuidv4(),
+          role: "assistant",
+          content: botResponse,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        
+        setMessages(prev => [...prev, botMessage]);
       }
     } catch (error) {
       console.error("Error procesando mensaje:", error);
@@ -148,7 +158,7 @@ const LectoGuia = () => {
       const errorMessage: ChatMessage = {
         id: uuidv4(),
         role: "assistant",
-        content: "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo?",
+        content: "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo o pedir un ejercicio de práctica?",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       
@@ -170,8 +180,8 @@ const LectoGuia = () => {
     setTimeout(() => {
       setShowFeedback(true);
       
-      // Guardar el intento de ejercicio si el usuario está logueado
-      if (currentExercise && currentExercise.id) {
+      // Guardar el intento de ejercicio si el usuario está logueado y el ejercicio es válido
+      if (currentExercise && currentExercise.id && currentExercise.options) {
         const correctAnswerIndex = currentExercise.options.findIndex(
           option => option === currentExercise.correctAnswer
         );

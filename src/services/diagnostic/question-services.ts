@@ -19,7 +19,7 @@ export const fetchDiagnosticQuestions = async (
       { 
         p_diagnostic_id: diagnosticId 
       }
-    ) as { data: any[] | null, error: any };
+    );
 
     if (error) {
       console.error('Error al obtener preguntas de diagnóstico:', error);
