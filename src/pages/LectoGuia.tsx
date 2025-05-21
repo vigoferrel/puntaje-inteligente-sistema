@@ -158,13 +158,13 @@ const LectoGuia = () => {
       console.error("Error procesando mensaje:", error);
       
       // Comprobar si es un error de rate limiting
-      const errorMessage = error instanceof Error ? error.message : "Hubo un problema al procesar tu mensaje";
-      const isRateLimitError = errorMessage.toLowerCase().includes('rate limit') || 
-                              errorMessage.toLowerCase().includes('rate-limit') ||
-                              errorMessage.toLowerCase().includes('límite de tasa');
+      const errMsg = error instanceof Error ? error.message : "Hubo un problema al procesar tu mensaje";
+      const isRateLimitError = errMsg.toLowerCase().includes('rate limit') || 
+                              errMsg.toLowerCase().includes('rate-limit') ||
+                              errMsg.toLowerCase().includes('límite de tasa');
       
       // Respuesta alternativa en caso de error
-      const errorMessage: ChatMessage = {
+      const errorChatMessage: ChatMessage = {
         id: uuidv4(),
         role: "assistant",
         content: isRateLimitError 
@@ -173,13 +173,13 @@ const LectoGuia = () => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorChatMessage]);
       
       toast({
         title: "Error",
         description: isRateLimitError 
           ? "El servicio está experimentando alta demanda. Por favor, intenta de nuevo más tarde."
-          : errorMessage,
+          : errMsg,
         variant: "destructive"
       });
     } finally {
