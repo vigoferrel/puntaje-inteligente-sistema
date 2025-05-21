@@ -4,6 +4,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { QuestionView } from "./QuestionView";
 import { QuestionNavigation } from "./QuestionNavigation";
 import { DiagnosticTest } from "@/types/diagnostic";
+import { Button } from "@/components/ui/button";
+import { PauseIcon } from "lucide-react";
 
 interface TestRunnerProps {
   currentTest: DiagnosticTest | null;
@@ -14,6 +16,7 @@ interface TestRunnerProps {
   onRequestHint: () => void;
   onPreviousQuestion: () => void;
   onNextQuestion: () => void;
+  onPauseTest: () => void;
 }
 
 export const TestRunner = ({ 
@@ -24,7 +27,8 @@ export const TestRunner = ({
   onAnswerSelect,
   onRequestHint,
   onPreviousQuestion,
-  onNextQuestion
+  onNextQuestion,
+  onPauseTest
 }: TestRunnerProps) => {
   const currentQuestion = currentTest?.questions[currentQuestionIndex];
   
@@ -38,7 +42,17 @@ export const TestRunner = ({
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
         <div className="space-y-2">
-          <CardTitle>{currentTest?.title}</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>{currentTest?.title}</CardTitle>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={onPauseTest}
+              className="flex items-center gap-1 text-amber-600 hover:text-amber-700"
+            >
+              <PauseIcon className="h-4 w-4" /> Pausar
+            </Button>
+          </div>
           {currentTest && (
             <QuestionNavigation
               currentQuestionIndex={currentQuestionIndex}

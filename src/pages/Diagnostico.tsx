@@ -9,6 +9,15 @@ import { DiagnosticSkeleton } from "@/components/diagnostic/DiagnosticSkeleton";
 import { TestSelection } from "@/components/diagnostic/TestSelection";
 import { TestResultView } from "@/components/diagnostic/TestResultView";
 import { TestRunner } from "@/components/diagnostic/TestRunner";
+import { PausedTestBanner } from "@/components/diagnostic/PausedTestBanner";
+import { 
+  saveTestProgress, 
+  getTestProgress, 
+  clearTestProgress,
+  hasSavedProgress, 
+  StoredTestProgress 
+} from "@/utils/test-storage";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const Diagnostico = () => {
   const { user, loading: userLoading, updateLearningPhase } = useUserData();
@@ -30,12 +39,22 @@ const Diagnostico = () => {
   const [resultSubmitted, setResultSubmitted] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [testResults, setTestResults] = useState<Record<string, number> | null>(null);
+  const [pausedProgress, setPausedProgress] = useState<StoredTestProgress | null>(null);
+  const [showPauseConfirmation, setShowPauseConfirmation] = useState(false);
   
   useEffect(() => {
     if (profile) {
       fetchDiagnosticTests(profile.id);
     }
   }, [profile, fetchDiagnosticTests]);
+  
+  useEffect(() => {
+    // Check for saved progress when tests are loaded
+    const savedProgress = getTestProgress();
+    if (savedProgress && tests.some(test => test.id === savedProgress.testId)) {
+      setPausedProgress(savedProgress);
+    }
+  }, [tests]);
   
   const handleTestSelect = (testId: string) => {
     setSelectedTestId(testId);
@@ -52,6 +71,54 @@ const Diagnostico = () => {
         setShowHint(false);
       }
     }
+  };
+  
+  const handleResumeTest = async () => {
+    if (pausedProgress) {
+      const test = await startDiagnosticTest(pausedProgress.testId);
+      if (test) {
+        setTestStarted(true);
+        setCurrentQuestionIndex(pausedProgress.currentQuestionIndex);
+        setAnswers(pausedProgress.answers);
+        setTimeStarted(new Date(pausedProgress.timeStarted));
+        setShowHint(false);
+        // Clear the paused state once resumed
+        setPausedProgress(null);
+        clearTestProgress();
+      }
+    }
+  };
+  
+  const handleDiscardProgress = () => {
+    setPausedProgress(null);
+    clearTestProgress();
+    toast({
+      title: "Progreso descartado",
+      description: "Se ha eliminado el progreso guardado del diagnóstico anterior",
+    });
+  };
+  
+  const handlePauseTest = () => {
+    setShowPauseConfirmation(true);
+  };
+  
+  const confirmPauseTest = () => {
+    if (currentTest && timeStarted) {
+      saveTestProgress(
+        currentTest,
+        currentQuestionIndex,
+        answers,
+        timeStarted
+      );
+      
+      setTestStarted(false);
+      setSelectedTestId(null);
+      toast({
+        title: "Diagnóstico pausado",
+        description: "Tu progreso ha sido guardado. Puedes continuar más tarde.",
+      });
+    }
+    setShowPauseConfirmation(false);
   };
   
   const handleAnswerSelect = (questionId: string, answer: string) => {
@@ -99,6 +166,9 @@ const Diagnostico = () => {
       setResultSubmitted(true);
       setTestResults(result.results);
       
+      // Clear any saved progress
+      clearTestProgress();
+      
       // Update user's learning phase to next phase
       if (user) {
         try {
@@ -143,12 +213,22 @@ const Diagnostico = () => {
         <h1 className="text-3xl font-bold mb-6">Diagnóstico</h1>
         
         {!testStarted ? (
-          <TestSelection 
-            tests={tests}
-            selectedTestId={selectedTestId}
-            onTestSelect={handleTestSelect}
-            onStartTest={handleStartTest}
-          />
+          <>
+            {pausedProgress && tests.some(test => test.id === pausedProgress.testId) && (
+              <PausedTestBanner 
+                testProgress={pausedProgress}
+                test={tests.find(test => test.id === pausedProgress.testId)!}
+                onResumeTest={handleResumeTest}
+                onDiscardProgress={handleDiscardProgress}
+              />
+            )}
+            <TestSelection 
+              tests={tests}
+              selectedTestId={selectedTestId}
+              onTestSelect={handleTestSelect}
+              onStartTest={handleStartTest}
+            />
+          </>
         ) : resultSubmitted ? (
           <TestResultView 
             onRestartDiagnostic={handleRestartDiagnostic} 
@@ -164,9 +244,25 @@ const Diagnostico = () => {
             onRequestHint={handleRequestHint}
             onPreviousQuestion={handlePreviousQuestion}
             onNextQuestion={handleNextQuestion}
+            onPauseTest={handlePauseTest}
           />
         )}
       </div>
+      
+      <AlertDialog open={showPauseConfirmation} onOpenChange={setShowPauseConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Pausar diagnóstico?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tu progreso será guardado y podrás continuar más tarde. ¿Estás seguro?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPauseTest}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 };
