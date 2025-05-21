@@ -9,7 +9,7 @@ import { TPAESHabilidad } from "@/types/system-types";
 export const fetchDiagnosticQuestions = async (
   diagnosticId: string,
   testId: number
-) => {
+): Promise<DiagnosticQuestion[]> => {
   try {
     // Call stored function or RPC - we're simulating this here
     // In production, you would have this function defined in your database
