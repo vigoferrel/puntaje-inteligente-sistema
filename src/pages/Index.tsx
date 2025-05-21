@@ -8,7 +8,7 @@ import { StatCard } from "@/components/stat-card";
 import { SkillProgress } from "@/components/skill-progress";
 import { CalendarDays, BookOpen, CheckCircle, Hourglass, Brain } from "lucide-react";
 import { useUserData } from "@/hooks/use-user-data";
-import { PAESHabilidades } from "@/types/system-types";
+import { PAESHabilidades, TPAESHabilidad } from "@/types/system-types";
 
 const Index = () => {
   const { user, loading } = useUserData();
@@ -19,7 +19,7 @@ const Index = () => {
     ? Object.entries(user.skillLevels)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 3)
-        .map(([skill]) => skill as keyof typeof PAESHabilidades)
+        .map(([skill]) => skill as TPAESHabilidad)
     : [];
 
   // Calculate accuracy percentage

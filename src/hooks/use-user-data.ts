@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { TPAESHabilidad } from "../types/system-types";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface UserProfile {
   id: string;
@@ -49,20 +51,28 @@ const MOCK_USER: UserProfile = {
 };
 
 export const useUserData = () => {
+  const { profile, isLoading } = useAuth();
+  const [loading, setLoading] = useState(isLoading);
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, this would fetch from an API or local storage
-    setTimeout(() => {
-      setUser(MOCK_USER);
+    if (!isLoading) {
+      if (profile) {
+        setUser(profile);
+      } else {
+        // Fallback to mock data if no profile is available (for demonstration purposes)
+        setUser(MOCK_USER);
+      }
       setLoading(false);
-    }, 500);
-  }, []);
+    }
+  }, [profile, isLoading]);
 
-  const updateSkillLevel = (skill: TPAESHabilidad, level: number) => {
+  const updateSkillLevel = async (skill: TPAESHabilidad, level: number) => {
     if (!user) return;
     
+    const normalizedLevel = Math.max(0, Math.min(1, level));
+    
+    // Update local state
     setUser(prev => {
       if (!prev) return prev;
       
@@ -70,10 +80,14 @@ export const useUserData = () => {
         ...prev,
         skillLevels: {
           ...prev.skillLevels,
-          [skill]: Math.max(0, Math.min(1, level)) // Ensure level is between 0 and 1
+          [skill]: normalizedLevel
         }
       };
     });
+    
+    // In a real implementation, we would also update this in the database
+    // For now, just simulate it with a console log
+    console.log(`Updated skill ${skill} to level ${normalizedLevel}`);
   };
 
   return {

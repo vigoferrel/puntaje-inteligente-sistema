@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Home, BookOpen, Settings, Calendar, User } from "lucide-react";
+import { Home, BookOpen, Settings, Calendar, User, LogOut } from "lucide-react";
 import { 
   BarChart3, 
   BookText, 
@@ -23,6 +23,9 @@ import {
   Award
 } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 interface NavItemProps {
   to: string;
@@ -51,6 +54,17 @@ const NavItem = ({ to, icon: Icon, label, active }: NavItemProps) => (
 export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Sesión cerrada",
+      description: "Has cerrado sesión correctamente",
+    });
+    navigate("/auth");
+  };
 
   return (
     <Sidebar className="border-r border-gray-200">
@@ -99,6 +113,15 @@ export function AppSidebar() {
         <SidebarMenu>
           <NavItem to="/perfil" icon={User} label="Perfil" active={currentPath === "/perfil"} />
           <NavItem to="/configuracion" icon={Settings} label="Configuración" active={currentPath === "/configuracion"} />
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-red-500 hover:bg-red-50 w-full"
+              onClick={handleSignOut}
+            >
+              <LogOut size={18} className="text-red-500" />
+              <span>Cerrar Sesión</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

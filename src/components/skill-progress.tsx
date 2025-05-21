@@ -1,53 +1,85 @@
 
 import React from "react";
 import { Progress } from "@/components/ui/progress";
-import { TPAESHabilidad, getHabilidadDisplayName } from "@/types/system-types";
+import { TPAESHabilidad } from "@/types/system-types";
+import { getHabilidadDisplayName } from "@/types/system-types";
 import { cn } from "@/lib/utils";
 
 interface SkillProgressProps {
   skill: TPAESHabilidad;
-  level: number; // 0 to 1
-  className?: string;
+  level: number;
 }
 
-const getSkillColor = (skill: TPAESHabilidad): string => {
-  const colorMap: Partial<Record<TPAESHabilidad, string>> = {
-    SOLVE_PROBLEMS: "bg-blue-500",
-    REPRESENT: "bg-purple-500",
-    MODEL: "bg-indigo-500",
-    INTERPRET_RELATE: "bg-pink-500",
-    EVALUATE_REFLECT: "bg-amber-500",
-    TRACK_LOCATE: "bg-emerald-500",
-    ARGUE_COMMUNICATE: "bg-cyan-500",
-    IDENTIFY_THEORIES: "bg-rose-500",
-    PROCESS_ANALYZE: "bg-teal-500",
-    APPLY_PRINCIPLES: "bg-orange-500",
-    SCIENTIFIC_ARGUMENT: "bg-lime-500",
-    TEMPORAL_THINKING: "bg-fuchsia-500",
-    SOURCE_ANALYSIS: "bg-sky-500",
-    MULTICAUSAL_ANALYSIS: "bg-violet-500",
-    CRITICAL_THINKING: "bg-red-500",
-    REFLECTION: "bg-green-500"
-  };
-  
-  return colorMap[skill] || "bg-gray-500";
-};
-
-export const SkillProgress = ({ skill, level, className }: SkillProgressProps) => {
-  const skillColor = getSkillColor(skill);
+export function SkillProgress({ skill, level }: SkillProgressProps) {
+  // Convert decimal to percentage (0-1 to 0-100)
   const percentage = Math.round(level * 100);
   
+  // Determine skill color based on skill type
+  const getSkillColor = (skill: TPAESHabilidad): {
+    bg: string;
+    text: string;
+    indicator: string;
+  } => {
+    switch (skill) {
+      case "SOLVE_PROBLEMS":
+      case "REPRESENT":
+      case "MODEL":
+      case "ARGUE_COMMUNICATE":
+        return {
+          bg: "bg-blue-100",
+          text: "text-blue-700",
+          indicator: "bg-blue-600"
+        };
+      case "INTERPRET_RELATE":
+      case "EVALUATE_REFLECT":
+        return {
+          bg: "bg-purple-100",
+          text: "text-purple-700",
+          indicator: "bg-purple-600"
+        };
+      case "TRACK_LOCATE":
+      case "CRITICAL_THINKING":
+      case "REFLECTION":
+        return {
+          bg: "bg-green-100",
+          text: "text-green-700",
+          indicator: "bg-green-600"
+        };
+      case "IDENTIFY_THEORIES":
+      case "PROCESS_ANALYZE":
+      case "APPLY_PRINCIPLES":
+      case "SCIENTIFIC_ARGUMENT":
+        return {
+          bg: "bg-amber-100",
+          text: "text-amber-700",
+          indicator: "bg-amber-600"
+        };
+      case "TEMPORAL_THINKING":
+      case "SOURCE_ANALYSIS":
+      case "MULTICAUSAL_ANALYSIS":
+        return {
+          bg: "bg-rose-100",
+          text: "text-rose-700",
+          indicator: "bg-rose-600"
+        };
+      default:
+        return {
+          bg: "bg-gray-100",
+          text: "text-gray-700",
+          indicator: "bg-gray-600"
+        };
+    }
+  };
+  
+  const { bg, text, indicator } = getSkillColor(skill);
+  
   return (
-    <div className={cn("space-y-2", className)}>
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-medium">{getHabilidadDisplayName(skill)}</span>
-        <span className="text-xs font-medium">{percentage}%</span>
+    <div className="space-y-1.5">
+      <div className="flex justify-between items-center text-sm">
+        <div className="font-medium">{getHabilidadDisplayName(skill)}</div>
+        <div className={cn("font-semibold", text)}>{percentage}%</div>
       </div>
-      <Progress 
-        value={percentage} 
-        className="h-2"
-        indicatorClassName={cn(skillColor)} 
-      />
+      <Progress value={percentage} className={cn("h-2", bg)} indicatorClassName={indicator} />
     </div>
   );
-};
+}
