@@ -9,6 +9,7 @@ import { BookOpen, Play, BarChart3, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/components/ui/use-toast";
+import { Exercise } from "@/types/ai-types";
 
 const WELCOME_MESSAGE = `👋 ¡Hola! Soy LectoGuía, tu asistente personalizado para la preparación de la PAES.
 
@@ -41,8 +42,9 @@ const LectoGuia = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
+  
+  const { callOpenRouter, loading } = useOpenRouter();
   const [isTyping, setIsTyping] = useState(false);
-  const { callOpenRouter, loading: openRouterLoading } = useOpenRouter();
   
   const [currentExercise, setCurrentExercise] = useState<ExerciseInterface | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -60,63 +62,90 @@ const LectoGuia = () => {
     setIsTyping(true);
     
     try {
-      // Handle exercise requests
-      if (message.toLowerCase().includes("ejercicio") || 
+      // Check if the user is asking for an exercise
+      const isExerciseRequest = message.toLowerCase().includes("ejercicio") || 
           message.toLowerCase().includes("practica") || 
-          message.toLowerCase().includes("ejemplo")) {
-        
-        // Switch to exercise tab if requested
-        if (activeTab === "chat") {
+          message.toLowerCase().includes("ejemplo");
+      
+      if (isExerciseRequest) {
+        // Use OpenRouter to generate an exercise
+        const exercise = await callOpenRouter<Exercise>("generate_exercise", {
+          skill: "INTERPRET_RELATE",
+          prueba: "COMPREHENSION_LECTORA",
+          difficulty: "INTERMEDIATE",
+          previousExercises: []
+        });
+
+        if (exercise) {
+          // Switch to exercise tab
           setTimeout(() => setActiveTab("exercise"), 500);
-        }
-        
-        // Generate sample exercise (in a real app, this would come from the API)
-        const sampleExercise: ExerciseInterface = {
-          id: uuidv4(),
-          text: "En países más dichosos, los poetas, obviamente, quieren ser publicados, leídos y entendidos, pero ya no hacen nada o casi nada en su vida cotidiana para destacar entre la gente. Sin embargo, hace poco, en las primeras décadas de nuestro siglo, a los poetas les gustaba escandalizar con su ropa extravagante y con un comportamiento excéntrico. Aquellos no eran más que espectáculos para el público, ya que siempre tenía que llegar el momento en que el poeta cerraba la puerta, se quitaba toda esa parafernalia: capas y oropeles, y se detenía en el silencio, en espera de sí mismo frente a una hoja de papel en blanco, que en el fondo es lo único que importa.",
-          question: "Según el texto, ¿qué representaban las excentricidades de los poetas a principios del siglo XX?",
-          options: [
-            "Una forma de expresión artística coherente con su obra",
-            "Un espectáculo público que no reflejaba su verdadero trabajo",
-            "Una estrategia para conseguir ser publicados y leídos",
-            "Una característica inherente a la personalidad creativa"
-          ],
-          correctAnswer: 1,
-          skill: "Interpretar-Relacionar",
-          difficulty: "Intermedio"
-        };
-        
-        setCurrentExercise(sampleExercise);
-        setSelectedOption(null);
-        setShowFeedback(false);
-        
-        const botMessage: ChatMessage = {
-          id: uuidv4(),
-          role: "assistant",
-          content: `He preparado un ejercicio de comprensión lectora para ti. Es un ejercicio de dificultad ${sampleExercise.difficulty} que evalúa la habilidad de ${sampleExercise.skill}. Puedes resolverlo en la pestaña de Ejercicios.`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        
-        setMessages(prev => [...prev, botMessage]);
-      } else {
-        // Regular conversation - in real app would call OpenRouter
-        setTimeout(() => {
+          
+          // Create an exercise from the OpenRouter response
+          const generatedExercise: ExerciseInterface = {
+            id: uuidv4(),
+            text: exercise.context || "En países más dichosos, los poetas, obviamente, quieren ser publicados, leídos y entendidos, pero ya no hacen nada o casi nada en su vida cotidiana para destacar entre la gente. Sin embargo, hace poco, en las primeras décadas de nuestro siglo, a los poetas les gustaba escandalizar con su ropa extravagante y con un comportamiento excéntrico. Aquellos no eran más que espectáculos para el público, ya que siempre tenía que llegar el momento en que el poeta cerraba la puerta, se quitaba toda esa parafernalia: capas y oropeles, y se detenía en el silencio, en espera de sí mismo frente a una hoja de papel en blanco, que en el fondo es lo único que importa.",
+            question: exercise.question,
+            options: exercise.options || [
+              "Opción A",
+              "Opción B",
+              "Opción C",
+              "Opción D"
+            ],
+            correctAnswer: exercise.options?.indexOf(exercise.correctAnswer) || 0,
+            skill: "Interpretar-Relacionar",
+            difficulty: "Intermedio"
+          };
+          
+          setCurrentExercise(generatedExercise);
+          setSelectedOption(null);
+          setShowFeedback(false);
+          
           const botMessage: ChatMessage = {
             id: uuidv4(),
             role: "assistant",
-            content: "Para mejorar tu comprensión lectora, es importante enfocarte en las tres habilidades principales que evalúa la PAES: Rastrear-Localizar, Interpretar-Relacionar y Evaluar-Reflexionar. ¿Te gustaría que trabajemos en alguna de ellas en específico?",
+            content: `He preparado un ejercicio de comprensión lectora para ti. Es un ejercicio de dificultad ${generatedExercise.difficulty} que evalúa la habilidad de ${generatedExercise.skill}. Puedes resolverlo en la pestaña de Ejercicios.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           
           setMessages(prev => [...prev, botMessage]);
-          setIsTyping(false);
-        }, 1500);
+        } else {
+          throw new Error("No se pudo generar el ejercicio");
+        }
+      } else {
+        // Regular conversation using OpenRouter
+        const response = await callOpenRouter<{ response: string }>("provide_feedback", {
+          userMessage: message,
+          context: "PAES preparation, reading comprehension"
+        });
+
+        if (response) {
+          const botMessage: ChatMessage = {
+            id: uuidv4(),
+            role: "assistant",
+            content: response.response || "Para mejorar tu comprensión lectora, es importante enfocarte en las tres habilidades principales que evalúa la PAES: Rastrear-Localizar, Interpretar-Relacionar y Evaluar-Reflexionar. ¿Te gustaría que trabajemos en alguna de ellas en específico?",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          
+          setMessages(prev => [...prev, botMessage]);
+        } else {
+          throw new Error("No se pudo obtener una respuesta");
+        }
       }
     } catch (error) {
       console.error("Error processing message:", error);
+      // Add fallback response in case of error
+      const errorMessage: ChatMessage = {
+        id: uuidv4(),
+        role: "assistant",
+        content: "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo?",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      
       toast({
         title: "Error",
-        description: "Hubo un problema al procesar tu mensaje. Por favor, intenta de nuevo.",
+        description: error instanceof Error ? error.message : "Hubo un problema al procesar tu mensaje",
         variant: "destructive"
       });
     } finally {
@@ -178,7 +207,7 @@ const LectoGuia = () => {
                       <ChatInterface
                         messages={messages}
                         onSendMessage={handleSendMessage}
-                        isTyping={isTyping}
+                        isTyping={isTyping || loading}
                         placeholder="Pregunta cualquier cosa sobre comprensión lectora..."
                       />
                     </div>

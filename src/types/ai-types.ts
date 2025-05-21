@@ -4,6 +4,7 @@ export interface Exercise {
   options: string[];
   correctAnswer: string;
   explanation: string;
+  context?: string; // Optional text content for the exercise
 }
 
 export interface AIAnalysis {

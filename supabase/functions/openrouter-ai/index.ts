@@ -49,13 +49,15 @@ async function generateExercise({ skill, prueba, difficulty, previousExercises =
   const systemPrompt = `You are an expert education AI specialized in generating exercises for the Chilean PAES exam. 
   Create one exercise for the skill "${skill}" in the test "${prueba}" with difficulty level "${difficulty}".
   The exercise should include:
-  1. A clear question
-  2. Four options for multiple choice (only one correct)
-  3. The correct answer
-  4. A brief explanation of the solution
+  1. A context passage for reading comprehension (approximately 150-200 words)
+  2. A clear question
+  3. Four options for multiple choice (only one correct)
+  4. The correct answer
+  5. A brief explanation of the solution
   
   Return your response in JSON format like:
   {
+    "context": "The reading passage...",
     "question": "Question text",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correctAnswer": "Option A",
@@ -83,48 +85,86 @@ async function analyzePerformance({ userId, skillLevels, exerciseResults }) {
   return await callOpenRouter(systemPrompt, userPrompt);
 }
 
-async function provideFeedback({ exerciseAttempt, correctAnswer, explanation }) {
-  const systemPrompt = `You are an educational feedback AI that provides helpful, encouraging feedback to students.
-  Review the student's answer and provide feedback that:
-  1. Acknowledges what they did correctly
-  2. Gently points out where they made mistakes
-  3. Explains the correct approach
-  4. Gives them a useful tip for similar problems in the future`;
+async function provideFeedback({ userMessage, context, exerciseAttempt, correctAnswer, explanation }) {
+  const systemPrompt = `You are LectoGuía, an educational AI assistant specializing in helping students prepare for the Chilean PAES exam, 
+  particularly in reading comprehension. You provide helpful, encouraging feedback to students in Spanish.
+  Your responses should be informative but concise, focusing on practical advice and encouragement.
+  Always respond in Spanish with a friendly, supportive tone.`;
 
-  const userPrompt = `The student was given this problem: ${exerciseAttempt.question}
-  Their answer: ${exerciseAttempt.answer}
-  The correct answer is: ${correctAnswer}
-  Explanation: ${explanation}`;
-
-  return await callOpenRouter(systemPrompt, userPrompt);
-}
-
-async function callOpenRouter(systemPrompt, userPrompt) {
-  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://settifboilityelprvjd.supabase.co',
-      'X-Title': 'PAES Preparation Platform'
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.0-flash-exp:free',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
-    })
-  });
-
-  const data = await response.json();
+  let userPrompt = '';
   
+  if (exerciseAttempt && correctAnswer) {
+    userPrompt = `The student was given this problem: ${exerciseAttempt.question}
+    Their answer: ${exerciseAttempt.answer}
+    The correct answer is: ${correctAnswer}
+    Explanation: ${explanation}`;
+  } else {
+    userPrompt = `Student message: ${userMessage}
+    Context: ${context || 'Chilean PAES exam preparation, focus on reading comprehension'}`;
+  }
+
+  const response = await callOpenRouter(systemPrompt, userPrompt);
+  
+  if (response.error) {
+    throw new Error(response.error);
+  }
+  
+  // Wrap the response in an object
   return new Response(
     JSON.stringify({ 
-      result: data.choices?.[0]?.message?.content || null 
+      result: { response: response.result || "Lo siento, no pude generar una respuesta adecuada." } 
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
+}
+
+async function callOpenRouter(systemPrompt, userPrompt) {
+  try {
+    console.log('Calling OpenRouter with system prompt:', systemPrompt);
+    console.log('User prompt:', userPrompt);
+    
+    const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://settifboilityelprvjd.supabase.co',
+        'X-Title': 'PAES Preparation Platform'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash-exp:free',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenRouter API error:', errorData);
+      return new Response(
+        JSON.stringify({ error: `OpenRouter API error: ${errorData.error?.message || 'Unknown error'}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const data = await response.json();
+    console.log('OpenRouter response:', data);
+    
+    return new Response(
+      JSON.stringify({ 
+        result: data.choices?.[0]?.message?.content || null 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error calling OpenRouter:', error);
+    return new Response(
+      JSON.stringify({ error: `Error calling OpenRouter: ${error.message}` }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 }
