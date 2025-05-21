@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap } from "@/components/ui/icons";
+import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Ingresa un correo electrónico válido" }),
@@ -29,7 +31,16 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -93,6 +104,13 @@ const Auth = () => {
         title: "Registro exitoso",
         description: "Revisa tu correo para confirmar tu cuenta",
       });
+      
+      // In development, auto-login after signup
+      await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      
       navigate("/");
     } catch (error: any) {
       toast({
@@ -135,7 +153,13 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Correo Electrónico</FormLabel>
                       <FormControl>
-                        <Input placeholder="tu@correo.com" {...field} type="email" />
+                        <Input 
+                          placeholder="tu@correo.com" 
+                          {...field} 
+                          type="email" 
+                          autoComplete="email"
+                          className="focus:ring-2 focus:ring-stp-primary/50"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -148,7 +172,23 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Contraseña</FormLabel>
                       <FormControl>
-                        <Input {...field} type="password" />
+                        <div className="relative">
+                          <Input 
+                            {...field} 
+                            type={showPassword ? "text" : "password"} 
+                            autoComplete="current-password"
+                            className="pr-10 focus:ring-2 focus:ring-stp-primary/50"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -173,7 +213,12 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Nombre Completo</FormLabel>
                       <FormControl>
-                        <Input placeholder="Juan Pérez" {...field} />
+                        <Input 
+                          placeholder="Juan Pérez" 
+                          {...field} 
+                          autoComplete="name"
+                          className="focus:ring-2 focus:ring-stp-primary/50"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -186,7 +231,13 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Correo Electrónico</FormLabel>
                       <FormControl>
-                        <Input placeholder="tu@correo.com" {...field} type="email" />
+                        <Input 
+                          placeholder="tu@correo.com" 
+                          {...field} 
+                          type="email" 
+                          autoComplete="email"
+                          className="focus:ring-2 focus:ring-stp-primary/50"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -199,7 +250,23 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Contraseña</FormLabel>
                       <FormControl>
-                        <Input {...field} type="password" />
+                        <div className="relative">
+                          <Input 
+                            {...field} 
+                            type={showPassword ? "text" : "password"} 
+                            autoComplete="new-password"
+                            className="pr-10 focus:ring-2 focus:ring-stp-primary/50"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -219,8 +286,11 @@ const Auth = () => {
         <CardFooter>
           <Button 
             variant="link" 
-            className="w-full" 
-            onClick={() => setIsLogin(!isLogin)}
+            className="w-full text-stp-primary" 
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setShowPassword(false);
+            }}
           >
             {isLogin 
               ? "¿No tienes cuenta? Regístrate" 
