@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LearningPlan, PlanProgress } from "@/types/learning-plan";
 import { TPAESHabilidad } from "@/types/system-types";
 import { 
@@ -7,6 +7,8 @@ import {
   createLearningPlan as createPlan,
   updatePlanProgress as updateProgress
 } from "@/services/plan-service";
+import { ensureUserHasLearningPlan } from "@/services/learning/plan-generator-service";
+import { toast } from "@/components/ui/use-toast";
 
 export { type LearningPlan, type LearningPlanNode } from "@/types/learning-plan";
 
@@ -21,6 +23,11 @@ export const useLearningPlans = () => {
   const fetchLearningPlans = async (userId: string) => {
     try {
       setLoading(true);
+      
+      // Asegurarse de que el usuario tenga al menos un plan
+      await ensureUserHasLearningPlan(userId);
+      
+      // Obtener todos los planes
       const plansWithNodes = await fetchPlans(userId);
       
       setPlans(plansWithNodes);
@@ -34,6 +41,14 @@ export const useLearningPlans = () => {
       }
       
       return plansWithNodes;
+    } catch (error) {
+      console.error('Error fetching learning plans:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los planes de aprendizaje",
+        variant: "destructive"
+      });
+      return [];
     } finally {
       setLoading(false);
     }
@@ -49,15 +64,20 @@ export const useLearningPlans = () => {
     targetDate?: string,
     skillPriorities?: Record<TPAESHabilidad, number>
   ) => {
-    const newPlan = await createPlan(userId, title, description, targetDate, skillPriorities);
-    
-    if (newPlan) {
-      // Update state
-      setPlans(prev => [...prev, newPlan]);
-      setCurrentPlan(newPlan);
+    try {
+      setLoading(true);
+      const newPlan = await createPlan(userId, title, description, targetDate, skillPriorities);
+      
+      if (newPlan) {
+        // Update state
+        setPlans(prev => [...prev, newPlan]);
+        setCurrentPlan(newPlan);
+      }
+      
+      return newPlan;
+    } finally {
+      setLoading(false);
     }
-    
-    return newPlan;
   };
 
   /**
@@ -67,6 +87,13 @@ export const useLearningPlans = () => {
     return await updateProgress(userId, planId);
   };
 
+  /**
+   * Gets a plan by ID
+   */
+  const getPlanById = (planId: string): LearningPlan | undefined => {
+    return plans.find(plan => plan.id === planId);
+  };
+
   return {
     plans,
     loading,
@@ -74,6 +101,7 @@ export const useLearningPlans = () => {
     fetchLearningPlans,
     createLearningPlan,
     updatePlanProgress,
-    setCurrentPlan
+    setCurrentPlan,
+    getPlanById
   };
 };

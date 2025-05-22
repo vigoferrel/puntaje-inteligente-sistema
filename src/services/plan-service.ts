@@ -1,8 +1,12 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { LearningPlan, LearningPlanNode, PlanProgress } from "@/types/learning-plan";
 import { toast } from "@/components/ui/use-toast";
 import { TPAESHabilidad } from "@/types/system-types";
 import { fetchLearningNodes } from "@/services/node";
+import { ensureLearningNodesExist } from "@/services/learning/initialize-learning-service";
+import { generatePersonalizedLearningPlan } from "@/services/learning/plan-generator-service";
+import { mapEnumToSkillId, mapSkillIdToEnum } from "@/utils/supabase-mappers";
 
 /**
  * Fetches all learning plans for a user
@@ -52,14 +56,19 @@ export async function fetchLearningPlans(userId: string): Promise<LearningPlan[]
         }
         
         // Map nodes to our frontend type
-        const mappedNodes: LearningPlanNode[] = nodeData?.map(node => ({
-          id: node.id,
-          planId: node.plan_id,
-          nodeId: node.node_id,
-          position: node.position,
-          nodeName: nodeDetails[node.node_id]?.title || 'Unnamed Node',
-          nodeSkill: nodeDetails[node.node_id]?.skill_id?.toString() || undefined
-        })) || [];
+        const mappedNodes: LearningPlanNode[] = nodeData?.map(node => {
+          const details = nodeDetails[node.node_id];
+          const skillEnum = details?.skill_id ? mapSkillIdToEnum(details.skill_id) : undefined;
+          
+          return {
+            id: node.id,
+            planId: node.plan_id,
+            nodeId: node.node_id,
+            position: node.position,
+            nodeName: details?.title || 'Módulo de aprendizaje',
+            nodeSkill: skillEnum
+          };
+        }) || [];
         
         // Return the plan with its nodes
         return {
@@ -97,35 +106,28 @@ export async function createLearningPlan(
   skillPriorities?: Record<TPAESHabilidad, number>
 ): Promise<LearningPlan | null> {
   try {
-    // Create the learning plan
-    const { data: planData, error: planError } = await supabase
-      .from('learning_plans')
-      .insert({
-        user_id: userId,
-        title,
-        description,
-        target_date: targetDate
-      })
-      .select()
-      .single();
+    // Asegurar que existan nodos de aprendizaje
+    await ensureLearningNodesExist();
     
-    if (planError) throw planError;
+    // Usar el servicio de generación de planes personalizado
+    const planId = await generatePersonalizedLearningPlan(
+      userId,
+      title,
+      description,
+      targetDate
+    );
     
-    if (!planData) throw new Error("No plan data returned");
+    if (!planId) {
+      throw new Error("No se pudo crear el plan de aprendizaje");
+    }
     
-    // Generate nodes for the plan
-    const generatedNodes = await generateLearningPlanNodes(userId, planData.id, skillPriorities);
+    // Obtener el plan recién creado con sus nodos
+    const plans = await fetchLearningPlans(userId);
+    const newPlan = plans.find(p => p.id === planId);
     
-    // Create the new plan object
-    const newPlan: LearningPlan = {
-      id: planData.id,
-      userId: planData.user_id,
-      title: planData.title,
-      description: planData.description,
-      targetDate: planData.target_date,
-      createdAt: planData.created_at,
-      nodes: generatedNodes
-    };
+    if (!newPlan) {
+      throw new Error("Plan creado pero no se pudo recuperar la información completa");
+    }
     
     toast({
       title: "Plan creado",
@@ -145,84 +147,6 @@ export async function createLearningPlan(
 }
 
 /**
- * Generates nodes for a learning plan
- */
-export async function generateLearningPlanNodes(
-  userId: string,
-  planId: string,
-  skillPriorities?: Record<TPAESHabilidad, number>
-): Promise<LearningPlanNode[]> {
-  try {
-    // Fetch appropriate nodes based on user's skill levels and career target
-    // Get user's target career
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select('target_career')
-      .eq('id', userId)
-      .single();
-    
-    if (userError) throw userError;
-    
-    const targetCareer = userData?.target_career;
-    
-    // Get user's skill levels
-    const { data: skillData, error: skillError } = await supabase
-      .from('user_skill_levels')
-      .select('skill_id, level')
-      .eq('user_id', userId);
-    
-    if (skillError) throw skillError;
-    
-    // Fetch all learning nodes
-    const allNodes = await fetchLearningNodes();
-    
-    if (!allNodes || allNodes.length === 0) {
-      throw new Error("No learning nodes available");
-    }
-    
-    // Sort nodes based on user's skill levels, skill priorities, and target career
-    // This would be a complex algorithm in a real implementation
-    // For now, we'll just select a subset of nodes and order them by position
-    const selectedNodes = allNodes.slice(0, 10);
-    
-    // Insert nodes into the learning plan
-    const planNodes: LearningPlanNode[] = [];
-    let position = 1;
-    
-    for (const node of selectedNodes) {
-      const { data: nodeData, error: nodeError } = await supabase
-        .from('learning_plan_nodes')
-        .insert({
-          plan_id: planId,
-          node_id: node.id,
-          position: position++
-        })
-        .select()
-        .single();
-      
-      if (nodeError) throw nodeError;
-      
-      if (nodeData) {
-        planNodes.push({
-          id: nodeData.id,
-          planId: nodeData.plan_id,
-          nodeId: nodeData.node_id,
-          position: nodeData.position,
-          nodeName: node.title,
-          // Fix for the skill_id error - skill property exists on TLearningNode, but not skill_id
-          nodeSkill: node.skill ? node.skill.toString() : undefined
-        });
-      }
-    }
-    
-    return planNodes;
-  } catch (error) {
-    console.error('Error generating learning plan nodes:', error);
-    return [];
-  }
-}
-
-/**
  * Updates progress for a learning plan
  */
 export async function updatePlanProgress(userId: string, planId: string): Promise<PlanProgress | false> {
@@ -235,7 +159,15 @@ export async function updatePlanProgress(userId: string, planId: string): Promis
       
     if (nodeError) throw nodeError;
     
-    if (!nodeData || nodeData.length === 0) return false;
+    if (!nodeData || nodeData.length === 0) {
+      // Si no hay nodos, inicializar valores predeterminados
+      return {
+        totalNodes: 0,
+        completedNodes: 0,
+        inProgressNodes: 0,
+        overallProgress: 0
+      };
+    }
     
     const nodeIds = nodeData.map(n => n.node_id);
     
@@ -253,6 +185,22 @@ export async function updatePlanProgress(userId: string, planId: string): Promis
     const completedNodes = progressData?.filter(p => p.status === 'completed').length || 0;
     const inProgressNodes = progressData?.filter(p => p.status === 'in_progress').length || 0;
     
+    // Si no hay nodos con progreso, inicializar automáticamente
+    if (!progressData || progressData.length === 0) {
+      // Crear registros de progreso iniciales para los nodos del plan
+      const initialProgress = nodeIds.map(nodeId => ({
+        user_id: userId,
+        node_id: nodeId,
+        status: 'not_started' as const,
+        progress: 0,
+        time_spent_minutes: 0
+      }));
+      
+      await supabase
+        .from('user_node_progress')
+        .upsert(initialProgress);
+    }
+    
     const overallProgress = totalNodes > 0 
       ? (completedNodes + (inProgressNodes * 0.5)) / totalNodes 
       : 0;
@@ -266,5 +214,92 @@ export async function updatePlanProgress(userId: string, planId: string): Promis
   } catch (error) {
     console.error('Error updating plan progress:', error);
     return false;
+  }
+}
+
+/**
+ * Gets skill distribution for a learning plan
+ */
+export async function getPlanSkillDistribution(planId: string): Promise<Record<TPAESHabilidad, number>> {
+  try {
+    // Get nodes for this plan
+    const { data: nodeData, error: nodeError } = await supabase
+      .from('learning_plan_nodes')
+      .select('node_id')
+      .eq('plan_id', planId);
+      
+    if (nodeError) throw nodeError;
+    
+    if (!nodeData || nodeData.length === 0) return {};
+    
+    const nodeIds = nodeData.map(n => n.node_id);
+    
+    // Get skill information for these nodes
+    const { data: nodeDetails, error: detailsError } = await supabase
+      .from('learning_nodes')
+      .select('skill_id')
+      .in('id', nodeIds);
+      
+    if (detailsError) throw detailsError;
+    
+    if (!nodeDetails) return {};
+    
+    // Count nodes by skill
+    const skillCounts: Record<TPAESHabilidad, number> = {};
+    
+    nodeDetails.forEach(node => {
+      const skillEnum = mapSkillIdToEnum(node.skill_id);
+      skillCounts[skillEnum] = (skillCounts[skillEnum] || 0) + 1;
+    });
+    
+    return skillCounts;
+  } catch (error) {
+    console.error('Error getting plan skill distribution:', error);
+    return {};
+  }
+}
+
+/**
+ * Get next recommended node for a user
+ */
+export async function getNextRecommendedNode(userId: string, planId: string): Promise<string | null> {
+  try {
+    // Get nodes for this plan with their current progress
+    const { data: planNodes, error: nodesError } = await supabase
+      .from('learning_plan_nodes')
+      .select('node_id, position')
+      .eq('plan_id', planId)
+      .order('position', { ascending: true });
+      
+    if (nodesError) throw nodesError;
+    
+    if (!planNodes || planNodes.length === 0) return null;
+    
+    const nodeIds = planNodes.map(n => n.node_id);
+    
+    // Get progress for these nodes
+    const { data: progressData, error: progressError } = await supabase
+      .from('user_node_progress')
+      .select('node_id, status')
+      .eq('user_id', userId)
+      .in('node_id', nodeIds);
+    
+    if (progressError) throw progressError;
+    
+    // Find the first node that is not completed
+    const completedNodeIds = progressData
+      ?.filter(p => p.status === 'completed')
+      .map(p => p.node_id) || [];
+    
+    for (const node of planNodes) {
+      if (!completedNodeIds.includes(node.node_id)) {
+        return node.node_id;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting next recommended node:', error);
+    return null;
   }
 }

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ import { EmptyPlanState } from "@/components/plan/EmptyPlanState";
 import { CurrentPlan } from "@/components/plan/CurrentPlan";
 import { PlanSelector } from "@/components/plan/PlanSelector";
 import { PlanProgress } from "@/types/learning-plan";
+import { ensureLearningNodesExist } from "@/services/learning/initialize-learning-service";
 
 const Plan = () => {
   const { profile } = useAuth();
@@ -25,11 +27,24 @@ const Plan = () => {
   } = useLearningPlans();
   
   const [planProgress, setPlanProgress] = useState<PlanProgress | null>(null);
+  const [initializing, setInitializing] = useState(true);
   
   useEffect(() => {
-    if (profile) {
-      fetchLearningPlans(profile.id);
-    }
+    const initializeData = async () => {
+      setInitializing(true);
+      
+      // Asegurar que existan los nodos de aprendizaje en la BD
+      await ensureLearningNodesExist();
+      
+      // Continuar con la carga normal
+      if (profile) {
+        await fetchLearningPlans(profile.id);
+      }
+      
+      setInitializing(false);
+    };
+    
+    initializeData();
   }, [profile, fetchLearningPlans]);
   
   useEffect(() => {
@@ -90,7 +105,7 @@ const Plan = () => {
     }
   };
   
-  if (loading) {
+  if (loading || initializing) {
     return (
       <AppLayout>
         <div className="container py-8">

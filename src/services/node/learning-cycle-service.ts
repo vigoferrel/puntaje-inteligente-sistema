@@ -1,84 +1,128 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { TLearningCyclePhase } from "@/types/system-types";
+import { ensureUserHasLearningPlan } from "../learning/plan-generator-service";
 
 /**
- * Determine the current learning cycle phase based on user's progress
+ * Determines the current learning cycle phase for a user
  */
 export const getLearningCyclePhase = async (userId: string): Promise<TLearningCyclePhase> => {
   try {
-    // Check if user has completed diagnostic
-    const { data: diagnosticData, error: diagnosticError } = await supabase
+    // Primero intentamos obtener la fase desde la base de datos
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('learning_phase')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching learning phase:", error);
+      return "DIAGNOSIS"; // Fase predeterminada
+    }
+    
+    // Si tenemos un valor, devolverlo como fase de aprendizaje
+    if (data && data.learning_phase) {
+      return data.learning_phase as TLearningCyclePhase;
+    }
+    
+    // Si no hay valor en la base de datos, determinar la fase basada en el progreso
+    // Verificar si el usuario ha completado el diagnóstico
+    const { count: diagnosticCount, error: diagnosticError } = await supabase
       .from('user_diagnostic_results')
-      .select('id')
-      .eq('user_id', userId)
-      .limit(1);
-    
-    if (diagnosticError) throw diagnosticError;
-    
-    if (!diagnosticData || diagnosticData.length === 0) {
-      return 'DIAGNOSIS'; // User needs to complete diagnosis first
-    }
-    
-    // Check if user has a learning plan
-    const { data: planData, error: planError } = await supabase
-      .from('learning_plans')
-      .select('id')
-      .eq('user_id', userId)
-      .limit(1);
-    
-    if (planError) throw planError;
-    
-    if (!planData || planData.length === 0) {
-      return 'PERSONALIZED_PLAN'; // User needs a learning plan
-    }
-    
-    // Check user's progress on nodes
-    const { data: nodeProgress, error: progressError } = await supabase
-      .from('user_node_progress')
-      .select('status')
+      .select('id', { count: 'exact', head: true })
       .eq('user_id', userId);
     
-    if (progressError) throw progressError;
-    
-    if (!nodeProgress || nodeProgress.length === 0) {
-      return 'SKILL_TRAINING'; // User needs to start training skills
+    if (diagnosticError) {
+      console.error("Error checking diagnostic results:", diagnosticError);
+      return "DIAGNOSIS";
     }
     
-    const completedNodes = nodeProgress.filter(node => node.status === 'completed').length;
-    const inProgressNodes = nodeProgress.filter(node => node.status === 'in_progress').length;
-    
-    // Calculate progress percentage assuming there are nodes in the plan
-    const { data: planNodesCount, error: countError } = await supabase
-      .from('learning_plan_nodes')
-      .select('id', { count: 'exact' })
-      .eq('plan_id', planData[0].id);
-    
-    if (countError) throw countError;
-    
-    const totalNodes = planNodesCount?.length || 0;
-    
-    if (totalNodes === 0) {
-      return 'PERSONALIZED_PLAN'; // Plan exists but has no nodes
+    // Si no ha completado ningún diagnóstico, está en la fase de diagnóstico
+    if (!diagnosticCount || diagnosticCount === 0) {
+      return "DIAGNOSIS";
     }
     
-    const progressPercentage = completedNodes / totalNodes;
+    // Verificar si tiene un plan personalizado
+    const hasLearningPlan = await ensureUserHasLearningPlan(userId);
     
-    if (progressPercentage < 0.2) {
-      return 'SKILL_TRAINING';
-    } else if (progressPercentage < 0.5) {
-      return 'CONTENT_STUDY';
-    } else if (progressPercentage < 0.75) {
-      return 'PERIODIC_TESTS';
-    } else if (progressPercentage < 0.9) {
-      return 'FEEDBACK_ANALYSIS';
-    } else if (progressPercentage < 1.0) {
-      return 'REINFORCEMENT';
-    } else {
-      return 'FINAL_SIMULATIONS'; // All nodes completed
+    // Si tiene un plan, está en la fase de entrenamiento de habilidades
+    if (hasLearningPlan) {
+      // Actualizar la fase en la base de datos para futuras consultas
+      await updateLearningPhase(userId, "SKILL_TRAINING");
+      return "SKILL_TRAINING";
     }
+    
+    // Si no tiene un plan pero ha completado diagnóstico, está en fase de planificación
+    await updateLearningPhase(userId, "PERSONALIZED_PLAN");
+    return "PERSONALIZED_PLAN";
   } catch (error) {
-    console.error('Error determining learning cycle phase:', error);
-    return 'DIAGNOSIS'; // Default to diagnosis if error
+    console.error("Error in getLearningCyclePhase:", error);
+    return "DIAGNOSIS"; // Fase predeterminada en caso de error
+  }
+};
+
+/**
+ * Updates a user's learning cycle phase
+ */
+const updateLearningPhase = async (userId: string, phase: TLearningCyclePhase): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ learning_phase: phase })
+      .eq('id', userId);
+    
+    if (error) {
+      console.error("Error updating learning phase:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in updateLearningPhase:", error);
+    return false;
+  }
+};
+
+/**
+ * Advances a user to the next learning phase
+ */
+export const advanceToNextLearningPhase = async (userId: string): Promise<TLearningCyclePhase | null> => {
+  try {
+    // Obtener fase actual
+    const currentPhase = await getLearningCyclePhase(userId);
+    
+    // Definir el orden de las fases
+    const phases: TLearningCyclePhase[] = [
+      "DIAGNOSIS",
+      "PERSONALIZED_PLAN",
+      "SKILL_TRAINING",
+      "CONTENT_STUDY",
+      "PERIODIC_TESTS",
+      "FEEDBACK_ANALYSIS",
+      "REINFORCEMENT",
+      "FINAL_SIMULATIONS"
+    ];
+    
+    // Encontrar la fase actual y determinar la siguiente
+    const currentIndex = phases.indexOf(currentPhase);
+    
+    if (currentIndex < 0 || currentIndex >= phases.length - 1) {
+      console.warn("Cannot advance phase: current phase not found or already at last phase");
+      return null;
+    }
+    
+    const nextPhase = phases[currentIndex + 1];
+    
+    // Actualizar la fase
+    const success = await updateLearningPhase(userId, nextPhase);
+    
+    if (!success) {
+      return null;
+    }
+    
+    return nextPhase;
+  } catch (error) {
+    console.error("Error advancing learning phase:", error);
+    return null;
   }
 };
