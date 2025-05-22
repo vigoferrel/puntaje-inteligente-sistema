@@ -1,4 +1,6 @@
 
-// Export all result services
-export * from './submit-result';
-export * from '../results-services';
+// Export correct result services
+export { 
+  submitDiagnosticResult, 
+  calculateDiagnosticResults 
+} from './submit-result';

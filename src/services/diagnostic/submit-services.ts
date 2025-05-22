@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { DiagnosticResult } from "@/types/diagnostic";
 import { TPAESHabilidad } from "@/types/system-types";
-import { fetchDiagnosticQuestions, getQuestionById } from "./question/fetch-questions";
+import { fetchDiagnosticQuestions } from "./question/fetch-questions";
 
 /**
  * Submits a diagnostic test result
@@ -27,19 +27,24 @@ export const submitDiagnosticResult = async (
       return null;
     }
     
-    // Inicializar resultados por habilidad
+    // Inicializar resultados por habilidad según las enumeraciones actualizadas
     const skillResults: Record<TPAESHabilidad, number> = {
-      'LT-1': 0,
-      'LT-2': 0,
-      'LT-3': 0,
-      'M1': 0,
-      'M2': 0,
-      'M3': 0,
-      'H1': 0,
-      'H2': 0,
-      'C1': 0,
-      'C2': 0,
-      'C3': 0
+      SOLVE_PROBLEMS: 0,
+      REPRESENT: 0,
+      MODEL: 0,
+      INTERPRET_RELATE: 0,
+      EVALUATE_REFLECT: 0,
+      TRACK_LOCATE: 0,
+      ARGUE_COMMUNICATE: 0,
+      IDENTIFY_THEORIES: 0,
+      PROCESS_ANALYZE: 0,
+      APPLY_PRINCIPLES: 0,
+      SCIENTIFIC_ARGUMENT: 0,
+      TEMPORAL_THINKING: 0,
+      SOURCE_ANALYSIS: 0,
+      MULTICAUSAL_ANALYSIS: 0,
+      CRITICAL_THINKING: 0,
+      REFLECTION: 0
     };
     
     // Contadores para calcular porcentajes por habilidad
@@ -58,10 +63,15 @@ export const submitDiagnosticResult = async (
         const userAnswer = answers[questionId];
         const isCorrect = userAnswer === question.correctAnswer;
         
-        // Incrementar contadores
-        skillCounts[question.skill].total++;
-        if (isCorrect) {
-          skillCounts[question.skill].correct++;
+        // Verificar que la habilidad del ejercicio es una habilidad válida
+        if (Object.keys(skillResults).includes(question.skill)) {
+          // Incrementar contadores
+          skillCounts[question.skill].total++;
+          if (isCorrect) {
+            skillCounts[question.skill].correct++;
+          }
+        } else {
+          console.warn(`Habilidad no reconocida: ${question.skill}`);
         }
       }
     }
@@ -84,7 +94,7 @@ export const submitDiagnosticResult = async (
         user_id: userId,
         diagnostic_id: diagnosticId,
         results: skillResults,
-        time_spent: timeSpentMinutes
+        completed_at: new Date().toISOString()  // Corregido a completed_at en lugar de created_at
       })
       .select()
       .single();
@@ -104,8 +114,8 @@ export const submitDiagnosticResult = async (
       id: data.id,
       userId: data.user_id,
       diagnosticId: data.diagnostic_id,
-      results: data.results,
-      completedAt: data.created_at
+      results: data.results as Record<TPAESHabilidad, number>,
+      completedAt: data.completed_at  // Corregido a completed_at
     };
     
     return diagnosticResult;

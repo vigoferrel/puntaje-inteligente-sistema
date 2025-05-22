@@ -122,10 +122,16 @@ export const calculateDiagnosticResults = (
     
     if (question && question.skill) {
       const skill = question.skill as TPAESHabilidad;
-      skillResults[skill].total += 1;
       
-      if (userAnswer === question.correctAnswer) {
-        skillResults[skill].correct += 1;
+      // Verificar que la habilidad del ejercicio es una habilidad válida
+      if (Object.keys(defaultSkillResults).includes(skill)) {
+        skillResults[skill].total += 1;
+        
+        if (userAnswer === question.correctAnswer) {
+          skillResults[skill].correct += 1;
+        }
+      } else {
+        console.warn(`Habilidad no reconocida en calculateDiagnosticResults: ${question.skill}`);
       }
     }
   });
