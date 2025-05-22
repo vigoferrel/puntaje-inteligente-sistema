@@ -5,7 +5,7 @@ import {
   fetchLearningPlans as fetchPlans,
   createLearningPlan as createPlan,
   updatePlanProgress as updateProgress
-} from "@/services/plan-service";
+} from "@/services/plan";
 import { ensureUserHasLearningPlan } from "@/services/learning/plan-generator-service";
 
 /**

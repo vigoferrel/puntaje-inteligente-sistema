@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { createLearningPlan } from "@/services/plan-service";
+import { createLearningPlan } from "@/services/plan";
 import { TPAESHabilidad } from "@/types/system-types";
 
 // Add the missing UserProfile type export to fix the build errors

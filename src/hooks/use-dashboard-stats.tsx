@@ -1,121 +1,88 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { UserProfile } from "@/hooks/use-user-data";
 
 interface DashboardStats {
-  totalModules: number;
-  completedModules: number;
-  totalTimeSpent: number;
-  progressPercentage: number;
-  lastActivity: string | null;
+  totalNodes: number;
+  completedNodes: number;
+  totalPlans: number;
 }
 
 export const useDashboardStats = () => {
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
-    totalModules: 0,
-    completedModules: 0,
-    totalTimeSpent: 0,
-    progressPercentage: 0,
-    lastActivity: null,
+    totalNodes: 0,
+    completedNodes: 0,
+    totalPlans: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
-      if (!user?.id) {
+      if (!profile?.id) {
+        setLoading(false);
         return;
       }
 
       setLoading(true);
-      setError(null);
-
       try {
-        // Fetch total modules from learning_plan_nodes
-        const { data: planNodes, error: planNodesError } = await supabase
-          .from('learning_plan_nodes')
-          .select('id')
-          .in('plan_id',
-            supabase
-              .from('learning_plans')
-              .select('id')
-              .eq('user_id', user.id)
-          );
+        // Fetch total number of learning plans
+        const { data: plansData, error: plansError } = await supabase
+          .from('learning_plans')
+          .select('*', { count: 'exact' })
+          .eq('user_id', profile.id);
 
-        if (planNodesError) {
-          console.error('Error fetching learning plan nodes:', planNodesError);
-          setError('Failed to fetch learning plan nodes.');
-          return;
+        if (plansError) {
+          throw plansError;
         }
 
-        const totalModules = planNodes ? planNodes.length : 0;
+        const totalPlans = plansData ? plansData.length : 0;
 
-        // Fetch completed modules from user_node_progress
-        const { data: completedNodes, error: completedNodesError } = await supabase
+        // Fetch total number of learning nodes
+        const { data: nodesData, error: nodesError } = await supabase
+          .from('learning_plan_nodes')
+          .select('id', { count: 'exact' })
+
+        if (nodesError) {
+          throw nodesError;
+        }
+
+        const totalNodes = nodesData ? nodesData.length : 0;
+
+        // Fetch completed learning nodes
+        const { data: completedNodesData, error: completedNodesError } = await supabase
           .from('user_node_progress')
-          .select('id')
-          .eq('user_id', user.id)
+          .select('id', { count: 'exact' })
+          .eq('user_id', profile.id)
           .eq('status', 'completed');
 
         if (completedNodesError) {
-          console.error('Error fetching completed nodes:', completedNodesError);
-          setError('Failed to fetch completed nodes.');
-          return;
+          throw completedNodesError;
         }
 
-        const completedModules = completedNodes ? completedNodes.length : 0;
-
-        // Calculate progress percentage
-        const progressPercentage = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
-
-        // Fetch total time spent from user_node_progress
-        const { data: timeSpentData, error: timeSpentError } = await supabase
-          .from('user_node_progress')
-          .select('time_spent_minutes')
-          .eq('user_id', user.id);
-
-        if (timeSpentError) {
-          console.error('Error fetching time spent data:', timeSpentError);
-          setError('Failed to fetch time spent data.');
-          return;
-        }
-
-        const totalTimeSpent = timeSpentData?.reduce((acc, curr) => acc + (curr.time_spent_minutes || 0), 0) || 0;
-
-        // Fetch last activity from user_node_progress
-        const { data: lastActivityData, error: lastActivityError } = await supabase
-          .from('user_node_progress')
-          .select('created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (lastActivityError) {
-          console.error('Error fetching last activity:', lastActivityError);
-          setError('Failed to fetch last activity.');
-          return;
-        }
-
-        const lastActivity = lastActivityData && lastActivityData.length > 0 ? lastActivityData[0].created_at : null;
+        const completedNodes = completedNodesData ? completedNodesData.length : 0;
 
         setStats({
-          totalModules,
-          completedModules,
-          totalTimeSpent,
-          progressPercentage,
-          lastActivity,
+          totalNodes,
+          completedNodes,
+          totalPlans,
         });
-      } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
-        setError('Failed to fetch dashboard stats.');
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch dashboard stats");
+        console.error("Error fetching dashboard stats:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardStats();
-  }, [user?.id]);
+  }, [profile?.id]);
 
-  return { stats, loading, error };
+  return {
+    stats,
+    loading,
+    error,
+  };
 };
