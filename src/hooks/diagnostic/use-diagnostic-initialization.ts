@@ -18,47 +18,30 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
   
-  // Function to initialize diagnostics
+  // Modified function to initialize diagnostics WITHOUT automatic generation
   const initDiagnostics = async () => {
     try {
       // Reset states
       setError(null);
       setInitializing(true);
       
-      // This will ensure at least one test exists
+      // Instead of generating new diagnostics, just try to load existing ones
       if (diagnosticService.tests.length === 0) {
-        setGeneratingDiagnostic(true);
-        const success = await diagnosticService.ensureDefaultDiagnosticsExist();
+        // Use only local fallback diagnostics - no API calls
+        const fallbackCreated = await diagnosticService.createLocalFallbackDiagnostics();
         
-        if (success) {
+        if (fallbackCreated) {
           toast({
-            title: "Diagnóstico creado",
-            description: "Se ha generado un diagnóstico inicial para ti",
+            title: "Diagnosticos básicos cargados",
+            description: "Se han cargado diagnósticos básicos predefinidos.",
           });
         } else {
-          // Try the local fallback if online generation failed
-          const fallbackCreated = await diagnosticService.createLocalFallbackDiagnostics();
-          
-          if (fallbackCreated) {
-            toast({
-              title: "Diagnóstico básico creado",
-              description: "Se ha generado un diagnóstico básico. Algunas funciones pueden estar limitadas.",
-            });
-          } else {
-            setError("No se pudieron crear diagnósticos. Por favor, intenta nuevamente más tarde.");
-          }
+          setError("No se pudieron cargar diagnósticos. Por favor, contacte al administrador.");
         }
-        setGeneratingDiagnostic(false);
       }
     } catch (error) {
       console.error("Error initializing diagnostics:", error);
       setError(error instanceof Error ? error.message : "Error al inicializar diagnósticos");
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los diagnósticos iniciales",
-        variant: "destructive"
-      });
-      setGeneratingDiagnostic(false);
     } finally {
       setInitializing(false);
     }

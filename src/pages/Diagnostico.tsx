@@ -12,6 +12,8 @@ import { DiagnosticErrorView } from "@/components/diagnostic/DiagnosticErrorView
 import { Button } from "@/components/ui/button";
 import { DetailedResultView } from "@/components/diagnostic/DetailedResultView";
 import { RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const Diagnostico = () => {
   console.log("Renderizando página de Diagnóstico");
@@ -64,12 +66,24 @@ const Diagnostico = () => {
           if (initializing) {
             loadingMessage = "Inicializando diagnósticos. Por favor espera...";
           } else if (generatingDiagnostic) {
-            loadingMessage = "Generando diagnóstico inicial personalizado...";
+            loadingMessage = "Cargando diagnóstico básico...";
           }
           
           return (
             <div className="container py-8">
-              <h1 className="text-3xl font-bold mb-6">Diagnóstico</h1>
+              <h1 className="text-3xl font-bold mb-2">Diagnóstico</h1>
+              <p className="text-gray-600 mb-6">
+                Evalúa tus conocimientos y habilidades para crear un plan de estudio personalizado.
+              </p>
+              
+              <Alert className="mb-6 bg-blue-50 border-blue-100">
+                <Info className="h-4 w-4 text-blue-500" />
+                <AlertTitle>Diagnósticos predefinidos</AlertTitle>
+                <AlertDescription>
+                  Los diagnósticos disponibles son versiones básicas predefinidas. Para diagnósticos avanzados o personalizados, 
+                  contacta con el administrador.
+                </AlertDescription>
+              </Alert>
               
               {loading ? (
                 <DiagnosticSkeleton message={loadingMessage} generating={generatingDiagnostic} />

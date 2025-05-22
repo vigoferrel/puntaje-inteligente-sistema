@@ -1,136 +1,171 @@
 
-import React, { useEffect, useState } from "react";
-import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { CheckCircle } from "lucide-react";
-import { LearningPlan } from "@/types/learning-plan";
-import { PlanMetrics } from "./PlanMetrics";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { LearningPlan, PlanProgress } from "@/types/learning-plan";
 import { PlanNodesList } from "./PlanNodesList";
-import { getNextRecommendedNode, getPlanSkillDistribution } from "@/services/plan-service";
-import { TPAESHabilidad, getHabilidadDisplayName } from "@/types/system-types";
+import { TPAESHabilidad } from "@/types/system-types";
 
 interface CurrentPlanProps {
-  plan: LearningPlan;
-  planProgress: {
-    totalNodes: number;
-    completedNodes: number;
-    inProgressNodes: number;
-    overallProgress: number;
-  } | null;
-  hasMultiplePlans: boolean;
-  onNavigateToTraining: () => void;
-  onNavigateHome: () => void;
+  plan: LearningPlan | null;
+  loading: boolean;
+  progress: PlanProgress | null;
+  recommendedNodeId: string | null;
+  onUpdateProgress: () => void;
+  onCreatePlan: (title: string, skillPriorities?: Record<TPAESHabilidad, number>) => void;
 }
 
-export const CurrentPlan = ({
+export function CurrentPlan({
   plan,
-  planProgress,
-  hasMultiplePlans,
-  onNavigateToTraining,
-  onNavigateHome,
-}: CurrentPlanProps) => {
-  const [skillDistribution, setSkillDistribution] = useState<Record<TPAESHabilidad, number>>({});
-  const [loading, setLoading] = useState(false);
-  const [recommendedNodeId, setRecommendedNodeId] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const loadPlanDetails = async () => {
-      if (plan) {
-        setLoading(true);
-        try {
-          // Obtener distribución de habilidades en el plan
-          const distribution = await getPlanSkillDistribution(plan.id);
-          setSkillDistribution(distribution);
-          
-          // Obtener próximo nodo recomendado
-          const nextNodeId = await getNextRecommendedNode(plan.userId, plan.id);
-          setRecommendedNodeId(nextNodeId);
-        } catch (error) {
-          console.error("Error loading plan details:", error);
-        } finally {
-          setLoading(false);
-        }
-      }
+  loading,
+  progress,
+  recommendedNodeId,
+  onUpdateProgress,
+  onCreatePlan,
+}: CurrentPlanProps) {
+  const [creating, setCreating] = useState(false);
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "No establecida";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+  };
+
+  const handleCreateSamplePlan = () => {
+    setCreating(true);
+    
+    // Default skill priorities para evitar errores de TypeScript
+    const defaultSkillPriorities: Record<TPAESHabilidad, number> = {
+      "SOLVE_PROBLEMS": 0.5,
+      "REPRESENT": 0.5,
+      "MODEL": 0.5,
+      "INTERPRET_RELATE": 0.5,
+      "EVALUATE_REFLECT": 0.5,
+      "TRACK_LOCATE": 0.5,
+      "ARGUE_COMMUNICATE": 0.5,
+      "IDENTIFY_THEORIES": 0.5,
+      "PROCESS_ANALYZE": 0.5,
+      "APPLY_PRINCIPLES": 0.5,
+      "REWRITE_TEXT": 0.5,
+      "REVISE_TEXT": 0.5,
+      "MONITOR_ADJUST": 0.5,
+      "ARTICULATE_CONTENT": 0.5,
+      "ORGANIZATION": 0.5,
+      "DEVELOPMENT": 0.5,
+      "REFLECTION": 0.5
     };
     
-    loadPlanDetails();
+    onCreatePlan("Mi plan de estudio PAES", defaultSkillPriorities);
+  };
+
+  // Reset creating state after plan changes
+  useEffect(() => {
+    if (plan) {
+      setCreating(false);
+    }
   }, [plan]);
-  
-  // Encontrar el nodo recomendado en la lista de nodos
-  const recommendedNode = plan.nodes.find(node => node.nodeId === recommendedNodeId);
-  
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!plan) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Ningún plan seleccionado</CardTitle>
+          <CardDescription>
+            No tienes ningún plan de estudio activo actualmente.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-6">
+            Un plan de estudio te ayudará a organizar tu aprendizaje y prepararte
+            efectivamente para la PAES. Crea tu primer plan para comenzar.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button
+            onClick={handleCreateSamplePlan}
+            disabled={creating}
+            className="w-full"
+          >
+            {creating ? "Creando plan..." : "Crear mi primer plan"}
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border-primary/20">
+    <Card>
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
             <CardTitle>{plan.title}</CardTitle>
-            <CardDescription>{plan.description}</CardDescription>
+            <CardDescription>
+              {plan.description || "Plan de estudio personalizado"}
+            </CardDescription>
           </div>
-          {hasMultiplePlans && (
-            <Button variant="outline" size="sm">
-              Cambiar Plan
-            </Button>
-          )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Plan Overview */}
-        <PlanMetrics 
-          targetDate={plan.targetDate}
-          nodesCount={plan.nodes.length}
-          progress={planProgress?.overallProgress || 0}
-        />
-        
-        {/* Habilidades en este plan */}
-        {Object.keys(skillDistribution).length > 0 && (
-          <div className="mt-4">
-            <h3 className="text-sm font-medium mb-2">Habilidades en este plan</h3>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(skillDistribution).map(([skill, count]) => (
-                <div 
-                  key={skill} 
-                  className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full"
-                >
-                  {getHabilidadDisplayName(skill as TPAESHabilidad)} ({count})
-                </div>
-              ))}
-            </div>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Progreso general</span>
+            <span className="font-medium">
+              {progress
+                ? `${Math.round(progress.overallProgress)}%`
+                : "0%"}
+            </span>
           </div>
-        )}
-        
-        {/* Próximo módulo recomendado */}
-        {recommendedNode && (
-          <div className="bg-primary/5 p-3 rounded-lg">
-            <h3 className="text-sm font-medium mb-1">Próximo módulo recomendado</h3>
-            <p className="text-sm font-bold">{recommendedNode.nodeName}</p>
-            {recommendedNode.nodeSkill && (
-              <p className="text-xs text-muted-foreground">
-                Habilidad: {getHabilidadDisplayName(recommendedNode.nodeSkill as TPAESHabilidad)}
-              </p>
-            )}
+          <Progress
+            value={progress ? progress.overallProgress : 0}
+            className="h-2"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>
+              {progress
+                ? `${progress.completedNodes}/${progress.totalNodes} módulos completados`
+                : "0/0 módulos completados"}
+            </span>
+            <span>Fecha objetivo: {formatDate(plan.targetDate)}</span>
           </div>
-        )}
-        
-        <Separator />
-        
-        {/* Plan Nodes */}
-        <PlanNodesList 
-          nodes={plan.nodes} 
-          recommendedNodeId={recommendedNodeId}
-          progress={planProgress}
-        />
+        </div>
+
+        <div className="pt-2">
+          <PlanNodesList
+            nodes={plan.nodes}
+            recommendedNodeId={recommendedNodeId}
+            progress={progress}
+          />
+        </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={onNavigateHome}>
-          Volver al Dashboard
-        </Button>
-        <Button onClick={onNavigateToTraining}>
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Iniciar Estudio
+      <CardFooter>
+        <Button onClick={onUpdateProgress} variant="outline" className="w-full">
+          Actualizar progreso
         </Button>
       </CardFooter>
     </Card>
   );
-};
+}

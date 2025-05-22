@@ -18,7 +18,10 @@ interface PlanNodesListProps {
 
 export const PlanNodesList = ({ nodes, recommendedNodeId, progress }: PlanNodesListProps) => {
   // Función para determinar el estado de un nodo
-  const getNodeStatus = (nodeId: string, index: number) => {
+  const getNodeStatus = (nodeId: string, index: number): { 
+    status: 'completed' | 'in-progress' | 'pending' | 'recommended',
+    label: string 
+  } => {
     if (!progress) return { status: 'pending', label: 'Pendiente' };
     
     // Asumimos que los nodos se completan en orden
