@@ -113,11 +113,12 @@ export async function fetchDiagnosticQuestions(
 interface RawExerciseData {
   id?: string;
   question?: string;
-  options?: string[] | string | any;
+  options?: string[] | string | null;
   correct_answer?: string;
-  skill?: number | string | TPAESHabilidad;
-  prueba?: number | string | TPAESPrueba;
+  skill?: number | string;
+  prueba?: number | string;
   explanation?: string;
+  diagnostic_id?: string;
 }
 
 function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
@@ -125,7 +126,7 @@ function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
   let options: string[] = [];
   
   try {
-    if (exercise && exercise.options) {
+    if (exercise?.options) {
       if (Array.isArray(exercise.options)) {
         options = exercise.options;
       } else if (typeof exercise.options === 'string') {
@@ -140,19 +141,25 @@ function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
     options = [];
   }
 
-  // Explicitly define skill and prueba types to avoid circular references
+  // Map skill and prueba to their respective enums
   let skill: TPAESHabilidad = 'SOLVE_PROBLEMS';
   if (typeof exercise?.skill === 'number') {
     skill = mapSkillIdToEnum(exercise.skill);
-  } else if (exercise?.skill) {
-    skill = exercise.skill as TPAESHabilidad;
+  } else if (typeof exercise?.skill === 'string') {
+    // Check if the string is a valid TPAESHabilidad
+    skill = (Object.values(TPAESHabilidad) as string[]).includes(exercise.skill)
+      ? exercise.skill as TPAESHabilidad
+      : 'SOLVE_PROBLEMS';
   }
 
   let prueba: TPAESPrueba = 'MATEMATICA_1';
   if (typeof exercise?.prueba === 'number') {
     prueba = mapTestIdToEnum(exercise.prueba);
-  } else if (exercise?.prueba) {
-    prueba = exercise.prueba as TPAESPrueba;
+  } else if (typeof exercise?.prueba === 'string') {
+    // Check if the string is a valid TPAESPrueba
+    prueba = (Object.values(TPAESPrueba) as string[]).includes(exercise.prueba)
+      ? exercise.prueba as TPAESPrueba
+      : 'MATEMATICA_1';
   }
 
   // Return the mapped question with explicitly typed properties
