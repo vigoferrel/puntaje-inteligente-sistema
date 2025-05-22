@@ -940,7 +940,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      exec_sql: {
+        Args: { sql: string }
+        Returns: undefined
+      }
+      get_policies_for_table: {
+        Args: { table_name: string }
+        Returns: {
+          policy_name: string
+          policy_roles: string[]
+          policy_cmd: string
+          policy_qual: string
+          policy_with_check: string
+        }[]
+      }
     }
     Enums: {
       difficulty_level: "basic" | "intermediate" | "advanced"

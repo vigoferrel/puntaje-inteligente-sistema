@@ -29,18 +29,18 @@ export const createGetPoliciesFunction = async (): Promise<boolean> => {
           SET search_path = public
           AS $$
             SELECT
-              p.policyname as policy_name,
+              p.polname as policy_name,
               ARRAY_AGG(r.rolname) as policy_roles,
-              p.cmd as policy_cmd,
-              p.qual as policy_qual,
-              p.with_check as policy_with_check
+              p.polcmd as policy_cmd,
+              p.polqual as policy_qual,
+              p.polwithcheck as policy_with_check
             FROM pg_policy p
             JOIN pg_class c ON p.polrelid = c.oid
             JOIN pg_namespace n ON c.relnamespace = n.oid
             JOIN pg_roles r ON r.oid = ANY(p.polroles)
             WHERE n.nspname = 'public'
               AND c.relname = table_name
-            GROUP BY p.policyname, p.cmd, p.qual, p.with_check;
+            GROUP BY p.polname, p.polcmd, p.polqual, p.polwithcheck;
           $$;
         `
       } as { sql: string });
