@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { v4 as uuidv4 } from "uuid";
@@ -11,15 +11,26 @@ import { LectoGuiaHeader } from "@/components/lectoguia/LectoGuiaHeader";
 import { ChatTab } from "@/components/lectoguia/ChatTab";
 import { ExerciseTab } from "@/components/lectoguia/ExerciseTab";
 import { ProgressTab } from "@/components/lectoguia/ProgressTab";
+import { useDiagnostic } from "@/hooks/use-diagnostic";
+import { useLearningPlan } from "@/hooks/use-learning-plan";
 
-// Componente principal de LectoGuía
+// Componente principal de LectoGuía convertido en asistente completo
 const LectoGuia = () => {
   // Estado para gestionar la pestaña activa
   const [activeTab, setActiveTab] = useState("chat");
   
   // Hooks para estados y lógica
   const { session, saveExerciseAttempt } = useLectoGuiaSession();
-  const { messages, isTyping, processUserMessage, addAssistantMessage } = useLectoGuiaChat();
+  const { 
+    messages, 
+    isTyping, 
+    processUserMessage, 
+    addAssistantMessage,
+    activeSubject,
+    changeSubject,
+    detectSubjectFromMessage 
+  } = useLectoGuiaChat();
+  
   const { 
     currentExercise, 
     selectedOption, 
@@ -28,6 +39,10 @@ const LectoGuia = () => {
     handleOptionSelect, 
     resetExercise 
   } = useLectoGuiaExercise();
+  
+  // Hooks adicionales para acceder a datos de la plataforma
+  const { tests } = useDiagnostic();
+  const { plan } = useLearningPlan();
   
   // Manejar el envío de mensajes
   const handleSendMessage = async (message: string, imageData?: string) => {
@@ -39,25 +54,61 @@ const LectoGuia = () => {
       return;
     }
     
+    // Detectar la materia del mensaje y cambiar si es necesario
+    const detectedSubject = detectSubjectFromMessage(message);
+    if (detectedSubject && detectedSubject !== activeSubject) {
+      changeSubject(detectedSubject);
+    }
+    
+    // Detectar si el usuario está pidiendo información sobre alguna sección del sitio
+    const isAboutDiagnostic = message.toLowerCase().includes("diagnóstico") || 
+                              message.toLowerCase().includes("diagnostic");
+    const isAboutPlan = message.toLowerCase().includes("plan") || 
+                         message.toLowerCase().includes("aprendizaje");
+    
     // Detectar si el usuario está pidiendo un ejercicio
     const isExerciseRequest = message.toLowerCase().includes("ejercicio") || 
-        message.toLowerCase().includes("practica") || 
-        message.toLowerCase().includes("ejemplo");
+                              message.toLowerCase().includes("practica") || 
+                              message.toLowerCase().includes("ejemplo");
     
     if (isExerciseRequest) {
-      // Generar ejercicio y cambiar a la pestaña de ejercicios
-      const exercise = await generateExercise();
+      // Generar ejercicio según la materia activa
+      const skillMap: Record<string, string> = {
+        'lectura': 'TRACK_LOCATE',
+        'matematicas': 'ALGEBRA',
+        'ciencias': 'PHYSICS',
+        'historia': 'HISTORY',
+        'general': 'INTERPRET_RELATE'
+      };
+      
+      const exercise = await generateExercise(skillMap[activeSubject] as any);
       
       if (exercise) {
         setTimeout(() => setActiveTab("exercise"), 500);
         
         // Agregar mensaje del asistente sobre el ejercicio generado
         addAssistantMessage(
-          `He preparado un ejercicio de comprensión lectora para ti. Es un ejercicio de dificultad ${exercise.difficulty || "intermedia"} que evalúa la habilidad de ${exercise.skill || "Interpretar-Relacionar"}. Puedes resolverlo en la pestaña de Ejercicios.`
+          `He preparado un ejercicio de ${activeSubject === 'general' ? 'comprensión lectora' : activeSubject} para ti. Es un ejercicio de dificultad ${exercise.difficulty || "intermedia"} que evalúa la habilidad de ${exercise.skill || "interpretación"}. Puedes resolverlo en la pestaña de Ejercicios.`
         );
       } else {
         addAssistantMessage("Lo siento, no pude generar un ejercicio en este momento. Por favor, inténtalo más tarde.");
       }
+    } else if (isAboutDiagnostic && tests) {
+      // Responder con información sobre los diagnósticos
+      const diagnosticInfo = `La sección de Diagnóstico te permite evaluar tu nivel actual en las distintas habilidades PAES. 
+      Actualmente hay ${tests.length} diagnóstico(s) disponible(s) para realizar.
+      ${message.toLowerCase().includes("como") ? "Para acceder a esta sección, ve al menú lateral y selecciona 'Diagnóstico'." : ""}`;
+      
+      await processUserMessage(message);
+      setTimeout(() => addAssistantMessage(diagnosticInfo), 1000);
+    } else if (isAboutPlan && plan) {
+      // Responder con información sobre el plan de aprendizaje
+      const planInfo = `Tu Plan de Aprendizaje está diseñado específicamente para mejorar tus habilidades PAES.
+      ${plan.title ? `Actualmente tienes un plan llamado "${plan.title}".` : "No tienes un plan activo en este momento."}
+      ${message.toLowerCase().includes("como") ? "Para acceder a esta sección, ve al menú lateral y selecciona 'Plan'." : ""}`;
+      
+      await processUserMessage(message);
+      setTimeout(() => addAssistantMessage(planInfo), 1000);
     } else {
       // Procesamiento normal de mensajes
       await processUserMessage(message);
@@ -92,7 +143,7 @@ const LectoGuia = () => {
     setActiveTab("chat");
     resetExercise();
     
-    addAssistantMessage("Excelente trabajo. ¿Te gustaría continuar con otro ejercicio o prefieres que trabajemos en otra habilidad?");
+    addAssistantMessage("Excelente trabajo. ¿Te gustaría continuar con otro ejercicio o prefieres que trabajemos en otra materia?");
   };
   
   // Manejar inicio de simulación
@@ -101,6 +152,11 @@ const LectoGuia = () => {
       title: "Simulación",
       description: "Función en desarrollo. Estará disponible próximamente."
     });
+  };
+  
+  // Manejar cambio de materia
+  const handleSubjectChange = (subject: string) => {
+    changeSubject(subject);
   };
 
   return (
@@ -130,6 +186,8 @@ const LectoGuia = () => {
                   messages={messages}
                   onSendMessage={handleSendMessage}
                   isTyping={isTyping}
+                  activeSubject={activeSubject}
+                  onSubjectChange={handleSubjectChange}
                 />
               </TabsContent>
 
@@ -148,7 +206,10 @@ const LectoGuia = () => {
                   skillLevels={{
                     'TRACK_LOCATE': session.skillLevels['TRACK_LOCATE'] || 0,
                     'INTERPRET_RELATE': session.skillLevels['INTERPRET_RELATE'] || 0,
-                    'EVALUATE_REFLECT': session.skillLevels['EVALUATE_REFLECT'] || 0
+                    'EVALUATE_REFLECT': session.skillLevels['EVALUATE_REFLECT'] || 0,
+                    'ALGEBRA': session.skillLevels['ALGEBRA'] || 0,
+                    'PHYSICS': session.skillLevels['PHYSICS'] || 0,
+                    'HISTORY': session.skillLevels['HISTORY'] || 0
                   }}
                   onStartSimulation={handleStartSimulation}
                 />

@@ -2,27 +2,41 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ChatInterface, ChatMessage } from "@/components/ai/ChatInterface";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { SubjectSelector } from "@/components/lectoguia/SubjectSelector";
 
 interface ChatTabProps {
   messages: ChatMessage[];
   onSendMessage: (message: string, imageData?: string) => void;
   isTyping: boolean;
+  activeSubject?: string;
+  onSubjectChange?: (subject: string) => void;
 }
 
 export const ChatTab: React.FC<ChatTabProps> = ({ 
   messages, 
   onSendMessage, 
-  isTyping 
+  isTyping,
+  activeSubject = "general",
+  onSubjectChange
 }) => {
   return (
     <Card className="border-border bg-card/50 backdrop-blur-sm">
       <CardContent className="p-0">
+        {onSubjectChange && (
+          <div className="p-2 border-b border-border">
+            <SubjectSelector 
+              activeSubject={activeSubject} 
+              onSubjectChange={onSubjectChange}
+            />
+          </div>
+        )}
         <div className="h-[calc(100vh-280px)] min-h-[500px]">
           <ChatInterface
             messages={messages}
             onSendMessage={onSendMessage}
             isTyping={isTyping}
-            placeholder="Pregunta algo o sube una imagen para analizarla..."
+            placeholder="Pregunta algo sobre cualquier materia PAES o sube una imagen para analizarla..."
           />
         </div>
       </CardContent>

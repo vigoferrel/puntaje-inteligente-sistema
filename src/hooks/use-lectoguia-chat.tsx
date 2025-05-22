@@ -6,15 +6,16 @@ import { useOpenRouter } from '@/hooks/use-openrouter';
 import { toast } from '@/components/ui/use-toast';
 import { ImageAnalysisResult } from '@/types/ai-types';
 
-const WELCOME_MESSAGE = `👋 ¡Hola! Soy LectoGuía, tu asistente personalizado para la preparación de la PAES.
+const WELCOME_MESSAGE = `👋 ¡Hola! Soy LectoGuía, tu asistente personalizado para toda la preparación PAES.
 
 Puedo ayudarte con:
 
-• Ejercicios de Comprensión Lectora personalizados
-• Explicaciones detalladas de conceptos
-• Análisis de tu progreso
+• Todas las materias de la PAES (Comprensión Lectora, Matemáticas, Ciencias, Historia)
+• Explicaciones detalladas de conceptos en cualquier asignatura
+• Análisis de tu progreso y recomendaciones personalizadas
 • Técnicas específicas para mejorar tus habilidades
 • Análisis de imágenes y textos con OCR
+• Navegación y orientación por todas las secciones de la plataforma
 
 ¿En qué puedo ayudarte hoy?`;
 
@@ -33,6 +34,7 @@ export function useLectoGuiaChat() {
   
   const { callOpenRouter, processImage } = useOpenRouter();
   const [isTyping, setIsTyping] = useState(false);
+  const [activeSubject, setActiveSubject] = useState('general');
   
   // Agregar un mensaje del asistente
   const addAssistantMessage = (content: string) => {
@@ -103,10 +105,11 @@ export function useLectoGuiaChat() {
         // Regular text conversation using OpenRouter
         const response = await callOpenRouter<{ response: string }>("provide_feedback", {
           userMessage: message,
-          context: "PAES preparation, reading comprehension"
+          context: `PAES preparation, subject: ${activeSubject}, full platform assistance`,
+          previousMessages: messages.slice(-6) // Include last 6 messages for context
         });
 
-        let botResponse = "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con ejercicios de comprensión lectora si lo deseas.";
+        let botResponse = "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con cualquier materia de la PAES si lo deseas.";
         
         if (response) {
           // Asegurarnos de que tenemos una respuesta válida
@@ -118,7 +121,7 @@ export function useLectoGuiaChat() {
             // Intentar extraer alguna propiedad útil del objeto
             const firstValue = Object.values(response)[0];
             botResponse = typeof firstValue === 'string' ? firstValue : 
-              "Para mejorar tu comprensión lectora, es importante enfocarte en las tres habilidades principales que evalúa la PAES: Rastrear-Localizar, Interpretar-Relacionar y Evaluar-Reflexionar.";
+              "Para mejorar tu rendimiento en la PAES, es importante enfocarte en todas las materias relevantes para tu área de interés.";
           }
         }
         
@@ -131,13 +134,13 @@ export function useLectoGuiaChat() {
       // Comprobar si es un error de rate limiting
       const errMsg = error instanceof Error ? error.message : "Hubo un problema al procesar tu mensaje";
       const isRateLimitError = errMsg.toLowerCase().includes('rate limit') || 
-                             errMsg.toLowerCase().includes('rate-limit') ||
+                             errMsg.toLowerCase().includes('rate-limit') || 
                              errMsg.toLowerCase().includes('límite de tasa');
       
       // Respuesta alternativa en caso de error
       const errorContent = isRateLimitError 
         ? ERROR_RATE_LIMIT_MESSAGE
-        : "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo o pedir un ejercicio de práctica?";
+        : "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo o pedir ayuda con una materia específica?";
       
       addAssistantMessage(errorContent);
       
@@ -155,10 +158,48 @@ export function useLectoGuiaChat() {
     }
   };
   
+  // Detectar materia a partir del mensaje del usuario
+  const detectSubjectFromMessage = (message: string): string | null => {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('leer') || lowerMessage.includes('texto') || lowerMessage.includes('lectura')) {
+      return 'lectura';
+    } else if (lowerMessage.includes('mate') || lowerMessage.includes('álgebra') || lowerMessage.includes('número')) {
+      return 'matematicas';
+    } else if (lowerMessage.includes('ciencia') || lowerMessage.includes('física') || lowerMessage.includes('química') || lowerMessage.includes('biología')) {
+      return 'ciencias';
+    } else if (lowerMessage.includes('historia') || lowerMessage.includes('geografía') || lowerMessage.includes('social')) {
+      return 'historia';
+    }
+    
+    return null;
+  };
+  
+  // Cambiar la materia activa
+  const changeSubject = (subject: string) => {
+    if (activeSubject !== subject) {
+      setActiveSubject(subject);
+      
+      // Informar al usuario del cambio de materia
+      const subjectNames: Record<string, string> = {
+        general: 'modo general',
+        lectura: 'Comprensión Lectora',
+        matematicas: 'Matemáticas',
+        ciencias: 'Ciencias',
+        historia: 'Historia'
+      };
+      
+      addAssistantMessage(`Ahora estamos en ${subjectNames[subject]}. ¿En qué puedo ayudarte con esta materia?`);
+    }
+  };
+  
   return {
     messages,
     isTyping,
+    activeSubject,
+    changeSubject,
     processUserMessage,
     addAssistantMessage,
+    detectSubjectFromMessage
   };
 }
