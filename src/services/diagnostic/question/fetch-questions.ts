@@ -55,8 +55,11 @@ export const fetchQuestionBatch = async (
 
     if (error) throw error;
     
+    // Convert string testId to number for the mapper function
+    const numericTestId = Number(testId);
+    
     // Use our mapper to convert database records to DiagnosticQuestion objects
-    return data ? data.map(item => mapExerciseToQuestion(item, Number(testId))) : [];
+    return data ? data.map(item => mapExerciseToQuestion(item, numericTestId)) : [];
   } catch (error) {
     console.error('Error fetching questions:', error);
     return [];
