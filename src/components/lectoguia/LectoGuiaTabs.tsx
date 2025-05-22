@@ -6,7 +6,7 @@ import { ExerciseTab } from "@/components/lectoguia/ExerciseTab";
 import { ProgressTab } from "@/components/lectoguia/ProgressTab";
 import { ChatMessage } from "@/components/ai/ChatInterface";
 import { Exercise } from "@/types/ai-types";
-import { LectoGuiaSkill } from "@/types/lectoguia-types";
+import { TPAESHabilidad } from "@/types/system-types";
 
 interface LectoGuiaTabsProps {
   activeTab: string;
@@ -24,9 +24,6 @@ interface LectoGuiaTabsProps {
   onOptionSelect: (index: number) => void;
   onContinue: () => void;
   isLoading?: boolean;
-  // Progress props
-  skillLevels: Record<LectoGuiaSkill, number>;
-  onStartSimulation: () => void;
   // Node selection
   onNodeSelect?: (nodeId: string) => void;
 }
@@ -45,8 +42,6 @@ export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
   onOptionSelect,
   onContinue,
   isLoading = false,
-  skillLevels,
-  onStartSimulation,
   onNodeSelect
 }) => {
   return (
@@ -89,8 +84,6 @@ export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
 
         <TabsContent value="progress" className="m-0">
           <ProgressTab 
-            skillLevels={skillLevels}
-            onStartSimulation={onStartSimulation}
             onNodeSelect={onNodeSelect}
           />
         </TabsContent>

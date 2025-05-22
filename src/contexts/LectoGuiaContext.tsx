@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -125,7 +124,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Nodos
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
   const [nodeProgress, setNodeProgress] = useState<Record<string, NodeProgress>>({});
-  
+
   // Actualizar prueba seleccionada cuando cambia el ID de prueba
   useEffect(() => {
     setSelectedPrueba(testIdToPrueba(selectedTestId));
@@ -147,7 +146,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         
         if (data) {
           // Mapear los nodos desde la base de datos a la interfaz TLearningNode
-          const formattedNodes = data.map(node => ({
+          const formattedNodes: TLearningNode[] = data.map(node => ({
             id: node.id,
             title: node.title,
             description: node.description || '',
@@ -159,7 +158,8 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             estimatedTimeMinutes: node.estimated_time_minutes || 30,
             content: {
               theory: '',
-              examples: []
+              examples: [],
+              exerciseCount: 0  // Añadiendo el campo que faltaba
             }
           }));
           
@@ -194,10 +194,13 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (data) {
           const progress: Record<string, NodeProgress> = {};
           data.forEach(item => {
+            // Convertir el valor de string a uno de los tipos permitidos
+            const validStatus = (item.status as "not_started" | "in_progress" | "completed") || "not_started";
+            
             progress[item.node_id] = {
               nodeId: item.node_id,
               userId: item.user_id,
-              status: item.status,
+              status: validStatus, // Usando el valor tipado
               progress: item.progress || 0,
               completedAt: item.completed_at,
               timeSpentMinutes: item.time_spent_minutes || 0

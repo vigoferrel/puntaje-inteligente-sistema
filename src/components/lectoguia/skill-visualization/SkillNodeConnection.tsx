@@ -32,17 +32,19 @@ export const SkillNodeConnection: React.FC<SkillNodeConnectionProps> = ({
   const initialNodesBySkill = {} as Record<TPAESHabilidad, TLearningNode[]>;
   
   // Obtener todas las habilidades del enum TPAESHabilidad
-  Object.values(TPAESHabilidad).forEach(skill => {
-    initialNodesBySkill[skill as TPAESHabilidad] = [];
+  // Usamos Object.keys y type assertion ya que TPAESHabilidad es un tipo, no un valor
+  const habilidades = Object.keys(skillLevels) as TPAESHabilidad[];
+  habilidades.forEach(skill => {
+    initialNodesBySkill[skill] = [];
   });
   
   // Agrupar nodos por habilidad
   const nodesBySkill = filteredNodes.reduce((acc, node) => {
     if (node.skill) {
-      if (!acc[node.skill]) {
-        acc[node.skill] = [];
+      if (!acc[node.skill as TPAESHabilidad]) {
+        acc[node.skill as TPAESHabilidad] = [];
       }
-      acc[node.skill].push(node);
+      acc[node.skill as TPAESHabilidad].push(node);
     }
     return acc;
   }, initialNodesBySkill);
