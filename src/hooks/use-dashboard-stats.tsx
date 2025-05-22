@@ -1,93 +1,121 @@
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-import { useState, useEffect } from "react";
-import { useUserData } from "@/hooks/use-user-data";
-import { TPAESHabilidad } from "@/types/system-types";
-import { StatCardItem } from "@/components/dashboard/stat-cards";
+interface DashboardStats {
+  totalModules: number;
+  completedModules: number;
+  totalTimeSpent: number;
+  progressPercentage: number;
+  lastActivity: string | null;
+}
 
 export const useDashboardStats = () => {
-  const { user, loading } = useUserData();
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  
-  // Default skill levels to ensure they're never undefined
-  const defaultSkillLevels: Record<TPAESHabilidad, number> = {
-    SOLVE_PROBLEMS: 0,
-    REPRESENT: 0,
-    MODEL: 0,
-    INTERPRET_RELATE: 0,
-    EVALUATE_REFLECT: 0,
-    TRACK_LOCATE: 0,
-    ARGUE_COMMUNICATE: 0,
-    IDENTIFY_THEORIES: 0,
-    PROCESS_ANALYZE: 0,
-    APPLY_PRINCIPLES: 0,
-    SCIENTIFIC_ARGUMENT: 0,
-    TEMPORAL_THINKING: 0,
-    SOURCE_ANALYSIS: 0,
-    MULTICAUSAL_ANALYSIS: 0,
-    CRITICAL_THINKING: 0,
-    REFLECTION: 0
-  };
-  
-  // Use the user skills if available, or the default ones
-  const skillLevels = user?.skillLevels || defaultSkillLevels;
-  
-  // Calculate stats
-  const completedExercises = user?.progress?.completedExercises || 0;
-  const correctExercises = user?.progress?.correctExercises || 0;
-  const accuracyPercentage = completedExercises > 0 
-    ? Math.round((correctExercises / completedExercises) * 100) 
-    : 0;
-  const totalTimeMinutes = user?.progress?.totalTimeMinutes || 0;
+  const { user } = useAuth();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalModules: 0,
+    completedModules: 0,
+    totalTimeSpent: 0,
+    progressPercentage: 0,
+    lastActivity: null,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Create stats array for the StatCards component
-  const stats: StatCardItem[] = [
-    {
-      title: "Ejercicios Completados",
-      value: completedExercises,
-      description: "Total de ejercicios completados",
-      trend: "up",
-      trendValue: "12"
-    },
-    {
-      title: "Precisión",
-      value: `${accuracyPercentage}%`,
-      description: "Porcentaje de respuestas correctas",
-      trend: "up",
-      trendValue: "5"
-    },
-    {
-      title: "Tiempo de Estudio",
-      value: `${totalTimeMinutes} min`,
-      description: "Tiempo total estudiando",
-      trend: "up",
-      trendValue: "8"
-    },
-    {
-      title: "Días Consecutivos",
-      value: "3",
-      description: "Días seguidos estudiando",
-      trend: "up",
-      trendValue: "2"
-    }
-  ];
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      if (!user?.id) {
+        return;
+      }
 
-  // Get top skills
-  const topSkills = Object.entries(skillLevels)
-    .map(([skill, level]) => ({ skill: skill as TPAESHabilidad, level }))
-    .sort((a, b) => b.level - a.level)
-    .slice(0, 5)
-    .map(item => item.skill);
+      setLoading(true);
+      setError(null);
 
-  return {
-    user,
-    loading,
-    searchQuery,
-    setSearchQuery,
-    stats,
-    skillLevels,
-    topSkills,
-    completedExercises,
-    accuracyPercentage,
-    totalTimeMinutes
-  };
+      try {
+        // Fetch total modules from learning_plan_nodes
+        const { data: planNodes, error: planNodesError } = await supabase
+          .from('learning_plan_nodes')
+          .select('id')
+          .in('plan_id',
+            supabase
+              .from('learning_plans')
+              .select('id')
+              .eq('user_id', user.id)
+          );
+
+        if (planNodesError) {
+          console.error('Error fetching learning plan nodes:', planNodesError);
+          setError('Failed to fetch learning plan nodes.');
+          return;
+        }
+
+        const totalModules = planNodes ? planNodes.length : 0;
+
+        // Fetch completed modules from user_node_progress
+        const { data: completedNodes, error: completedNodesError } = await supabase
+          .from('user_node_progress')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'completed');
+
+        if (completedNodesError) {
+          console.error('Error fetching completed nodes:', completedNodesError);
+          setError('Failed to fetch completed nodes.');
+          return;
+        }
+
+        const completedModules = completedNodes ? completedNodes.length : 0;
+
+        // Calculate progress percentage
+        const progressPercentage = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
+
+        // Fetch total time spent from user_node_progress
+        const { data: timeSpentData, error: timeSpentError } = await supabase
+          .from('user_node_progress')
+          .select('time_spent_minutes')
+          .eq('user_id', user.id);
+
+        if (timeSpentError) {
+          console.error('Error fetching time spent data:', timeSpentError);
+          setError('Failed to fetch time spent data.');
+          return;
+        }
+
+        const totalTimeSpent = timeSpentData?.reduce((acc, curr) => acc + (curr.time_spent_minutes || 0), 0) || 0;
+
+        // Fetch last activity from user_node_progress
+        const { data: lastActivityData, error: lastActivityError } = await supabase
+          .from('user_node_progress')
+          .select('created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (lastActivityError) {
+          console.error('Error fetching last activity:', lastActivityError);
+          setError('Failed to fetch last activity.');
+          return;
+        }
+
+        const lastActivity = lastActivityData && lastActivityData.length > 0 ? lastActivityData[0].created_at : null;
+
+        setStats({
+          totalModules,
+          completedModules,
+          totalTimeSpent,
+          progressPercentage,
+          lastActivity,
+        });
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+        setError('Failed to fetch dashboard stats.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, [user?.id]);
+
+  return { stats, loading, error };
 };

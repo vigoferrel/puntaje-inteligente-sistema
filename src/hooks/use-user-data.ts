@@ -5,6 +5,17 @@ import { toast } from "@/components/ui/use-toast";
 import { createLearningPlan } from "@/services/plan-service";
 import { TPAESHabilidad } from "@/types/system-types";
 
+// Add the missing UserProfile type export to fix the build errors
+export interface UserProfile {
+  id: string;
+  name?: string;
+  email?: string;
+  avatar_url?: string;
+  preferences?: Record<string, any>;
+  targetCareer?: string;
+  learningCyclePhase?: string;
+}
+
 export const useUserData = () => {
   const { profile: authProfile } = useAuth();
   const [user, setUser] = useState(null);
