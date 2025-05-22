@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { TPAESPrueba } from "@/types/system-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface ProgressTabProps {
   skillLevels: Record<string, number>;
@@ -54,35 +55,37 @@ export function ProgressTab({ skillLevels, onStartSimulation }: ProgressTabProps
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <h2 className="text-2xl font-bold">Tu Progreso de Aprendizaje</h2>
+    <TooltipProvider>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          <h2 className="text-2xl font-bold">Tu Progreso de Aprendizaje</h2>
+          
+          <Select value={selectedTestId.toString()} onValueChange={handleTestChange}>
+            <SelectTrigger className="w-full md:w-[240px]">
+              <SelectValue placeholder="Seleccionar prueba" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">Competencia Lectora</SelectItem>
+              <SelectItem value="2">Matemática 1</SelectItem>
+              <SelectItem value="3">Matemática 2</SelectItem>
+              <SelectItem value="4">Ciencias</SelectItem>
+              <SelectItem value="5">Historia</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
-        <Select value={selectedTestId.toString()} onValueChange={handleTestChange}>
-          <SelectTrigger className="w-full md:w-[240px]">
-            <SelectValue placeholder="Seleccionar prueba" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">Competencia Lectora</SelectItem>
-            <SelectItem value="2">Matemática 1</SelectItem>
-            <SelectItem value="3">Matemática 2</SelectItem>
-            <SelectItem value="4">Ciencias</SelectItem>
-            <SelectItem value="5">Historia</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Sección de resumen de progreso con métricas de habilidades */}
+        <ProgressView skillLevels={skillLevels} onStartSimulation={onStartSimulation} />
+        
+        {/* Visualización avanzada de habilidades y nodos con jerarquía de Bloom */}
+        <SkillNodeConnection 
+          skillLevels={skillLevels as any} 
+          nodes={nodes}
+          nodeProgress={nodeProgress}
+          onNodeSelect={handleNodeSelect}
+          className="mt-8"
+        />
       </div>
-      
-      {/* Sección de resumen de progreso con métricas de habilidades */}
-      <ProgressView skillLevels={skillLevels} onStartSimulation={onStartSimulation} />
-      
-      {/* Visualización avanzada de habilidades y nodos con jerarquía de Bloom */}
-      <SkillNodeConnection 
-        skillLevels={skillLevels as any} 
-        nodes={nodes}
-        nodeProgress={nodeProgress}
-        onNodeSelect={handleNodeSelect}
-        className="mt-8"
-      />
-    </div>
+    </TooltipProvider>
   );
 }
