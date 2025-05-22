@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { TLearningNode } from "@/types/system-types";
-import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/supabase-mappers";
+// Modificamos la importación para usar el archivo barril
+import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/mappers";
 
 /**
  * Maps database nodes to frontend type
