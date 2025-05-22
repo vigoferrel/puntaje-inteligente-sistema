@@ -6,7 +6,7 @@
 
 // Re-exportar todas las funciones de manejo desde sus respectivos módulos
 export { generateExercise, generateExercisesBatch } from './exercise/index.ts';
-export { generateDiagnostic } from './diagnostic-handlers.ts';
+export { generateDiagnostic } from './diagnostic/index.ts';
 export { analyzePerformance } from './performance-handlers.ts';
 export { provideFeedback } from './feedback-handlers.ts';
 export { processImage } from './image-handlers.ts';
