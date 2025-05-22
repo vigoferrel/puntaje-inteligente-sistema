@@ -5,6 +5,7 @@ import { LectoGuiaHeader } from "@/components/lectoguia/LectoGuiaHeader";
 import { LectoGuiaTabs } from "@/components/lectoguia/LectoGuiaTabs";
 import { useLectoGuia } from "@/hooks/use-lectoguia";
 import { Toaster } from "@/components/ui/toaster";
+import { ChatSettingsProvider } from "@/components/lectoguia/chat-settings/ChatSettingsContext";
 
 // Componente principal de LectoGuía convertido en asistente completo
 const LectoGuia = () => {
@@ -27,29 +28,31 @@ const LectoGuia = () => {
 
   return (
     <AppLayout>
-      <div className="container max-w-6xl mx-auto py-6 px-4 md:px-6">
-        <div className="flex flex-col space-y-4">
-          <LectoGuiaHeader />
+      <ChatSettingsProvider>
+        <div className="container max-w-6xl mx-auto py-6 px-4 md:px-6">
+          <div className="flex flex-col space-y-4">
+            <LectoGuiaHeader />
 
-          <LectoGuiaTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            isTyping={isTyping}
-            activeSubject={activeSubject}
-            onSubjectChange={handleSubjectChange}
-            exercise={currentExercise}
-            selectedOption={selectedOption}
-            showFeedback={showFeedback}
-            onOptionSelect={handleExerciseOptionSelect}
-            onContinue={handleNewExercise}
-            skillLevels={skillLevels}
-            onStartSimulation={handleStartSimulation}
-          />
+            <LectoGuiaTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              isTyping={isTyping}
+              activeSubject={activeSubject}
+              onSubjectChange={handleSubjectChange}
+              exercise={currentExercise}
+              selectedOption={selectedOption}
+              showFeedback={showFeedback}
+              onOptionSelect={handleExerciseOptionSelect}
+              onContinue={handleNewExercise}
+              skillLevels={skillLevels}
+              onStartSimulation={handleStartSimulation}
+            />
+          </div>
         </div>
-      </div>
-      <Toaster />
+        <Toaster />
+      </ChatSettingsProvider>
     </AppLayout>
   );
 };

@@ -4,6 +4,7 @@ import { PaperAirplaneIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { ImagePlus, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { useChatSettings } from "@/components/lectoguia/chat-settings/ChatSettingsContext";
 
 interface ChatInputProps {
   onSendMessage: (message: string, imageData?: string) => void;
@@ -11,6 +12,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..." }: ChatInputProps) {
+  const { settings } = useChatSettings();
   const [input, setInput] = useState("");
   const [imageData, setImageData] = useState<string | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
@@ -25,7 +27,8 @@ export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..."
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Only handle Enter key press according to settings
+    if (e.key === "Enter" && !e.shiftKey && settings.enterToSend) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -146,6 +149,13 @@ export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..."
           <PaperAirplaneIcon className="h-4 w-4" />
         </Button>
       </div>
+      
+      {/* Enter to send hint */}
+      {settings.enterToSend && (
+        <div className="text-xs text-muted-foreground mt-1 text-right mr-1">
+          Presiona Enter para enviar, Shift+Enter para nueva línea
+        </div>
+      )}
     </div>
   );
-}
+};
