@@ -9,11 +9,16 @@ interface TopSkillsProps {
   loading: boolean;
   topSkills: TPAESHabilidad[];
   skillLevels: Record<TPAESHabilidad, number>;
+  skills?: TPAESHabilidad[]; // Added to support the new prop usage
+  className?: string;
 }
 
-export const TopSkills = ({ loading, topSkills, skillLevels }: TopSkillsProps) => {
+export const TopSkills = ({ loading, topSkills, skillLevels, skills, className }: TopSkillsProps) => {
+  // Use skills prop if provided, otherwise use topSkills
+  const skillsToDisplay = skills || topSkills;
+
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>Tus Habilidades Top</CardTitle>
         <CardDescription>
@@ -28,7 +33,7 @@ export const TopSkills = ({ loading, topSkills, skillLevels }: TopSkillsProps) =
             <div className="h-10 bg-gray-200 animate-pulse rounded" />
           </div>
         ) : (
-          topSkills.map((skill) => (
+          skillsToDisplay.map((skill) => (
             <SkillProgress 
               key={skill} 
               skill={skill} 

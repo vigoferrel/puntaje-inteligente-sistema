@@ -72,29 +72,9 @@ const Index = () => {
 
         <StatCards
           loading={loading}
-          stats={[
-            {
-              title: "Ejercicios Completados",
-              value: completedExercises,
-              description: "Total de ejercicios resueltos",
-              trend: "up",
-              trendValue: "+5% esta semana"
-            },
-            {
-              title: "Precisión",
-              value: `${accuracyPercentage}%`,
-              description: "Respuestas correctas",
-              trend: accuracyPercentage >= 70 ? "up" : "down",
-              trendValue: accuracyPercentage >= 70 ? "Buen progreso!" : "Necesita mejora"
-            },
-            {
-              title: "Tiempo de Estudio",
-              value: `${Math.floor(totalTimeMinutes / 60)}h ${totalTimeMinutes % 60}m`,
-              description: "Tiempo total invertido",
-              trend: "up",
-              trendValue: "Constancia"
-            }
-          ]}
+          completedExercises={completedExercises}
+          accuracyPercentage={accuracyPercentage}
+          totalTimeMinutes={totalTimeMinutes}
           className="mb-8"
         />
 
@@ -103,7 +83,12 @@ const Index = () => {
             <LearningWorkflow className="h-full" />
           </div>
           <div className="md:col-span-3">
-            <TopSkills skills={topSkills} className="h-full" />
+            <TopSkills 
+              loading={loading} 
+              topSkills={topSkills} 
+              skillLevels={skillLevels} 
+              className="h-full" 
+            />
           </div>
         </div>
         

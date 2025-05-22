@@ -129,19 +129,29 @@ function mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
     options = [];
   }
 
-  // Map database fields to our type, with fallbacks for missing data
+  // Explicitly define skill and prueba types to avoid circular references
+  let skill: TPAESHabilidad = 'SOLVE_PROBLEMS';
+  if (typeof exercise?.skill === 'number') {
+    skill = mapSkillIdToEnum(exercise.skill);
+  } else if (exercise?.skill) {
+    skill = exercise.skill as TPAESHabilidad;
+  }
+
+  let prueba: TPAESPrueba = 'MATEMATICA_1';
+  if (typeof exercise?.prueba === 'number') {
+    prueba = mapTestIdToEnum(exercise.prueba);
+  } else if (exercise?.prueba) {
+    prueba = exercise.prueba as TPAESPrueba;
+  }
+
+  // Return the mapped question with explicitly typed properties
   return {
     id: exercise?.id || '',
     question: exercise?.question || '',
     options: options,
     correctAnswer: exercise?.correct_answer || '',
-    // If skill/prueba are stored as IDs, map them to the enum types
-    skill: typeof exercise?.skill === 'number' 
-      ? mapSkillIdToEnum(exercise.skill)
-      : (exercise?.skill as TPAESHabilidad || 'SOLVE_PROBLEMS'),
-    prueba: typeof exercise?.prueba === 'number'
-      ? mapTestIdToEnum(exercise.prueba)
-      : (exercise?.prueba as TPAESPrueba || 'MATEMATICA_1'),
+    skill: skill,
+    prueba: prueba,
     explanation: exercise?.explanation || undefined
   };
 }
