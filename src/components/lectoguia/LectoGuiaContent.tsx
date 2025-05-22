@@ -18,7 +18,7 @@ export const LectoGuiaContent: React.FC = () => {
     currentExercise,
     selectedOption,
     showFeedback,
-    handleExerciseOptionSelect,
+    handleOptionSelect,
     handleNewExercise,
     isLoading,
     handleNodeSelect
@@ -56,7 +56,7 @@ export const LectoGuiaContent: React.FC = () => {
             exercise={currentExercise}
             selectedOption={selectedOption}
             showFeedback={showFeedback}
-            onOptionSelect={handleExerciseOptionSelect}
+            onOptionSelect={handleOptionSelect}
             onContinue={handleNewExercise}
             isLoading={isLoading}
           />
