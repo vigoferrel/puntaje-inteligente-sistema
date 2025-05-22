@@ -12,6 +12,7 @@ export const useDiagnosticController = () => {
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [testStarted, setTestStarted] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [generatingDiagnostic, setGeneratingDiagnostic] = useState(false);
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
@@ -25,7 +26,16 @@ export const useDiagnosticController = () => {
         
         // Generate a test if none exist
         if (diagnosticService.tests.length === 0) {
-          await diagnosticService.ensureDefaultDiagnosticsExist();
+          setGeneratingDiagnostic(true);
+          const success = await diagnosticService.ensureDefaultDiagnosticsExist();
+          
+          if (success) {
+            toast({
+              title: "Diagnóstico creado",
+              description: "Se ha generado un diagnóstico inicial para ti",
+            });
+          }
+          setGeneratingDiagnostic(false);
         }
       } catch (error) {
         console.error("Error initializing diagnostics:", error);
@@ -34,6 +44,7 @@ export const useDiagnosticController = () => {
           description: "No se pudieron cargar los diagnósticos iniciales",
           variant: "destructive"
         });
+        setGeneratingDiagnostic(false);
       } finally {
         setInitializing(false);
       }
@@ -75,8 +86,9 @@ export const useDiagnosticController = () => {
   return {
     // State from hooks
     initializing,
+    generatingDiagnostic,
     tests: selectionState.tests,
-    loading: selectionState.loading || initializing,
+    loading: selectionState.loading || initializing || generatingDiagnostic,
     selectedTestId,
     pausedProgress: selectionState.pausedProgress,
     testStarted,

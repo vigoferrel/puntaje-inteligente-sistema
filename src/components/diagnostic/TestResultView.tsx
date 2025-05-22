@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, InfoIcon, Home, RotateCw, BookOpen } from "lucide-react";
+import { CheckCircle, InfoIcon, Home, RotateCw, BookOpen, BarChart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DiagnosticResultsSummary } from "@/components/diagnostic/DiagnosticResultsSummary";
 import { TPAESHabilidad } from "@/types/system-types";
@@ -57,9 +57,10 @@ export const TestResultView = ({ onRestartDiagnostic, results }: TestResultViewP
           <AlertDescription className="text-blue-700">
             <p className="mb-2">Con base en tus resultados, te recomendamos:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Revisar los temas en los que obtuviste menor puntaje</li>
-              <li>Utilizar los recursos de estudio personalizados</li>
-              <li>Programar sesiones de práctica enfocadas en tus áreas de mejora</li>
+              <li>Revisar tu plan de estudio personalizado que hemos generado basado en tu diagnóstico</li>
+              <li>Concentrarte en las áreas identificadas para mejorar</li>
+              <li>Realizar ejercicios de práctica con LectoGuía para reforzar tus conocimientos</li>
+              <li>Programar diagnósticos periódicos para seguir tu progreso</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -85,8 +86,8 @@ export const TestResultView = ({ onRestartDiagnostic, results }: TestResultViewP
           onClick={() => navigate("/")}
           className="w-full sm:w-auto flex items-center gap-2"
         >
-          <Home className="w-4 h-4" />
-          Ir al inicio
+          <BarChart className="w-4 h-4" />
+          Ver dashboard
         </Button>
       </CardFooter>
     </Card>

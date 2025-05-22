@@ -21,6 +21,7 @@ const Diagnostico = () => {
           tests, 
           loading,
           initializing,
+          generatingDiagnostic,
           currentTest,
           selectedTestId,
           testStarted,
@@ -47,6 +48,7 @@ const Diagnostico = () => {
           console.log("Estado actual:", { 
             loading, 
             initializing,
+            generatingDiagnostic,
             testStarted, 
             resultSubmitted,
             testsCount: tests.length
@@ -55,7 +57,9 @@ const Diagnostico = () => {
           // Determine what message to show during loading
           let loadingMessage = "Cargando diagnósticos...";
           if (initializing) {
-            loadingMessage = "Inicializando diagnósticos. Esto puede tomar un momento...";
+            loadingMessage = "Inicializando diagnósticos. Por favor espera...";
+          } else if (generatingDiagnostic) {
+            loadingMessage = "Generando diagnóstico inicial personalizado...";
           }
           
           return (
@@ -63,7 +67,7 @@ const Diagnostico = () => {
               <h1 className="text-3xl font-bold mb-6">Diagnóstico</h1>
               
               {loading ? (
-                <DiagnosticSkeleton message={loadingMessage} />
+                <DiagnosticSkeleton message={loadingMessage} generating={generatingDiagnostic} />
               ) : !testStarted ? (
                 <>
                   {pausedProgress && tests.length > 0 && tests.some(test => test.id === pausedProgress.testId) && (
@@ -86,7 +90,7 @@ const Diagnostico = () => {
                     <div className="text-center p-8 border rounded-lg bg-background">
                       <h3 className="text-xl font-medium mb-2">No hay diagnósticos disponibles</h3>
                       <p className="text-muted-foreground mb-4">
-                        No se encontraron pruebas diagnósticas. Esto puede deberse a que aún no se han configurado los diagnósticos o a un problema al cargarlos.
+                        No se encontraron pruebas diagnósticas. Puede deberse a un problema de conexión o que aún no se han configurado.
                       </p>
                       <Button 
                         onClick={() => window.location.reload()}
@@ -122,8 +126,7 @@ const Diagnostico = () => {
                 open={showPauseConfirmation} 
                 onOpenChange={(open) => {
                   if (!open) {
-                    // Si se cierra el diálogo sin confirmar
-                    console.log("Cerrado sin confirmar");
+                    console.log("Diálogo de pausa cerrado sin confirmar");
                   }
                 }}
                 onConfirm={confirmPauseTest} 
