@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useUserData } from "@/hooks/use-user-data";
 import { TPAESHabilidad } from "@/types/system-types";
-import { StatCards } from "@/components/dashboard/stat-cards";
+import { StatCards, StatCardItem } from "@/components/dashboard/stat-cards";
 import { SearchBar } from "@/components/dashboard/search-bar";
 import { TopSkills } from "@/components/dashboard/top-skills";
 import { AIFeatures } from "@/components/dashboard/ai-features";
@@ -48,6 +48,38 @@ const Index = () => {
     : 0;
   const totalTimeMinutes = user?.progress?.totalTimeMinutes || 0;
 
+  // Create stats array for the StatCards component
+  const stats: StatCardItem[] = [
+    {
+      title: "Ejercicios Completados",
+      value: completedExercises,
+      description: "Total de ejercicios completados",
+      trend: "up",
+      trendValue: "12"
+    },
+    {
+      title: "Precisión",
+      value: `${accuracyPercentage}%`,
+      description: "Porcentaje de respuestas correctas",
+      trend: "up",
+      trendValue: "5"
+    },
+    {
+      title: "Tiempo de Estudio",
+      value: `${totalTimeMinutes} min`,
+      description: "Tiempo total estudiando",
+      trend: "up",
+      trendValue: "8"
+    },
+    {
+      title: "Días Consecutivos",
+      value: "3",
+      description: "Días seguidos estudiando",
+      trend: "up",
+      trendValue: "2"
+    }
+  ];
+
   // Get top skills
   const topSkills = Object.entries(skillLevels)
     .map(([skill, level]) => ({ skill: skill as TPAESHabilidad, level }))
@@ -72,6 +104,7 @@ const Index = () => {
 
         <StatCards
           loading={loading}
+          stats={stats}
           completedExercises={completedExercises}
           accuracyPercentage={accuracyPercentage}
           totalTimeMinutes={totalTimeMinutes}

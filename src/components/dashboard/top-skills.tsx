@@ -9,7 +9,7 @@ interface TopSkillsProps {
   loading: boolean;
   topSkills: TPAESHabilidad[];
   skillLevels: Record<TPAESHabilidad, number>;
-  skills?: TPAESHabilidad[]; // Added to support the new prop usage
+  skills?: TPAESHabilidad[];
   className?: string;
 }
 

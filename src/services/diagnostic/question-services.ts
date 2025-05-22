@@ -109,7 +109,18 @@ export async function fetchDiagnosticQuestions(
 /**
  * Helper function to transform a raw exercise row from the database into our DiagnosticQuestion type
  */
-function mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
+// Define a simplified type for the database exercise to prevent circular references
+interface RawExerciseData {
+  id?: string;
+  question?: string;
+  options?: string[] | string | any;
+  correct_answer?: string;
+  skill?: number | string | TPAESHabilidad;
+  prueba?: number | string | TPAESPrueba;
+  explanation?: string;
+}
+
+function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
   // Safely parse options if they're stored as a JSON string
   let options: string[] = [];
   

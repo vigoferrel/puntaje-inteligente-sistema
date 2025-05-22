@@ -3,7 +3,7 @@ import React from "react";
 import { StatCard } from "@/components/stat-card";
 import { BookOpen, CalendarDays, CheckCircle, Hourglass } from "lucide-react";
 
-interface StatCardItem {
+export interface StatCardItem {
   title: string;
   value: string | number;
   description: string;
@@ -13,7 +13,7 @@ interface StatCardItem {
 
 interface StatCardsProps {
   loading: boolean;
-  stats: StatCardItem[];
+  stats?: StatCardItem[];
   className?: string;
   completedExercises?: number;
   accuracyPercentage?: number;
