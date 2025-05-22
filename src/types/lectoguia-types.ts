@@ -1,5 +1,6 @@
 
 import { Exercise } from './ai-types';
+import { TLearningNode, TPAESHabilidad } from './system-types';
 
 export interface ExerciseAttempt {
   id: string;
@@ -61,3 +62,6 @@ export type LectoGuiaSkill =
   | 'ALGEBRA'
   | 'PHYSICS'
   | 'HISTORY';
+
+// Re-export TLearningNode for convenience
+export type { TLearningNode };

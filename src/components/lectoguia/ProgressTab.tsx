@@ -12,9 +12,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 interface ProgressTabProps {
   skillLevels: Record<string, number>;
   onStartSimulation: () => void;
+  onNodeSelect?: (nodeId: string) => void;
 }
 
-export function ProgressTab({ skillLevels, onStartSimulation }: ProgressTabProps) {
+export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: ProgressTabProps) {
   const { user } = useAuth();
   const [selectedTestId, setSelectedTestId] = useState<number>(1); // Default: Competencia lectora
   
@@ -40,18 +41,6 @@ export function ProgressTab({ skillLevels, onStartSimulation }: ProgressTabProps
   // Manejar cambio de prueba
   const handleTestChange = (value: string) => {
     setSelectedTestId(parseInt(value, 10));
-  };
-
-  // Manejar selección de nodo
-  const handleNodeSelect = (nodeId: string) => {
-    // Here you would navigate to the node content page or start the node session
-    toast({
-      title: "Nodo seleccionado",
-      description: `Iniciando nodo de aprendizaje: ${nodeId}`,
-    });
-    
-    // In a real implementation, you would navigate to the node page:
-    // router.push(`/lectoguia/nodes/${nodeId}`);
   };
 
   return (
@@ -82,7 +71,7 @@ export function ProgressTab({ skillLevels, onStartSimulation }: ProgressTabProps
           skillLevels={skillLevels as any} 
           nodes={nodes}
           nodeProgress={nodeProgress}
-          onNodeSelect={handleNodeSelect}
+          onNodeSelect={onNodeSelect}
           className="mt-8"
         />
       </div>

@@ -26,6 +26,8 @@ interface LectoGuiaTabsProps {
   // Progress props
   skillLevels: Record<LectoGuiaSkill, number>;
   onStartSimulation: () => void;
+  // Node selection
+  onNodeSelect?: (nodeId: string) => void;
 }
 
 export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
@@ -42,7 +44,8 @@ export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
   onOptionSelect,
   onContinue,
   skillLevels,
-  onStartSimulation
+  onStartSimulation,
+  onNodeSelect
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
@@ -85,6 +88,7 @@ export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
           <ProgressTab 
             skillLevels={skillLevels}
             onStartSimulation={onStartSimulation}
+            onNodeSelect={onNodeSelect}
           />
         </TabsContent>
       </div>

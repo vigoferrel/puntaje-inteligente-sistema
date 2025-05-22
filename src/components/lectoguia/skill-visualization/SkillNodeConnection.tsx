@@ -109,6 +109,7 @@ export const SkillNodeConnection = ({
             <LearningNodesByBloomLevel 
               nodes={nodes}
               nodeProgress={nodeProgress}
+              onNodeSelect={onNodeSelect}
             />
           </TabsContent>
           
@@ -127,6 +128,7 @@ export const SkillNodeConnection = ({
         <ActiveLearningNodes 
           nodes={nodes}
           nodeProgress={nodeProgress}
+          onNodeSelect={onNodeSelect}
         />
       )}
     </div>

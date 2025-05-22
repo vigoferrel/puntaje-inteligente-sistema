@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowRight, Brain } from "lucide-react";
+import { ArrowRight, Brain, Play } from "lucide-react";
 import { useBloomRecommendations } from "@/hooks/use-bloom-recommendations";
 import { TLearningNode, TPAESHabilidad } from "@/types/system-types";
 import { NodeProgress } from "@/hooks/use-learning-nodes";
@@ -92,30 +92,44 @@ export const BloomRecommendations: React.FC<BloomRecommendationsProps> = ({
         {recommendedNodes.length > 0 && (
           <div className="space-y-3">
             <h4 className="font-medium">Nodos Recomendados</h4>
-            <div className="space-y-2">
-              {recommendedNodes.map(node => (
-                <div 
-                  key={node.id} 
-                  className="p-3 border rounded-md hover:bg-gray-50"
-                >
-                  <div className="flex justify-between">
-                    <div>
-                      <div className="font-medium">{node.title}</div>
-                      <div className="text-sm text-muted-foreground">{node.description}</div>
+            <div className="space-y-3">
+              {recommendedNodes.map(node => {
+                const isInProgress = nodeProgress[node.id]?.status === "in_progress";
+                return (
+                  <div 
+                    key={node.id} 
+                    className="p-4 border rounded-md hover:bg-gray-50 transition-colors space-y-3"
+                  >
+                    <div className="flex justify-between">
+                      <div>
+                        <div className="font-medium">{node.title}</div>
+                        <div className="text-sm text-muted-foreground line-clamp-2">{node.description}</div>
+                      </div>
                     </div>
+                    
                     {onNodeSelect && (
                       <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 gap-1"
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2"
                         onClick={() => onNodeSelect(node.id)}
                       >
-                        Iniciar <ArrowRight className="h-4 w-4" />
+                        {isInProgress ? (
+                          <>
+                            <ArrowRight className="h-4 w-4" />
+                            Continuar nodo
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4" />
+                            Iniciar nodo
+                          </>
+                        )}
                       </Button>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

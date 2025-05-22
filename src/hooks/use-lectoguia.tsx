@@ -1,15 +1,19 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Exercise } from "@/types/ai-types";
-import { LectoGuiaSkill } from "@/types/lectoguia-types";
+import { LectoGuiaSkill, TLearningNode } from "@/types/lectoguia-types";
 import { useLectoGuiaSession } from "@/hooks/use-lectoguia-session";
-import { useLectoGuiaChat } from "@/hooks/use-lectoguia-chat";
+import { useLectoGuiaChat } from "@/hooks/lectoguia-chat";
 import { useLectoGuiaExercise } from "@/hooks/use-lectoguia-exercise";
 import { toast } from "@/components/ui/use-toast";
+import { useLearningNodes } from "@/hooks/use-learning-nodes";
+import { useAuth } from "@/contexts/AuthContext";
+import { fetchNodeById } from "@/services/learning-node-service";
 
 export function useLectoGuia() {
   // Estado para gestionar la pestaña activa
   const [activeTab, setActiveTab] = useState("chat");
+  const { user } = useAuth();
   
   // Hooks para estados y lógica
   const { session, saveExerciseAttempt } = useLectoGuiaSession();
@@ -29,8 +33,13 @@ export function useLectoGuia() {
     showFeedback, 
     generateExercise, 
     handleOptionSelect, 
-    resetExercise 
+    resetExercise,
+    generateExerciseForNode
   } = useLectoGuiaExercise();
+
+  const {
+    updateNodeProgress,
+  } = useLearningNodes();
 
   // Manejar el envío de mensajes
   const handleSendMessage = async (message: string, imageData?: string) => {
@@ -137,6 +146,78 @@ export function useLectoGuia() {
     changeSubject(subject);
   };
 
+  // Nueva función para manejar la selección de nodo
+  const handleNodeSelect = useCallback(async (nodeId: string) => {
+    if (!user?.id) {
+      toast({
+        title: "Inicia sesión",
+        description: "Debes iniciar sesión para acceder a este nodo de aprendizaje",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // 1. Marcar el nodo como "in_progress"
+      const nodeUpdateSuccess = await updateNodeProgress(
+        user.id,
+        nodeId,
+        'in_progress',
+        0.1, // Iniciamos con un 10% de progreso
+        1 // Añadimos un minuto de tiempo invertido inicialmente
+      );
+
+      if (!nodeUpdateSuccess) {
+        throw new Error("No se pudo actualizar el estado del nodo");
+      }
+
+      // 2. Obtener los detalles del nodo
+      const nodeDetails = await fetchNodeById(nodeId);
+      if (!nodeDetails) {
+        throw new Error("No se pudo obtener la información del nodo");
+      }
+
+      // 3. Cambiar a la pestaña de chat
+      setActiveTab("chat");
+
+      // 4. Generar mensaje del asistente sobre el nodo
+      const welcomeMessage = `
+Estamos trabajando ahora en el nodo de aprendizaje **${nodeDetails.title}**. 
+
+Este nodo se enfoca en la habilidad **${nodeDetails.skill}** y tiene un nivel de dificultad **${nodeDetails.difficulty}**.
+
+${nodeDetails.description}
+
+Trabajemos en este tema para mejorar tu dominio. ¿Te gustaría comenzar con:
+1. Una explicación del concepto principal
+2. Ver un ejercicio de ejemplo
+3. Practicar con un ejercicio relacionado
+`;
+
+      addAssistantMessage(welcomeMessage);
+
+      // 5. Preparar un ejercicio relacionado con la habilidad del nodo
+      const exercise = await generateExerciseForNode(nodeDetails);
+
+      if (exercise) {
+        toast({
+          title: "Ejercicio generado",
+          description: "Se ha generado un ejercicio relacionado con este nodo de aprendizaje",
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error al iniciar nodo de aprendizaje:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo iniciar el nodo de aprendizaje",
+        variant: "destructive"
+      });
+      return false;
+    }
+  }, [user, updateNodeProgress, addAssistantMessage, generateExerciseForNode, setActiveTab]);
+
   return {
     activeTab,
     setActiveTab,
@@ -151,6 +232,7 @@ export function useLectoGuia() {
     handleExerciseOptionSelect,
     handleNewExercise,
     handleStartSimulation,
-    skillLevels: session.skillLevels as Record<LectoGuiaSkill, number>
+    skillLevels: session.skillLevels as Record<LectoGuiaSkill, number>,
+    handleNodeSelect
   };
 }

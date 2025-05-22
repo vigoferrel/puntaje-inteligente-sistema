@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TPAESHabilidad } from "@/types/system-types";
 import { TLearningNode } from "@/types/system-types";
@@ -22,22 +21,7 @@ export const fetchNodeById = async (nodeId: string): Promise<TLearningNode | nul
     
     if (!data) return null;
     
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description || '',
-      skill: data.skill?.code as TPAESHabilidad || 'MODEL',
-      prueba: 'MATEMATICA_1', // Default value
-      difficulty: data.difficulty || 'basic',
-      position: data.position || 0,
-      dependsOn: data.depends_on || [],
-      estimatedTimeMinutes: data.estimated_time_minutes || 30,
-      content: {
-        theory: '',
-        examples: [],
-        exerciseCount: 15
-      }
-    };
+    return mapDbNodeToLearningNode(data);
   } catch (error) {
     console.error("Error fetching node by ID:", error);
     return null;
@@ -101,4 +85,26 @@ export const fetchNodesBySkills = async (skills: TPAESHabilidad[]): Promise<TLea
     console.error("Error fetching nodes by skills:", error);
     return [];
   }
+};
+
+/**
+ * Maps a raw database node to the TLearningNode type
+ */
+const mapDbNodeToLearningNode = (data: any): TLearningNode => {
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description || '',
+    skill: data.skill?.code as TPAESHabilidad || 'MODEL',
+    prueba: 'MATEMATICA_1', // Default value
+    difficulty: data.difficulty || 'basic',
+    position: data.position || 0,
+    dependsOn: data.depends_on || [],
+    estimatedTimeMinutes: data.estimated_time_minutes || 30,
+    content: {
+      theory: '',
+      examples: [],
+      exerciseCount: 15
+    }
+  };
 };
