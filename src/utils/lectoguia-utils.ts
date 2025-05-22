@@ -1,28 +1,10 @@
 
-import { TPAESHabilidad } from '@/types/system-types';
+import { TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName } from '@/types/system-types';
+import { SUBJECT_TO_PRUEBA_MAP } from '@/hooks/lectoguia/use-subjects';
 
 // Helper para obtener un nombre amigable para cada habilidad
 export function getSkillName(skillCode: string): string {
-  const skillNames: Record<string, string> = {
-    'TRACK_LOCATE': 'Localizar información',
-    'INTERPRET_RELATE': 'Interpretar y relacionar',
-    'EVALUATE_REFLECT': 'Evaluar y reflexionar',
-    'SOLVE_PROBLEMS': 'Resolución de problemas',
-    'REPRESENT': 'Representación',
-    'MODEL': 'Modelamiento',
-    'ARGUE_COMMUNICATE': 'Argumentación',
-    'IDENTIFY_THEORIES': 'Identificación de teorías',
-    'PROCESS_ANALYZE': 'Procesamiento de datos',
-    'APPLY_PRINCIPLES': 'Aplicación de principios',
-    'SCIENTIFIC_ARGUMENT': 'Argumentación científica',
-    'TEMPORAL_THINKING': 'Pensamiento temporal',
-    'SOURCE_ANALYSIS': 'Análisis de fuentes',
-    'MULTICAUSAL_ANALYSIS': 'Análisis multicausal',
-    'CRITICAL_THINKING': 'Pensamiento crítico',
-    'REFLECTION': 'Reflexión'
-  };
-  
-  return skillNames[skillCode] || skillCode;
+  return getHabilidadDisplayName(skillCode as TPAESHabilidad);
 }
 
 // Helper para formatear el nivel de habilidad
@@ -61,7 +43,7 @@ export function getInitialSkillLevels(): Record<string, number> {
 }
 
 // Función para agrupar habilidades por tipo de prueba
-export function getSkillsByPrueba(): Record<string, string[]> {
+export function getSkillsByPrueba(): Record<TPAESPrueba, TPAESHabilidad[]> {
   return {
     'COMPETENCIA_LECTORA': ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT'],
     'MATEMATICA_1': ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE'],
@@ -94,3 +76,15 @@ export function getSkillId(skillCode: string): number | null {
   
   return skillIds[skillCode] || null;
 }
+
+// Función para convertir una materia en su prueba PAES correspondiente
+export function subjectToPrueba(subject: string): TPAESPrueba {
+  return SUBJECT_TO_PRUEBA_MAP[subject] || 'COMPETENCIA_LECTORA';
+}
+
+// Función para obtener las habilidades de una prueba PAES
+export function getSkillsForPrueba(prueba: TPAESPrueba): TPAESHabilidad[] {
+  const skillsByPrueba = getSkillsByPrueba();
+  return skillsByPrueba[prueba] || [];
+}
+

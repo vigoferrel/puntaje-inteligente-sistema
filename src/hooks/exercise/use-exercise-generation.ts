@@ -1,165 +1,109 @@
 
 import { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { Exercise } from '@/types/ai-types';
-import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
-import { TLearningNode } from '@/types/lectoguia-types';
-import { useOpenRouter } from '@/hooks/use-openrouter';
-import { toast } from '@/components/ui/use-toast';
+import { generateExercise as genExerciseFromAPI, generateExercisesBatch } from '@/services/openrouter/exercise-generation';
+import { TPAESHabilidad, TPAESPrueba, TLearningNode } from '@/types/system-types';
 
 /**
- * Hook para manejar la generación de ejercicios
+ * Hook para manejar la generación de ejercicios con mejor integración de tipos de prueba
  */
 export function useExerciseGeneration() {
   const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { callOpenRouter } = useOpenRouter();
-  
-  // Generar un ejercicio básico
+
+  // Generar un ejercicio nuevo
   const generateExercise = async (
-    skill: TPAESHabilidad = "INTERPRET_RELATE",
-    prueba: TPAESPrueba = "COMPETENCIA_LECTORA",
+    skill: TPAESHabilidad, 
+    prueba?: TPAESPrueba, 
     difficulty: string = "INTERMEDIATE"
   ): Promise<Exercise | null> => {
     try {
       setIsLoading(true);
-      console.log(`Generando ejercicio para skill: ${skill}, prueba: ${prueba}, dificultad: ${difficulty}`);
       
-      // Generar un ejercicio usando OpenRouter con el tipo de prueba correcto
-      const exercise = await callOpenRouter<Exercise>("generate_exercise", {
-        skill,
-        prueba, // Usar el tipo de prueba proporcionado
-        difficulty,
-        previousExercises: [],
-        includeVisualContent: true
-      });
-
+      console.log(`ExerciseGeneration: Generando ejercicio - skill=${skill}, prueba=${prueba || 'no especificada'}, difficulty=${difficulty}`);
+      
+      // Si no se especifica una prueba, inferir según la habilidad
+      const effectivePrueba = prueba || inferPruebaFromSkill(skill);
+      
+      const exercise = await genExerciseFromAPI(skill, effectivePrueba, difficulty as any);
+      
+      // Asegurarse de que el ejercicio tiene la información de prueba correcta
       if (exercise) {
-        console.log("Ejercicio generado con éxito:", exercise);
-        
-        // Crear un objeto de ejercicio a partir de la respuesta
-        const generatedExercise: Exercise = {
-          id: exercise.id || uuidv4(),
-          text: exercise.context || exercise.text || "",
-          question: exercise.question || "¿Cuál es la idea principal del texto?",
-          options: exercise.options || [
-            "Opción A",
-            "Opción B", 
-            "Opción C",
-            "Opción D"
-          ],
-          correctAnswer: exercise.correctAnswer || exercise.options?.[0] || "Opción A",
-          explanation: exercise.explanation || "No se proporcionó explicación.",
-          skill: exercise.skill || skill,
-          prueba: exercise.prueba || prueba, // Guardar el tipo de prueba en el ejercicio
-          difficulty: exercise.difficulty || difficulty,
-          imageUrl: exercise.imageUrl || undefined,
-          graphData: exercise.graphData || undefined,
-          visualType: exercise.visualType,
-          hasVisualContent: !!exercise.imageUrl || !!exercise.graphData || !!exercise.hasVisualContent
-        };
-        
-        // Actualizar estado del ejercicio
-        setCurrentExercise(generatedExercise);
-        return generatedExercise;
-      } else {
-        console.error("La respuesta de OpenRouter no contiene datos de ejercicio");
-        toast({
-          title: "Error",
-          description: "No se pudo generar el ejercicio. La respuesta está vacía.",
-          variant: "destructive"
-        });
-        return null;
+        exercise.prueba = effectivePrueba; // Garantizar que prueba está presente y es correcta
+        setCurrentExercise(exercise);
+        return exercise;
       }
+      
+      return null;
     } catch (error) {
       console.error("Error al generar ejercicio:", error);
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al generar el ejercicio. Por favor intenta de nuevo.",
-        variant: "destructive"
-      });
       return null;
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Generar un ejercicio basado en un nodo de aprendizaje específico
+  // Generar un ejercicio para un nodo de aprendizaje
   const generateExerciseForNode = async (node: TLearningNode): Promise<Exercise | null> => {
+    if (!node || !node.skill || !node.prueba) {
+      console.error("Información insuficiente en el nodo para generar ejercicio");
+      return null;
+    }
+    
     try {
       setIsLoading(true);
-      // Obtener datos del nodo para generar un ejercicio más contextualizado
-      const skill = node.skill;
-      const difficulty = node.difficulty.toUpperCase();
-      const prueba = node.prueba;
       
-      console.log(`Generando ejercicio para nodo: ${node.id}, skill: ${skill}, prueba: ${prueba}, dificultad: ${difficulty}`);
+      // Generar ejercicio utilizando la información del nodo
+      const exercise = await genExerciseFromAPI(
+        node.skill,
+        node.prueba,
+        node.difficulty as any
+      );
       
-      // Generar un ejercicio usando OpenRouter con contexto del nodo y el valor correcto de prueba
-      const exercise = await callOpenRouter<Exercise>("generate_exercise", {
-        skill,
-        prueba, // Usar el valor directamente del nodo
-        difficulty,
-        nodeContext: {
-          title: node.title,
-          description: node.description,
-          position: node.position
-        },
-        previousExercises: [],
-        includeVisualContent: true
-      });
-
       if (exercise) {
-        console.log("Ejercicio generado para nodo:", exercise);
+        // Vincular el ejercicio con el nodo
+        exercise.nodeId = node.id;
+        exercise.nodeName = node.title;
+        exercise.prueba = node.prueba;
         
-        // Crear un objeto de ejercicio a partir de la respuesta
-        const generatedExercise: Exercise = {
-          id: exercise.id || uuidv4(),
-          text: exercise.context || exercise.text || "",
-          question: exercise.question || `¿Cuál es la respuesta correcta según el tema "${node.title}"?`,
-          options: exercise.options || [
-            "Opción A",
-            "Opción B", 
-            "Opción C",
-            "Opción D"
-          ],
-          correctAnswer: exercise.correctAnswer || exercise.options?.[0] || "Opción A",
-          explanation: exercise.explanation || "No se proporcionó explicación.",
-          skill: skill,
-          prueba: prueba, // Guardar el tipo de prueba en el ejercicio
-          difficulty: difficulty,
-          nodeId: node.id,
-          imageUrl: exercise.imageUrl || undefined,
-          graphData: exercise.graphData || undefined,
-          visualType: exercise.visualType,
-          hasVisualContent: !!exercise.imageUrl || !!exercise.graphData || !!exercise.hasVisualContent
-        };
-        
-        // Actualizar estado del ejercicio
-        setCurrentExercise(generatedExercise);
-        return generatedExercise;
-      } else {
-        console.error("La respuesta de OpenRouter para el nodo no contiene datos de ejercicio");
-        toast({
-          title: "Error",
-          description: "No se pudo generar el ejercicio para este nodo. La respuesta está vacía.",
-          variant: "destructive"
-        });
-        return null;
+        setCurrentExercise(exercise);
+        return exercise;
       }
+      
+      return null;
     } catch (error) {
       console.error("Error al generar ejercicio para nodo:", error);
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al generar el ejercicio para este nodo. Por favor intenta de nuevo.",
-        variant: "destructive"
-      });
       return null;
     } finally {
       setIsLoading(false);
     }
   };
   
+  // Inferir el tipo de prueba según la habilidad
+  const inferPruebaFromSkill = (skill: TPAESHabilidad): TPAESPrueba => {
+    // Mapeo de habilidades a pruebas
+    const skillToPruebaMap: Record<TPAESHabilidad, TPAESPrueba> = {
+      'TRACK_LOCATE': 'COMPETENCIA_LECTORA',
+      'INTERPRET_RELATE': 'COMPETENCIA_LECTORA',
+      'EVALUATE_REFLECT': 'COMPETENCIA_LECTORA',
+      'SOLVE_PROBLEMS': 'MATEMATICA_1', // Por defecto usar Mat 1, puede ser sobreescrito
+      'REPRESENT': 'MATEMATICA_1',
+      'MODEL': 'MATEMATICA_2',
+      'ARGUE_COMMUNICATE': 'MATEMATICA_2',
+      'IDENTIFY_THEORIES': 'CIENCIAS',
+      'PROCESS_ANALYZE': 'CIENCIAS',
+      'APPLY_PRINCIPLES': 'CIENCIAS',
+      'SCIENTIFIC_ARGUMENT': 'CIENCIAS',
+      'TEMPORAL_THINKING': 'HISTORIA',
+      'SOURCE_ANALYSIS': 'HISTORIA',
+      'MULTICAUSAL_ANALYSIS': 'HISTORIA',
+      'CRITICAL_THINKING': 'HISTORIA',
+      'REFLECTION': 'HISTORIA'
+    };
+    
+    return skillToPruebaMap[skill] || 'COMPETENCIA_LECTORA';
+  };
+
   return {
     currentExercise,
     setCurrentExercise,

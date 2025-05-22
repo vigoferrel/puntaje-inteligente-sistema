@@ -4,7 +4,7 @@ import { ProgressView } from "./ProgressView";
 import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useAuth } from "@/contexts/AuthContext";
-import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
+import { TPAESHabilidad, TPAESPrueba, pruebaToTestId, testIdToPrueba } from "@/types/system-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +18,7 @@ interface ProgressTabProps {
 export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: ProgressTabProps) {
   const { user } = useAuth();
   const [selectedTestId, setSelectedTestId] = useState<number>(1); // Default: Competencia lectora
+  const [selectedPrueba, setSelectedPrueba] = useState<TPAESPrueba>('COMPETENCIA_LECTORA');
   
   const { 
     nodes, 
@@ -30,17 +31,32 @@ export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: Pr
   useEffect(() => {
     const loadData = async () => {
       if (user?.id) {
-        await fetchLearningNodes(selectedTestId);
-        await fetchUserNodeProgress(user.id);
+        try {
+          await fetchLearningNodes(selectedTestId);
+          await fetchUserNodeProgress(user.id);
+        } catch (error) {
+          console.error("Error cargando datos de nodos:", error);
+          toast({
+            title: "Error",
+            description: "No se pudieron cargar los datos de progreso",
+            variant: "destructive"
+          });
+        }
       }
     };
     
     loadData();
   }, [user?.id, selectedTestId, fetchLearningNodes, fetchUserNodeProgress]);
 
+  // Actualizar la prueba seleccionada cuando cambia el ID de prueba
+  useEffect(() => {
+    setSelectedPrueba(testIdToPrueba(selectedTestId));
+  }, [selectedTestId]);
+
   // Manejar cambio de prueba
   const handleTestChange = (value: string) => {
-    setSelectedTestId(parseInt(value, 10));
+    const newTestId = parseInt(value, 10);
+    setSelectedTestId(newTestId);
   };
 
   return (
@@ -64,7 +80,11 @@ export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: Pr
         </div>
         
         {/* Sección de resumen de progreso con métricas de habilidades */}
-        <ProgressView skillLevels={skillLevels} onStartSimulation={onStartSimulation} />
+        <ProgressView 
+          skillLevels={skillLevels}
+          selectedPrueba={selectedPrueba} 
+          onStartSimulation={onStartSimulation} 
+        />
         
         {/* Visualización avanzada de habilidades y nodos con jerarquía de Bloom */}
         <SkillNodeConnection 
@@ -72,6 +92,7 @@ export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: Pr
           nodes={nodes}
           nodeProgress={nodeProgress}
           onNodeSelect={onNodeSelect}
+          selectedTest={selectedPrueba}
           className="mt-8"
         />
       </div>

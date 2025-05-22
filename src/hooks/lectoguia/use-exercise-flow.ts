@@ -5,6 +5,7 @@ import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 import { useLectoGuiaExercise } from '@/hooks/use-lectoguia-exercise';
 import { useLectoGuiaSession } from '@/hooks/use-lectoguia-session';
 import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
+import { SUBJECT_TO_PRUEBA_MAP } from '@/hooks/lectoguia/use-subjects';
 import { toast } from '@/components/ui/use-toast';
 
 /**
@@ -29,24 +30,19 @@ export function useExerciseFlow(
     isLoading
   } = useLectoGuiaExercise();
   
-  // Mapeo más específico de materias a habilidades
+  // Mapeo específico de materias a habilidades PAES principales
   const skillMap: Record<string, TPAESHabilidad> = {
     'lectura': 'TRACK_LOCATE',
     'matematicas-basica': 'SOLVE_PROBLEMS',    // Matemáticas 1 (7° a 2° medio)
-    'matematicas-avanzada': 'SOLVE_PROBLEMS',  // Matemáticas 2 (3° y 4° medio)
+    'matematicas-avanzada': 'MODEL',           // Matemáticas 2 (3° y 4° medio)
     'ciencias': 'IDENTIFY_THEORIES',
     'historia': 'TEMPORAL_THINKING',
     'general': 'INTERPRET_RELATE'
   };
   
-  // Mapeo específico de materias a pruebas PAES
-  const pruebaMap: Record<string, TPAESPrueba> = {
-    'lectura': 'COMPETENCIA_LECTORA',
-    'matematicas-basica': 'MATEMATICA_1',      // Claramente 7° a 2° medio
-    'matematicas-avanzada': 'MATEMATICA_2',    // Claramente 3° y 4° medio
-    'ciencias': 'CIENCIAS',
-    'historia': 'HISTORIA',
-    'general': 'COMPETENCIA_LECTORA'
+  // Obtener el tipo de prueba PAES correspondiente a la materia actual
+  const getCurrentPrueba = (): TPAESPrueba => {
+    return SUBJECT_TO_PRUEBA_MAP[activeSubject] || 'COMPETENCIA_LECTORA';
   };
   
   // Generar un ejercicio según la materia actual con mejor manejo de errores
@@ -61,7 +57,7 @@ export function useExerciseFlow(
       });
       
       const skill = skillMap[activeSubject];
-      const prueba = pruebaMap[activeSubject];
+      const prueba = getCurrentPrueba();
       
       console.log(`Generando ejercicio para materia: ${activeSubject}, skill: ${skill}, prueba: ${prueba}`);
       
@@ -76,15 +72,9 @@ export function useExerciseFlow(
           description: "Se ha creado un nuevo ejercicio para ti.",
         });
         
-        // Determinar el nombre de la materia para el mensaje
-        let materiaName = activeSubject === 'general' ? 'comprensión lectora' : 
-          activeSubject === 'matematicas-basica' ? 'matemáticas para 7° a 2° medio' :
-          activeSubject === 'matematicas-avanzada' ? 'matemáticas para 3° y 4° medio' :
-          activeSubject;
-        
         // Agregar mensaje del asistente sobre el ejercicio generado
         addAssistantMessage(
-          `He preparado un ejercicio de ${materiaName} para ti. ` +
+          `He preparado un ejercicio de ${getCurrentSubjectDisplayName()} para ti. ` +
           `Es un ejercicio de dificultad ${exercise.difficulty || "intermedia"} que evalúa la habilidad de ` +
           `${exercise.skill || "interpretación"}. Puedes resolverlo en la pestaña de Ejercicios.`
         );
@@ -116,6 +106,20 @@ export function useExerciseFlow(
     }
   };
   
+  // Obtener el nombre de la materia actual para mostrar
+  const getCurrentSubjectDisplayName = (): string => {
+    const subjectNames: Record<string, string> = {
+      'general': 'comprensión lectora',
+      'lectura': 'comprensión lectora',
+      'matematicas-basica': 'matemáticas para 7° a 2° medio',
+      'matematicas-avanzada': 'matemáticas para 3° y 4° medio',
+      'ciencias': 'ciencias',
+      'historia': 'historia'
+    };
+    
+    return subjectNames[activeSubject] || activeSubject;
+  };
+  
   // Manejar la selección de una opción en el ejercicio
   const handleOptionSelect = (index: number) => {
     selectOption(index);
@@ -129,9 +133,8 @@ export function useExerciseFlow(
         
         const isCorrect = index === (correctAnswerIndex >= 0 ? correctAnswerIndex : 0);
         
-        // Obtener la prueba adecuada para la materia actual
-        // Asegurarnos de que se utilice el tipo de prueba correcto 
-        const prueba = currentExercise.prueba || pruebaMap[activeSubject] || 'COMPETENCIA_LECTORA';
+        // Utilizar la prueba del ejercicio si está presente, o determinarla según la materia activa
+        const prueba = currentExercise.prueba || getCurrentPrueba();
         
         console.log(`Guardando ejercicio con prueba: ${prueba}, materia: ${activeSubject}`);
         
@@ -139,8 +142,8 @@ export function useExerciseFlow(
           currentExercise,
           index,
           isCorrect,
-          currentExercise.skill || 'INTERPRET_RELATE',
-          prueba // Pasamos el parámetro prueba
+          currentExercise.skill || skillMap[activeSubject],
+          prueba
         );
       }
     }, 300);
@@ -161,6 +164,7 @@ export function useExerciseFlow(
     handleExerciseRequest,
     handleOptionSelect,
     handleNewExercise,
+    getCurrentPrueba,
     skillMap,
     isLoading: isLoading || isGenerating
   };

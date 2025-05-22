@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { TPAESHabilidad, TPAESPrueba, getPruebaDisplayName, getHabilidadDisplayName } from "@/types/system-types";
 import { mapSkillToBloomLevel, BloomLevel } from "./BloomTaxonomyLevel";
 import { cn } from "@/lib/utils";
+import { getSkillsByPrueba } from "@/utils/lectoguia-utils";
 
 interface SkillHierarchyChartProps {
   skillLevels: Record<string, number>;
@@ -23,24 +24,18 @@ const bloomLevelColors: Record<BloomLevel, string> = {
   create: "bg-purple-500"
 };
 
-// Group skills by test type - Separando claramente las matemáticas en dos pruebas
-const skillsByTest: Record<TPAESPrueba, TPAESHabilidad[]> = {
-  "COMPETENCIA_LECTORA": ["TRACK_LOCATE", "INTERPRET_RELATE", "EVALUATE_REFLECT"],
-  "MATEMATICA_1": ["SOLVE_PROBLEMS", "REPRESENT", "MODEL", "ARGUE_COMMUNICATE"],
-  "MATEMATICA_2": ["SOLVE_PROBLEMS", "REPRESENT", "MODEL", "ARGUE_COMMUNICATE"],
-  "CIENCIAS": ["IDENTIFY_THEORIES", "PROCESS_ANALYZE", "APPLY_PRINCIPLES", "SCIENTIFIC_ARGUMENT"],
-  "HISTORIA": ["TEMPORAL_THINKING", "SOURCE_ANALYSIS", "MULTICAUSAL_ANALYSIS", "CRITICAL_THINKING", "REFLECTION"]
-};
-
 export const SkillHierarchyChart: React.FC<SkillHierarchyChartProps> = ({
   skillLevels,
   selectedTest,
   className
 }) => {
-  // If a test is selected, only show skills for that test
+  // Si no se selecciona una prueba específica, mostrar todas las pruebas
   const testsToShow: TPAESPrueba[] = selectedTest 
     ? [selectedTest] 
     : ["COMPETENCIA_LECTORA", "MATEMATICA_1", "MATEMATICA_2", "CIENCIAS", "HISTORIA"];
+  
+  // Obtener la agrupación de habilidades por prueba
+  const skillsByTest = getSkillsByPrueba();
   
   return (
     <Card className={className}>

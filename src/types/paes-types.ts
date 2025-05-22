@@ -1,4 +1,3 @@
-
 /**
  * Types related to PAES tests and skills
  */
@@ -27,6 +26,24 @@ export type TPAESHabilidad =
   | 'MULTICAUSAL_ANALYSIS'
   | 'CRITICAL_THINKING'
   | 'REFLECTION';
+
+// Mapeo de ID de test a tipo de prueba PAES
+export const TEST_ID_TO_PRUEBA_MAP: Record<number, TPAESPrueba> = {
+  1: 'COMPETENCIA_LECTORA',
+  2: 'MATEMATICA_1',
+  3: 'MATEMATICA_2',
+  4: 'CIENCIAS',
+  5: 'HISTORIA'
+};
+
+// Mapeo inverso de prueba PAES a ID de test
+export const PRUEBA_TO_TEST_ID_MAP: Record<TPAESPrueba, number> = {
+  'COMPETENCIA_LECTORA': 1,
+  'MATEMATICA_1': 2,
+  'MATEMATICA_2': 3,
+  'CIENCIAS': 4,
+  'HISTORIA': 5
+};
 
 /**
  * Obtiene el nombre para mostrar de una prueba PAES
@@ -88,4 +105,18 @@ export function getHabilidadDisplayName(habilidad: TPAESHabilidad): string {
     default:
       return habilidad;
   }
+}
+
+/**
+ * Convierte un ID de prueba a su tipo TPAESPrueba correspondiente
+ */
+export function testIdToPrueba(testId: number): TPAESPrueba {
+  return TEST_ID_TO_PRUEBA_MAP[testId] || 'COMPETENCIA_LECTORA';
+}
+
+/**
+ * Convierte un tipo TPAESPrueba a su ID de prueba correspondiente
+ */
+export function pruebaToTestId(prueba: TPAESPrueba): number {
+  return PRUEBA_TO_TEST_ID_MAP[prueba] || 1;
 }

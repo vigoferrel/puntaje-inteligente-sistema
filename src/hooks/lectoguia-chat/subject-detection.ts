@@ -1,9 +1,11 @@
 
+import { SUBJECT_TO_PRUEBA_MAP } from '@/hooks/lectoguia/use-subjects';
+
 /**
  * Utility functions for subject detection and handling
  */
 
-// Map of subject display names
+// Re-export subject names from a central place
 export const subjectNames: Record<string, string> = {
   general: 'modo general',
   lectura: 'Comprensión Lectora',
@@ -19,9 +21,12 @@ export const subjectNames: Record<string, string> = {
 export function detectSubjectFromMessage(message: string): string | null {
   const lowerMessage = message.toLowerCase();
   
-  if (lowerMessage.includes('leer') || lowerMessage.includes('texto') || lowerMessage.includes('lectura')) {
+  if (lowerMessage.includes('leer') || lowerMessage.includes('texto') || lowerMessage.includes('lectura') || 
+      lowerMessage.includes('comprensión') || lowerMessage.includes('comprender')) {
     return 'lectura';
-  } else if (lowerMessage.includes('mate') || lowerMessage.includes('álgebra') || lowerMessage.includes('número')) {
+  } else if (lowerMessage.includes('mate') || lowerMessage.includes('álgebra') || 
+             lowerMessage.includes('número') || lowerMessage.includes('geometría') ||
+             lowerMessage.includes('matemática')) {
     // Detectar nivel específico de matemáticas
     if (lowerMessage.includes('7') || 
         lowerMessage.includes('octavo') || 
@@ -39,11 +44,14 @@ export function detectSubjectFromMessage(message: string): string | null {
       // Por defecto usar matemáticas básicas si no se especifica
       return 'matematicas-basica';
     }
-  } else if (lowerMessage.includes('ciencia') || lowerMessage.includes('física') || lowerMessage.includes('química') || lowerMessage.includes('biología')) {
+  } else if (lowerMessage.includes('ciencia') || lowerMessage.includes('física') || 
+             lowerMessage.includes('química') || lowerMessage.includes('biología')) {
     return 'ciencias';
-  } else if (lowerMessage.includes('historia') || lowerMessage.includes('geografía') || lowerMessage.includes('social')) {
+  } else if (lowerMessage.includes('historia') || lowerMessage.includes('geografía') || 
+             lowerMessage.includes('social')) {
     return 'historia';
   }
   
   return null;
 }
+

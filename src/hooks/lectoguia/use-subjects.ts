@@ -1,9 +1,22 @@
 
 import { useState } from 'react';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
+import { TPAESPrueba } from '@/types/system-types';
 
 /**
- * Hook para gestionar las materias en LectoGuia
+ * Mapeo entre identificadores de materia y tipos de prueba PAES
+ */
+export const SUBJECT_TO_PRUEBA_MAP: Record<string, TPAESPrueba> = {
+  'general': 'COMPETENCIA_LECTORA',
+  'lectura': 'COMPETENCIA_LECTORA',
+  'matematicas-basica': 'MATEMATICA_1',
+  'matematicas-avanzada': 'MATEMATICA_2',
+  'ciencias': 'CIENCIAS',
+  'historia': 'HISTORIA'
+};
+
+/**
+ * Hook para gestionar las materias en LectoGuia y su correspondencia con pruebas PAES
  */
 export function useSubjects() {
   const [activeSubject, setActiveSubject] = useState('general');
@@ -28,8 +41,15 @@ export function useSubjects() {
     }
   };
   
+  // Obtener el tipo de prueba PAES correspondiente a la materia activa
+  const getActivePruebaType = (): TPAESPrueba => {
+    return SUBJECT_TO_PRUEBA_MAP[activeSubject] || 'COMPETENCIA_LECTORA';
+  };
+  
   return {
     activeSubject,
-    handleSubjectChange
+    handleSubjectChange,
+    getActivePruebaType,
+    subjectNames
   };
 }
