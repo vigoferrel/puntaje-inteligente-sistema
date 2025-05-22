@@ -1,5 +1,4 @@
 
-// If this file doesn't exist, this is a placeholder implementation
 import React from "react";
 import { LearningPlanNode } from "@/types/learning-plan";
 import { motion } from "framer-motion";
@@ -7,7 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { BookOpenCheck, BookOpen, BookOpenCheckIcon, ChevronRight, Star } from "lucide-react";
+import { 
+  BookOpenCheck, 
+  BookOpen, 
+  ChevronRight, 
+  Star, 
+  Clock, 
+  BarChart,
+  GraduationCap,
+  Brain
+} from "lucide-react";
 
 interface PlanNodeItemProps {
   node: LearningPlanNode;
@@ -16,6 +24,7 @@ interface PlanNodeItemProps {
   statusLabel: string;
   progressValue: number;
   isRecommended?: boolean;
+  timeSpent?: number; // tiempo en minutos
 }
 
 export const PlanNodeItem = ({
@@ -24,7 +33,8 @@ export const PlanNodeItem = ({
   status,
   statusLabel,
   progressValue,
-  isRecommended = false
+  isRecommended = false,
+  timeSpent = 0
 }: PlanNodeItemProps) => {
   const navigate = useNavigate();
   
@@ -61,6 +71,39 @@ export const PlanNodeItem = ({
       default: return <BookOpen className="h-5 w-5 text-gray-600" />;
     }
   };
+
+  const getStatusBadge = () => {
+    switch(status) {
+      case 'completed': 
+        return (
+          <Badge className="bg-green-100 text-green-700 border-green-200 ml-2">
+            Completado
+          </Badge>
+        );
+      case 'in_progress': 
+        return (
+          <Badge className="bg-blue-100 text-blue-700 border-blue-200 ml-2">
+            En progreso
+          </Badge>
+        );
+      default: 
+        return null;
+    }
+  };
+
+  const getProgressIndicatorColor = () => {
+    if (progressValue === 100) return "bg-green-600";
+    if (progressValue > 50) return "bg-blue-600";
+    if (progressValue > 0) return "bg-blue-500";
+    return "bg-gray-400";
+  };
+
+  const formatTimeSpent = (minutes: number) => {
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h ${remainingMinutes > 0 ? `${remainingMinutes}m` : ''}`;
+  };
   
   const handleNodeClick = () => {
     navigate(`/node/${node.nodeId}`);
@@ -84,21 +127,23 @@ export const PlanNodeItem = ({
       onClick={handleNodeClick}
       whileHover={{ scale: 1.01 }}
     >
+      {isRecommended && (
+        <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full px-2 py-1 text-xs flex items-center">
+          <Star className="h-3 w-3 mr-1" />
+          Recomendado
+        </div>
+      )}
+      
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 rounded-full bg-primary/10 items-center justify-center">
+          <div className={`flex h-10 w-10 rounded-full ${status === 'completed' ? 'bg-green-100' : 'bg-primary/10'} items-center justify-center`}>
             {getNodeIcon()}
           </div>
           
           <div>
-            <h4 className="font-medium">
+            <h4 className="font-medium flex items-center">
               {node.nodeName || `Módulo ${index + 1}`}
-              {isRecommended && (
-                <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
-                  <Star className="h-3 w-3 mr-1" />
-                  Recomendado
-                </Badge>
-              )}
+              {getStatusBadge()}
             </h4>
             <div className="flex items-center text-muted-foreground text-sm">
               <span>{node.nodeSkill || "Habilidad"}</span>
@@ -116,17 +161,53 @@ export const PlanNodeItem = ({
         </Button>
       </div>
       
-      <div className="mt-4">
-        <div className="flex justify-between items-center text-xs mb-1">
-          <span className={`font-medium ${isRecommended ? 'text-primary' : ''}`}>
-            {statusLabel}
-          </span>
-          <span>
-            {progressValue}%
-          </span>
+      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div>
+          <div className="flex justify-between items-center text-xs mb-1">
+            <span className={`font-medium ${isRecommended ? 'text-primary' : ''}`}>
+              {statusLabel}
+            </span>
+            <span className="font-medium">
+              {progressValue}%
+            </span>
+          </div>
+          <Progress 
+            value={progressValue} 
+            className={`h-2 ${isRecommended ? 'bg-primary/20' : ''}`}
+            indicatorClassName={getProgressIndicatorColor()}
+          />
         </div>
-        <Progress value={progressValue} className={`h-2 ${isRecommended ? 'bg-primary/20' : ''}`} />
+        
+        {status !== 'not_started' && (
+          <div className="flex items-center justify-end gap-3 text-xs text-muted-foreground">
+            {timeSpent > 0 && (
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>{formatTimeSpent(timeSpent)}</span>
+              </div>
+            )}
+            
+            {status === 'completed' && (
+              <div className="flex items-center">
+                <GraduationCap className="h-3 w-3 mr-1 text-green-600" />
+                <span className="text-green-600">Dominado</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+      
+      {isRecommended && (
+        <div className="mt-3 bg-primary/5 rounded p-2 text-xs text-primary border border-primary/20">
+          <div className="flex items-center">
+            <Brain className="h-3 w-3 mr-1" />
+            <span className="font-medium">Sugerido para ti</span>
+          </div>
+          <p className="mt-1">
+            Este módulo es ideal para continuar tu progreso basado en tu rendimiento actual.
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 };

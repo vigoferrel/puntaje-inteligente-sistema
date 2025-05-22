@@ -6,11 +6,23 @@ import { CurrentPlan } from "./current-plan";
 import { PlanSelector } from "./PlanSelector";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, CalendarDays, BarChart2, CheckCircle, Flame } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { 
+  PlayCircle, 
+  CalendarDays, 
+  BarChart2, 
+  CheckCircle, 
+  Flame, 
+  Clock, 
+  BookOpen, 
+  GraduationCap,
+  BrainCircuit
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { StudyStreakCard } from "./study-streak/StudyStreakCard";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
 interface PlanContentProps {
   plans: LearningPlan[];
@@ -72,6 +84,55 @@ export const PlanContent = ({
       navigate(`/node/${continueNode.nodeId}`);
     }
   };
+
+  const getCompletionStatus = () => {
+    if (!currentPlanProgress) return { text: "0/0 módulos", percentage: 0 };
+    
+    const { completedNodes, totalNodes } = currentPlanProgress;
+    const percentage = totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
+    
+    return {
+      text: `${completedNodes}/${totalNodes} módulos`,
+      percentage
+    };
+  };
+
+  const completionStatus = getCompletionStatus();
+  
+  const getTimeEstimate = () => {
+    if (!currentPlan?.nodes) return "0 min";
+    
+    // Assume each node takes about 30 minutes to complete
+    const remainingNodes = currentPlanProgress ? 
+      currentPlan.nodes.length - currentPlanProgress.completedNodes : 
+      currentPlan.nodes.length;
+    
+    const remainingMinutes = remainingNodes * 30;
+    
+    if (remainingMinutes >= 60) {
+      const hours = Math.floor(remainingMinutes / 60);
+      const minutes = remainingMinutes % 60;
+      return `${hours} h${minutes > 0 ? ` ${minutes} min` : ''}`;
+    }
+    
+    return `${remainingMinutes} min`;
+  };
+
+  const getRecommendationText = () => {
+    if (!currentPlan || !continueNode) return "";
+    
+    const streak = streakData?.currentStreak || 0;
+    
+    if (streak >= 3) {
+      return "Sigue con tu buena racha. ¡Ya llevas 3 días o más!";
+    } else if (streak > 0) {
+      return "¡Buen comienzo! Continúa estudiando para mejorar tu racha.";
+    } else if (currentPlanProgress && currentPlanProgress.completedNodes > 0) {
+      return "Retoma tu plan de estudio para construir una racha.";
+    } else {
+      return "Comienza tu plan de estudio hoy.";
+    }
+  };
   
   return (
     <AnimatePresence mode="wait">
@@ -87,51 +148,118 @@ export const PlanContent = ({
           <EmptyPlanState onCreatePlan={onCreatePlan} />
         ) : (
           <>
-            {/* Quick Actions */}
+            {/* Dashboard Cards */}
             {currentPlan && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Continue Learning */}
-                <Card className="col-span-1 md:col-span-2 hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between">
-                    <div className="flex items-center">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                {/* Main Continue Learning Card */}
+                <Card className="col-span-1 md:col-span-6 border-primary/20 hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-center mb-3">
                       <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
                         <PlayCircle className="h-6 w-6 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-medium">Continuar aprendiendo</h3>
                         <p className="text-sm text-muted-foreground">
-                          {continueNode ? 
-                            `Continuar con "${continueNode.nodeName || `Módulo ${continueNode.position}`}"` : 
-                            "Comienza tu próximo módulo"}
+                          {getRecommendationText()}
                         </p>
                       </div>
                     </div>
-                    <Button 
-                      onClick={handleContinue}
-                      disabled={!continueNode}
-                      className="mt-3 md:mt-0"
-                    >
-                      Continuar
-                    </Button>
+                    
+                    {continueNode && (
+                      <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">
+                              {continueNode.nodeName || `Módulo ${continueNode.position}`}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {continueNode.nodeSkill || "Habilidad"}
+                              {continueNode.nodeDifficulty && (
+                                <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  {continueNode.nodeDifficulty.charAt(0).toUpperCase() + continueNode.nodeDifficulty.slice(1)}
+                                </Badge>
+                              )}
+                            </p>
+                          </div>
+                          <Button 
+                            onClick={handleContinue}
+                            className="bg-primary"
+                          >
+                            Continuar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-2 bg-green-50 rounded-lg border border-green-100">
+                        <div className="flex items-center text-sm text-green-700 mb-1">
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          <span>Completado</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">{completionStatus.text}</p>
+                          <p className="text-xs">{Math.round(completionStatus.percentage)}%</p>
+                        </div>
+                        <Progress value={completionStatus.percentage} className="h-1.5 mt-1 bg-green-200" indicatorClassName="bg-green-600" />
+                      </div>
+                      
+                      <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
+                        <div className="flex items-center text-sm text-blue-700 mb-1">
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>Tiempo restante</span>
+                        </div>
+                        <p className="font-medium">{getTimeEstimate()}</p>
+                        <p className="text-xs text-blue-700 mt-1">Estimado para completar</p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
                 
-                {/* Study Streak */}
-                <StudyStreakCard streakData={streakData} />
+                {/* Study Streak Card */}
+                <div className="col-span-1 md:col-span-3">
+                  <StudyStreakCard streakData={streakData} />
+                </div>
                 
-                {/* Completion Status */}
-                <Card className="col-span-1 hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mr-4">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Completado</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {currentPlanProgress ? 
-                          `${currentPlanProgress.completedNodes}/${currentPlanProgress.totalNodes} módulos` : 
-                          "0/0 módulos"}
-                      </p>
+                {/* Quick Stats Card */}
+                <Card className="col-span-1 md:col-span-3 hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <h3 className="font-medium mb-3 flex items-center">
+                      <BarChart2 className="h-5 w-5 text-primary mr-2" />
+                      Estadísticas
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <BookOpen className="h-4 w-4 text-blue-600 mr-2" />
+                          <span className="text-sm">Nodos en progreso</span>
+                        </div>
+                        <Badge variant="outline" className="bg-blue-50">
+                          {currentPlanProgress?.inProgressNodes || 0}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <GraduationCap className="h-4 w-4 text-green-600 mr-2" />
+                          <span className="text-sm">Nivel completado</span>
+                        </div>
+                        <Badge variant="outline" className="bg-green-50">
+                          {Math.round(completionStatus.percentage)}%
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <BrainCircuit className="h-4 w-4 text-purple-600 mr-2" />
+                          <span className="text-sm">Dominio promedio</span>
+                        </div>
+                        <Badge variant="outline" className="bg-purple-50">
+                          {currentPlanProgress?.overallProgress ? Math.round(currentPlanProgress.overallProgress) : 0}%
+                        </Badge>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -139,10 +267,16 @@ export const PlanContent = ({
             )}
             
             {/* Plans Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
               <TabsList className="mb-4">
-                <TabsTrigger value="current-plan">Plan Actual</TabsTrigger>
-                <TabsTrigger value="all-plans">Todos los Planes</TabsTrigger>
+                <TabsTrigger value="current-plan" className="flex items-center">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Plan Actual
+                </TabsTrigger>
+                <TabsTrigger value="all-plans" className="flex items-center">
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                  Todos los Planes
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="current-plan">
