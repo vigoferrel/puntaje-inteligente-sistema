@@ -8,6 +8,7 @@ import { ContextualActionButtons } from "@/components/lectoguia/action-buttons/C
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
+import { useLectoGuia } from '@/contexts/LectoGuiaContext';
 
 interface ChatTabProps {
   messages: ChatMessage[];
@@ -24,12 +25,8 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   activeSubject,
   onSubjectChange
 }) => {
-  // Esto debe venir del contexto cuando se implemente completamente
-  const setActiveTab = (tab: string) => {
-    // Implementación temporal hasta que se conecte con el contexto real
-    console.log("Cambiando a pestaña:", tab);
-  };
-
+  const { setActiveTab } = useLectoGuia();
+  
   const handleExerciseRequest = async () => {
     // Simulación temporal hasta la implementación completa
     return true;
@@ -53,7 +50,11 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   
   // Construir los elementos de migas de pan
   const breadcrumbItems = [
-    { label: 'LectoGuía', active: false, onClick: () => {} }
+    { 
+      label: 'LectoGuía', 
+      active: false, 
+      onClick: () => setActiveTab('chat')
+    }
   ];
   
   // Añadir la materia activa como un elemento adicional
@@ -69,7 +70,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
     breadcrumbItems.push({
       label: subjectNames[activeSubject] || activeSubject,
       active: true,
-      onClick: () => {} // Añadimos la propiedad onClick que faltaba
+      onClick: () => onSubjectChange(activeSubject)
     });
   }
   

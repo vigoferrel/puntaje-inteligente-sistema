@@ -61,11 +61,22 @@ export const LectoGuiaBreadcrumb: React.FC<LectoGuiaBreadcrumbProps> = ({
 }) => {
   if (!items || items.length === 0) return null;
   
+  // Handler para el click en el ícono de home
+  const handleHomeClick = () => {
+    // Si hay un ítem inicial, usar su onClick
+    if (items.length > 0 && items[0] && items[0].onClick) {
+      items[0].onClick();
+    }
+  };
+  
   return (
     <Breadcrumb className={className}>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="#" onClick={() => {}}>
+          <BreadcrumbLink href="#" onClick={(e) => {
+            e.preventDefault();
+            handleHomeClick();
+          }}>
             <Home className="h-3.5 w-3.5" />
           </BreadcrumbLink>
         </BreadcrumbItem>
@@ -88,7 +99,10 @@ export const LectoGuiaBreadcrumb: React.FC<LectoGuiaBreadcrumbProps> = ({
                 ) : (
                   <BreadcrumbLink 
                     href="#" 
-                    onClick={item.onClick}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (item.onClick) item.onClick();
+                    }}
                     className="flex items-center gap-1.5"
                   >
                     {item.icon || getSubjectIcon(item.label)}

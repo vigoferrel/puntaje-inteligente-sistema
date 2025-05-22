@@ -42,14 +42,9 @@ export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
     nodeProgress,
     selectedTestId,
     setSelectedTestId,
-    selectedPrueba
+    selectedPrueba,
+    setActiveTab
   } = useLectoGuia();
-
-  // Esto debe venir del contexto cuando se implemente completamente
-  const setActiveTab = (tab: string) => {
-    // Implementación temporal hasta que se conecte con el contexto real
-    console.log("Cambiando a pestaña:", tab);
-  };
 
   const handleExerciseRequest = async () => {
     // Simulación temporal hasta la implementación completa
@@ -78,8 +73,16 @@ export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
   
   // Construir los elementos de migas de pan
   const breadcrumbItems = [
-    { label: 'LectoGuía', active: false, onClick: () => {} },
-    { label: 'Progreso', active: true }
+    { 
+      label: 'LectoGuía', 
+      active: false, 
+      onClick: () => setActiveTab('chat') 
+    },
+    { 
+      label: 'Progreso', 
+      active: true,
+      onClick: () => setActiveTab('progress')
+    }
   ];
   
   // Si hay una prueba seleccionada, añadirla como un elemento adicional
@@ -87,7 +90,20 @@ export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
     breadcrumbItems.splice(1, 0, {
       label: getPruebaDisplayName(selectedPrueba),
       active: false,
-      onClick: () => {}
+      onClick: () => {
+        // Mapear la prueba a la materia correspondiente
+        const pruebaMappings: Record<string, string> = {
+          'COMPETENCIA_LECTORA': 'lectura',
+          'MATEMATICA_1': 'matematicas-basica',
+          'MATEMATICA_2': 'matematicas-avanzada',
+          'CIENCIAS': 'ciencias',
+          'HISTORIA': 'historia'
+        };
+        
+        // Navegar al chat para esta prueba
+        setActiveTab('chat');
+        // La actualización de la materia se hará a través del contexto
+      }
     });
   }
 

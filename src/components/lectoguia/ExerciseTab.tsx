@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Exercise } from "@/types/ai-types";
@@ -6,6 +7,7 @@ import { ExerciseView } from "./exercise";
 import { ContextualActionButtons } from "./action-buttons/ContextualActionButtons";
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
+import { useLectoGuia } from '@/contexts/LectoGuiaContext';
 
 interface ExerciseTabProps {
   exercise: Exercise | null;
@@ -24,12 +26,8 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
   onContinue,
   isLoading = false
 }) => {
-  // Esto debe venir del contexto cuando se implemente completamente
-  const setActiveTab = (tab: string) => {
-    // Implementación temporal hasta que se conecte con el contexto real
-    console.log("Cambiando a pestaña:", tab);
-  };
-
+  const { setActiveTab } = useLectoGuia();
+  
   const handleExerciseRequest = async () => {
     // Simulación temporal hasta la implementación completa
     onContinue();
@@ -134,8 +132,16 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
   
   // Construir los elementos de migas de pan
   const breadcrumbItems = [
-    { label: 'LectoGuía', active: false, onClick: () => {} },
-    { label: 'Ejercicios', active: true }
+    { 
+      label: 'LectoGuía', 
+      active: false, 
+      onClick: () => setActiveTab('chat') 
+    },
+    { 
+      label: 'Ejercicios', 
+      active: true,
+      onClick: () => setActiveTab('exercise')
+    }
   ];
   
   // Si hay un ejercicio, añadir su tipo como un elemento adicional
@@ -152,7 +158,23 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
       breadcrumbItems.splice(1, 0, {
         label: pruebaNames[exercise.prueba],
         active: false,
-        onClick: () => {}
+        onClick: () => {
+          // Mapear el tipo de prueba a la materia correspondiente
+          const pruebaMappings: Record<string, string> = {
+            'COMPETENCIA_LECTORA': 'lectura',
+            'MATEMATICA_1': 'matematicas-basica',
+            'MATEMATICA_2': 'matematicas-avanzada',
+            'CIENCIAS': 'ciencias',
+            'HISTORIA': 'historia'
+          };
+          
+          const subjectKey = pruebaMappings[exercise.prueba];
+          // Solo navegar al chat si podemos determinar la materia
+          if (subjectKey) {
+            setActiveTab('chat');
+            // La actualización de la materia se hará a través de LectoGuiaContext
+          }
+        }
       });
     }
   }
