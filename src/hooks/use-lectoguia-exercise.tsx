@@ -1,5 +1,6 @@
 
 import { useExerciseState } from './exercise';
+import { TPAESPrueba } from '@/types/system-types';
 
 /**
  * Hook principal para gestionar los ejercicios de LectoGuia
@@ -10,13 +11,19 @@ export function useLectoGuiaExercise() {
     currentExercise,
     selectedOption,
     showFeedback,
-    generateExercise,
+    generateExercise: genExercise,
     generateExerciseForNode,
     handleOptionSelect,
     resetExercise,
     setCurrentExercise,
     isLoading
   } = useExerciseState();
+  
+  // Envolvemos la función para asegurar que se procesa el tipo de prueba
+  const generateExercise = async (skill: any, prueba?: TPAESPrueba, difficulty: string = "INTERMEDIATE") => {
+    console.log(`LectoGuiaExercise: Generando ejercicio con skill=${skill}, prueba=${prueba || 'no especificada'}`);
+    return await genExercise(skill, prueba, difficulty);
+  };
   
   return {
     currentExercise,

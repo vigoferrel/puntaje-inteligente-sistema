@@ -13,6 +13,8 @@ export const generateExercise = async (
   previousExercises: Exercise[] = [],
   includeVisualContent?: boolean
 ): Promise<Exercise | null> => {
+  console.log(`OpenRouter Service: Generando ejercicio - skill=${skill}, prueba=${prueba}, difficulty=${difficulty}`);
+  
   return await openRouterService<Exercise>({
     action: 'generate_exercise',
     payload: {

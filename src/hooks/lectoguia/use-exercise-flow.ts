@@ -4,7 +4,7 @@ import { Exercise } from '@/types/ai-types';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 import { useLectoGuiaExercise } from '@/hooks/use-lectoguia-exercise';
 import { useLectoGuiaSession } from '@/hooks/use-lectoguia-session';
-import { TPAESHabilidad } from '@/types/system-types';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { toast } from '@/components/ui/use-toast';
 
 /**
@@ -38,6 +38,15 @@ export function useExerciseFlow(
     'general': 'INTERPRET_RELATE'
   };
   
+  // Mapeo de materias a pruebas PAES
+  const pruebaMap: Record<string, TPAESPrueba> = {
+    'lectura': 'COMPETENCIA_LECTORA',
+    'matematicas': 'MATEMATICA_1',
+    'ciencias': 'CIENCIAS',
+    'historia': 'HISTORIA',
+    'general': 'COMPETENCIA_LECTORA'
+  };
+  
   // Generar un ejercicio según la materia actual con mejor manejo de errores
   const handleExerciseRequest = async () => {
     try {
@@ -49,9 +58,12 @@ export function useExerciseFlow(
         description: "Estamos preparando un ejercicio para ti...",
       });
       
-      console.log(`Generando ejercicio para materia: ${activeSubject}, skill: ${skillMap[activeSubject]}`);
+      const skill = skillMap[activeSubject];
+      const prueba = pruebaMap[activeSubject];
       
-      const exercise = await generateExercise(skillMap[activeSubject]);
+      console.log(`Generando ejercicio para materia: ${activeSubject}, skill: ${skill}, prueba: ${prueba}`);
+      
+      const exercise = await generateExercise(skill, prueba);
       
       if (exercise) {
         setTimeout(() => setActiveTab("exercise"), 500);

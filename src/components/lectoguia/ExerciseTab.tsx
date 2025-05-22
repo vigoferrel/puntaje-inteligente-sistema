@@ -11,7 +11,7 @@ interface ExerciseTabProps {
   showFeedback: boolean;
   onOptionSelect: (index: number) => void;
   onContinue: () => void;
-  isLoading?: boolean; // Nuevo prop para mostrar estado de carga
+  isLoading?: boolean;
 }
 
 export const ExerciseTab: React.FC<ExerciseTabProps> = ({
@@ -22,11 +22,25 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
   onContinue,
   isLoading = false
 }) => {
-  // Determinar el icono según el tipo de habilidad
+  // Determinar el icono según el tipo de prueba o habilidad
   const getSkillIcon = () => {
-    if (!exercise?.skill) return <BookOpen size={18} />;
+    if (!exercise) return <BookOpen size={18} />;
     
-    const skillType = exercise.skill.toString().toUpperCase();
+    // Verificar primero por el tipo de prueba
+    if (exercise.prueba) {
+      if (exercise.prueba === 'COMPETENCIA_LECTORA') {
+        return <BookOpen size={18} />;
+      } else if (exercise.prueba === 'MATEMATICA_1' || exercise.prueba === 'MATEMATICA_2') {
+        return <Calculator size={18} />;
+      } else if (exercise.prueba === 'CIENCIAS') {
+        return <Atom size={18} />;
+      } else if (exercise.prueba === 'HISTORIA') {
+        return <History size={18} />;
+      }
+    }
+    
+    // Fallback al método anterior por si no tiene prueba pero sí skill
+    const skillType = exercise.skill?.toString().toUpperCase() || '';
     
     if (skillType.includes('TRACK_LOCATE') || 
         skillType.includes('INTERPRET_RELATE') || 
@@ -41,7 +55,7 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
                skillType.includes('PROCESS_ANALYZE') ||
                skillType.includes('APPLY_PRINCIPLES') ||
                skillType.includes('SCIENTIFIC_ARGUMENT')) {
-      return <Atom size={18} />; // Replacing Flask with Atom
+      return <Atom size={18} />;
     } else if (skillType.includes('TEMPORAL_THINKING') || 
                skillType.includes('SOURCE_ANALYSIS') ||
                skillType.includes('MULTICAUSAL_ANALYSIS') ||
@@ -53,11 +67,25 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
     }
   };
 
-  // Determinar el título según el tipo de habilidad
+  // Determinar el título según el tipo de prueba o habilidad
   const getSkillTitle = () => {
-    if (!exercise?.skill) return "Ejercicio";
+    if (!exercise) return "Ejercicio";
     
-    const skillType = exercise.skill.toString().toUpperCase();
+    // Verificar primero por el tipo de prueba
+    if (exercise.prueba) {
+      if (exercise.prueba === 'COMPETENCIA_LECTORA') {
+        return "Ejercicio de comprensión lectora";
+      } else if (exercise.prueba === 'MATEMATICA_1' || exercise.prueba === 'MATEMATICA_2') {
+        return "Ejercicio de matemáticas";
+      } else if (exercise.prueba === 'CIENCIAS') {
+        return "Ejercicio de ciencias";
+      } else if (exercise.prueba === 'HISTORIA') {
+        return "Ejercicio de historia";
+      }
+    }
+    
+    // Fallback al método anterior por si no tiene prueba pero sí skill
+    const skillType = exercise.skill?.toString().toUpperCase() || '';
     
     if (skillType.includes('TRACK_LOCATE') || 
         skillType.includes('INTERPRET_RELATE') || 

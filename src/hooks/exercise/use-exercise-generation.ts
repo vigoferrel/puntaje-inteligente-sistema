@@ -18,20 +18,17 @@ export function useExerciseGeneration() {
   // Generar un ejercicio básico
   const generateExercise = async (
     skill: TPAESHabilidad = "INTERPRET_RELATE",
+    prueba: TPAESPrueba = "COMPETENCIA_LECTORA",
     difficulty: string = "INTERMEDIATE"
   ): Promise<Exercise | null> => {
     try {
       setIsLoading(true);
-      console.log(`Generando ejercicio para skill: ${skill}, dificultad: ${difficulty}`);
+      console.log(`Generando ejercicio para skill: ${skill}, prueba: ${prueba}, dificultad: ${difficulty}`);
       
-      // CORRECCIÓN: Usar el valor correcto del enum TPAESPrueba
-      const prueba: TPAESPrueba = "COMPETENCIA_LECTORA";
-      
-      // Generar un ejercicio usando OpenRouter con el valor correcto de prueba
-      console.log("Llamando a OpenRouter con params:", { skill, prueba, difficulty });
+      // Generar un ejercicio usando OpenRouter con el tipo de prueba correcto
       const exercise = await callOpenRouter<Exercise>("generate_exercise", {
         skill,
-        prueba: prueba, // Aseguramos usar el valor correcto del enum
+        prueba, // Usar el tipo de prueba proporcionado
         difficulty,
         previousExercises: [],
         includeVisualContent: true
@@ -54,6 +51,7 @@ export function useExerciseGeneration() {
           correctAnswer: exercise.correctAnswer || exercise.options?.[0] || "Opción A",
           explanation: exercise.explanation || "No se proporcionó explicación.",
           skill: exercise.skill || skill,
+          prueba: exercise.prueba || prueba, // Guardar el tipo de prueba en el ejercicio
           difficulty: exercise.difficulty || difficulty,
           imageUrl: exercise.imageUrl || undefined,
           graphData: exercise.graphData || undefined,
@@ -93,7 +91,6 @@ export function useExerciseGeneration() {
       // Obtener datos del nodo para generar un ejercicio más contextualizado
       const skill = node.skill;
       const difficulty = node.difficulty.toUpperCase();
-      // CORRECCIÓN: Asegurarse que prueba sea del tipo correcto TPAESPrueba
       const prueba = node.prueba;
       
       console.log(`Generando ejercicio para nodo: ${node.id}, skill: ${skill}, prueba: ${prueba}, dificultad: ${difficulty}`);
@@ -129,6 +126,7 @@ export function useExerciseGeneration() {
           correctAnswer: exercise.correctAnswer || exercise.options?.[0] || "Opción A",
           explanation: exercise.explanation || "No se proporcionó explicación.",
           skill: skill,
+          prueba: prueba, // Guardar el tipo de prueba en el ejercicio
           difficulty: difficulty,
           nodeId: node.id,
           imageUrl: exercise.imageUrl || undefined,

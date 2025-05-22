@@ -34,6 +34,7 @@ export async function generateExercise(payload: any): Promise<any> {
       - correctAnswer: La respuesta correcta (debe coincidir con una de las opciones)
       - explanation: Explicación detallada de por qué la respuesta es correcta
       - skill: La habilidad que se evalúa
+      - prueba: El tipo de prueba (${prueba})
       - difficulty: La dificultad del ejercicio
       - imageUrl: (opcional) URL de una imagen relacionada
       - graphData: (opcional) Datos para un gráfico si aplica
@@ -140,6 +141,7 @@ function createBackupExercise(skill: string, difficulty: string, prueba: string)
   let correctAnswer = "Entender el significado contextual e ideas transmitidas";
   let explanation = "El texto menciona explícitamente que la lectura comprensiva 'implica no solo decodificar las palabras, sino también entender su significado contextual y las ideas que transmiten'.";
   
+  // Adaptar según el tipo de prueba
   if (prueba === "MATEMATICA_1" || prueba === "MATEMATICA_2") {
     context = "Para resolver ecuaciones de primer grado, es necesario aislar la variable despejando términos.";
     question = "¿Cuál es la solución de la ecuación 2x + 3 = 7?";
