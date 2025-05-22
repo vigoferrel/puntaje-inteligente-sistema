@@ -1,14 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { DiagnosticQuestion } from '@/types/diagnostic';
-import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
-import { mapSkillIdToEnum, mapTestIdToEnum } from '@/utils/supabase-mappers';
-
-// Define Json type explicitly to avoid circular references
-type JsonPrimitive = string | number | boolean | null;
-type JsonArray = JsonValue[];
-type JsonObject = { [key: string]: JsonValue };
-type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+import { TPAESPrueba } from '@/types/system-types';
+import { RawExerciseData } from './types';
+import { mapExerciseToQuestion } from './mappers';
 
 /**
  * Fetches a question by its ID
@@ -28,7 +23,7 @@ export async function fetchQuestionById(questionId: string): Promise<DiagnosticQ
     if (!data) return null;
     
     // Transform the raw DB data into our DiagnosticQuestion type
-    return mapExerciseToQuestion(data);
+    return mapExerciseToQuestion(data as RawExerciseData);
   } catch (error) {
     console.error('Error fetching question by ID:', error);
     return null;
@@ -57,7 +52,7 @@ export async function fetchQuestionsByIds(
     if (!data || !Array.isArray(data)) return [];
     
     // Transform each row into a DiagnosticQuestion
-    return data.map(exercise => mapExerciseToQuestion(exercise));
+    return data.map(exercise => mapExerciseToQuestion(exercise as RawExerciseData));
   } catch (error) {
     console.error('Error fetching questions by IDs:', error);
     return [];
@@ -101,104 +96,13 @@ export async function fetchDiagnosticQuestions(
       if (!fallbackData || !Array.isArray(fallbackData)) return [];
       
       // Map the fallback data
-      return fallbackData.map(exercise => mapExerciseToQuestion(exercise));
+      return fallbackData.map(exercise => mapExerciseToQuestion(exercise as RawExerciseData));
     }
     
     // Map the data
-    return data.map(exercise => mapExerciseToQuestion(exercise));
+    return data.map(exercise => mapExerciseToQuestion(exercise as RawExerciseData));
   } catch (error) {
     console.error('Error in fetchDiagnosticQuestions:', error);
     return [];
   }
-}
-
-/**
- * Define a clear interface for the raw exercise data from database
- */
-interface RawExerciseData {
-  id?: string;
-  question?: string;
-  options?: JsonValue;
-  correct_answer?: string;
-  skill?: number | string;
-  prueba?: number | string;
-  explanation?: string;
-  diagnostic_id?: string;
-  node_id?: string;
-  difficulty?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-/**
- * Helper function to transform a raw exercise row from the database into our DiagnosticQuestion type
- */
-function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
-  // Safely parse options if they're stored as a JSON string
-  let options: string[] = [];
-  
-  try {
-    if (exercise.options) {
-      if (Array.isArray(exercise.options)) {
-        options = exercise.options.map(String);
-      } else if (typeof exercise.options === 'string') {
-        options = JSON.parse(exercise.options);
-      } else if (typeof exercise.options === 'object') {
-        // Handle as object if it's already parsed JSON
-        const optionsObj = exercise.options;
-        options = Array.isArray(optionsObj) ? optionsObj.map(String) : [];
-      }
-    }
-  } catch (e) {
-    console.error('Error parsing options:', e);
-    options = [];
-  }
-
-  // Map skill using a safe helper function
-  const safeMapSkill = (skillValue: number | string | undefined): TPAESHabilidad => {
-    if (typeof skillValue === 'number') {
-      return mapSkillIdToEnum(skillValue);
-    } else if (typeof skillValue === 'string') {
-      const validSkills: TPAESHabilidad[] = [
-        'SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'INTERPRET_RELATE', 
-        'EVALUATE_REFLECT', 'TRACK_LOCATE', 'ARGUE_COMMUNICATE', 
-        'IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 
-        'SCIENTIFIC_ARGUMENT', 'TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 
-        'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION'
-      ] as TPAESHabilidad[];
-      
-      return validSkills.includes(skillValue as TPAESHabilidad) 
-        ? skillValue as TPAESHabilidad 
-        : 'SOLVE_PROBLEMS';
-    }
-    return 'SOLVE_PROBLEMS' as TPAESHabilidad;
-  };
-
-  // Map prueba using a safe helper function
-  const safeMapPrueba = (pruebaValue: number | string | undefined): TPAESPrueba => {
-    if (typeof pruebaValue === 'number') {
-      return mapTestIdToEnum(pruebaValue);
-    } else if (typeof pruebaValue === 'string') {
-      const validPruebas: TPAESPrueba[] = [
-        'COMPETENCIA_LECTORA', 'MATEMATICA_1', 'MATEMATICA_2', 
-        'CIENCIAS', 'HISTORIA'
-      ] as TPAESPrueba[];
-      
-      return validPruebas.includes(pruebaValue as TPAESPrueba) 
-        ? pruebaValue as TPAESPrueba 
-        : 'MATEMATICA_1';
-    }
-    return 'MATEMATICA_1' as TPAESPrueba;
-  };
-
-  // Return the mapped question with explicitly typed properties
-  return {
-    id: exercise.id || '',
-    question: exercise.question || '',
-    options: options,
-    correctAnswer: exercise.correct_answer || '',
-    skill: safeMapSkill(exercise.skill),
-    prueba: safeMapPrueba(exercise.prueba),
-    explanation: exercise.explanation || undefined
-  };
 }

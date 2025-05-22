@@ -1,0 +1,83 @@
+
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
+import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/supabase-mappers";
+import { DiagnosticQuestion } from "@/types/diagnostic";
+import { RawExerciseData, JsonValue } from "./types";
+
+/**
+ * Maps a skill value to the corresponding TPAESHabilidad enum
+ */
+export function safeMapSkill(skillValue: number | string | undefined): TPAESHabilidad {
+  if (typeof skillValue === 'number') {
+    return mapSkillIdToEnum(skillValue);
+  } else if (typeof skillValue === 'string') {
+    const validSkills: TPAESHabilidad[] = [
+      'SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'INTERPRET_RELATE', 
+      'EVALUATE_REFLECT', 'TRACK_LOCATE', 'ARGUE_COMMUNICATE', 
+      'IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 
+      'SCIENTIFIC_ARGUMENT', 'TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 
+      'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION'
+    ];
+    
+    return validSkills.includes(skillValue as TPAESHabilidad) 
+      ? skillValue as TPAESHabilidad 
+      : 'SOLVE_PROBLEMS';
+  }
+  return 'SOLVE_PROBLEMS';
+}
+
+/**
+ * Maps a test value to the corresponding TPAESPrueba enum
+ */
+export function safeMapPrueba(pruebaValue: number | string | undefined): TPAESPrueba {
+  if (typeof pruebaValue === 'number') {
+    return mapTestIdToEnum(pruebaValue);
+  } else if (typeof pruebaValue === 'string') {
+    const validPruebas: TPAESPrueba[] = [
+      'COMPETENCIA_LECTORA', 'MATEMATICA_1', 'MATEMATICA_2', 
+      'CIENCIAS', 'HISTORIA'
+    ];
+    
+    return validPruebas.includes(pruebaValue as TPAESPrueba) 
+      ? pruebaValue as TPAESPrueba 
+      : 'MATEMATICA_1';
+  }
+  return 'MATEMATICA_1';
+}
+
+/**
+ * Parse options from database into string array
+ */
+export function parseOptions(options: JsonValue | undefined): string[] {
+  if (!options) return [];
+  
+  try {
+    if (Array.isArray(options)) {
+      return options.map(String);
+    } else if (typeof options === 'string') {
+      const parsedOptions = JSON.parse(options);
+      return Array.isArray(parsedOptions) ? parsedOptions.map(String) : [];
+    } else if (typeof options === 'object' && options !== null) {
+      return Object.values(options).map(String);
+    }
+  } catch (e) {
+    console.error('Error parsing options:', e);
+  }
+  
+  return [];
+}
+
+/**
+ * Transform a raw exercise from the database into a DiagnosticQuestion
+ */
+export function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
+  return {
+    id: exercise.id || '',
+    question: exercise.question || '',
+    options: parseOptions(exercise.options),
+    correctAnswer: exercise.correct_answer || '',
+    skill: safeMapSkill(exercise.skill),
+    prueba: safeMapPrueba(exercise.prueba),
+    explanation: exercise.explanation || undefined
+  };
+}
