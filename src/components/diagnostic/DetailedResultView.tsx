@@ -1,233 +1,254 @@
 
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { TestResultView } from "./TestResultView";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SkillRadarChart } from "./SkillRadarChart";
-import { SkillProgress } from "@/components/skill-progress";
 import { DiagnosticResult } from "@/types/diagnostic";
-import { TPAESHabilidad, getHabilidadDisplayName } from "@/types/system-types";
-import { ArrowRight, BarChart2, BookOpen, CheckCircle, List } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../ui/breadcrumb";
+import { SkillRadarChart } from "./SkillRadarChart";
+import { TPAESHabilidad } from "@/types/system-types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, BookOpen, Brain, Lightbulb, Target } from "lucide-react";
+import { motion } from "framer-motion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface DetailedResultViewProps {
-  results?: DiagnosticResult;
   onRestartDiagnostic: () => void;
-  onViewPlan?: () => void;
+  results?: Record<TPAESHabilidad, number>;
+  completedAt?: string;
+  testTitle?: string;
+  showRecommendations?: boolean;
 }
 
-export const DetailedResultView = ({ 
-  results, 
+export const DetailedResultView = ({
   onRestartDiagnostic,
-  onViewPlan 
+  results,
+  completedAt,
+  testTitle = "Diagnóstico PAES",
+  showRecommendations = true
 }: DetailedResultViewProps) => {
-  if (!results?.results) {
-    return (
-      <Card className="p-6 text-center">
-        <CardTitle className="mb-4">No hay resultados disponibles</CardTitle>
-        <CardDescription className="mb-4">
-          No se encontraron resultados para mostrar. Intenta completar un diagnóstico primero.
-        </CardDescription>
-        <Button onClick={onRestartDiagnostic}>Realizar diagnóstico</Button>
-      </Card>
-    );
-  }
-
-  // Calcular el promedio general
-  const skillValues = Object.values(results.results);
-  const averageScore = skillValues.reduce((sum, val) => sum + val, 0) / skillValues.length;
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("results");
   
-  // Ordenar habilidades por nivel (de mayor a menor)
-  const sortedSkills = Object.entries(results.results)
-    .sort(([, a], [, b]) => b - a)
-    .map(([skill]) => skill as TPAESHabilidad);
-
-  // Identificar fortalezas y áreas de mejora
-  const strengths = sortedSkills.slice(0, 2);
-  const weaknesses = [...sortedSkills].reverse().slice(0, 2);
-
+  // Estructura para recomendaciones basadas en habilidades
+  const getRecommendations = () => {
+    if (!results) return [];
+    
+    // Determinar áreas de mejora (habilidades con puntuación menor a 60%)
+    const areasToImprove = Object.entries(results)
+      .filter(([_, score]) => score < 0.6)
+      .map(([skill]) => skill as TPAESHabilidad);
+    
+    // Generar recomendaciones específicas para cada área
+    return areasToImprove.map(skill => {
+      const recommendations = {
+        SOLVE_PROBLEMS: {
+          title: "Mejora tu resolución de problemas",
+          activities: [
+            "Practica con problemas matemáticos en contextos reales",
+            "Enfócate en entender el enunciado antes de intentar resolver",
+            "Utiliza distintas estrategias para el mismo problema"
+          ]
+        },
+        REPRESENT: {
+          title: "Refuerza tu representación matemática",
+          activities: [
+            "Practica la conversión entre representaciones diferentes",
+            "Trabaja con gráficos y tablas de datos",
+            "Relaciona expresiones algebraicas con representaciones visuales"
+          ]
+        },
+        MODEL: {
+          title: "Desarrolla tu modelamiento matemático",
+          activities: [
+            "Practica la creación de modelos matemáticos para situaciones cotidianas",
+            "Analiza modelos existentes y su aplicación",
+            "Verifica y ajusta modelos con datos reales"
+          ]
+        },
+        INTERPRET_RELATE: {
+          title: "Mejora tu interpretación de textos",
+          activities: [
+            "Practica la lectura activa subrayando ideas principales",
+            "Conecta información de diferentes párrafos",
+            "Identifica la intención comunicativa del autor"
+          ]
+        },
+        EVALUATE_REFLECT: {
+          title: "Desarrolla tu capacidad de evaluación y reflexión",
+          activities: [
+            "Practica el análisis crítico de textos argumentativos",
+            "Evalúa la validez de argumentos y evidencias",
+            "Relaciona el contenido con tu conocimiento previo"
+          ]
+        },
+        TRACK_LOCATE: {
+          title: "Refuerza tu ubicación de información",
+          activities: [
+            "Practica la búsqueda de datos específicos en textos",
+            "Identifica rápidamente secciones relevantes",
+            "Utiliza estrategias de escaneo de información"
+          ]
+        },
+        ARGUE_COMMUNICATE: {
+          title: "Mejora tu argumentación",
+          activities: [
+            "Practica la construcción de argumentos con evidencias",
+            "Desarrolla conclusiones basadas en premisas",
+            "Ejercita la comunicación de ideas matemáticas con precisión"
+          ]
+        }
+      };
+      
+      // Devolver recomendación para la habilidad o una genérica si no existe
+      return recommendations[skill as keyof typeof recommendations] || {
+        title: `Refuerza tu ${skill.toLowerCase().replace('_', ' ')}`,
+        activities: [
+          "Practica ejercicios específicos para esta habilidad",
+          "Revisa conceptos básicos relacionados",
+          "Aplica lo aprendido en contextos diversos"
+        ]
+      };
+    });
+  };
+  
+  const recommendations = getRecommendations();
+  
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link to="/">Inicio</Link></BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link to="/diagnostico">Diagnóstico</Link></BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink>Resultados</BreadcrumbLink>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold">Resultados de tu diagnóstico</h2>
-        <p className="text-muted-foreground">
-          Completado el {new Date(results.completedAt).toLocaleDateString('es-CL', {
-            day: 'numeric',
-            month: 'long',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </p>
-      </div>
-
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="text-blue-600" />
-            Diagnóstico completado
-          </CardTitle>
-          <CardDescription>
-            Tu nivel promedio es <span className="font-semibold">{Math.round(averageScore * 100)}%</span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <p className="text-sm">
-              Basado en tus resultados, hemos identificado tus fortalezas y áreas de mejora.
-              Utiliza esta información para enfocar tu preparación en los aspectos que más necesitas trabajar.
-            </p>
-            <div className="flex justify-end">
-              <Button 
-                variant="default" 
-                onClick={onViewPlan || (() => {})} 
-                asChild
-                className="group"
-              >
-                <Link to="/plan">
-                  Ver mi plan de estudio personalizado
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="summary" className="w-full">
-        <TabsList>
-          <TabsTrigger value="summary" className="flex items-center gap-2">
-            <BarChart2 className="h-4 w-4" />
-            <span>Resumen</span>
-          </TabsTrigger>
-          <TabsTrigger value="skills" className="flex items-center gap-2">
-            <List className="h-4 w-4" />
-            <span>Detalles por habilidad</span>
-          </TabsTrigger>
-          <TabsTrigger value="recommendations" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            <span>Recomendaciones</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="summary" className="space-y-4 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <SkillRadarChart 
-              skillScores={results.results} 
-              title="Perfil de Habilidades" 
-              description="Visualización de tu nivel en cada habilidad evaluada" 
-            />
+      <TestResultView 
+        onRestartDiagnostic={onRestartDiagnostic} 
+        results={results} 
+        completedAt={completedAt}
+        diagnosticTitle={testTitle}
+      />
+      
+      {showRecommendations && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full mb-4">
+              <TabsTrigger value="results" className="flex-1 gap-2">
+                <Target className="h-4 w-4" />
+                Resultados
+              </TabsTrigger>
+              <TabsTrigger value="recommendations" className="flex-1 gap-2">
+                <Lightbulb className="h-4 w-4" />
+                Recomendaciones
+              </TabsTrigger>
+            </TabsList>
             
-            <div className="grid gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tus fortalezas</CardTitle>
-                  <CardDescription>Habilidades en las que destacas</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {strengths.map(skill => (
-                    <SkillProgress
-                      key={skill}
-                      skill={skill}
-                      level={results.results[skill]}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Áreas de mejora</CardTitle>
-                  <CardDescription>Habilidades que requieren más atención</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {weaknesses.map(skill => (
-                    <SkillProgress
-                      key={skill}
-                      skill={skill}
-                      level={results.results[skill]}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="skills" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Detalle por habilidad</CardTitle>
-              <CardDescription>Análisis completo de todas tus habilidades evaluadas</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              {sortedSkills.map(skill => (
-                <div key={skill} className="border-b pb-4 last:border-b-0 last:pb-0">
-                  <div className="mb-2">
-                    <h3 className="font-medium">{getHabilidadDisplayName(skill)}</h3>
-                    <p className="text-sm text-muted-foreground">Nivel: {Math.round(results.results[skill] * 100)}%</p>
-                  </div>
-                  <SkillProgress
-                    skill={skill}
-                    level={results.results[skill]}
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="recommendations" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recomendaciones personalizadas</CardTitle>
-              <CardDescription>
-                Basado en tu diagnóstico, te recomendamos enfocar tu estudio en las siguientes áreas
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {weaknesses.map(skill => (
-                <div key={skill} className="p-4 border rounded-lg">
-                  <h3 className="font-medium mb-2">{getHabilidadDisplayName(skill)}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Recomendamos enfocarte en mejorar esta habilidad con ejercicios específicos y material de estudio.
-                  </p>
-                  <Button variant="outline" asChild className="w-full">
-                    <Link to="/plan">Ver ejercicios recomendados</Link>
-                  </Button>
-                </div>
-              ))}
-              
-              <div className="flex justify-between mt-4">
-                <Button variant="outline" onClick={onRestartDiagnostic}>
-                  Realizar diagnóstico nuevamente
-                </Button>
-                <Button asChild>
-                  <Link to="/plan">
-                    Ir a mi plan de estudio
-                  </Link>
-                </Button>
+            <TabsContent value="results" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Radar chart of skills */}
+                <SkillRadarChart 
+                  skillScores={results || {}}
+                  title="Visualización de habilidades" 
+                  description="Representación visual de tus niveles en cada habilidad"
+                  showLegend={true}
+                />
+                
+                {/* Study tips card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="h-5 w-5 text-primary" />
+                      Estrategias de estudio recomendadas
+                    </CardTitle>
+                    <CardDescription>
+                      Basadas en tu perfil de resultados
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-2">
+                      <li className="flex items-start gap-2">
+                        <div className="bg-blue-100 text-blue-800 rounded-full p-1 mt-0.5 shrink-0">
+                          <span className="block h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+                        </div>
+                        <span>Enfócate primero en las habilidades con menor puntaje</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="bg-blue-100 text-blue-800 rounded-full p-1 mt-0.5 shrink-0">
+                          <span className="block h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+                        </div>
+                        <span>Dedica sesiones de estudio más cortas pero frecuentes</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="bg-blue-100 text-blue-800 rounded-full p-1 mt-0.5 shrink-0">
+                          <span className="block h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+                        </div>
+                        <span>Alterna entre distintos tipos de ejercicios</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="bg-blue-100 text-blue-800 rounded-full p-1 mt-0.5 shrink-0">
+                          <span className="block h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+                        </div>
+                        <span>Realiza nuevos diagnósticos regularmente para medir tu progreso</span>
+                      </li>
+                    </ul>
+                    
+                    <Button 
+                      className="w-full mt-4 group" 
+                      onClick={() => navigate("/plan")}
+                    >
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      Ver mi plan de estudio
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+            
+            <TabsContent value="recommendations">
+              {recommendations.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {recommendations.map((rec, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 * index }}
+                    >
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">{rec.title}</CardTitle>
+                          <CardDescription>
+                            Actividades recomendadas para mejorar
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2">
+                            {rec.activities.map((activity, actIndex) => (
+                              <li key={actIndex} className="flex items-start gap-2">
+                                <div className="bg-primary/10 text-primary rounded-full p-1 mt-0.5 shrink-0">
+                                  <span className="block h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                </div>
+                                <span>{activity}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <AlertTitle>No hay recomendaciones disponibles</AlertTitle>
+                  <AlertDescription>
+                    No se encontraron áreas específicas que requieran mejora prioritaria. 
+                    Continúa practicando con tu plan de estudio para mantener tus habilidades.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      )}
     </div>
   );
 };
