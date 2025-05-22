@@ -8,11 +8,11 @@ export const getNodeStatus = (
   progress: PlanProgress | null,
   recommendedNodeId: string | null
 ): { 
-  status: 'completed' | 'in-progress' | 'pending' | 'recommended',
+  status: 'not_started' | 'in_progress' | 'completed',
   label: string,
-  progress?: number
+  progress: number
 } => {
-  if (!progress) return { status: 'pending', label: 'Pendiente' };
+  if (!progress) return { status: 'not_started', label: 'Pendiente', progress: 0 };
   
   // Assume nodes are completed in order
   if (index < progress.completedNodes) {
@@ -23,15 +23,15 @@ export const getNodeStatus = (
     // Use specific node progress if available, or 50% by default
     const nodeProgressValue = progress.nodeProgress?.[nodeId] || 50;
     return { 
-      status: 'in-progress', 
+      status: 'in_progress', 
       label: 'En progreso', 
       progress: nodeProgressValue 
     };
   }
   
   if (nodeId === recommendedNodeId) {
-    return { status: 'recommended', label: 'Recomendado' };
+    return { status: 'not_started', label: 'Recomendado', progress: 0 };
   }
   
-  return { status: 'pending', label: 'Pendiente' };
+  return { status: 'not_started', label: 'Pendiente', progress: 0 };
 };
