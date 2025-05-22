@@ -38,7 +38,7 @@ export async function fetchQuestionsByIds(
 
     if (error) throw error;
     
-    return (data || []).map((question) => question as DiagnosticQuestion);
+    return (data || []) as DiagnosticQuestion[];
   } catch (error) {
     console.error('Error fetching questions by IDs:', error);
     return [];

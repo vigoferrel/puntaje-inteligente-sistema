@@ -26,3 +26,15 @@ export interface AIFeedback {
   tip: string;
   response?: string; // Added for direct text responses
 }
+
+export interface ImageAnalysisResult {
+  response: string;
+  extractedText?: string;
+  analysis?: {
+    textContent?: string;
+    ocrConfidence?: number;
+    detectedLanguage?: string;
+    mainTopic?: string;
+    keyPoints?: string[];
+  };
+}

@@ -5,7 +5,7 @@ import { ChatInterface, ChatMessage } from "@/components/ai/ChatInterface";
 
 interface ChatTabProps {
   messages: ChatMessage[];
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, imageData?: string) => void;
   isTyping: boolean;
 }
 
@@ -22,7 +22,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
             messages={messages}
             onSendMessage={onSendMessage}
             isTyping={isTyping}
-            placeholder="Pregunta cualquier cosa sobre comprensión lectora..."
+            placeholder="Pregunta algo o sube una imagen para analizarla..."
           />
         </div>
       </CardContent>

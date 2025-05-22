@@ -46,6 +46,12 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
     
     if (data && data.result) {
       try {
+        // For image processing
+        if (action === 'process_image') {
+          console.log('Image processing result received:', data.result);
+          return data.result as unknown as T;
+        }
+        
         // Para generate_exercise, el resultado ya debería ser un objeto
         if (action === 'generate_exercise') {
           console.log('Exercise data received:', data.result);
@@ -83,6 +89,46 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
       : 'Error en la solicitud a OpenRouter';
     
     console.error('Error in OpenRouter service:', err);
+    
+    toast({
+      title: "Error",
+      description: message,
+      variant: "destructive"
+    });
+    
+    return null;
+  }
+};
+
+/**
+ * Processes an image and returns analysis from the AI
+ */
+export const processImageWithOpenRouter = async (imageData: string, prompt?: string, context?: string) => {
+  try {
+    // Validate image data
+    if (!imageData) {
+      toast({
+        title: "Error",
+        description: "No se proporcionó una imagen para procesar",
+        variant: "destructive"
+      });
+      return null;
+    }
+
+    return await openRouterService({
+      action: 'process_image',
+      payload: {
+        image: imageData,
+        prompt: prompt || "Analiza esta imagen y extrae todo el texto que puedas encontrar",
+        context: context || "Análisis de imagen para comprensión lectora"
+      }
+    });
+  } catch (error) {
+    const message = error instanceof Error
+      ? error.message
+      : 'Error procesando la imagen';
+    
+    console.error('Error processing image with OpenRouter:', error);
     
     toast({
       title: "Error",

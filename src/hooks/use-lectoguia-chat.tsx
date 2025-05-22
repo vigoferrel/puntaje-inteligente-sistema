@@ -13,6 +13,7 @@ Puedo ayudarte con:
 • Explicaciones detalladas de conceptos
 • Análisis de tu progreso
 • Técnicas específicas para mejorar tus habilidades
+• Análisis de imágenes y textos con OCR
 
 ¿En qué puedo ayudarte hoy?`;
 
@@ -29,7 +30,7 @@ export function useLectoGuiaChat() {
     }
   ]);
   
-  const { callOpenRouter } = useOpenRouter();
+  const { callOpenRouter, processImage } = useOpenRouter();
   const [isTyping, setIsTyping] = useState(false);
   
   // Agregar un mensaje del asistente
@@ -45,46 +46,81 @@ export function useLectoGuiaChat() {
   };
   
   // Procesar y responder a un mensaje del usuario
-  const processUserMessage = async (message: string) => {
-    if (!message.trim()) return null;
+  const processUserMessage = async (message: string, imageData?: string) => {
+    // Create timestamp for current message
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    if (!message.trim() && !imageData) return null;
     
     // Agregar mensaje del usuario a la conversación
     const userMessage: ChatMessage = {
       id: uuidv4(),
       role: "user",
       content: message,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp,
+      imageUrl: imageData
     };
     
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
     
     try {
-      // Conversación normal usando OpenRouter
-      const response = await callOpenRouter<{ response: string }>("provide_feedback", {
-        userMessage: message,
-        context: "PAES preparation, reading comprehension"
-      });
+      // If there's an image, process it with the vision model
+      if (imageData) {
+        // Prepare prompt based on user message or default to analysis
+        const prompt = message.trim() || "Analiza esta imagen y extrae todo el texto visible";
+        
+        const response = await processImage(imageData, prompt);
 
-      let botResponse = "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con ejercicios de comprensión lectora si lo deseas.";
-      
-      if (response) {
-        // Asegurarnos de que tenemos una respuesta válida
-        if (typeof response === 'string') {
-          botResponse = response;
-        } else if (response.response) {
-          botResponse = response.response;
-        } else if (typeof response === 'object' && Object.keys(response).length > 0) {
-          // Intentar extraer alguna propiedad útil del objeto
-          const firstValue = Object.values(response)[0];
-          botResponse = typeof firstValue === 'string' ? firstValue : 
-            "Para mejorar tu comprensión lectora, es importante enfocarte en las tres habilidades principales que evalúa la PAES: Rastrear-Localizar, Interpretar-Relacionar y Evaluar-Reflexionar.";
+        if (response) {
+          let botResponse = "";
+          
+          if (typeof response === 'string') {
+            botResponse = response;
+          } else if (response.response) {
+            botResponse = response.response;
+            
+            // Add extracted text info if available
+            if (response.extractedText) {
+              botResponse = `${botResponse}\n\n**Texto extraído:**\n${response.extractedText}`;
+            }
+          } else {
+            botResponse = "He analizado la imagen, pero no pude extraer información clara. ¿Puedes proporcionar una imagen con mejor resolución?";
+          }
+          
+          addAssistantMessage(botResponse);
+          return botResponse;
+        } else {
+          const errorMessage = "Lo siento, tuve problemas analizando la imagen. Intenta con otra imagen o describe tu consulta.";
+          addAssistantMessage(errorMessage);
+          return errorMessage;
         }
+      } else {
+        // Regular text conversation using OpenRouter
+        const response = await callOpenRouter<{ response: string }>("provide_feedback", {
+          userMessage: message,
+          context: "PAES preparation, reading comprehension"
+        });
+
+        let botResponse = "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con ejercicios de comprensión lectora si lo deseas.";
+        
+        if (response) {
+          // Asegurarnos de que tenemos una respuesta válida
+          if (typeof response === 'string') {
+            botResponse = response;
+          } else if (response.response) {
+            botResponse = response.response;
+          } else if (typeof response === 'object' && Object.keys(response).length > 0) {
+            // Intentar extraer alguna propiedad útil del objeto
+            const firstValue = Object.values(response)[0];
+            botResponse = typeof firstValue === 'string' ? firstValue : 
+              "Para mejorar tu comprensión lectora, es importante enfocarte en las tres habilidades principales que evalúa la PAES: Rastrear-Localizar, Interpretar-Relacionar y Evaluar-Reflexionar.";
+          }
+        }
+        
+        addAssistantMessage(botResponse);
+        return botResponse;
       }
-      
-      addAssistantMessage(botResponse);
-      return botResponse;
-      
     } catch (error) {
       console.error("Error procesando mensaje:", error);
       

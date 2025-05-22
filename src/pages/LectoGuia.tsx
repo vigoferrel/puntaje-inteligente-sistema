@@ -30,8 +30,14 @@ const LectoGuia = () => {
   } = useLectoGuiaExercise();
   
   // Manejar el envío de mensajes
-  const handleSendMessage = async (message: string) => {
-    if (!message.trim()) return;
+  const handleSendMessage = async (message: string, imageData?: string) => {
+    if (!message.trim() && !imageData) return;
+    
+    // If there's an image, process it
+    if (imageData) {
+      await processUserMessage(message, imageData);
+      return;
+    }
     
     // Detectar si el usuario está pidiendo un ejercicio
     const isExerciseRequest = message.toLowerCase().includes("ejercicio") || 

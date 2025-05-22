@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { openRouterService } from "@/services/openrouter-service";
+import { openRouterService, processImageWithOpenRouter } from "@/services/openrouter-service";
 import { toast } from "@/components/ui/use-toast";
 
 export function useOpenRouter() {
@@ -24,8 +24,26 @@ export function useOpenRouter() {
     }
   };
 
+  const processImage = async (imageData: string, prompt?: string, context?: string) => {
+    try {
+      setLoading(true);
+      return await processImageWithOpenRouter(imageData, prompt, context);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error procesando la imagen';
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     callOpenRouter,
+    processImage,
     loading
   };
 }

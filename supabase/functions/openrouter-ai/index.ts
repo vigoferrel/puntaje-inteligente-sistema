@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -17,7 +16,13 @@ const corsHeaders = {
 const MODELS = [
   'google/gemini-2.0-flash-exp:free',
   'anthropic/claude-3-haiku:2024-04-29',
-  'meta-llama/llama-3-70b-instruct'
+  'meta-llama/llama-3-70b-instruct',
+  'qwen/qwen2.5-vl-72b-instruct:free' // Added Qwen vision model
+];
+
+// Vision-capable models
+const VISION_MODELS = [
+  'qwen/qwen2.5-vl-72b-instruct:free'
 ];
 
 // Main handler function
@@ -82,6 +87,8 @@ async function processAction(action: string, payload: any): Promise<Response> {
       return await analyzePerformance(payload);
     case 'provide_feedback':
       return await provideFeedback(payload);
+    case 'process_image':
+      return await processImage(payload);
     default:
       console.error(`Invalid action specified: ${action}`);
       return createErrorResponse(`Acción inválida: ${action}`, 400);
@@ -199,6 +206,47 @@ async function provideFeedback({ userMessage, context, exerciseAttempt, correctA
 }
 
 /**
+ * Handles image processing requests using vision models
+ */
+async function processImage({ image, prompt, context = '' }) {
+  console.log(`Processing image with prompt: ${prompt?.substring(0, 50)}...`);
+
+  if (!image) {
+    return createErrorResponse("Se requiere una imagen para el procesamiento", 400);
+  }
+
+  // Validate image format
+  if (!image.startsWith('data:image/') && !image.startsWith('http')) {
+    return createErrorResponse("Formato de imagen inválido. Debe ser una URL o una imagen codificada en Base64", 400);
+  }
+
+  const systemPrompt = `Eres un asistente educativo especializado en comprensión lectora y análisis de textos para la preparación 
+  del examen PAES chileno. Analiza detenidamente la imagen proporcionada y responde en español. 
+  ${context ? `Contexto adicional: ${context}` : ''}`;
+
+  const userPrompt = prompt || "Analiza esta imagen y extrae todo el texto que puedas encontrar. Luego, resume el contenido principal.";
+
+  try {
+    const response = await callVisionModel(systemPrompt, userPrompt, image);
+    
+    if (response.error) {
+      console.error('Error in processImage:', response.error);
+      throw new Error(response.error);
+    }
+
+    const responseData = processAIResponse(response.result);
+    return createSuccessResponse({
+      response: responseData.response || responseData,
+      extractedText: responseData.extractedText || null,
+      analysis: responseData.analysis || null
+    });
+  } catch (error) {
+    console.error('Error processing image:', error);
+    return createErrorResponse(`Error al procesar la imagen: ${error.message}`, 500);
+  }
+}
+
+/**
  * Process and normalize AI response data
  */
 function processAIResponse(result: any) {
@@ -269,6 +317,109 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string) {
   } catch (error) {
     console.error('Error calling OpenRouter:', error);
     return createErrorResponse(`Error calling OpenRouter: ${error.message}`, 500);
+  }
+}
+
+/**
+ * Specific function to call vision models for image processing
+ */
+async function callVisionModel(systemPrompt: string, userPrompt: string, imageData: string) {
+  try {
+    console.log('Calling vision model with system prompt:', systemPrompt.substring(0, 100) + '...');
+    console.log('User prompt:', userPrompt.substring(0, 100) + '...');
+    
+    if (!OPENROUTER_API_KEY) {
+      console.error('Missing OpenRouter API key');
+      throw new Error('OpenRouter API key is not configured');
+    }
+    
+    const requestStartTime = Date.now();
+    
+    // Use the Qwen vision model directly since it supports images
+    const model = 'qwen/qwen2.5-vl-72b-instruct:free';
+    console.log(`Using vision model: ${model}`);
+    
+    // Prepare content array with both text and image
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { 
+        role: 'user',
+        content: [
+          { type: 'text', text: userPrompt }
+        ]
+      }
+    ];
+
+    // Add image data based on format (URL or Base64)
+    if (imageData.startsWith('data:image/')) {
+      // Base64 image
+      messages[1].content.push({
+        type: 'image_url',
+        image_url: { url: imageData }
+      });
+    } else {
+      // URL image
+      messages[1].content.push({
+        type: 'image_url',
+        image_url: { url: imageData }
+      });
+    }
+
+    const requestBody = JSON.stringify({
+      model: model,
+      messages: messages,
+      temperature: 0.5,
+      max_tokens: 1200
+    });
+    
+    console.log('Vision request body structure:', JSON.stringify({
+      model: model,
+      messages: [
+        { role: 'system', content: '...' },
+        { role: 'user', content: [{ type: 'text' }, { type: 'image_url' }] }
+      ]
+    }));
+    
+    const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': APP_URL,
+        'X-Title': 'PAES Preparation Platform'
+      },
+      body: requestBody
+    });
+
+    const requestDuration = Date.now() - requestStartTime;
+    console.log(`OpenRouter Vision API call completed in ${requestDuration}ms with status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenRouter API vision error response:', errorText);
+      return { error: `Error procesando imagen (${response.status}): ${errorText}` };
+    }
+
+    const responseText = await response.text();
+    console.log('Raw vision response text:', responseText.substring(0, 200) + '...');
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Error parsing JSON response:', e);
+      return { error: `Error al analizar respuesta JSON: ${e.message}` };
+    }
+    
+    console.log('Vision response received, first 200 chars of content:', 
+      data.choices?.[0]?.message?.content?.substring(0, 200) + '...');
+    
+    const content = data.choices?.[0]?.message?.content || null;
+    
+    return { result: content };
+  } catch (error) {
+    console.error('Error calling vision model:', error);
+    return { error: `Error llamando al modelo de visión: ${error.message}` };
   }
 }
 
