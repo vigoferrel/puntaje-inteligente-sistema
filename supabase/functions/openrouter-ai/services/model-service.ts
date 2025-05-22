@@ -130,6 +130,7 @@ export async function callOpenRouter(
     
     let response;
     let attempts = 0;
+    let successfulModel = '';
     const maxAttempts = modelsToTry.length;
     
     while (attempts < maxAttempts) {
@@ -141,6 +142,7 @@ export async function callOpenRouter(
         
         if (response.ok) {
           MonitoringService.info(`El modelo ${currentModel} respondió exitosamente con estado:`, response.status);
+          successfulModel = currentModel;
           break;
         } else if (response.status === 429) {
           // Se encontró un límite de tasa, intentar con el siguiente modelo
@@ -169,7 +171,7 @@ export async function callOpenRouter(
     const requestDuration = Date.now() - requestStartTime;
     MonitoringService.info(`Llamada a la API de OpenRouter completada en ${requestDuration}ms`, { 
       status: response.status,
-      model: modelsToTry[attempts],
+      model: successfulModel || 'no exitoso',
       attempts: attempts + 1,
       requestId
     });
@@ -178,7 +180,17 @@ export async function callOpenRouter(
       return await handleApiError(response, attempts >= maxAttempts);
     }
 
-    return await processSuccessfulResponse(response, requestId);
+    const result = await processSuccessfulResponse(response, requestId);
+    
+    // Agregar información sobre qué modelo respondió finalmente
+    if (result && !result.error) {
+      result.metadata = {
+        ...(result.metadata || {}),
+        modelUsed: successfulModel
+      };
+    }
+    
+    return result;
   } catch (error) {
     MonitoringService.error('Error llamando a OpenRouter:', error);
     

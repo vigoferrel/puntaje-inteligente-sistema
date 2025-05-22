@@ -36,6 +36,11 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
       throw new Error('No se recibieron datos desde OpenRouter');
     }
     
+    // Si hay metadatos, registrarlos para análisis de rendimiento
+    if (data.metadata && data.metadata.modelUsed) {
+      console.log(`Respuesta generada usando el modelo: ${data.metadata.modelUsed}`);
+    }
+    
     // Si hay un error pero también hay una respuesta de fallback, usamos esa respuesta
     if (data.error) {
       console.error('OpenRouter error:', data.error);

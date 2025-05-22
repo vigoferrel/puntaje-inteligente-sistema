@@ -14,9 +14,9 @@ export const APP_URL = 'https://app.paes-ai.com';
 export const MODELS = [
   'google/gemini-2.5-flash-preview',    // Modelo principal Gemini 2.5 Flash
   'google/gemini-2.0-flash-exp:free',   // Fallback: Gemini 2.0 Flash
-  'anthropic/claude-3-haiku:2024-04-29', // Segundo fallback
-  'meta-llama/llama-3-70b-instruct',     // Tercer fallback
-  'qwen/qwen2.5-vl-72b-instruct:free'    // Cuarto fallback
+  'openai/gpt-4.1-mini',               // Segundo fallback - reemplaza a Claude Haiku
+  'meta-llama/llama-3-70b-instruct',    // Tercer fallback
+  'qwen/qwen2.5-vl-72b-instruct:free'   // Cuarto fallback
 ];
 
 // Configuración de modelos avanzados con parámetros específicos
@@ -35,9 +35,12 @@ export const MODEL_CONFIGS = {
     max_tokens: 1200,
     multimodal: false
   },
-  'anthropic/claude-3-haiku:2024-04-29': {
+  'openai/gpt-4.1-mini': {
     temperature: 0.7,
     max_tokens: 1000,
+    top_p: 0.95,
+    frequency_penalty: 0.1,
+    presence_penalty: 0.1,
     multimodal: false
   }
 };

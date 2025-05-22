@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
 import { 
@@ -14,7 +13,7 @@ import { CacheService } from "./services/cache-service.ts";
 import { METRICS_CONFIG } from "./config.ts";
 import { cleanExpiredCacheContent } from "./services/usage-tracking-service.ts";
 
-console.log("OpenRouter AI Edge Function Started with Enhanced Gemini 2.5 Support");
+console.log("OpenRouter AI Edge Function Started with Enhanced Gemini 2.5 Support and GPT-4.1-mini Fallback");
 
 // Variable para el estado de salud del servicio
 let serviceHealthy = true;
@@ -51,8 +50,9 @@ serve(async (req) => {
         status: serviceHealthy ? 'healthy' : 'degraded',
         uptime: `${uptime} segundos`,
         metrics,
-        version: '3.0.0', // Versión actualizada para Gemini 2.5
-        model: 'google/gemini-2.5-flash-preview'
+        version: '3.1.0', // Versión actualizada para cascada con GPT-4.1-mini
+        model: 'google/gemini-2.5-flash-preview',
+        fallback_models: ['google/gemini-2.0-flash-exp:free', 'openai/gpt-4.1-mini']
       }), {
         status: 200,
         headers: {
