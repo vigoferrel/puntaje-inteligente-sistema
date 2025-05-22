@@ -83,9 +83,7 @@ export const AppSidebar = () => {
   return (
     <Sidebar
       className="border-r"
-      collapsible={isMobile ? "offcanvas" : "icon"}
-      open={open}
-      onOpenChange={setOpen}>
+      collapsible={isMobile ? "offcanvas" : "icon"}>
       <div className="pb-12 h-full flex flex-col">
         <div className="py-4 px-4 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
