@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Award } from 'lucide-react';
+import { ArrowRight, Award, Image as ImageIcon } from 'lucide-react';
 import { Exercise } from '@/types/ai-types';
+import { ChatImagePreview } from '@/components/ai/chat/ChatImagePreview';
 
 interface ExerciseViewProps {
   exercise: Exercise | null;
@@ -20,6 +21,8 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({
   onOptionSelect,
   onContinue
 }) => {
+  const [expandedImage, setExpandedImage] = useState(false);
+
   if (!exercise) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
@@ -45,8 +48,76 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({
   // Si no se encuentra la respuesta correcta, usamos 0 por defecto
   const correctIndex = correctAnswerIndex >= 0 ? correctAnswerIndex : 0;
 
+  // Función para renderizar contenido visual del ejercicio
+  const renderVisualContent = () => {
+    // Si hay una imagen asociada al ejercicio
+    if (exercise.imageUrl) {
+      return (
+        <div className="mb-4">
+          <ChatImagePreview 
+            imageUrl={exercise.imageUrl} 
+            isExpanded={expandedImage}
+            onToggleExpand={() => setExpandedImage(!expandedImage)}
+          />
+        </div>
+      );
+    }
+    
+    // Si hay datos de gráfico asociados al ejercicio
+    if (exercise.graphData && exercise.visualType === 'graph') {
+      return (
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+          <p className="text-xs text-muted-foreground mb-2">Gráfico relacionado:</p>
+          {/* Aquí se podría integrar un componente de visualización de gráficos */}
+          <div className="bg-secondary/20 p-4 rounded border border-dashed border-primary/30 text-center">
+            [Visualización de gráfico]
+          </div>
+        </div>
+      );
+    }
+    
+    // Para otros tipos de contenido visual que se puedan agregar en el futuro
+    if (exercise.hasVisualContent && exercise.visualType) {
+      return (
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+          <p className="text-xs text-muted-foreground mb-2">
+            Contenido visual: {exercise.visualType}
+          </p>
+          <div className="bg-secondary/20 p-4 rounded border border-dashed border-primary/30 text-center">
+            [Contenido visual no disponible]
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  // Información del nodo relacionado (si existe)
+  const renderNodeInfo = () => {
+    if (exercise.nodeId) {
+      return (
+        <div className="bg-blue-50 p-3 rounded-md border border-blue-100 mb-4 text-sm">
+          <p className="text-blue-600 font-medium">
+            <span className="mr-2">📚</span> 
+            Este ejercicio está relacionado con un nodo de aprendizaje.
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Función para formatear el texto del ejercicio con posibles estilos
+  const formatExerciseText = (text: string) => {
+    // Aquí se podría implementar un parser de markdown o HTML si fuera necesario
+    return text;
+  };
+
   return (
     <div className="space-y-6">
+      {renderNodeInfo()}
+      
       <div>
         <div className="flex justify-between">
           <h3 className="text-lg font-semibold text-foreground mb-1">Lectura</h3>
@@ -54,6 +125,9 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({
             {exercise.skill || "Comprensión Lectora"}
           </span>
         </div>
+        
+        {renderVisualContent()}
+        
         <div className="bg-secondary/30 p-4 rounded-lg text-foreground border border-border">
           {exercise.text || exercise.context || "Sin contenido"}
         </div>

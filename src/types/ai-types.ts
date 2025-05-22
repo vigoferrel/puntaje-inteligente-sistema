@@ -1,4 +1,3 @@
-
 export interface Exercise {
   id: string;
   text?: string;
@@ -11,6 +10,10 @@ export interface Exercise {
   difficulty?: string;
   prueba?: string;
   nodeId?: string; // Added to support node-specific exercises
+  imageUrl?: string; // URL for any image related to the exercise
+  graphData?: any; // Data for rendering graphs if needed
+  visualType?: 'image' | 'graph' | 'table' | 'code' | 'math'; // Type of visual content
+  hasVisualContent?: boolean; // Flag to indicate if this exercise has visual content
 }
 
 export interface AIAnalysis {

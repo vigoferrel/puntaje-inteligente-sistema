@@ -25,7 +25,8 @@ export function useLectoGuiaExercise() {
         skill,
         prueba: "COMPREHENSION_LECTORA",
         difficulty,
-        previousExercises: []
+        previousExercises: [],
+        includeVisualContent: true // Solicitar contenido visual si es posible
       });
 
       if (exercise) {
@@ -45,7 +46,12 @@ export function useLectoGuiaExercise() {
           correctAnswer: exercise.correctAnswer || exercise.options?.[0] || "Opción A",
           explanation: exercise.explanation || "No se proporcionó explicación.",
           skill: exercise.skill || skill,
-          difficulty: exercise.difficulty || difficulty
+          difficulty: exercise.difficulty || difficulty,
+          // Propiedades relacionadas con contenido visual
+          imageUrl: exercise.imageUrl || undefined,
+          graphData: exercise.graphData || undefined,
+          visualType: exercise.visualType,
+          hasVisualContent: !!exercise.imageUrl || !!exercise.graphData || !!exercise.hasVisualContent
         };
         
         // Actualizar estado del ejercicio
@@ -82,7 +88,8 @@ export function useLectoGuiaExercise() {
           description: node.description,
           position: node.position
         },
-        previousExercises: []
+        previousExercises: [],
+        includeVisualContent: true // Solicitar contenido visual si es relevante para este nodo
       });
 
       if (exercise) {
@@ -103,7 +110,12 @@ export function useLectoGuiaExercise() {
           explanation: exercise.explanation || "No se proporcionó explicación.",
           skill: skill,
           difficulty: difficulty,
-          nodeId: node.id
+          nodeId: node.id,
+          // Propiedades relacionadas con contenido visual
+          imageUrl: exercise.imageUrl || undefined,
+          graphData: exercise.graphData || undefined,
+          visualType: exercise.visualType,
+          hasVisualContent: !!exercise.imageUrl || !!exercise.graphData || !!exercise.hasVisualContent
         };
         
         // Actualizar estado del ejercicio

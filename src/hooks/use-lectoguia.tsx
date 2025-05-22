@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Exercise } from "@/types/ai-types";
 import { LectoGuiaSkill, TLearningNode } from "@/types/lectoguia-types";
@@ -200,10 +199,15 @@ Trabajemos en este tema para mejorar tu dominio. ¿Te gustaría comenzar con:
       const exercise = await generateExerciseForNode(nodeDetails);
 
       if (exercise) {
-        toast({
-          title: "Ejercicio generado",
-          description: "Se ha generado un ejercicio relacionado con este nodo de aprendizaje",
-        });
+        // Cambiamos a la pestaña de ejercicios después de generarlo
+        setTimeout(() => {
+          setActiveTab("exercise");
+          
+          toast({
+            title: "Ejercicio generado",
+            description: "Se ha generado un ejercicio relacionado con este nodo de aprendizaje. ¡Resuélvelo para avanzar!",
+          });
+        }, 800);
       }
 
       return true;

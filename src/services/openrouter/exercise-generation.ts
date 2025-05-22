@@ -10,7 +10,8 @@ export const generateExercise = async (
   skill: TPAESHabilidad,
   prueba: TPAESPrueba,
   difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED',
-  previousExercises: Exercise[] = []
+  previousExercises: Exercise[] = [],
+  includeVisualContent?: boolean
 ): Promise<Exercise | null> => {
   return await openRouterService<Exercise>({
     action: 'generate_exercise',
@@ -18,7 +19,8 @@ export const generateExercise = async (
       skill,
       prueba,
       difficulty,
-      previousExercises
+      previousExercises,
+      includeVisualContent // Flag para solicitar contenido visual
     }
   });
 };
@@ -31,7 +33,8 @@ export const generateExercisesBatch = async (
   skill: string,
   testId: number,
   count: number = 5,
-  difficulty: string = 'INTERMEDIATE'
+  difficulty: string = 'INTERMEDIATE',
+  includeVisualContent?: boolean
 ): Promise<Exercise[]> => {
   try {
     console.log(`Generando lote de ${count} ejercicios para skill ${skill}, testId ${testId}`);
@@ -45,7 +48,8 @@ export const generateExercisesBatch = async (
         count,
         difficulty,
         retry: true,
-        retryCount: 0
+        retryCount: 0,
+        includeVisualContent // Flag para solicitar contenido visual
       }
     });
     
