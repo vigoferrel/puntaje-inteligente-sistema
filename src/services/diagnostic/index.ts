@@ -14,3 +14,5 @@ export * from './default-diagnostics';
 export * from './test-services';
 // Exportamos el servicio para generar diagnósticos por defecto
 export { generateDefaultDiagnostic, ensureDefaultDiagnosticsExist } from './default-services';
+// Exportamos el módulo refactorizado de generación de diagnósticos
+export * from '../diagnostic-generator';
