@@ -59,25 +59,25 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         changeSubject(detectedSubject);
       }
       
-      // Request response directly from feedback service
-      console.log('Enviando mensaje a servicio de feedback:', message);
+      // Request response directly from feedback service with mejor manejo de errores
+      console.log('Enviando mensaje al servicio de feedback con contexto:', activeSubject);
       const responseData = await provideChatFeedback(
         message,
         `PAES preparation, subject: ${activeSubject}, full platform assistance`,
         getRecentMessages(6)
       );
       
-      console.log('Respuesta del servicio de feedback:', responseData);
-      
-      // Manejar caso de error o respuesta nula
+      // Caso especial: si no hay respuesta pero no es un error crítico
       if (!responseData) {
-        console.log('Respuesta nula recibida del servicio');
-        const errorContent = "Lo siento, no pude procesar tu solicitud. Por favor intenta de nuevo.";
-        addAssistantMessage(errorContent);
-        return errorContent;
+        console.log('No se recibió respuesta del servicio, utilizando respuesta de respaldo');
+        const fallbackContent = "Lo siento, en este momento no puedo acceder a toda mi información. ¿Puedo ayudarte con algo más básico sobre el tema?";
+        addAssistantMessage(fallbackContent);
+        return fallbackContent;
       }
       
-      // La respuesta ya debería estar en formato de texto
+      console.log('Respuesta procesada:', responseData);
+      
+      // Añadir la respuesta al chat
       addAssistantMessage(responseData);
       return responseData;
       
@@ -91,7 +91,15 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         : "Hubo un problema al procesar tu mensaje.";
       
       addAssistantMessage(errorContent);
-      return null;
+      
+      // Notificar al usuario sobre el problema
+      toast({
+        title: "Error de comunicación",
+        description: "Hubo un problema al conectar con el asistente. Verifica tu conexión a internet.",
+        variant: "destructive"
+      });
+      
+      return errorContent;
     } finally {
       setIsTyping(false);
     }

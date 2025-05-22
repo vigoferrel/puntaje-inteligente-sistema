@@ -23,8 +23,8 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       requestId: request.requestId || generateRequestId()
     };
     
-    // URL de la función de borde que maneja las solicitudes de OpenRouter
-    const functionUrl = '/functions/v1/openrouter-ai';
+    // URL completa de la función de borde con el ID del proyecto
+    const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
     
     console.log('OpenRouter: Enviando solicitud a', functionUrl, requestWithId);
     
@@ -32,6 +32,7 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY || ''}`
       },
       body: JSON.stringify(requestWithId),
     });
@@ -41,7 +42,14 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       console.error('OpenRouter: Error en la respuesta:', response.status, errorText);
       
       // Manejo específico según el código de estado
-      if (response.status === 429) {
+      if (response.status === 404) {
+        toast({
+          title: "Servicio no disponible",
+          description: "La función OpenRouter no se encuentra disponible. Contacte al administrador.",
+          variant: "destructive"
+        });
+        throw new Error("Función OpenRouter no encontrada (404)");
+      } else if (response.status === 429) {
         toast({
           title: "Límite de solicitudes excedido",
           description: "Por favor, espera un momento antes de intentar nuevamente.",

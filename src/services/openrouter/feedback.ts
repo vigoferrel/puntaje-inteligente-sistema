@@ -23,6 +23,10 @@ export const provideExerciseFeedback = async (
       }
     });
     
+    if (!result) {
+      throw new Error("No se recibió respuesta del servicio de feedback");
+    }
+    
     console.log('Feedback recibido:', result);
     return result;
   } catch (error) {
@@ -39,6 +43,7 @@ export const provideExerciseFeedback = async (
 
 /**
  * Procesa mensajes del usuario para proporcionar retroalimentación general
+ * Versión mejorada con mejor manejo de errores y respuestas
  */
 export const provideChatFeedback = async (
   userMessage: string,
@@ -53,26 +58,46 @@ export const provideChatFeedback = async (
       payload: {
         userMessage,
         context: context || "general assistance",
-        previousMessages: previousMessages || []
+        previousMessages: previousMessages || [],
+        timestamp: new Date().toISOString() // Añadir timestamp para evitar respuestas en caché
       }
     });
     
-    // Manejar diferentes formatos de respuesta
+    // Si no hay respuesta, devolver mensaje de error controlado
     if (!result) {
-      return null;
+      console.log('No se recibió respuesta del servicio');
+      return "Lo siento, estoy teniendo problemas para conectarme al servicio en este momento. ¿Podrías intentarlo de nuevo?";
     }
     
+    console.log('Respuesta recibida del servicio:', typeof result, result);
+    
+    // Manejar diferentes formatos de respuesta
     if (typeof result === 'string') {
       return result;
     }
     
-    if (typeof result === 'object' && 'response' in result) {
-      return result.response;
+    if (typeof result === 'object') {
+      // Si tiene la propiedad response, usarla directamente
+      if ('response' in result) {
+        return result.response;
+      }
+      
+      // Si tiene cualquier propiedad de tipo string, usar la primera que encontremos
+      for (const key of Object.keys(result)) {
+        if (typeof result[key] === 'string') {
+          return result[key];
+        }
+      }
+      
+      // Último recurso: convertir el objeto completo a string
+      return JSON.stringify(result);
     }
     
-    return JSON.stringify(result);
+    // Caso extremo: el resultado es de un tipo no esperado
+    return "Recibí una respuesta pero no pude interpretarla correctamente. ¿Puedes reformular tu pregunta?";
   } catch (error) {
     console.error('Error al procesar mensaje:', error);
-    return null;
+    // Proporcionar un mensaje de error amigable al usuario
+    return "Lo siento, estoy experimentando dificultades técnicas en este momento. Por favor, intenta de nuevo más tarde.";
   }
 };
