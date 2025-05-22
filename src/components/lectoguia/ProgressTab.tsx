@@ -2,13 +2,10 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ProgressView } from "@/components/lectoguia/ProgressView";
+import { LectoGuiaSkill } from "@/types/lectoguia-types";
 
 interface ProgressTabProps {
-  skillLevels: {
-    'TRACK_LOCATE': number;
-    'INTERPRET_RELATE': number;
-    'EVALUATE_REFLECT': number;
-  };
+  skillLevels: Record<LectoGuiaSkill, number>;
   onStartSimulation: () => void;
 }
 

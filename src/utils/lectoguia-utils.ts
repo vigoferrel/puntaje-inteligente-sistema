@@ -1,3 +1,4 @@
+
 /**
  * Helper function to map skill codes to IDs
  * @param skillCode The code of the skill 
@@ -44,6 +45,9 @@ export const getSkillName = (skillCode: string): string => {
     case 'TRACK_LOCATE': return 'Rastrear y Localizar';
     case 'INTERPRET_RELATE': return 'Interpretar y Relacionar';
     case 'EVALUATE_REFLECT': return 'Evaluar y Reflexionar';
+    case 'ALGEBRA': return 'Álgebra';
+    case 'PHYSICS': return 'Física';
+    case 'HISTORY': return 'Historia';
     default: return skillCode || 'Desconocida';
   }
 };
@@ -54,7 +58,7 @@ export const getSkillName = (skillCode: string): string => {
  * @returns Boolean indicating if the code is valid
  */
 export const isValidSkillCode = (skillCode: string): boolean => {
-  return ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT'].includes(skillCode);
+  return ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT', 'ALGEBRA', 'PHYSICS', 'HISTORY'].includes(skillCode);
 };
 
 /**

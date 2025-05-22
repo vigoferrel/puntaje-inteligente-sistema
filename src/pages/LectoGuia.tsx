@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +12,7 @@ import { ExerciseTab } from "@/components/lectoguia/ExerciseTab";
 import { ProgressTab } from "@/components/lectoguia/ProgressTab";
 import { useDiagnostic } from "@/hooks/use-diagnostic";
 import { useLearningPlan } from "@/hooks/use-learning-plan";
+import { LectoGuiaSkill } from "@/types/lectoguia-types";
 
 // Componente principal de LectoGuía convertido en asistente completo
 const LectoGuia = () => {
@@ -203,14 +203,7 @@ const LectoGuia = () => {
 
               <TabsContent value="progress" className="m-0">
                 <ProgressTab 
-                  skillLevels={{
-                    'TRACK_LOCATE': session.skillLevels['TRACK_LOCATE'] || 0,
-                    'INTERPRET_RELATE': session.skillLevels['INTERPRET_RELATE'] || 0,
-                    'EVALUATE_REFLECT': session.skillLevels['EVALUATE_REFLECT'] || 0,
-                    'ALGEBRA': session.skillLevels['ALGEBRA'] || 0,
-                    'PHYSICS': session.skillLevels['PHYSICS'] || 0,
-                    'HISTORY': session.skillLevels['HISTORY'] || 0
-                  }}
+                  skillLevels={session.skillLevels as Record<LectoGuiaSkill, number>}
                   onStartSimulation={handleStartSimulation}
                 />
               </TabsContent>
