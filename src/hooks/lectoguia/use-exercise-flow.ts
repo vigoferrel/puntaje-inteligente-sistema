@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Exercise } from '@/types/ai-types';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
@@ -129,11 +128,17 @@ export function useExerciseFlow(
         
         const isCorrect = index === (correctAnswerIndex >= 0 ? correctAnswerIndex : 0);
         
+        // Get the appropriate prueba for the current subject
+        const prueba = currentExercise.prueba || pruebaMap[activeSubject] || 'COMPETENCIA_LECTORA';
+        
+        console.log(`Saving exercise with prueba: ${prueba}, subject: ${activeSubject}`);
+        
         saveExerciseAttempt(
           currentExercise,
           index,
           isCorrect,
-          currentExercise.skill || 'INTERPRET_RELATE'
+          currentExercise.skill || 'INTERPRET_RELATE',
+          prueba // Pass the prueba parameter
         );
       }
     }, 300);

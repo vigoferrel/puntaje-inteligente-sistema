@@ -26,7 +26,8 @@ export function useExerciseHistory(
     exercise: Exercise, 
     selectedOption: number, 
     isCorrect: boolean,
-    skill: string = 'INTERPRET_RELATE'
+    skill: string = 'INTERPRET_RELATE',
+    prueba: string = 'COMPETENCIA_LECTORA' // Add prueba parameter with default value
   ): Promise<SaveExerciseResult> => {
     if (!exercise) {
       setError("No exercise provided");
@@ -42,13 +43,16 @@ export function useExerciseHistory(
       setSaving(true);
       setError(null);
       
+      console.log(`Saving exercise attempt with skill: ${skill}, prueba: ${prueba}`);
+      
       // Save to Supabase and get new attempt
       const newAttempt = await saveExerciseAttemptToDb(
         userId,
         exercise,
         selectedOption,
         isCorrect,
-        skill
+        skill,
+        prueba // Pass prueba to the database function
       );
       
       if (!newAttempt) {

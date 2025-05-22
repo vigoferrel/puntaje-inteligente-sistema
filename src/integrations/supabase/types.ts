@@ -526,6 +526,7 @@ export type Database = {
           exercise_id: string
           id: string
           is_correct: boolean
+          prueba: string
           selected_option: number
           skill_type: string
           user_id: string
@@ -535,6 +536,7 @@ export type Database = {
           exercise_id: string
           id?: string
           is_correct: boolean
+          prueba: string
           selected_option: number
           skill_type: string
           user_id: string
@@ -544,6 +546,7 @@ export type Database = {
           exercise_id?: string
           id?: string
           is_correct?: boolean
+          prueba?: string
           selected_option?: number
           skill_type?: string
           user_id?: string

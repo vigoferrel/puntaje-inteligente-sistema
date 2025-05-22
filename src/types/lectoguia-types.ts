@@ -1,4 +1,3 @@
-
 import { Exercise } from './ai-types';
 import { TPAESHabilidad } from './system-types';
 
@@ -10,6 +9,7 @@ export interface ExerciseAttempt {
   isCorrect: boolean;
   skillType: string;
   completedAt: string;
+  prueba: string;  // Added prueba field
 }
 
 export interface UserPreference {
