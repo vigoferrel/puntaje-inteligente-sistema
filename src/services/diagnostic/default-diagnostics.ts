@@ -1,127 +1,141 @@
 
+import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { generateDiagnosticTest } from "@/services/diagnostic-generator";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Generates a default diagnostic test for demonstration purposes
+ * Creates a local fallback diagnostic test
  */
-export const generateDefaultDiagnostic = async (): Promise<boolean> => {
+export async function createLocalFallbackDiagnostics(): Promise<boolean> {
   try {
-    // First check if there are already diagnostic tests
-    const { data: existingTests, error: checkError } = await supabase
+    console.log("Creando diagnósticos locales de respaldo...");
+    
+    const basicDiagnostic: Partial<DiagnosticTest> = {
+      title: "Diagnóstico Básico de Comprensión Lectora",
+      description: "Evalúa tus habilidades básicas de comprensión de textos",
+      testId: 1, // Suponiendo que 1 es el ID del test Comprensión Lectora
+    };
+    
+    // Crear el diagnóstico en Supabase
+    const { data: diagnosticData, error: diagnosticError } = await supabase
       .from('diagnostic_tests')
-      .select('count')
-      .limit(1);
-    
-    if (checkError) throw checkError;
-    
-    // If there are already tests, don't create more by default
-    if (existingTests && existingTests.length > 0 && existingTests[0].count > 0) {
-      return true;
-    }
-    
-    // Get available tests
-    const { data: tests, error: testsError } = await supabase
-      .from('paes_tests')
-      .select('id, name')
-      .limit(3);
-    
-    if (testsError) throw testsError;
-    
-    if (!tests || tests.length === 0) {
-      // No tests available in the database
-      console.error('No hay pruebas PAES disponibles para crear diagnósticos');
+      .insert({
+        title: basicDiagnostic.title,
+        description: basicDiagnostic.description,
+        test_id: basicDiagnostic.testId
+      })
+      .select()
+      .single();
       
-      // Try to create a default test
-      const { data: newTest, error: createError } = await supabase
-        .from('paes_tests')
-        .insert({
-          name: 'Matemáticas',
-          code: 'M1',
-          description: 'Prueba de matemáticas para la PAES'
-        })
-        .select();
-      
-      if (createError) throw createError;
-      
-      if (newTest && newTest.length > 0) {
-        // Create skills for this test
-        const { error: skillError } = await supabase
-          .from('paes_skills')
-          .insert([
-            { 
-              name: 'Resolución de problemas', 
-              code: 'SOLVE_PROBLEMS', 
-              test_id: newTest[0].id,
-              description: 'Habilidad para resolver problemas matemáticos' 
-            },
-            { 
-              name: 'Interpretación', 
-              code: 'INTERPRET_RELATE', 
-              test_id: newTest[0].id,
-              description: 'Habilidad para interpretar datos y problemas' 
-            }
-          ]);
-        
-        if (skillError) throw skillError;
-        
-        // Generate a diagnostic for this test
-        await generateDiagnosticTest(
-          newTest[0].id,
-          'Diagnóstico de Matemáticas',
-          'Diagnóstico inicial para evaluar habilidades matemáticas'
-        );
-        
-        return true;
-      }
-      
+    if (diagnosticError) {
+      console.error("Error al crear diagnóstico local:", diagnosticError);
       return false;
     }
     
-    // Generate a default diagnostic for each test found
-    let createdAny = false;
+    if (!diagnosticData) {
+      console.error("No se recibieron datos al crear el diagnóstico local");
+      return false;
+    }
     
-    for (const test of tests) {
-      try {
-        // Check if there's already a diagnostic for this test
-        const { data: existing, error: existingError } = await supabase
-          .from('diagnostic_tests')
-          .select('id')
-          .eq('test_id', test.id)
-          .limit(1);
-        
-        if (existingError) throw existingError;
-        
-        // Skip if there's already a diagnostic for this test
-        if (existing && existing.length > 0) continue;
-        
-        // Generate a diagnostic for this test
-        const diagnosticId = await generateDiagnosticTest(
-          test.id,
-          `Diagnóstico de ${test.name}`,
-          `Diagnóstico inicial para evaluar habilidades en ${test.name}`
-        );
-        
-        if (diagnosticId) {
-          createdAny = true;
-        }
-      } catch (testError) {
-        console.error(`Error al crear diagnóstico para prueba ${test.id}:`, testError);
-        // Continue with other tests
+    const diagnosticId = diagnosticData.id;
+    
+    // Preguntas de ejemplo
+    const questions = [
+      {
+        question: "¿Cuál es la idea principal del párrafo?",
+        options: [
+          "La importancia de la lectura",
+          "El desarrollo de la escritura",
+          "La evolución del lenguaje",
+          "Los beneficios de la comprensión lectora"
+        ],
+        correctAnswer: "La importancia de la lectura",
+        skill: 1, // TRACK_LOCATE
+        explanation: "El párrafo se centra en cómo la lectura impacta el desarrollo cognitivo."
+      },
+      {
+        question: "Según el texto, ¿qué relación existe entre los eventos A y B?",
+        options: [
+          "Causa y efecto",
+          "Comparación",
+          "Secuencia temporal",
+          "No hay relación"
+        ],
+        correctAnswer: "Causa y efecto",
+        skill: 2, // INTERPRET_RELATE
+        explanation: "El texto establece que el evento A provocó directamente el evento B."
+      },
+      {
+        question: "¿Cuál es la conclusión más adecuada para este argumento?",
+        options: [
+          "El argumento es válido y sólido",
+          "El argumento tiene premisas falsas",
+          "El argumento contiene una falacia",
+          "El argumento es circular"
+        ],
+        correctAnswer: "El argumento contiene una falacia",
+        skill: 3, // EVALUATE_REFLECT
+        explanation: "El argumento presenta una falacia de generalización apresurada."
+      }
+    ];
+    
+    // Guardar las preguntas de ejemplo
+    for (const q of questions) {
+      const { error: exerciseError } = await supabase
+        .from('exercises')
+        .insert({
+          diagnostic_id: diagnosticId,
+          node_id: '00000000-0000-0000-0000-000000000000', // Placeholder
+          test_id: basicDiagnostic.testId,
+          skill_id: q.skill,
+          question: q.question,
+          options: q.options,
+          correct_answer: q.correctAnswer,
+          explanation: q.explanation,
+          difficulty: 'basic'
+        });
+      
+      if (exerciseError) {
+        console.error("Error al crear ejercicio:", exerciseError);
+        // No fallamos la operación completa si un ejercicio falla
       }
     }
     
-    return createdAny;
+    console.log("Diagnóstico local creado con éxito:", diagnosticId);
+    return true;
+    
   } catch (error) {
-    console.error('Error al generar diagnóstico por defecto:', error);
-    
-    toast({
-      title: "Error",
-      description: "No se pudo generar un diagnóstico de prueba",
-      variant: "destructive"
-    });
-    
+    console.error("Error al crear diagnóstico local fallback:", error);
     return false;
   }
-};
+}
+
+/**
+ * Ensures that default diagnostics exist, creating them if needed
+ */
+export async function ensureDefaultDiagnosticsExist(): Promise<boolean> {
+  try {
+    // Verificar si ya existen diagnósticos
+    const { data: existingTests, error: fetchError } = await supabase
+      .from('diagnostic_tests')
+      .select('id, title, description')
+      .limit(1);
+    
+    if (fetchError) {
+      console.error("Error al verificar diagnósticos:", fetchError);
+      return false;
+    }
+    
+    if (existingTests && existingTests.length > 0) {
+      console.log("Ya existen diagnósticos en el sistema:", existingTests.length);
+      return true;
+    }
+    
+    // Si no hay diagnósticos, crear uno básico
+    return await createLocalFallbackDiagnostics();
+    
+  } catch (error) {
+    console.error("Error al asegurar diagnósticos:", error);
+    return false;
+  }
+}
