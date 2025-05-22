@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { DiagnosticQuestion } from '@/types/diagnostic';
-import { TPAESPrueba } from '@/types/system-types';
 
 export async function fetchQuestionById(questionId: string): Promise<DiagnosticQuestion | null> {
   try {
@@ -77,10 +76,10 @@ export async function fetchDiagnosticQuestions(
         return [];
       }
       
-      return (fallbackData || []) as DiagnosticQuestion[];
+      return (fallbackData || []) as unknown as DiagnosticQuestion[];
     }
     
-    return data as DiagnosticQuestion[];
+    return data as unknown as DiagnosticQuestion[];
   } catch (error) {
     console.error('Error in fetchDiagnosticQuestions:', error);
     return [];

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/components/ai/ChatInterface';
 import { useOpenRouter } from '@/hooks/use-openrouter';
 import { toast } from '@/components/ui/use-toast';
+import { ImageAnalysisResult } from '@/types/ai-types';
 
 const WELCOME_MESSAGE = `👋 ¡Hola! Soy LectoGuía, tu asistente personalizado para la preparación de la PAES.
 
@@ -75,14 +76,17 @@ export function useLectoGuiaChat() {
         if (response) {
           let botResponse = "";
           
+          // Handle different response formats
+          const typedResponse = response as ImageAnalysisResult;
+          
           if (typeof response === 'string') {
             botResponse = response;
-          } else if (response.response) {
-            botResponse = response.response;
+          } else if (typedResponse.response) {
+            botResponse = typedResponse.response;
             
             // Add extracted text info if available
-            if (response.extractedText) {
-              botResponse = `${botResponse}\n\n**Texto extraído:**\n${response.extractedText}`;
+            if (typedResponse.extractedText) {
+              botResponse = `${botResponse}\n\n**Texto extraído:**\n${typedResponse.extractedText}`;
             }
           } else {
             botResponse = "He analizado la imagen, pero no pude extraer información clara. ¿Puedes proporcionar una imagen con mejor resolución?";
@@ -108,7 +112,7 @@ export function useLectoGuiaChat() {
           // Asegurarnos de que tenemos una respuesta válida
           if (typeof response === 'string') {
             botResponse = response;
-          } else if (response.response) {
+          } else if (response && typeof response === 'object' && 'response' in response) {
             botResponse = response.response;
           } else if (typeof response === 'object' && Object.keys(response).length > 0) {
             // Intentar extraer alguna propiedad útil del objeto

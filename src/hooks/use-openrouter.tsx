@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { openRouterService, processImageWithOpenRouter } from "@/services/openrouter-service";
 import { toast } from "@/components/ui/use-toast";
+import { ImageAnalysisResult } from "@/types/ai-types";
 
 export function useOpenRouter() {
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export function useOpenRouter() {
     }
   };
 
-  const processImage = async (imageData: string, prompt?: string, context?: string) => {
+  const processImage = async (imageData: string, prompt?: string, context?: string): Promise<ImageAnalysisResult | null> => {
     try {
       setLoading(true);
       return await processImageWithOpenRouter(imageData, prompt, context);
