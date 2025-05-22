@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDataInitialization } from '@/hooks/use-data-initialization';
-import { Database, Loader, RefreshCw, LogIn, AlertTriangle } from 'lucide-react';
+import { Database, Loader, RefreshCw, LogIn, AlertTriangle, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,10 +16,12 @@ export function DataManagementPanel() {
     status,
     isLoading,
     message,
-    error
+    error,
+    detailedError
   } = useDataInitialization();
   
   const { user } = useAuth();
+  const [showDetails, setShowDetails] = useState(false);
 
   return (
     <Card>
@@ -64,15 +66,40 @@ export function DataManagementPanel() {
         
         {message && !error && (
           <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
-            <AlertTitle>Información</AlertTitle>
+            <AlertTitle className="flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              Información
+            </AlertTitle>
             <AlertDescription>{message}</AlertDescription>
           </Alert>
         )}
         
         {error && (
           <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Error
+            </AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>{error}</p>
+              {detailedError && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="mt-2"
+                  >
+                    {showDetails ? "Ocultar detalles" : "Mostrar detalles"}
+                  </Button>
+                  {showDetails && (
+                    <pre className="text-xs bg-black/10 p-2 rounded overflow-x-auto mt-2">
+                      {detailedError}
+                    </pre>
+                  )}
+                </>
+              )}
+            </AlertDescription>
           </Alert>
         )}
         
@@ -82,14 +109,17 @@ export function DataManagementPanel() {
             <StatusCard 
               title="Nodos de Aprendizaje" 
               status={status.learningNodes} 
+              description={getStatusDescription("learningNodes", status.learningNodes)}
             />
             <StatusCard 
               title="Habilidades PAES" 
               status={status.paesSkills} 
+              description={getStatusDescription("paesSkills", status.paesSkills)}
             />
             <StatusCard 
               title="Pruebas PAES" 
               status={status.paesTests} 
+              description={getStatusDescription("paesTests", status.paesTests)}
             />
           </div>
         </div>
@@ -138,12 +168,41 @@ export function DataManagementPanel() {
   );
 }
 
+function getStatusDescription(tableType: string, status: 'loading' | 'empty' | 'populated' | 'error' | 'unknown'): string {
+  const descriptions: Record<string, Record<string, string>> = {
+    learningNodes: {
+      empty: "No hay nodos de aprendizaje cargados",
+      populated: "Nodos de aprendizaje cargados correctamente",
+      error: "Error al cargar los nodos de aprendizaje",
+      loading: "Verificando nodos de aprendizaje...",
+      unknown: "Estado de nodos desconocido"
+    },
+    paesSkills: {
+      empty: "No hay habilidades PAES cargadas",
+      populated: "Habilidades PAES cargadas correctamente",
+      error: "Error al cargar las habilidades PAES",
+      loading: "Verificando habilidades PAES...",
+      unknown: "Estado de habilidades desconocido"
+    },
+    paesTests: {
+      empty: "No hay pruebas PAES cargadas",
+      populated: "Pruebas PAES cargadas correctamente",
+      error: "Error al cargar las pruebas PAES",
+      loading: "Verificando pruebas PAES...",
+      unknown: "Estado de pruebas desconocido"
+    }
+  };
+
+  return descriptions[tableType]?.[status] || "Estado desconocido";
+}
+
 interface StatusCardProps {
   title: string;
   status: 'loading' | 'empty' | 'populated' | 'error' | 'unknown';
+  description?: string;
 }
 
-function StatusCard({ title, status }: StatusCardProps) {
+function StatusCard({ title, status, description }: StatusCardProps) {
   const getStatusBadge = () => {
     switch (status) {
       case 'populated':
@@ -163,6 +222,7 @@ function StatusCard({ title, status }: StatusCardProps) {
     <div className="flex flex-col gap-2 p-4 border rounded-lg">
       <div className="text-sm font-medium">{title}</div>
       <div>{getStatusBadge()}</div>
+      {description && <div className="text-xs text-muted-foreground mt-1">{description}</div>}
     </div>
   );
 }

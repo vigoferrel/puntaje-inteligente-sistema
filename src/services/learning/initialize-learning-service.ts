@@ -6,32 +6,43 @@ import { mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
 import { v4 as uuidv4 } from 'uuid';
 
 // First, check if paes_skills and paes_tests already exist before initializing nodes
-const checkRequiredTables = async (): Promise<boolean> => {
+const checkRequiredTables = async (): Promise<{exists: boolean, skillIds: number[], testIds: number[]}> => {
   try {
     // Check if paes_skills table has data
-    const { count: skillsCount, error: skillsError } = await supabase
+    const { data: skillsData, error: skillsError } = await supabase
       .from('paes_skills')
-      .select('*', { count: 'exact', head: true });
+      .select('id, code');
     
     if (skillsError) {
       console.error('Error checking paes_skills table:', skillsError);
-      return false;
+      return {exists: false, skillIds: [], testIds: []};
     }
     
     // Check if paes_tests table has data
-    const { count: testsCount, error: testsError } = await supabase
+    const { data: testsData, error: testsError } = await supabase
       .from('paes_tests')
-      .select('*', { count: 'exact', head: true });
+      .select('id, code');
     
     if (testsError) {
       console.error('Error checking paes_tests table:', testsError);
-      return false;
+      return {exists: false, skillIds: [], testIds: []};
     }
     
-    return (skillsCount && skillsCount > 0) && (testsCount && testsCount > 0);
+    const exists = (skillsData && skillsData.length > 0) && (testsData && testsData.length > 0);
+    const skillIds = skillsData ? skillsData.map(skill => skill.id) : [];
+    const testIds = testsData ? testsData.map(test => test.id) : [];
+    
+    console.log('Available skill IDs:', skillIds);
+    console.log('Available test IDs:', testIds);
+    
+    return {
+      exists,
+      skillIds,
+      testIds
+    };
   } catch (error) {
     console.error('Error checking required tables:', error);
-    return false;
+    return {exists: false, skillIds: [], testIds: []};
   }
 };
 
@@ -39,9 +50,9 @@ const checkRequiredTables = async (): Promise<boolean> => {
 const initializeFoundationTables = async (): Promise<boolean> => {
   try {
     // First check if tables already have data
-    const hasData = await checkRequiredTables();
+    const {exists} = await checkRequiredTables();
     
-    if (hasData) {
+    if (exists) {
       console.log('Foundation tables already exist with data, no need to initialize');
       return true;
     }
@@ -103,51 +114,117 @@ const initializeFoundationTables = async (): Promise<boolean> => {
   }
 };
 
-// Using proper UUID generation instead of hardcoded strings
-const initialLearningNodes = [
-  {
-    id: uuidv4(), // Generate valid UUID
-    title: 'Introducción a la Competencia Lectora',
-    description: 'Aprende los fundamentos de la competencia lectora y cómo abordar diferentes tipos de textos.',
-    code: 'INTRO_LECTORA',
-    position: 1,
-    skill_id: 15, // CRITICAL_THINKING
-    test_id: 1, // COMPETENCIA_LECTORA
-    depends_on: [],
-    difficulty: 'basic' as const,
-    estimated_time_minutes: 30,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: uuidv4(), // Generate valid UUID
-    title: 'Resolución de Problemas Matemáticos',
-    description: 'Desarrolla tus habilidades para resolver problemas matemáticos complejos paso a paso.',
-    code: 'PROB_MATEMATICOS',
-    position: 1,
-    skill_id: 4, // SOLVE_PROBLEMS
-    test_id: 2, // MATEMATICA_1
-    depends_on: [],
-    difficulty: 'basic' as const,
-    estimated_time_minutes: 45,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: uuidv4(), // Generate valid UUID
-    title: 'Análisis de Datos Científicos',
-    description: 'Aprende a interpretar y analizar datos científicos para extraer conclusiones significativas.',
-    code: 'ANAL_CIENTIFICOS',
-    position: 1,
-    skill_id: 9, // PROCESS_ANALYZE
-    test_id: 4, // CIENCIAS
-    depends_on: [],
-    difficulty: 'basic' as const,
-    estimated_time_minutes: 60,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+// Define learning nodes with skills and tests that match our foundation tables
+const getInitialLearningNodes = (availableSkillIds: number[], availableTestIds: number[]) => {
+  // Use default values that will work if the recommended IDs exist
+  const defaultSkills = [15, 4, 9]; // CRITICAL_THINKING, SOLVE_PROBLEMS, PROCESS_ANALYZE
+  const defaultTests = [1, 2, 4];   // COMPETENCIA_LECTORA, MATEMATICA_1, CIENCIAS
+  
+  // Map to track which nodes we've created
+  const createdNodes: {skill: number, test: number}[] = [];
+  
+  // Get valid skill IDs (use first available if default not found)
+  const getValidSkillId = (preferredId: number, index: number) => {
+    if (availableSkillIds.includes(preferredId)) {
+      return preferredId;
+    }
+    console.log(`Warning: Preferred skill ID ${preferredId} not found, using alternative`);
+    return availableSkillIds[index % availableSkillIds.length] || 1;
+  };
+  
+  // Get valid test IDs (use first available if default not found)
+  const getValidTestId = (preferredId: number, index: number) => {
+    if (availableTestIds.includes(preferredId)) {
+      return preferredId;
+    }
+    console.log(`Warning: Preferred test ID ${preferredId} not found, using alternative`);
+    return availableTestIds[index % availableTestIds.length] || 1;
+  };
+  
+  return [
+    {
+      id: uuidv4(),
+      title: 'Introducción a la Competencia Lectora',
+      description: 'Aprende los fundamentos de la competencia lectora y cómo abordar diferentes tipos de textos.',
+      code: 'INTRO_LECTORA',
+      position: 1,
+      skill_id: getValidSkillId(defaultSkills[0], 0),
+      test_id: getValidTestId(defaultTests[0], 0),
+      depends_on: [],
+      difficulty: 'basic' as const,
+      estimated_time_minutes: 30,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: uuidv4(),
+      title: 'Resolución de Problemas Matemáticos',
+      description: 'Desarrolla tus habilidades para resolver problemas matemáticos complejos paso a paso.',
+      code: 'PROB_MATEMATICOS',
+      position: 1,
+      skill_id: getValidSkillId(defaultSkills[1], 1),
+      test_id: getValidTestId(defaultTests[1], 1),
+      depends_on: [],
+      difficulty: 'basic' as const,
+      estimated_time_minutes: 45,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: uuidv4(),
+      title: 'Análisis de Datos Científicos',
+      description: 'Aprende a interpretar y analizar datos científicos para extraer conclusiones significativas.',
+      code: 'ANAL_CIENTIFICOS',
+      position: 1,
+      skill_id: getValidSkillId(defaultSkills[2], 2),
+      test_id: getValidTestId(defaultTests[2], 2),
+      depends_on: [],
+      difficulty: 'basic' as const,
+      estimated_time_minutes: 60,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+};
+
+// Validate DB content before inserting to help diagnose issues
+const validateDatabaseContent = async (): Promise<string | null> => {
+  try {
+    // Check skills
+    const { data: skillsData, error: skillsError } = await supabase
+      .from('paes_skills')
+      .select('id, name, code');
+    
+    if (skillsError) {
+      return `Error validando tabla paes_skills: ${skillsError.message}`;
+    }
+    
+    if (!skillsData || skillsData.length === 0) {
+      return 'La tabla paes_skills no contiene datos. Por favor, inicialice los datos base primero.';
+    }
+    
+    console.log('Skills encontrados:', skillsData.length);
+    
+    // Check tests
+    const { data: testsData, error: testsError } = await supabase
+      .from('paes_tests')
+      .select('id, name, code');
+    
+    if (testsError) {
+      return `Error validando tabla paes_tests: ${testsError.message}`;
+    }
+    
+    if (!testsData || testsData.length === 0) {
+      return 'La tabla paes_tests no contiene datos. Por favor, inicialice los datos base primero.';
+    }
+    
+    console.log('Tests encontrados:', testsData.length);
+    
+    return null;
+  } catch (error: any) {
+    return `Error validando contenido de la base de datos: ${error.message}`;
+  }
+};
 
 export const ensureLearningNodesExist = async (): Promise<boolean> => {
   try {
@@ -176,6 +253,13 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       return true;
     }
     
+    // Validate database content to ensure required tables have data
+    const validationError = await validateDatabaseContent();
+    if (validationError) {
+      console.error(validationError);
+      throw new Error(`VALIDATION_ERROR: ${validationError}`);
+    }
+    
     // No nodes exist, so first ensure RLS policies are properly configured
     console.log('No learning nodes found, initializing RLS policies first...');
     const rlsPoliciesInitialized = await initializeRLSPolicies();
@@ -194,7 +278,20 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       return false;
     }
     
+    // Get available skill and test IDs to ensure we use valid IDs
+    const { skillIds, testIds } = await checkRequiredTables();
+    
+    if (skillIds.length === 0 || testIds.length === 0) {
+      console.error('No skill or test IDs available. Cannot create learning nodes.');
+      throw new Error('MISSING_REFERENCE_DATA');
+    }
+    
+    // Get initial learning nodes with valid IDs
+    const initialLearningNodes = getInitialLearningNodes(skillIds, testIds);
+    
     console.log('Foundation tables ready, now inserting learning nodes...');
+    console.log('Using skill IDs:', initialLearningNodes.map(node => node.skill_id));
+    console.log('Using test IDs:', initialLearningNodes.map(node => node.test_id));
     
     // Insert initial learning nodes
     const { error: insertError } = await supabase
@@ -210,10 +307,10 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
         throw new Error('DUPLICATE_KEY');
       } else if (insertError.message.includes('violates foreign key constraint')) {
         console.error('Error de clave foránea al insertar nodos. Verifica que los skill_id y test_id existan en sus respectivas tablas.', insertError);
-        throw new Error('FOREIGN_KEY_VIOLATION');
+        throw new Error(`FOREIGN_KEY_VIOLATION: ${insertError.message}`);
       } else {
         console.error('Error insertando nodos de aprendizaje iniciales:', insertError);
-        throw new Error('INSERT_ERROR');
+        throw new Error(`INSERT_ERROR: ${insertError.message}`);
       }
     }
     
@@ -221,7 +318,9 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
     return true;
   } catch (error: any) {
     // Propagate specific error types we explicitly threw
-    if (['AUTH_REQUIRED', 'PERMISSION_DENIED', 'DUPLICATE_KEY', 'FOREIGN_KEY_VIOLATION'].includes(error.message)) {
+    if (['AUTH_REQUIRED', 'PERMISSION_DENIED', 'DUPLICATE_KEY', 'FOREIGN_KEY_VIOLATION', 'VALIDATION_ERROR', 'MISSING_REFERENCE_DATA', 'INSERT_ERROR'].some(
+      errType => error.message?.includes(errType)
+    )) {
       throw error;
     }
     console.error('Error initializing learning nodes:', error);
