@@ -17,7 +17,25 @@ export const submitDiagnosticResult = async (
   try {
     // Obtener las preguntas del diagnóstico
     // Pasamos diagnosticId como primer argumento, el segundo es opcional
-    const questions = await fetchDiagnosticQuestions(diagnosticId);
+    // Según la firma de la función en fetch-questions.ts, necesita 2 argumentos
+    const { data: testData, error: testError } = await supabase
+      .from('diagnostic_tests')
+      .select('*')
+      .eq('id', diagnosticId)
+      .single();
+      
+    if (testError) {
+      console.error("Error fetching test:", testError);
+      toast({
+        title: "Error",
+        description: "No se pudo recuperar la información del diagnóstico",
+        variant: "destructive"
+      });
+      return null;
+    }
+    
+    // Ahora pasamos ambos argumentos requeridos
+    const questions = await fetchDiagnosticQuestions(diagnosticId, testData.test_id);
     
     if (!questions || questions.length === 0) {
       toast({
@@ -95,7 +113,7 @@ export const submitDiagnosticResult = async (
         user_id: userId,
         diagnostic_id: diagnosticId,
         results: skillResults,
-        completed_at: new Date().toISOString()  // Corregido a completed_at en lugar de created_at
+        completed_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -116,7 +134,7 @@ export const submitDiagnosticResult = async (
       userId: data.user_id,
       diagnosticId: data.diagnostic_id,
       results: data.results as Record<TPAESHabilidad, number>,
-      completedAt: data.completed_at  // Corregido a completed_at
+      completedAt: data.completed_at
     };
     
     return diagnosticResult;
