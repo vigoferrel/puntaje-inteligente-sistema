@@ -83,7 +83,7 @@ export const AppSidebar = () => {
   return (
     <Sidebar
       className="border-r"
-      collapsible={isMobile}
+      collapsible={isMobile ? "offcanvas" : "icon"}
       open={open}
       onOpenChange={setOpen}>
       <div className="pb-12 h-full flex flex-col">
