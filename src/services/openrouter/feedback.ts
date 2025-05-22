@@ -27,10 +27,12 @@ export const provideExerciseFeedback = async (
     return result;
   } catch (error) {
     console.error('Error al obtener feedback de ejercicio:', error);
+    // Return a valid AIFeedback object without the errorMessage property
     return {
       isCorrect: false,
       feedback: "Lo siento, no pude evaluar tu respuesta. Por favor intenta de nuevo más tarde.",
-      errorMessage: error instanceof Error ? error.message : "Error desconocido"
+      explanation: error instanceof Error ? `Error: ${error.message}` : "Error desconocido al procesar la respuesta",
+      tips: ["Intenta de nuevo más tarde", "Verifica tu conexión a internet"]
     };
   }
 };
