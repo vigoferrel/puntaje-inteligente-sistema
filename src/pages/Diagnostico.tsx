@@ -12,8 +12,9 @@ import { DiagnosticErrorView } from "@/components/diagnostic/DiagnosticErrorView
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Diagnostico() {
   const { profile } = useAuth();
@@ -46,6 +47,7 @@ export default function Diagnostico() {
         showPauseConfirmation,
         resultSubmitted,
         testResults,
+        isDemoMode,
         handleTestSelect,
         handleStartTest,
         handleResumeTest,
@@ -76,6 +78,15 @@ export default function Diagnostico() {
               />
             ) : (
               <>
+                {isDemoMode && (
+                  <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
+                    <Info className="h-4 w-4 text-amber-600" />
+                    <AlertDescription>
+                      Modo de demostración activado. Los datos mostrados son ejemplos y no se guardarán en tu perfil.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 {showBackButton && !testStarted && (
                   <div className="mb-4">
                     <Button

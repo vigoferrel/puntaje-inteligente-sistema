@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { DiagnosticResultsSummary } from "./DiagnosticResultsSummary";
 import { DiagnosticResultRadar } from "./SkillRadarChart";
 import { DetailedResultView } from "./DetailedResultView";
-import { BarChart3, ArrowRight } from "lucide-react";
+import { BarChart3, ArrowRight, LightbulbIcon } from "lucide-react";
 
 interface DiagnosticResultsProps {
   results: DiagnosticResult;
@@ -18,7 +18,7 @@ export const DiagnosticResults = ({
   onRestart
 }: DiagnosticResultsProps) => {
   // Verificar que results exista antes de mostrar el contenido
-  if (!results) {
+  if (!results || !results.results || Object.keys(results.results).length === 0) {
     return (
       <Card className="text-center p-6">
         <CardTitle className="mb-4">No se encontraron resultados</CardTitle>
@@ -44,7 +44,6 @@ export const DiagnosticResults = ({
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pasamos el objeto results.results (Record<TPAESHabilidad, number>) al componente DiagnosticResultsSummary */}
         <DiagnosticResultsSummary results={results.results} />
         
         <Card>
@@ -55,7 +54,6 @@ export const DiagnosticResults = ({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* DiagnosticResultRadar acepta el objeto DiagnosticResult completo */}
             <DiagnosticResultRadar results={results} />
           </CardContent>
         </Card>

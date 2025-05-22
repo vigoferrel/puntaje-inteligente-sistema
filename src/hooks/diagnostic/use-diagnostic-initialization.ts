@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDiagnostic } from "@/hooks/use-diagnostic";
 import { toast } from "@/components/ui/use-toast";
+import { useDemonstrationMode } from "./use-demonstration-mode";
 
 interface DiagnosticInitializationResult {
   initializing: boolean;
@@ -11,6 +12,7 @@ interface DiagnosticInitializationResult {
   retryCount: number;
   progress: number;
   loadingStep: string;
+  isDemoMode: boolean;
 }
 
 export const useDiagnosticInitialization = (): DiagnosticInitializationResult => {
@@ -20,9 +22,13 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
   const [retryCount, setRetryCount] = useState(0);
   const [progress, setProgress] = useState(0);
   const [loadingStep, setLoadingStep] = useState("Inicializando");
+  const [isDemoMode, setIsDemoMode] = useState(false);
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
+  
+  // Get demo mode hook
+  const demoMode = useDemonstrationMode();
   
   // Función para simular progreso de carga visual
   const simulateLoadingProgress = useCallback(() => {
@@ -59,6 +65,25 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
     setLoadingStep("Completado");
   }, []);
   
+  // Función para activar el modo demostración
+  const activateDemonstrationMode = useCallback(() => {
+    // Activar el modo demo
+    demoMode.activateDemoMode();
+    setIsDemoMode(true);
+    
+    // Sustituir los tests del servicio con tests de demostración
+    diagnosticService.tests = demoMode.getDemoDiagnosticTests();
+    
+    // Notificar al usuario que estamos en modo demostración
+    toast({
+      title: "Modo demostración activado",
+      description: "Se han cargado diagnósticos de demostración para visualización",
+    });
+    
+    completeLoadingProgress();
+    setError(null);
+  }, [demoMode, diagnosticService, completeLoadingProgress]);
+  
   // Función mejorada para inicializar diagnósticos con mejor manejo de errores
   const initDiagnostics = useCallback(async () => {
     try {
@@ -75,45 +100,35 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
       if (!hasTests) {
         console.log("Intentando cargar diagnósticos locales...");
         
-        // Usar solo diagnósticos locales fallback
-        setGeneratingDiagnostic(true);
-        setLoadingStep("Generando diagnósticos básicos");
-        
-        // Primer intento: crear diagnósticos fallback
-        const fallbackCreated = await diagnosticService.createLocalFallbackDiagnostics();
-        
-        if (fallbackCreated) {
-          toast({
-            title: "Diagnósticos básicos cargados",
-            description: "Se han cargado diagnósticos básicos predefinidos.",
-          });
+        try {
+          // Usar solo diagnósticos locales fallback
+          setGeneratingDiagnostic(true);
+          setLoadingStep("Generando diagnósticos básicos");
           
-          // Intentar cargar la lista de diagnósticos otra vez
-          await diagnosticService.fetchDiagnosticTests("auto-generated");
+          // Primer intento: crear diagnósticos fallback
+          const fallbackCreated = await diagnosticService.createLocalFallbackDiagnostics();
           
-          completeLoadingProgress();
-        } else {
-          // Si fallan los diagnósticos locales, intentar con el método por defecto
-          setLoadingStep("Intentando método alternativo");
-          const defaultDiagnosticsCreated = await diagnosticService.ensureDefaultDiagnosticsExist();
-          
-          if (!defaultDiagnosticsCreated) {
-            // En caso de que todos los métodos fallen, activar un modo de diagnóstico "offline"
+          if (fallbackCreated) {
             toast({
-              title: "Modo de demostración activado",
-              description: "Usando datos de diagnóstico de demostración para visualización.",
+              title: "Diagnósticos básicos cargados",
+              description: "Se han cargado diagnósticos básicos predefinidos.",
             });
             
-            clearSimulation();
-            setError("No se pudieron cargar diagnósticos de la base de datos. Se ha activado el modo de demostración.");
-          } else {
             // Intentar cargar la lista de diagnósticos otra vez
             await diagnosticService.fetchDiagnosticTests("auto-generated");
+            
             completeLoadingProgress();
+          } else {
+            // Si fallan los diagnósticos locales, activar el modo demostración
+            console.log("Fallback local falló, activando modo demostración");
+            activateDemonstrationMode();
           }
+        } catch (innerError) {
+          console.error("Error en la generación de diagnósticos locales:", innerError);
+          activateDemonstrationMode();
+        } finally {
+          setGeneratingDiagnostic(false);
         }
-        
-        setGeneratingDiagnostic(false);
       } else {
         // Ya hay diagnósticos cargados
         console.log("Diagnósticos ya están cargados:", diagnosticService.tests.length);
@@ -122,11 +137,19 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
     } catch (error) {
       console.error("Error initializing diagnostics:", error);
       setError(error instanceof Error ? error.message : "Error al inicializar diagnósticos");
-      setProgress(0);
+      
+      // Activar el modo demostración como último recurso
+      console.log("Error crítico, activando modo demostración");
+      activateDemonstrationMode();
     } finally {
       setInitializing(false);
     }
-  }, [diagnosticService, simulateLoadingProgress, completeLoadingProgress]);
+  }, [
+    diagnosticService, 
+    simulateLoadingProgress, 
+    completeLoadingProgress,
+    activateDemonstrationMode
+  ]);
 
   // Initialize data
   useEffect(() => {
@@ -146,6 +169,7 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
     retryInitialization,
     retryCount,
     progress,
-    loadingStep
+    loadingStep,
+    isDemoMode
   };
 };

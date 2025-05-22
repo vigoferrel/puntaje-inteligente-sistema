@@ -13,7 +13,14 @@ export const useDiagnosticController = () => {
   const { selectedTestId, testStarted, setSelectedTestId, setTestStarted } = useDiagnosticState();
   
   // Initialization hook
-  const { initializing, generatingDiagnostic, error, retryInitialization, retryCount } = useDiagnosticInitialization();
+  const { 
+    initializing, 
+    generatingDiagnostic, 
+    error, 
+    retryInitialization, 
+    retryCount,
+    isDemoMode 
+  } = useDiagnosticInitialization();
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
@@ -22,7 +29,8 @@ export const useDiagnosticController = () => {
   const selectionState = useDiagnosticTestSelection({
     selectedTestId,
     setSelectedTestId,
-    setTestStarted
+    setTestStarted,
+    isDemoMode
   });
   
   const executionState = useDiagnosticTestExecution({
@@ -59,6 +67,7 @@ export const useDiagnosticController = () => {
     generatingDiagnostic,
     error,
     retryCount,
+    isDemoMode,
     
     // State from hooks
     tests: selectionState.tests,
