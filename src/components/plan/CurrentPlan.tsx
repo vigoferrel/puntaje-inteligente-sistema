@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { LearningPlan, PlanProgress } from "@/types/learning-plan";
 import { PlanNodesList } from "./PlanNodesList";
-import { TPAESHabilidad } from "@/types/system-types";
 import { RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -16,7 +15,7 @@ interface CurrentPlanProps {
   progress: PlanProgress | null;
   recommendedNodeId: string | null;
   onUpdateProgress: () => void;
-  onCreatePlan: (title: string, skillPriorities?: Record<TPAESHabilidad, number>) => void;
+  onCreatePlan: () => void;
 }
 
 export function CurrentPlan({
@@ -31,38 +30,22 @@ export function CurrentPlan({
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "No establecida";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date);
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat("es-ES", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return "Fecha inválida";
+    }
   };
 
-  const handleCreateSamplePlan = () => {
+  const handleCreatePlan = () => {
     setCreating(true);
-    
-    // Default skill priorities para evitar errores de TypeScript
-    const defaultSkillPriorities: Record<TPAESHabilidad, number> = {
-      "SOLVE_PROBLEMS": 0.5,
-      "REPRESENT": 0.5,
-      "MODEL": 0.5,
-      "INTERPRET_RELATE": 0.5,
-      "EVALUATE_REFLECT": 0.5,
-      "TRACK_LOCATE": 0.5,
-      "ARGUE_COMMUNICATE": 0.5,
-      "IDENTIFY_THEORIES": 0.5,
-      "PROCESS_ANALYZE": 0.5,
-      "APPLY_PRINCIPLES": 0.5,
-      "SCIENTIFIC_ARGUMENT": 0.5,
-      "TEMPORAL_THINKING": 0.5,
-      "SOURCE_ANALYSIS": 0.5,
-      "MULTICAUSAL_ANALYSIS": 0.5,
-      "CRITICAL_THINKING": 0.5,
-      "REFLECTION": 0.5
-    };
-    
-    onCreatePlan("Mi plan de estudio PAES", defaultSkillPriorities);
+    onCreatePlan();
   };
 
   // Reset creating state after plan changes
@@ -134,7 +117,7 @@ export function CurrentPlan({
           </CardContent>
           <CardFooter>
             <Button
-              onClick={handleCreateSamplePlan}
+              onClick={handleCreatePlan}
               disabled={creating}
               className="w-full"
             >
@@ -163,7 +146,7 @@ export function CurrentPlan({
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-xl md:text-2xl">{plan.title}</CardTitle>
+              <CardTitle className="text-xl md:text-2xl">{plan.title || "Plan de Estudio"}</CardTitle>
               <CardDescription>
                 {plan.description || "Plan de estudio personalizado"}
               </CardDescription>
@@ -175,31 +158,22 @@ export function CurrentPlan({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Progreso general</span>
               <span className="font-medium">
-                {loading ? (
-                  <RefreshCw className="h-4 w-4 animate-spin inline mr-2" />
-                ) : (
-                  progress ? 
-                    `${Math.round(progress.overallProgress)}%` : 
-                    "0%"
-                )}
+                {progress ? 
+                  `${Math.round(progress.overallProgress)}%` : 
+                  "0%"
+                }
               </span>
             </div>
             <Progress
-              value={loading ? null : (progress ? progress.overallProgress : 0)}
+              value={progress ? progress.overallProgress : 0}
               className="h-2"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>
-                {loading ? (
-                  <span className="inline-flex items-center">
-                    <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                    Actualizando...
-                  </span>
-                ) : (
-                  progress ?
-                    `${progress.completedNodes}/${progress.totalNodes} módulos completados` :
-                    "0/0 módulos completados"
-                )}
+                {progress ?
+                  `${progress.completedNodes}/${progress.totalNodes} módulos completados` :
+                  "0/0 módulos completados"
+                }
               </span>
               <span>Fecha objetivo: {formatDate(plan.targetDate)}</span>
             </div>
@@ -207,7 +181,7 @@ export function CurrentPlan({
 
           <div className="pt-2">
             <PlanNodesList
-              nodes={plan.nodes}
+              nodes={plan.nodes || []}
               recommendedNodeId={recommendedNodeId}
               progress={progress}
             />

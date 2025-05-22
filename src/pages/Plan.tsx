@@ -1,48 +1,31 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useUserData } from "@/hooks/use-user-data";
 import { toast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
-import { usePlanInitialization } from "@/hooks/use-plan-initialization";
+import { useLearningPlan } from "@/hooks/use-learning-plan";
 import { LoadingState } from "@/components/plan/LoadingState";
 import { ErrorState } from "@/components/plan/ErrorState";
 import { PlanContent } from "@/components/plan/PlanContent";
-import { diagnoseMapperImports } from "@/utils/diagnostic-mappers";
 
 const Plan = () => {
-  const navigate = useNavigate();
   const { user } = useUserData();
   const { 
-    profile,
     plans, 
-    loading, 
-    error,
-    initializing,
     currentPlan,
-    recommendedNodeId,
+    loading, 
+    error, 
+    initializing,
     progressLoading,
     getPlanProgress,
-    handleRefresh,
-    handlePlanSelect,
+    refreshPlans,
+    selectPlan,
+    createPlan,
     updateCurrentPlanProgress
-  } = usePlanInitialization();
-  
-  const { createLearningPlan } = useUserData();
-  
-  // Realizar diagnóstico al montar el componente
-  useEffect(() => {
-    console.log("Plan component mounted");
-    try {
-      const diagnosis = diagnoseMapperImports();
-      console.log("Diagnóstico de mapeo desde Plan:", diagnosis);
-    } catch (err) {
-      console.error("Error en diagnóstico desde Plan:", err);
-    }
-  }, []);
+  } = useLearningPlan();
   
   const handleCreatePlan = async () => {
-    if (!profile) {
+    if (!user) {
       toast({
         title: "Error",
         description: "Debes iniciar sesión para crear un plan",
@@ -52,24 +35,10 @@ const Plan = () => {
     }
     
     const targetCareer = user?.targetCareer || "General";
-    
-    const newPlan = await createLearningPlan(
-      profile.id,
+    await createPlan(
       `Plan PAES ${targetCareer}`,
-      `Plan de preparación PAES personalizado para ${targetCareer}`,
-      // Set target date to 3 months from now
-      new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString()
+      `Plan de preparación PAES personalizado para ${targetCareer}`
     );
-    
-    if (newPlan) {
-      // Si este es el primer plan del usuario, actualizamos su fase de aprendizaje
-      if (user?.learningCyclePhase === "DIAGNOSIS" || !user?.learningCyclePhase) {
-        toast({
-          title: "Fase actualizada",
-          description: "Ahora estás en la fase de Entrenamiento de Habilidades",
-        });
-      }
-    }
   };
   
   // Contenido de carga
@@ -93,7 +62,7 @@ const Plan = () => {
       <AppLayout>
         <div className="container py-8">
           <h1 className="text-3xl font-bold mb-6">Plan de Estudio</h1>
-          <ErrorState onRetry={handleRefresh} />
+          <ErrorState onRetry={refreshPlans} />
         </div>
       </AppLayout>
     );
@@ -112,9 +81,9 @@ const Plan = () => {
           currentPlan={currentPlan}
           currentPlanProgress={currentPlanProgress}
           progressLoading={progressLoading}
-          recommendedNodeId={recommendedNodeId}
+          recommendedNodeId={null}
           onCreatePlan={handleCreatePlan}
-          onSelectPlan={handlePlanSelect}
+          onSelectPlan={selectPlan}
           onUpdateProgress={updateCurrentPlanProgress}
         />
       </div>

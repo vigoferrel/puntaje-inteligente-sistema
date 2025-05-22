@@ -2,9 +2,33 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { LearningPlanNode } from "@/types/learning-plan";
-import { TPAESHabilidad, getHabilidadDisplayName } from "@/types/system-types";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
+
+// Map skill codes to display names
+const skillDisplayNames: Record<string, string> = {
+  "TRACK_LOCATE": "Rastrear y Localizar",
+  "INTERPRET_RELATE": "Interpretar y Relacionar",
+  "EVALUATE_REFLECT": "Evaluar y Reflexionar",
+  "SOLVE_PROBLEMS": "Resolver Problemas",
+  "REPRESENT": "Representar",
+  "MODEL": "Modelar",
+  "ARGUE_COMMUNICATE": "Argumentar y Comunicar",
+  "IDENTIFY_THEORIES": "Identificar Teorías",
+  "PROCESS_ANALYZE": "Procesar y Analizar",
+  "APPLY_PRINCIPLES": "Aplicar Principios",
+  "SCIENTIFIC_ARGUMENT": "Argumentación Científica",
+  "TEMPORAL_THINKING": "Pensamiento Temporal",
+  "SOURCE_ANALYSIS": "Análisis de Fuentes",
+  "MULTICAUSAL_ANALYSIS": "Análisis Multicausal",
+  "CRITICAL_THINKING": "Pensamiento Crítico",
+  "REFLECTION": "Reflexión"
+};
+
+// Helper function to get the display name for a skill
+const getSkillDisplayName = (skillCode: string): string => {
+  return skillDisplayNames[skillCode] || "Habilidad General";
+};
 
 interface PlanNodesListProps {
   nodes: LearningPlanNode[];
@@ -83,7 +107,7 @@ export const PlanNodesList = ({ nodes, recommendedNodeId, progress }: PlanNodesL
           
           return (
             <PlanNodeItem 
-              key={node.id} 
+              key={node.id || index} 
               node={node} 
               index={index}
               status={nodeStatus.status}
@@ -157,7 +181,7 @@ const PlanNodeItem = ({ node, index, status, statusLabel, progressValue, isRecom
           <p className="font-medium">{node.nodeName || `Módulo ${index + 1}`}</p>
           {node.nodeSkill && (
             <p className="text-xs text-gray-500">
-              Habilidad: {getHabilidadDisplayName(node.nodeSkill as TPAESHabilidad)}
+              Habilidad: {getSkillDisplayName(node.nodeSkill)}
             </p>
           )}
         </div>

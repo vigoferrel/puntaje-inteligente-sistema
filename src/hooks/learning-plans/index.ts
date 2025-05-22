@@ -1,3 +1,3 @@
 
-export { useLearningPlans } from "./use-learning-plans";
+export { useLearningPlan } from "../use-learning-plan";
 export { type LearningPlan, type LearningPlanNode } from "@/types/learning-plan";
