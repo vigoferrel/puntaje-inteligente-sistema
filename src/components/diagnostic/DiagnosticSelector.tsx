@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DiagnosticTest } from "@/types/diagnostic";
-import { TPAESPrueba, getPruebaDisplayName } from "@/types/system-types";
-import { BookOpen, Calculator, FlaskConical, Globe } from "lucide-react";
+import { TPAESPrueba, TPAESHabilidad, getPruebaDisplayName, getHabilidadDisplayName } from "@/types/system-types";
+import { BookOpen, Calculator, FlaskConical, Globe, Brain, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface DiagnosticSelectorProps {
   tests: DiagnosticTest[];
@@ -94,57 +95,73 @@ export const DiagnosticSelector = ({
         <TabsContent key={testType} value={testType.toString()} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {groupedTests[testType].map((test) => (
-              <Card 
-                key={test.id} 
-                className={cn(
-                  "cursor-pointer transition-transform hover:scale-[1.01]",
-                  selectedTestId === test.id && "ring-2 ring-primary ring-offset-2"
-                )}
-                onClick={() => onTestSelect(test.id)}
+              <motion.div 
+                key={test.id}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
               >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{test.title}</CardTitle>
-                      <CardDescription>{test.description}</CardDescription>
+                <Card 
+                  className={cn(
+                    "cursor-pointer transition-transform h-full",
+                    selectedTestId === test.id && "ring-2 ring-primary ring-offset-2"
+                  )}
+                  onClick={() => onTestSelect(test.id)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg">{test.title}</CardTitle>
+                        <CardDescription>{test.description}</CardDescription>
+                      </div>
+                      {getTestIcon(test.testId)}
                     </div>
-                    {getTestIcon(test.testId)}
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="text-sm text-muted-foreground">
-                    <div className="flex items-center justify-between">
-                      <span>{test.questions.length} preguntas</span>
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                        {test.isCompleted ? "Completado" : "Pendiente"}
-                      </span>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="text-sm text-muted-foreground">
+                      <div className="flex items-center justify-between">
+                        <span>{test.questions.length} preguntas</span>
+                        <span className={cn(
+                          "text-xs px-2 py-1 rounded-full",
+                          test.isCompleted 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-blue-100 text-blue-800"
+                        )}>
+                          {test.isCompleted ? "Completado" : "Pendiente"}
+                        </span>
+                      </div>
+                      <p className="mt-1">Tiempo estimado: {Math.ceil(test.questions.length * 2 / 10) * 10} minutos</p>
                     </div>
-                    <p className="mt-1">Tiempo estimado: {Math.ceil(test.questions.length * 2 / 10) * 10} minutos</p>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    variant={test.isCompleted ? "outline" : "default"}
-                    className="w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTestSelect(test.id);
-                      onStartTest();
-                    }}
-                  >
-                    {test.isCompleted ? 'Repetir diagnóstico' : 'Comenzar diagnóstico'}
-                  </Button>
-                </CardFooter>
-              </Card>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      variant={test.isCompleted ? "outline" : "default"}
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTestSelect(test.id);
+                        onStartTest();
+                      }}
+                    >
+                      {test.isCompleted ? 'Repetir diagnóstico' : 'Comenzar diagnóstico'}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
             ))}
           </div>
           
           {selectedTestId && groupedTests[testType].some(t => t.id === selectedTestId) && (
-            <div className="flex justify-end mt-4">
-              <Button onClick={onStartTest}>
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex justify-end mt-4"
+            >
+              <Button onClick={onStartTest} size="lg" className="gap-2">
                 Comenzar diagnóstico seleccionado
+                <Brain className="w-4 h-4" />
               </Button>
-            </div>
+            </motion.div>
           )}
         </TabsContent>
       ))}
