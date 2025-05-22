@@ -1,24 +1,21 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useUserData } from "@/hooks/use-user-data";
-import { LEARNING_CYCLE_PHASES_ORDER, TLearningCyclePhase, TPAESHabilidad } from "@/types/system-types";
+import { TPAESHabilidad } from "@/types/system-types";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { SearchBar } from "@/components/dashboard/search-bar";
 import { TopSkills } from "@/components/dashboard/top-skills";
-import { StudyPlan } from "@/components/dashboard/study-plan";
 import { AIFeatures } from "@/components/dashboard/ai-features";
-import { LearningCycle } from "@/components/dashboard/learning-cycle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircleQuestion, BookOpen, BarChart3 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { MessageCircleQuestion, BookOpen, BarChart3, Sparkles, ArrowRight } from "lucide-react";
+import { LearningWorkflow } from "@/components/dashboard/learning-workflow";
 
 const Index = () => {
-  const { user, loading, updateLearningPhase } = useUserData();
+  const { user, loading } = useUserData();
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const navigate = useNavigate();
   
   // Default skill levels to ensure they're never undefined
   const defaultSkillLevels: Record<TPAESHabilidad, number> = {
@@ -58,128 +55,127 @@ const Index = () => {
     .slice(0, 5)
     .map(item => item.skill);
 
-  // Default to diagnosis phase if none is set
-  const currentPhase = user?.learningCyclePhase || "DIAGNOSIS";
-
-  const handlePhaseSelect = async (phase: TLearningCyclePhase) => {
-    // Check if the selected phase is available based on progress
-    const currentIndex = LEARNING_CYCLE_PHASES_ORDER.indexOf(currentPhase);
-    const selectedIndex = LEARNING_CYCLE_PHASES_ORDER.indexOf(phase);
-    
-    // Only allow selecting current phase or earlier phases
-    if (selectedIndex > currentIndex) {
-      toast({
-        title: "Fase no disponible",
-        description: "Debes completar la fase actual antes de avanzar",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Navigate to the appropriate page based on the phase
-    switch(phase) {
-      case "DIAGNOSIS":
-        navigate("/diagnostico");
-        break;
-      case "PERSONALIZED_PLAN":
-        navigate("/plan");
-        break;
-      default:
-        // For other phases that might not have pages yet
-        if (phase !== currentPhase) {
-          await updateLearningPhase(phase);
-        }
-        break;
-    }
-  };
-
   return (
     <AppLayout>
       <div className="p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            {!loading && user ? `Bienvenido, ${user.name}` : 'Cargando...'}
-          </h1>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              {!loading && user ? `Bienvenido, ${user.name}` : 'Cargando...'}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Continúa tu preparación para la PAES
+            </p>
+          </div>
           <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         </div>
 
         <StatCards
           loading={loading}
-          completedExercises={completedExercises}
-          accuracyPercentage={accuracyPercentage}
-          totalTimeMinutes={totalTimeMinutes}
+          stats={[
+            {
+              title: "Ejercicios Completados",
+              value: completedExercises,
+              description: "Total de ejercicios resueltos",
+              trend: "up",
+              trendValue: "+5% esta semana"
+            },
+            {
+              title: "Precisión",
+              value: `${accuracyPercentage}%`,
+              description: "Respuestas correctas",
+              trend: accuracyPercentage >= 70 ? "up" : "down",
+              trendValue: accuracyPercentage >= 70 ? "Buen progreso!" : "Necesita mejora"
+            },
+            {
+              title: "Tiempo de Estudio",
+              value: `${Math.floor(totalTimeMinutes / 60)}h ${totalTimeMinutes % 60}m`,
+              description: "Tiempo total invertido",
+              trend: "up",
+              trendValue: "Constancia"
+            }
+          ]}
+          className="mb-8"
         />
-        
-        <div className="mb-8">
-          <LearningCycle 
-            currentPhase={currentPhase}
-            loading={loading}
-            onPhaseSelect={handlePhaseSelect}
-          />
+
+        <div className="grid gap-6 md:grid-cols-7 mb-8">
+          <div className="md:col-span-4">
+            <LearningWorkflow className="h-full" />
+          </div>
+          <div className="md:col-span-3">
+            <TopSkills skills={topSkills} className="h-full" />
+          </div>
         </div>
         
-        <div className="mb-8">
-          <Card className="border-border bg-card/50 backdrop-blur-sm animated-gradient bg-opacity-10">
+        <div className="grid gap-6 md:grid-cols-3 mb-8">
+          <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-purple-200 shadow hover:shadow-md transition-all duration-300">
             <CardHeader>
-              <CardTitle className="text-2xl text-gradient">LectoGuía AI - Nuevo</CardTitle>
-              <CardDescription>Tu asistente personalizado para mejorar en la PAES</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-violet-500" />
+                LectoGuía AI
+              </CardTitle>
+              <CardDescription>
+                Asistente inteligente de comprensión lectora
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="md:w-2/3">
-                  <p className="text-foreground/80 mb-4">
-                    LectoGuía es un tutor inteligente especializado en comprensión lectora que te ayudará a mejorar tus habilidades
-                    a través de ejercicios personalizados, análisis de tu desempeño y recomendaciones específicas.
-                  </p>
-                  <div className="flex flex-wrap gap-3 mb-6">
-                    <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full text-sm">
-                      <MessageCircleQuestion className="h-4 w-4 text-primary" />
-                      <span>Chat interactivo</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full text-sm">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      <span>Ejercicios personalizados</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full text-sm">
-                      <BarChart3 className="h-4 w-4 text-primary" />
-                      <span>Análisis de progreso</span>
-                    </div>
-                  </div>
-                  <Button 
-                    className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
-                    onClick={() => navigate('/lectoguia')}
-                  >
-                    Probar ahora
-                  </Button>
-                </div>
-                <div className="md:w-1/3 flex items-center justify-center">
-                  <div className="relative w-32 h-32">
-                    <div className="absolute inset-0 bg-primary/20 rounded-full pulse-animation"></div>
-                    <div className="absolute inset-2 bg-primary/30 rounded-full pulse-animation animation-delay-150"></div>
-                    <div className="absolute inset-4 bg-primary/40 rounded-full pulse-animation animation-delay-300"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <MessageCircleQuestion className="h-12 w-12 text-primary" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <p className="text-sm mb-4">
+                Entrenamiento personalizado con IA para mejorar tus habilidades de comprensión lectora. Genera ejercicios adaptados a tu nivel.
+              </p>
+              <Button asChild className="w-full bg-violet-500 hover:bg-violet-600">
+                <Link to="/lectoguia" className="flex items-center justify-center gap-2">
+                  Practicar con IA <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200 shadow hover:shadow-md transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-500" />
+                Diagnóstico
+              </CardTitle>
+              <CardDescription>
+                Evalúa tus conocimientos actuales
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm mb-4">
+                Realiza un test diagnóstico para identificar tus fortalezas y áreas de mejora en las diferentes pruebas de la PAES.
+              </p>
+              <Button asChild className="w-full bg-blue-500 hover:bg-blue-600">
+                <Link to="/diagnostico" className="flex items-center justify-center gap-2">
+                  Iniciar Diagnóstico <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-emerald-200 shadow hover:shadow-md transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-emerald-500" />
+                Biblioteca
+              </CardTitle>
+              <CardDescription>
+                Recursos de estudio y material complementario
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm mb-4">
+                Accede a material de estudio, guías y contenido seleccionado específicamente para mejorar tu rendimiento en la PAES.
+              </p>
+              <Button asChild className="w-full bg-emerald-500 hover:bg-emerald-600">
+                <Link to="/biblioteca" className="flex items-center justify-center gap-2">
+                  Explorar Biblioteca <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <StudyPlan />
-            <AIFeatures />
-          </div>
-          <div>
-            <TopSkills 
-              topSkills={topSkills} 
-              loading={loading} 
-              skillLevels={skillLevels}
-            />
-          </div>
-        </div>
+        
+        <AIFeatures />
       </div>
     </AppLayout>
   );
