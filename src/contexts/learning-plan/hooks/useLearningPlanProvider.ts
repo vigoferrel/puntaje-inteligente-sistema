@@ -11,8 +11,8 @@ import {
 } from "../services";
 import { LearningPlanContextType } from "../types";
 
-// Import for Supabase that's needed only in this file
-const { supabase } = require('@/integrations/supabase/client');
+// Import Supabase client using ES module syntax instead of require
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Custom hook that provides all the learning plan state and logic
