@@ -1,8 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { TLearningNode } from "@/types/system-types";
-// Importamos desde el archivo barril para asegurar las exportaciones
-import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/mappers";
+// Importamos directamente desde supabase-mappers para evitar problemas con el archivo barril
+import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/supabase-mappers";
 
 /**
  * Maps database nodes to frontend type

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useUserData } from "@/hooks/use-user-data";
 import { toast } from "@/components/ui/use-toast";
@@ -8,6 +8,7 @@ import { usePlanInitialization } from "@/hooks/use-plan-initialization";
 import { LoadingState } from "@/components/plan/LoadingState";
 import { ErrorState } from "@/components/plan/ErrorState";
 import { PlanContent } from "@/components/plan/PlanContent";
+import { diagnoseMapperImports } from "@/utils/diagnostic-mappers";
 
 const Plan = () => {
   const navigate = useNavigate();
@@ -28,6 +29,17 @@ const Plan = () => {
   } = usePlanInitialization();
   
   const { createLearningPlan } = useUserData();
+  
+  // Realizar diagnóstico al montar el componente
+  useEffect(() => {
+    console.log("Plan component mounted");
+    try {
+      const diagnosis = diagnoseMapperImports();
+      console.log("Diagnóstico de mapeo desde Plan:", diagnosis);
+    } catch (err) {
+      console.error("Error en diagnóstico desde Plan:", err);
+    }
+  }, []);
   
   const handleCreatePlan = async () => {
     if (!profile) {
@@ -76,6 +88,7 @@ const Plan = () => {
   
   // Contenido de error
   if (error) {
+    console.error("Error en Plan component:", error);
     return (
       <AppLayout>
         <div className="container py-8">

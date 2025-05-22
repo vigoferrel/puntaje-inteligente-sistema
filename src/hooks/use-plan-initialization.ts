@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLearningPlans } from "@/hooks/use-learning-plans";
 import { toast } from "@/components/ui/use-toast";
 import { ensureLearningNodesExist } from "@/services/learning/initialize-learning-service";
+import { diagnoseMapperImports } from "@/utils/diagnostic-mappers";
 
 export const usePlanInitialization = () => {
   const { profile } = useAuth();
@@ -29,6 +30,14 @@ export const usePlanInitialization = () => {
     
     setInitializing(true);
     console.log('Iniciando carga de datos...');
+
+    // Verificar que las funciones de mapeo están disponibles correctamente
+    try {
+      const mapperDiagnosis = diagnoseMapperImports();
+      console.log("Diagnóstico de mappers completado:", mapperDiagnosis);
+    } catch (error) {
+      console.error("Error en diagnóstico de mappers:", error);
+    }
     
     try {
       // Cargar en paralelo para optimizar el tiempo de inicialización
