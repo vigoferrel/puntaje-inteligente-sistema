@@ -126,3 +126,15 @@ export const advanceToNextLearningPhase = async (userId: string): Promise<TLearn
     return null;
   }
 };
+
+/**
+ * Sets a user's learning phase to a specific phase
+ */
+export const setLearningPhase = async (userId: string, phase: TLearningCyclePhase): Promise<boolean> => {
+  try {
+    return await updateLearningPhase(userId, phase);
+  } catch (error) {
+    console.error("Error setting learning phase:", error);
+    return false;
+  }
+};
