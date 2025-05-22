@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { Exercise } from "@/types/ai-types";
 import { LectoGuiaSkill, TLearningNode } from "@/types/lectoguia-types";
@@ -8,6 +9,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchNodeById } from "@/services/learning-node-service";
+import { TPAESHabilidad } from "@/types/system-types";
 
 export function useLectoGuia() {
   // Estado para gestionar la pestaña activa
@@ -68,16 +70,16 @@ export function useLectoGuia() {
                               message.toLowerCase().includes("ejemplo");
     
     if (isExerciseRequest) {
-      // Generar ejercicio según la materia activa
-      const skillMap: Record<string, string> = {
+      // Generar ejercicio según la materia activa - ACTUALIZADO con los nombres correctos de las habilidades
+      const skillMap: Record<string, TPAESHabilidad> = {
         'lectura': 'TRACK_LOCATE',
-        'matematicas': 'ALGEBRA',
-        'ciencias': 'PHYSICS',
-        'historia': 'HISTORY',
+        'matematicas': 'SOLVE_PROBLEMS',
+        'ciencias': 'IDENTIFY_THEORIES',
+        'historia': 'TEMPORAL_THINKING',
         'general': 'INTERPRET_RELATE'
       };
       
-      const exercise = await generateExercise(skillMap[activeSubject] as any);
+      const exercise = await generateExercise(skillMap[activeSubject]);
       
       if (exercise) {
         setTimeout(() => setActiveTab("exercise"), 500);
