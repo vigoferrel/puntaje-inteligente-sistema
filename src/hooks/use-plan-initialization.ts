@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLearningPlans } from "@/hooks/use-learning-plans";
+import { useLearningPlans } from "@/hooks/learning-plans";
 import { toast } from "@/components/ui/use-toast";
 import { ensureLearningNodesExist } from "@/services/learning/initialize-learning-service";
 import { diagnoseMapperImports } from "@/utils/diagnostic-mappers";
