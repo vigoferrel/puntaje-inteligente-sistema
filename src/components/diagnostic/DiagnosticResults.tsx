@@ -17,6 +17,7 @@ export const DiagnosticResults = ({
   results,
   onRestart
 }: DiagnosticResultsProps) => {
+  // Verificar que results exista antes de mostrar el contenido
   if (!results) {
     return (
       <Card className="text-center p-6">
@@ -43,7 +44,7 @@ export const DiagnosticResults = ({
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pass the results.results (the nested record) to DiagnosticResultsSummary */}
+        {/* Pasamos el objeto results.results (Record<TPAESHabilidad, number>) al componente DiagnosticResultsSummary */}
         <DiagnosticResultsSummary results={results.results} />
         
         <Card>
@@ -54,7 +55,7 @@ export const DiagnosticResults = ({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Use the DiagnosticResultRadar component that accepts DiagnosticResult */}
+            {/* DiagnosticResultRadar acepta el objeto DiagnosticResult completo */}
             <DiagnosticResultRadar results={results} />
           </CardContent>
         </Card>
