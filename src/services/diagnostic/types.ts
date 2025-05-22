@@ -34,7 +34,9 @@ export interface RawExerciseData {
   question?: string;
   options?: JsonValue;
   correct_answer?: string;
+  skill_id?: number;
   skill?: number | string;
+  test_id?: number;
   prueba?: number | string;
   explanation?: string;
   diagnostic_id?: string;

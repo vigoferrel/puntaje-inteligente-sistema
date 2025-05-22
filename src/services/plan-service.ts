@@ -1,9 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { LearningPlan, LearningPlanNode, PlanProgress } from "@/types/learning-plan";
 import { toast } from "@/components/ui/use-toast";
 import { TPAESHabilidad } from "@/types/system-types";
-import { fetchLearningNodes } from "@/services/node-service";
+import { fetchLearningNodes } from "@/services/node";
 
 /**
  * Fetches all learning plans for a user

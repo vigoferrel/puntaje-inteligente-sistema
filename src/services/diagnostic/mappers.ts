@@ -1,6 +1,6 @@
 
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
-import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/supabase-mappers";
+import { mapSkillIdToEnum, mapTestIdToEnum, mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
 import { DiagnosticQuestion } from "@/types/diagnostic";
 import { RawExerciseData, JsonValue } from "./types";
 
@@ -10,6 +10,9 @@ import { RawExerciseData, JsonValue } from "./types";
 export function safeMapSkill(skillValue: number | string | undefined): TPAESHabilidad {
   if (typeof skillValue === 'number') {
     return mapSkillIdToEnum(skillValue);
+  } else if (typeof skillValue === 'string' && !isNaN(Number(skillValue))) {
+    // If it's a string but represents a number, convert and map
+    return mapSkillIdToEnum(Number(skillValue));
   } else if (typeof skillValue === 'string') {
     const validSkills: TPAESHabilidad[] = [
       'SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'INTERPRET_RELATE', 
@@ -32,6 +35,9 @@ export function safeMapSkill(skillValue: number | string | undefined): TPAESHabi
 export function safeMapPrueba(pruebaValue: number | string | undefined): TPAESPrueba {
   if (typeof pruebaValue === 'number') {
     return mapTestIdToEnum(pruebaValue);
+  } else if (typeof pruebaValue === 'string' && !isNaN(Number(pruebaValue))) {
+    // If it's a string but represents a number, convert and map
+    return mapTestIdToEnum(Number(pruebaValue));
   } else if (typeof pruebaValue === 'string') {
     const validPruebas: TPAESPrueba[] = [
       'COMPETENCIA_LECTORA', 'MATEMATICA_1', 'MATEMATICA_2', 
@@ -55,8 +61,13 @@ export function parseOptions(options: JsonValue | undefined): string[] {
     if (Array.isArray(options)) {
       return options.map(String);
     } else if (typeof options === 'string') {
-      const parsedOptions = JSON.parse(options);
-      return Array.isArray(parsedOptions) ? parsedOptions.map(String) : [];
+      try {
+        const parsedOptions = JSON.parse(options);
+        return Array.isArray(parsedOptions) ? parsedOptions.map(String) : [];
+      } catch (e) {
+        // If it's not valid JSON, return single item array
+        return [options];
+      }
     } else if (typeof options === 'object' && options !== null) {
       return Object.values(options).map(String);
     }
@@ -70,14 +81,20 @@ export function parseOptions(options: JsonValue | undefined): string[] {
 /**
  * Transform a raw exercise from the database into a DiagnosticQuestion
  */
-export function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
+export function mapExerciseToQuestion(exercise: RawExerciseData, testId?: number): DiagnosticQuestion {
+  // Extract skill_id from exercise if it exists
+  const skillId = exercise.skill_id || exercise.skill;
+  
+  // Use the actual testId passed or fall back to exercise.test_id
+  const actualTestId = testId || exercise.test_id || exercise.prueba;
+  
   return {
     id: exercise.id || '',
     question: exercise.question || '',
     options: parseOptions(exercise.options),
     correctAnswer: exercise.correct_answer || '',
-    skill: safeMapSkill(exercise.skill),
-    prueba: safeMapPrueba(exercise.prueba),
+    skill: safeMapSkill(skillId),
+    prueba: safeMapPrueba(actualTestId),
     explanation: exercise.explanation || undefined
   };
 }

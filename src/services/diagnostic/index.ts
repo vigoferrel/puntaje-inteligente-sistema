@@ -1,7 +1,9 @@
 
-// This file re-exports all functionality from the new services structure
-// to maintain backwards compatibility
+// Este archivo reexporta todas las funcionalidades de la nueva estructura de servicios
+// para mantener la compatibilidad con el código existente
 export * from './fetch-services';
 export * from './submit-services';
 export * from './skill-services';
 export * from './question-services';
+export * from './types';
+export * from './mappers';

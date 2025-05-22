@@ -1,13 +1,15 @@
 
-import { DiagnosticQuestion, QuestionFeedback, QuestionStatus } from './types';
-import { TPAESHabilidad } from "@/types/system-types";
 import { supabase } from "@/integrations/supabase/client";
+import { DiagnosticQuestion } from '@/types/diagnostic';
+import { QuestionFeedback, QuestionStatus, RawExerciseData } from './types';
+import { TPAESHabilidad } from "@/types/system-types";
 import { getAuthUser } from '@/contexts/auth-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { 
   calculateQuestionPenalty,
   calculateSkillLevelChange 
 } from './skill-services';
+import { mapExerciseToQuestion } from './mappers';
 
 // Fetch diagnostic questions from Supabase
 export const fetchDiagnosticQuestions = async (
@@ -24,16 +26,8 @@ export const fetchDiagnosticQuestions = async (
 
     if (error) throw error;
     
-    // Convert the database format to our application format
-    return (data || []).map(item => ({
-      id: item.id,
-      question: item.question,
-      options: Array.isArray(item.options) ? item.options : [],
-      correctAnswer: item.correct_answer,
-      skill: item.skill,
-      prueba: testId,
-      explanation: item.explanation
-    })) as DiagnosticQuestion[];
+    // Convert the database format to our application format using our mapper
+    return (data || []).map(item => mapExerciseToQuestion(item, testId));
   } catch (error) {
     console.error('Error fetching diagnostic questions:', error);
     return [];
@@ -63,15 +57,8 @@ export const fetchQuestionBatch = async (
 
     if (error) throw error;
     
-    return (data || []).map(item => ({
-      id: item.id,
-      question: item.question,
-      options: Array.isArray(item.options) ? item.options : [],
-      correctAnswer: item.correct_answer,
-      skill: item.skill,
-      prueba: Number(testId),
-      explanation: item.explanation
-    })) as DiagnosticQuestion[];
+    // Use our mapper to convert database records to DiagnosticQuestion objects
+    return (data || []).map(item => mapExerciseToQuestion(item, Number(testId)));
   } catch (error) {
     console.error('Error fetching questions:', error);
     return [];
@@ -91,15 +78,8 @@ export const getQuestionById = async (questionId: string): Promise<DiagnosticQue
     
     if (!data) return null;
     
-    return {
-      id: data.id,
-      question: data.question,
-      options: Array.isArray(data.options) ? data.options : [],
-      correctAnswer: data.correct_answer,
-      skill: data.skill,
-      prueba: data.test_id,
-      explanation: data.explanation
-    } as DiagnosticQuestion;
+    // Use our mapper to convert the database record
+    return mapExerciseToQuestion(data);
   } catch (error) {
     console.error('Error fetching question:', error);
     return null;
@@ -137,7 +117,7 @@ export const recordAnswer = async (
       const penalty = calculateQuestionPenalty(timeSpentSeconds, isCorrect);
       const levelChange = calculateSkillLevelChange(isCorrect, penalty);
       
-      // We'll implement this function in skill-services.ts
+      // Implementamos esta función para actualizar el nivel de habilidad del usuario
       await updateUserSkillLevel(user.id, skill, levelChange);
     }
 
@@ -155,12 +135,16 @@ const updateUserSkillLevel = async (
   levelChange: number
 ): Promise<boolean> => {
   try {
+    // Convertir skill a number usando mapEnumToSkillId desde supabase-mappers
+    const { mapEnumToSkillId } = await import('@/utils/supabase-mappers');
+    const skillId = mapEnumToSkillId(skill);
+
     // First get current skill level if exists
     const { data, error } = await supabase
       .from('user_skill_levels')
       .select('level')
       .eq('user_id', userId)
-      .eq('skill_id', skill)
+      .eq('skill_id', skillId)
       .single();
 
     if (error && error.code !== 'PGSQL_NO_ROWS_RETURNED') {
@@ -170,12 +154,12 @@ const updateUserSkillLevel = async (
     const currentLevel = data ? data.level : 0.5; // Default to middle if not found
     const newLevel = Math.max(0.1, Math.min(0.99, currentLevel + levelChange));
 
-    // Insert or update the skill level - assuming skill_id is a string in this table
+    // Insert or update the skill level
     const { error: upsertError } = await supabase
       .from('user_skill_levels')
       .upsert({
         user_id: userId,
-        skill_id: Number(skill), // Convert skill to number
+        skill_id: skillId, // Use the numeric skill_id
         level: newLevel
       });
 
