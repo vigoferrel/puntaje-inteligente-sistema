@@ -10,6 +10,7 @@ import { ActiveLearningNodes } from "./ActiveLearningNodes";
 import { LearningNodesByBloomLevel } from "./LearningNodesByBloomLevel";
 import { TestSelector } from "./TestSelector";
 import { BloomRecommendations } from "./BloomRecommendations";
+import { SkillLearningPath } from "./SkillLearningPath";
 
 interface SkillNodeConnectionProps {
   skillLevels: Record<TPAESHabilidad, number>;
@@ -28,6 +29,22 @@ export const SkillNodeConnection = ({
 }: SkillNodeConnectionProps) => {
   const [activeTab, setActiveTab] = useState<string>("radar");
   const [selectedTest, setSelectedTest] = useState<TPAESPrueba | undefined>(undefined);
+  const [selectedTestId, setSelectedTestId] = useState<number>(1); // Default: Competencia lectora
+
+  // Update selectedTestId when selectedTest changes
+  React.useEffect(() => {
+    if (selectedTest) {
+      // Map the test enum to its ID
+      const testIdMap: Record<TPAESPrueba, number> = {
+        "COMPETENCIA_LECTORA": 1,
+        "MATEMATICA_1": 2,
+        "MATEMATICA_2": 3,
+        "CIENCIAS": 4,
+        "HISTORIA": 5
+      };
+      setSelectedTestId(testIdMap[selectedTest] || 1);
+    }
+  }, [selectedTest]);
 
   // Convert skill levels to format required by SkillRadar
   const skillRadarData = Object.entries(skillLevels).map(([skill, level]) => ({
@@ -41,10 +58,11 @@ export const SkillNodeConnection = ({
   return (
     <div className={`space-y-6 ${className}`}>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="radar">Radar de Habilidades</TabsTrigger>
           <TabsTrigger value="bloom">Taxonomía de Bloom</TabsTrigger>
           <TabsTrigger value="hierarchy">Jerarquía de Habilidades</TabsTrigger>
+          <TabsTrigger value="path">Ruta de Aprendizaje</TabsTrigger>
           <TabsTrigger value="nodes">Nodos de Aprendizaje</TabsTrigger>
           <TabsTrigger value="recommendations">Recomendaciones</TabsTrigger>
         </TabsList>
@@ -71,6 +89,22 @@ export const SkillNodeConnection = ({
             </div>
           </TabsContent>
           
+          <TabsContent value="path" className="m-0">
+            <div className="space-y-4">
+              {/* Test selector */}
+              <TestSelector 
+                availableTests={availableTests}
+                selectedTest={selectedTest}
+                onTestSelect={setSelectedTest}
+              />
+              
+              <SkillLearningPath 
+                skillLevels={skillLevels} 
+                selectedTestId={selectedTestId} 
+              />
+            </div>
+          </TabsContent>
+          
           <TabsContent value="nodes" className="m-0">
             <LearningNodesByBloomLevel 
               nodes={nodes}
@@ -89,7 +123,7 @@ export const SkillNodeConnection = ({
         </div>
       </Tabs>
 
-      {activeTab !== "nodes" && activeTab !== "recommendations" && (
+      {(activeTab !== "nodes" && activeTab !== "recommendations" && activeTab !== "path") && (
         <ActiveLearningNodes 
           nodes={nodes}
           nodeProgress={nodeProgress}
