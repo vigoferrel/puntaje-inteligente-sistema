@@ -16,6 +16,7 @@ export const submitDiagnosticResult = async (
 ): Promise<DiagnosticResult | null> => {
   try {
     // Obtener las preguntas del diagnóstico
+    // Pasamos diagnosticId como primer argumento, el segundo es opcional
     const questions = await fetchDiagnosticQuestions(diagnosticId);
     
     if (!questions || questions.length === 0) {
