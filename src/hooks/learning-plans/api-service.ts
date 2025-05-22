@@ -26,6 +26,28 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
       initPromise
     ]);
     
+    // Verificar la estructura de los planes y sus nodos
+    if (plansWithNodes && plansWithNodes.length > 0) {
+      // Verificar el primer plan como diagnóstico
+      const samplePlan = plansWithNodes[0];
+      console.log('Diagnóstico de plan:', {
+        id: samplePlan.id,
+        title: samplePlan.title,
+        nodeCount: samplePlan.nodes.length
+      });
+      
+      // Si hay nodos, verificar su estructura
+      if (samplePlan.nodes && samplePlan.nodes.length > 0) {
+        const sampleNode = samplePlan.nodes[0];
+        console.log('Diagnóstico de nodo:', {
+          id: sampleNode.id,
+          nodeId: sampleNode.nodeId,
+          skill: sampleNode.nodeSkill,
+          hasName: !!sampleNode.nodeName
+        });
+      }
+    }
+    
     const endTime = performance.now();
     console.log(`Planes cargados exitosamente en ${(endTime - startTime).toFixed(2)}ms`);
     

@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { LearningPlan, LearningPlanNode } from "@/types/learning-plan";
 import { TPAESHabilidad } from "@/types/system-types";
+import { mapSkillIdToEnum } from "@/utils/supabase-mappers";
 
 /**
  * Fetches all learning plans for a user
@@ -41,7 +42,7 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
               id, position,
               node:node_id (
                 id, code, title, description, difficulty, 
-                skill:skill_id (id, name, code)
+                skill_id
               )
             `)
             .eq('plan_id', plan.id)
@@ -54,17 +55,35 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
           
           console.log(`Found ${planNodes?.length || 0} nodes for plan ${plan.id}`);
           
-          // Map the nodes to the expected format
-          const nodes: LearningPlanNode[] = planNodes ? planNodes.map(item => ({
-            id: item.id,
-            nodeId: item.node.id,
-            nodeName: item.node.title,
-            nodeDescription: item.node.description,
-            nodeDifficulty: item.node.difficulty,
-            nodeSkill: item.node.skill?.code as TPAESHabilidad || 'MODEL',
-            position: item.position,
-            planId: plan.id
-          })) : [];
+          // Debugging log para verificar estructura de datos
+          if (planNodes && planNodes.length > 0) {
+            console.log('Muestra de estructura de nodo:', planNodes[0]);
+          }
+          
+          // Map the nodes to the expected format with proper skill mapping
+          const nodes: LearningPlanNode[] = planNodes ? planNodes.map(item => {
+            // Asegurar el mapeo correcto de skill_id a TPAESHabilidad
+            let nodeSkill: TPAESHabilidad = 'MODEL'; // valor predeterminado
+            
+            try {
+              if (item.node && item.node.skill_id) {
+                nodeSkill = mapSkillIdToEnum(item.node.skill_id);
+              }
+            } catch (err) {
+              console.error('Error mapeando skill_id:', item.node.skill_id, err);
+            }
+            
+            return {
+              id: item.id,
+              nodeId: item.node.id,
+              nodeName: item.node.title,
+              nodeDescription: item.node.description,
+              nodeDifficulty: item.node.difficulty,
+              nodeSkill: nodeSkill,
+              position: item.position,
+              planId: plan.id
+            };
+          }) : [];
           
           // Return the plan with its nodes
           return {
