@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLearningPlan } from "@/hooks/use-learning-plan";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, ArrowRight } from "lucide-react";
+import { BookOpen, ArrowRight, CheckCircle, Clock, Award } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 export const StudyPlan = () => {
   const navigate = useNavigate();
-  const { currentPlan, loading, initializing } = useLearningPlan();
+  const { currentPlan, loading, initializing, getPlanProgress } = useLearningPlan();
+
+  // Get progress for the current plan
+  const currentPlanProgress = currentPlan ? getPlanProgress(currentPlan.id) : null;
 
   // Loading state
   if (loading || initializing) {
@@ -62,6 +66,29 @@ export const StudyPlan = () => {
   // Default nodes to show if available
   const nodesToShow = currentPlan?.nodes.slice(0, 3) || [];
   
+  // Find the next recommended node (first incomplete node)
+  const findNextNode = () => {
+    if (!currentPlan || !currentPlanProgress?.nodeProgress) return null;
+    
+    // First look for in-progress nodes
+    const inProgressNode = currentPlan.nodes.find(node => {
+      const progress = currentPlanProgress.nodeProgress[node.nodeId];
+      return progress && progress > 0 && progress < 100;
+    });
+    
+    if (inProgressNode) return inProgressNode;
+    
+    // Then look for not started nodes
+    const notStartedNode = currentPlan.nodes.find(node => {
+      const progress = currentPlanProgress.nodeProgress[node.nodeId];
+      return !progress || progress === 0;
+    });
+    
+    return notStartedNode || null;
+  };
+  
+  const nextNode = findNextNode();
+  
   // Helper function to get color scheme by index
   const getColorScheme = (index: number) => {
     const schemes = [
@@ -94,20 +121,125 @@ export const StudyPlan = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
+          {/* Progress Overview */}
+          <div className="rounded-lg border p-4 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium">Progreso General</h3>
+              <span className="text-sm font-medium">
+                {currentPlanProgress ? `${Math.round(currentPlanProgress.overallProgress)}%` : "0%"}
+              </span>
+            </div>
+            <Progress 
+              value={currentPlanProgress ? currentPlanProgress.overallProgress : 0} 
+              className="h-2 mb-2"
+            />
+            <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mt-2">
+              <div className="flex items-center">
+                <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+                <span>
+                  {currentPlanProgress ? 
+                    `${currentPlanProgress.completedNodes}/${currentPlanProgress.totalNodes} completados` : 
+                    "0/0 completados"}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1 text-blue-500" />
+                <span>
+                  {currentPlanProgress ? 
+                    `${currentPlanProgress.inProgressNodes} en progreso` : 
+                    "0 en progreso"}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <Award className="h-3 w-3 mr-1 text-purple-500" />
+                <span>
+                  {nextNode ? "Continúa aprendiendo" : "¡Plan completado!"}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Next Module or Recommended Modules */}
+          {nextNode ? (
+            <div className="bg-primary/5 rounded-lg p-4 mb-4 border border-primary/20">
+              <h3 className="font-medium flex items-center">
+                <BookOpen className="h-4 w-4 mr-2 text-primary" />
+                Continúa tu aprendizaje
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1 mb-3">
+                {nextNode.nodeName || `Módulo ${nextNode.position}`}
+              </p>
+              <Button 
+                size="sm" 
+                onClick={() => navigate(`/node/${nextNode.nodeId}`)}
+                className="w-full"
+              >
+                Continuar <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-200">
+              <h3 className="font-medium flex items-center text-green-700">
+                <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                ¡Plan Completado!
+              </h3>
+              <p className="text-sm text-green-600/80 mt-1 mb-3">
+                Has completado todos los módulos de este plan.
+              </p>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => navigate("/plan")}
+                className="w-full border-green-200 text-green-700 hover:bg-green-100"
+              >
+                Ver detalles
+              </Button>
+            </div>
+          )}
+          
+          {/* Module Preview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {nodesToShow.length > 0 ? (
               nodesToShow.map((node, index) => {
                 const colors = getColorScheme(index);
+                const nodeProgress = currentPlanProgress?.nodeProgress?.[node.nodeId] || 0;
+                
+                let statusLabel = "Por comenzar";
+                if (nodeProgress === 100) statusLabel = "Completado";
+                else if (nodeProgress > 0) statusLabel = "En progreso";
+                
                 return (
-                  <Card className={`${colors.bg}`} key={node.id}>
+                  <Card className={`${colors.bg} border`} key={node.id}>
                     <CardContent className="p-4">
                       <div className={`${colors.accent} h-10 w-10 rounded-full flex items-center justify-center mb-3`}>
                         {index + 1}
                       </div>
-                      <h3 className="font-medium text-gray-900">{node.nodeSkill || "Habilidad"}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{node.nodeName || `Módulo ${index + 1}`}</p>
-                      <Button className={`mt-3 w-full ${colors.button}`} onClick={() => navigate("/plan")}>
-                        {index === 0 ? "Continuar" : "Comenzar"}
+                      <div className="space-y-2">
+                        <h3 className="font-medium text-gray-900">{node.nodeSkill || "Habilidad"}</h3>
+                        <p className="text-sm text-gray-600">{node.nodeName || `Módulo ${index + 1}`}</p>
+                        
+                        <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-current rounded-full" 
+                            style={{ 
+                              width: `${nodeProgress}%`,
+                              color: nodeProgress === 100 ? '#10b981' : '#6366f1'
+                            }}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-xs text-gray-500">
+                          <span>{statusLabel}</span>
+                          <span>{nodeProgress}%</span>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        className={`mt-3 w-full ${colors.button}`} 
+                        onClick={() => navigate(`/node/${node.nodeId}`)}
+                      >
+                        {nodeProgress > 0 && nodeProgress < 100 ? "Continuar" : 
+                         nodeProgress === 100 ? "Repasar" : "Comenzar"}
                       </Button>
                     </CardContent>
                   </Card>

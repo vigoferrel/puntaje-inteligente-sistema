@@ -393,8 +393,8 @@ export type Database = {
           estimated_time_minutes: number | null
           id: string
           position: number
-          skill_id: number
-          test_id: number
+          skill_id: number | null
+          test_id: number | null
           title: string
           updated_at: string | null
         }
@@ -407,8 +407,8 @@ export type Database = {
           estimated_time_minutes?: number | null
           id?: string
           position: number
-          skill_id: number
-          test_id: number
+          skill_id?: number | null
+          test_id?: number | null
           title: string
           updated_at?: string | null
         }
@@ -421,8 +421,8 @@ export type Database = {
           estimated_time_minutes?: number | null
           id?: string
           position?: number
-          skill_id?: number
-          test_id?: number
+          skill_id?: number | null
+          test_id?: number | null
           title?: string
           updated_at?: string | null
         }
