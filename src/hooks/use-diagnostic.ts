@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { 
   DiagnosticTest, 
@@ -8,7 +9,8 @@ import {
   fetchDiagnosticTests,
   fetchDiagnosticResults,
   submitDiagnosticResult,
-  ensureDefaultDiagnosticsExist
+  ensureDefaultDiagnosticsExist,
+  createLocalFallbackDiagnostics
 } from "@/services/diagnostic";
 import { toast } from "@/components/ui/use-toast";
 
@@ -62,6 +64,26 @@ export const useDiagnostic = () => {
         description: "No se pudo generar un diagnóstico de prueba",
         variant: "destructive"
       });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Creates local fallback diagnostics when online generation fails
+   */
+  const createLocalFallbacks = async () => {
+    try {
+      setLoading(true);
+      const success = await createLocalFallbackDiagnostics();
+      if (success) {
+        // Refrescar la lista
+        await fetchTests("auto-generated");
+      }
+      return success;
+    } catch (error) {
+      console.error('Error al crear diagnósticos fallback:', error);
       return false;
     } finally {
       setLoading(false);
@@ -140,6 +162,7 @@ export const useDiagnostic = () => {
     results,
     fetchDiagnosticTests: fetchTests,
     ensureDefaultDiagnosticsExist: ensureDefaultDiagnostics,
+    createLocalFallbackDiagnostics: createLocalFallbacks,
     startDiagnosticTest,
     submitDiagnosticResult: submitResult,
     fetchDiagnosticResults: fetchResults

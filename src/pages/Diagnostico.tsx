@@ -8,7 +8,8 @@ import { TestRunner } from "@/components/diagnostic/TestRunner";
 import { PausedTestBanner } from "@/components/diagnostic/PausedTestBanner";
 import { PauseConfirmationDialog } from "@/components/diagnostic/PauseConfirmationDialog";
 import { DiagnosticController } from "@/components/diagnostic/DiagnosticController";
-import { Button } from "@/components/ui/button";
+import { DiagnosticErrorView } from "@/components/diagnostic/DiagnosticErrorView"; 
+import { Button } from "@/components/ui/card";
 import { DetailedResultView } from "@/components/diagnostic/DetailedResultView";
 import { RefreshCw } from "lucide-react";
 
@@ -33,6 +34,7 @@ const Diagnostico = () => {
           testResults,
           pausedProgress,
           showPauseConfirmation,
+          error,
           handleTestSelect,
           handleStartTest,
           handleResumeTest,
@@ -44,7 +46,8 @@ const Diagnostico = () => {
           handlePreviousQuestion,
           handleNextQuestion,
           handleFinishTest,
-          handleRestartDiagnostic
+          handleRestartDiagnostic,
+          handleRetryInitialization
         }) => {
           console.log("Estado actual:", { 
             loading, 
@@ -52,7 +55,8 @@ const Diagnostico = () => {
             generatingDiagnostic,
             testStarted, 
             resultSubmitted,
-            testsCount: tests.length
+            testsCount: tests.length,
+            error
           });
           
           // Determine what message to show during loading
@@ -69,6 +73,12 @@ const Diagnostico = () => {
               
               {loading ? (
                 <DiagnosticSkeleton message={loadingMessage} generating={generatingDiagnostic} />
+              ) : error ? (
+                <DiagnosticErrorView 
+                  error={error}
+                  message="Esto puede deberse a una conexión inestable o a un problema temporal con el sistema. Por favor, intenta nuevamente."
+                  onRetry={handleRetryInitialization}
+                />
               ) : !testStarted ? (
                 <>
                   {pausedProgress && tests.length > 0 && tests.some(test => test.id === pausedProgress.testId) && (
@@ -95,7 +105,7 @@ const Diagnostico = () => {
                         No se encontraron pruebas diagnósticas. Puede deberse a un problema de conexión o que aún no se han configurado.
                       </p>
                       <Button 
-                        onClick={() => window.location.reload()}
+                        onClick={handleRetryInitialization}
                         className="flex items-center gap-2"
                       >
                         <RefreshCw className="h-4 w-4" />

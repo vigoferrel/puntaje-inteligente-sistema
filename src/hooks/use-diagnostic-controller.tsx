@@ -13,7 +13,7 @@ export const useDiagnosticController = () => {
   const { selectedTestId, testStarted, setSelectedTestId, setTestStarted } = useDiagnosticState();
   
   // Initialization hook
-  const { initializing, generatingDiagnostic } = useDiagnosticInitialization();
+  const { initializing, generatingDiagnostic, error, retryInitialization } = useDiagnosticInitialization();
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
@@ -47,11 +47,17 @@ export const useDiagnosticController = () => {
     timeStarted: executionState.timeStarted,
     setTestStarted
   });
+
+  // Función para manejar el reintento de inicialización
+  const handleRetryInitialization = async () => {
+    await retryInitialization();
+  };
   
   return {
     // State from initialization
     initializing,
     generatingDiagnostic,
+    error,
     
     // State from hooks
     tests: selectionState.tests,
@@ -80,7 +86,8 @@ export const useDiagnosticController = () => {
     handlePauseTest: progressState.handlePauseTest,
     confirmPauseTest: progressState.confirmPauseTest,
     handleFinishTest: resultState.handleFinishTest,
-    handleRestartDiagnostic: resultState.handleRestartDiagnostic
+    handleRestartDiagnostic: resultState.handleRestartDiagnostic,
+    handleRetryInitialization
   };
 };
 
