@@ -37,10 +37,10 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
     // Check current RLS policies
     const { data: policies, error: policiesError } = await supabase.rpc('get_policies_for_table', { 
       table_name: 'learning_nodes' 
-    });
+    } as { table_name: string });
     
     // If there are RLS issues, try to fix them
-    if (policiesError || !policies || policies.length === 0) {
+    if (policiesError || !policies || (policies as any[]).length === 0) {
       console.warn('RLS policies issue detected, attempting to initialize policies');
       await initializeRLSPolicies();
     }

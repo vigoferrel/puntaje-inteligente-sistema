@@ -85,7 +85,7 @@ export const useDataInitialization = () => {
       // First check if there's an admin policy for learning_nodes
       // This is needed because we're seeing RLS errors in the logs
       const { data: policies, error: policiesError } = await supabase
-        .rpc('get_policies_for_table', { table_name: 'learning_nodes' });
+        .rpc('get_policies_for_table', { table_name: 'learning_nodes' } as { table_name: string });
         
       if (policiesError) {
         console.error("Error checking policies:", policiesError);

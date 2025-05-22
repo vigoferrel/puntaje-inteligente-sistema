@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const createExecSqlFunction = async (): Promise<boolean> => {
   try {
     // Check if function already exists by trying to call it
-    const { error } = await supabase.rpc('exec_sql', { sql: 'SELECT 1;' });
+    const { error } = await supabase.rpc('exec_sql', { sql: 'SELECT 1;' } as { sql: string });
     
     // If the function doesn't exist, create it
     if (error && error.message.includes('does not exist')) {

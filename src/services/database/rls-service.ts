@@ -9,7 +9,7 @@ export const createGetPoliciesFunction = async (): Promise<boolean> => {
   try {
     const { error } = await supabase.rpc('get_policies_for_table', { 
       table_name: 'learning_nodes' 
-    });
+    } as { table_name: string });
     
     // If the function already exists, this will return an error but we can ignore it
     if (error && !error.message.includes('already exists')) {
@@ -43,7 +43,7 @@ export const createGetPoliciesFunction = async (): Promise<boolean> => {
             GROUP BY p.policyname, p.cmd, p.qual, p.with_check;
           $$;
         `
-      });
+      } as { sql: string });
       
       if (createError) {
         console.error('Error creating policy function:', createError);
@@ -113,7 +113,7 @@ export const initializeRLSPolicies = async (): Promise<boolean> => {
         FOR DELETE
         USING (true);
       `
-    });
+    } as { sql: string });
     
     if (error) {
       console.error('Error creating RLS policies:', error);
