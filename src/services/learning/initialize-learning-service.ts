@@ -1,46 +1,51 @@
-import { supabase } from "@/integrations/supabase/client";
-import { TLearningNode } from "@/types/system-types";
-import { initializeRLSPolicies } from "@/services/database/rls-service";
 
-const initialLearningNodes: TLearningNode[] = [
+import { supabase } from "@/integrations/supabase/client";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
+import { initializeRLSPolicies } from "@/services/database/rls-service";
+import { mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
+
+const initialLearningNodes = [
   {
     id: '1',
     title: 'Introducción a la Competencia Lectora',
     description: 'Aprende los fundamentos de la competencia lectora y cómo abordar diferentes tipos de textos.',
-    content: 'Aquí encontrarás una explicación detallada de los conceptos clave y estrategias para mejorar tu comprensión lectora.',
-    test_id: 1,
-    skill_id: 15,
-    estimated_time: 30,
-    resources: ['Guía de Competencia Lectora', 'Ejercicios de Práctica'],
-    is_active: true,
-    created_at: new Date(),
-    updated_at: new Date(),
+    code: 'INTRO_LECTORA',
+    position: 1,
+    skill_id: 15, // CRITICAL_THINKING
+    test_id: 1, // COMPETENCIA_LECTORA
+    depends_on: [],
+    difficulty: 'basic' as const,
+    estimated_time_minutes: 30,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: '2',
     title: 'Resolución de Problemas Matemáticos',
     description: 'Desarrolla tus habilidades para resolver problemas matemáticos complejos paso a paso.',
-    content: 'Este nodo te guiará a través de diferentes técnicas y enfoques para abordar desafíos matemáticos con confianza.',
-    test_id: 2,
-    skill_id: 4,
-    estimated_time: 45,
-    resources: ['Estrategias de Resolución de Problemas', 'Ejemplos Resueltos'],
-    is_active: true,
-    created_at: new Date(),
-    updated_at: new Date(),
+    code: 'PROB_MATEMATICOS',
+    position: 1,
+    skill_id: 4, // SOLVE_PROBLEMS
+    test_id: 2, // MATEMATICA_1
+    depends_on: [],
+    difficulty: 'basic' as const,
+    estimated_time_minutes: 45,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: '3',
     title: 'Análisis de Datos Científicos',
     description: 'Aprende a interpretar y analizar datos científicos para extraer conclusiones significativas.',
-    content: 'Descubre cómo utilizar herramientas y métodos estadísticos para comprender mejor los resultados de experimentos científicos.',
-    test_id: 4,
-    skill_id: 9,
-    estimated_time: 60,
-    resources: ['Manual de Análisis de Datos', 'Software de Estadística'],
-    is_active: true,
-    created_at: new Date(),
-    updated_at: new Date(),
+    code: 'ANAL_CIENTIFICOS',
+    position: 1,
+    skill_id: 9, // PROCESS_ANALYZE
+    test_id: 4, // CIENCIAS
+    depends_on: [],
+    difficulty: 'basic' as const,
+    estimated_time_minutes: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
 ];
 
@@ -64,9 +69,6 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
     
     // No nodes exist, so let's initialize
     console.log('No learning nodes found, initializing...');
-    
-    // Here we would normally initialize nodes from a seed file or external source
-    // For demo purposes, we'll add a few sample nodes
     
     // Insert initial learning nodes
     const { error: insertError } = await supabase
