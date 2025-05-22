@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { DiagnosticController } from "@/components/diagnostic/DiagnosticController";

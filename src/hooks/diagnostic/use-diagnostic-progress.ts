@@ -29,7 +29,11 @@ export const useDiagnosticProgress = ({
     setShowPauseConfirmation(true);
   };
   
-  const confirmPauseTest = () => {
+  const confirmPauseTest = (shouldPause: boolean = true) => {
+    setShowPauseConfirmation(false);
+    
+    if (!shouldPause) return;
+    
     if (!currentTest || !timeStarted) return;
     
     // Save progress to localStorage
@@ -48,7 +52,6 @@ export const useDiagnosticProgress = ({
     // Reset test state
     setTestStarted(false);
     setSelectedTestId(null);
-    setShowPauseConfirmation(false);
   };
   
   return {

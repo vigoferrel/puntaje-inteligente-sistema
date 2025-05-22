@@ -1,58 +1,67 @@
 
 import React from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlayIcon, XIcon } from "lucide-react";
+import { Clock, PlayCircle, XCircle } from "lucide-react";
 import { StoredTestProgress } from "@/utils/test-storage";
-import { DiagnosticTest } from "@/types/diagnostic";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
 interface PausedTestBannerProps {
-  testProgress: StoredTestProgress;
-  test: DiagnosticTest;
+  pausedProgress: StoredTestProgress;
   onResumeTest: () => void;
   onDiscardProgress: () => void;
 }
 
 export const PausedTestBanner = ({
-  testProgress,
-  test,
+  pausedProgress,
   onResumeTest,
-  onDiscardProgress,
+  onDiscardProgress
 }: PausedTestBannerProps) => {
-  if (!testProgress || !test) return null;
-
-  // Calcular tiempo transcurrido
-  const startedDate = new Date(testProgress.timeStarted);
-  const formattedDate = format(startedDate, "d 'de' MMMM 'a las' HH:mm", { locale: es });
-  const progressPercentage = ((testProgress.currentQuestionIndex + 1) / test.questions.length) * 100;
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('es-ES', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
-    <Alert className="mb-6 border-amber-200 bg-amber-50">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
-        <div>
-          <AlertTitle className="text-amber-800 flex items-center">
-            Diagnóstico en progreso
-          </AlertTitle>
-          <AlertDescription className="text-amber-700">
-            <p>Tienes un diagnóstico pausado: <strong>{test.title}</strong></p>
-            <p className="text-sm mt-1">
-              Iniciado el {formattedDate} • Progreso: {Math.round(progressPercentage)}%
-            </p>
-          </AlertDescription>
+    <Card className="bg-amber-50 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">
+      <CardContent className="pt-6 pb-4">
+        <div className="flex items-start md:items-center flex-col md:flex-row gap-4 justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-amber-600 dark:text-amber-500" />
+            <div>
+              <h3 className="font-medium text-amber-800 dark:text-amber-300">
+                Tienes un diagnóstico pausado
+              </h3>
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                Pausado el {formatDate(pausedProgress.lastPausedAt)}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onDiscardProgress}
+              className="border-amber-300 hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-800/50"
+            >
+              <XCircle className="w-4 h-4 mr-1" />
+              Descartar
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={onResumeTest}
+              className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 flex-1 md:flex-none"
+            >
+              <PlayCircle className="w-4 h-4 mr-1" />
+              Continuar diagnóstico
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2 mt-4 md:mt-0">
-          <Button variant="outline" size="sm" onClick={onDiscardProgress}>
-            <XIcon className="h-4 w-4 mr-1" />
-            Descartar
-          </Button>
-          <Button className="bg-amber-600 hover:bg-amber-700" size="sm" onClick={onResumeTest}>
-            <PlayIcon className="h-4 w-4 mr-1" />
-            Continuar
-          </Button>
-        </div>
-      </div>
-    </Alert>
+      </CardContent>
+    </Card>
   );
 };
