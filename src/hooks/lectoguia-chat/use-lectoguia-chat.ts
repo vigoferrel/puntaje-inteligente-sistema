@@ -68,18 +68,25 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       
       console.log('Response received from OpenRouter:', responseData);
       
-      // Extract and format response
-      let botResponse: string;
-      
       if (!responseData) {
-        botResponse = "Lo siento, no pude procesar tu solicitud. Por favor intenta de nuevo.";
-      } else {
-        botResponse = extractResponseContent(responseData);
+        const errorContent = "Lo siento, no pude procesar tu solicitud. Por favor intenta de nuevo.";
+        addAssistantMessage(errorContent);
+        return errorContent;
       }
       
+      // Utilizar la función mejorada de extracción de contenido
+      const botResponse = extractResponseContent(responseData);
       console.log('Processed bot response:', botResponse);
-      addAssistantMessage(botResponse);
-      return botResponse;
+      
+      // Solo agregar respuesta al chat si es válida
+      if (botResponse && typeof botResponse === 'string' && botResponse.length > 0) {
+        addAssistantMessage(botResponse);
+        return botResponse;
+      } else {
+        const fallbackResponse = "Recibí una respuesta pero no pude procesarla correctamente. ¿Podrías reformular tu pregunta?";
+        addAssistantMessage(fallbackResponse);
+        return fallbackResponse;
+      }
       
     } catch (error) {
       // Handle errors

@@ -26,8 +26,18 @@ export function createErrorResponse(message: string, status: number = 400, fallb
 
 /**
  * Procesa la respuesta de la IA para asegurar un formato consistente
+ * Función mejorada para manejar diferentes formatos de respuesta
  */
 export function processAIResponse(response: any): any {
+  console.log("Procesando respuesta AI:", response ? typeof response : "null");
+  
+  // Si la respuesta es nula o undefined, proporcionar respuesta por defecto
+  if (response === null || response === undefined) {
+    return {
+      response: "No se recibió una respuesta válida"
+    };
+  }
+  
   // Si la respuesta ya es un objeto con una propiedad 'response', devolverla
   if (typeof response === 'object' && response !== null && 'response' in response) {
     return response;
@@ -51,10 +61,14 @@ export function processAIResponse(response: any): any {
     }
     
     // Si no encontramos un valor de texto, serializar el objeto completo
-    return { response: JSON.stringify(response) };
+    try {
+      return { response: JSON.stringify(response) };
+    } catch (e) {
+      return { response: "Objeto no serializable" };
+    }
   }
   
-  // Si la respuesta es una cadena, encapsularla en un objeto
+  // Importante: Si la respuesta es una cadena, encapsularla en un objeto
   if (typeof response === 'string') {
     // Intentar analizar la cadena como JSON
     try {
@@ -70,12 +84,13 @@ export function processAIResponse(response: any): any {
       }
     } catch (e) {
       // No es un JSON válido, devolver como respuesta de texto
+      // Este es el caso que estaba fallando - texto plano que no es JSON
       return { response: response };
     }
   }
   
-  // Valor predeterminado si la respuesta es nula o indefinida
+  // Valor predeterminado si la respuesta es de un tipo no manejado
   return {
-    response: response || "No se recibió una respuesta válida"
+    response: "Respuesta en formato no reconocido"
   };
 }

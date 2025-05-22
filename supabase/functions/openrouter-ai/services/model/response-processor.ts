@@ -2,6 +2,7 @@
 import { MonitoringService } from "../monitoring-service.ts";
 import { ServiceResult } from "../base-service.ts";
 import { extractJsonFromContent } from "../../utils/json-extractor.ts";
+import { processAIResponse } from "../../utils/response-formatters.ts";
 
 /**
  * Servicio para procesar respuestas de los modelos
@@ -53,6 +54,16 @@ export const processResponse = {
     const responseText = await response.text();
     MonitoringService.debug('Texto de respuesta crudo:', responseText.substring(0, 200) + '...');
     
+    // Si la respuesta es texto vacío o muy corta
+    if (!responseText || responseText.trim().length < 3) {
+      return {
+        error: 'Respuesta vacía o inválida del modelo',
+        fallbackResponse: {
+          response: "No se recibió una respuesta válida del modelo. Por favor intenta de nuevo."
+        }
+      };
+    }
+    
     // Intentar analizar como JSON primero
     try {
       const data = JSON.parse(responseText);
@@ -62,26 +73,31 @@ export const processResponse = {
       
       const content = data.choices?.[0]?.message?.content || null;
       
-      // Intentar extraer JSON del contenido
-      const parsedContent = extractJsonFromContent(content);
-      
-      return { result: parsedContent || content || data || null };
-    } catch (e) {
-      // Si no es JSON, tratar como texto plano y envolverlo en un objeto
-      MonitoringService.debug('Respuesta no es JSON, tratando como texto plano:', responseText.substring(0, 200) + '...');
-      
-      // Si la respuesta tiene más de 2 caracteres, considerarla válida
-      if (responseText.trim().length > 2) {
-        return { result: { response: responseText } };
+      // Intentar extraer JSON del contenido si hay contenido estructurado
+      if (content) {
+        try {
+          const parsedContent = extractJsonFromContent(content);
+          if (parsedContent) {
+            return { result: parsedContent };
+          }
+        } catch (e) {
+          // Si falla la extracción, usar el contenido original
+          MonitoringService.debug('No se pudo extraer JSON del contenido:', e);
+        }
       }
       
-      // Respuesta vacía o inválida
-      return { 
-        error: 'Respuesta vacía o inválida del modelo',
-        fallbackResponse: {
-          response: "No se recibió una respuesta válida del modelo. Por favor intenta de nuevo."
-        }
-      };
+      // Si no hay JSON que extraer, devolver el contenido o los datos completos
+      return { result: content || data || null };
+      
+    } catch (e) {
+      // Si no es JSON, manejar como texto plano
+      MonitoringService.debug('Respuesta no es JSON, procesando como texto plano:', responseText.substring(0, 200) + '...');
+      
+      // Procesar la respuesta para asegurar un formato consistente
+      const processedResult = processAIResponse(responseText);
+      console.log("Processed result for client:", processedResult);
+      
+      return { result: processedResult };
     }
   }
 };

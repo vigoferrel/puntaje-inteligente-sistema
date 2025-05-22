@@ -58,51 +58,95 @@ export function handleMessageError(error: unknown): { errorContent: string, isRa
 
 /**
  * Extract response content from various API response formats
+ * Con manejo mejorado de texto plano y respuestas complejas
  */
 export function extractResponseContent(response: any): string {
+  console.log("Procesando respuesta:", response);
+  
   if (!response) {
+    console.log('La respuesta está vacía');
     return "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con cualquier materia de la PAES si lo deseas.";
   }
   
-  // Handle plain text responses directly
+  // Manejar respuestas de OpenRouter con estructura success/result
+  if (typeof response === 'object' && 'success' in response && response.success === true) {
+    console.log('Detectada respuesta con formato success/result:', response.result);
+    if (response.result) {
+      // Si result es un objeto con propiedad 'response'
+      if (typeof response.result === 'object' && 'response' in response.result) {
+        return response.result.response;
+      }
+      // Si result es texto plano
+      if (typeof response.result === 'string') {
+        return response.result;
+      }
+      // Si result es otro tipo de objeto, intentar convertirlo
+      if (typeof response.result === 'object') {
+        const stringProps = Object.values(response.result).find(val => typeof val === 'string');
+        if (stringProps) return stringProps as string;
+        return JSON.stringify(response.result);
+      }
+    }
+  }
+  
+  // Manejar respuestas de texto plano directamente
   if (typeof response === 'string') {
     return response;
   } 
   
-  // Handle object responses
-  if (typeof response === 'object') {
-    // Response has direct response property
-    if ('response' in response) {
-      return response.response;
-    }
-    
-    // For compatibility with the OpenRouter response format
-    if ('choices' in response && Array.isArray(response.choices) && response.choices.length > 0) {
-      const choice = response.choices[0];
-      if ('message' in choice && 'content' in choice.message) {
-        return choice.message.content;
-      }
-    }
-    
-    // Try to extract useful info from any object value
-    if (Object.keys(response).length > 0) {
-      // Find the first string property to use as response
-      for (const key of Object.keys(response)) {
-        const value = response[key];
-        if (typeof value === 'string' && value.trim().length > 0) {
-          return value;
-        }
-      }
-      
-      // Fallback to stringify the first value if no strings found
-      const firstValue = Object.values(response)[0];
-      return typeof firstValue === 'string' ? firstValue : 
-        "Para mejorar tu rendimiento en la PAES, es importante enfocarte en todas las materias relevantes para tu área de interés.";
+  // Manejar objetos con propiedad 'response' directa
+  if (typeof response === 'object' && 'response' in response) {
+    return response.response;
+  }
+  
+  // Para compatibilidad con el formato OpenRouter de OpenAI
+  if (typeof response === 'object' && 'choices' in response && Array.isArray(response.choices) && response.choices.length > 0) {
+    const choice = response.choices[0];
+    if ('message' in choice && 'content' in choice.message) {
+      return choice.message.content;
     }
   }
   
-  // Default fallback for unknown response formats
-  return "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con cualquier materia de la PAES si lo deseas.";
+  // Extraer información útil de cualquier objeto
+  if (typeof response === 'object' && response !== null) {
+    // Buscar propiedades que puedan contener la respuesta
+    for (const key of ['text', 'content', 'message', 'data', 'result']) {
+      if (key in response && typeof response[key] === 'string') {
+        return response[key];
+      }
+    }
+    
+    // Buscar cualquier propiedad string que no esté vacía
+    for (const key of Object.keys(response)) {
+      const value = response[key];
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return value;
+      }
+    }
+    
+    // Si es un objeto anidado, intentar buscar recursivamente
+    for (const key of Object.keys(response)) {
+      if (typeof response[key] === 'object' && response[key] !== null) {
+        // Evitar recursión infinita
+        if (response[key] !== response) {
+          const nestedContent = extractResponseContent(response[key]);
+          if (nestedContent && nestedContent.length > 5) { 
+            return nestedContent;
+          }
+        }
+      }
+    }
+    
+    // Si todo falla, convertir el objeto a string
+    try {
+      return JSON.stringify(response);
+    } catch (e) {
+      console.error("Error al convertir respuesta a texto:", e);
+    }
+  }
+  
+  // Respuesta por defecto
+  return "He recibido tu mensaje, pero tuve dificultades procesando la respuesta. ¿En qué tema de la PAES puedo ayudarte?";
 }
 
 /**
