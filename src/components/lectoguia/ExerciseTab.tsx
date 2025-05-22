@@ -1,9 +1,11 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Exercise } from "@/types/ai-types";
 import { BookOpen, PenTool, Calculator, Atom, History, Loader2, BarChart3 } from "lucide-react";
 import { ExerciseView } from "./exercise";
+import { ContextualActionButtons } from "./action-buttons/ContextualActionButtons";
+import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
+import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
 
 interface ExerciseTabProps {
   exercise: Exercise | null;
@@ -22,6 +24,20 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
   onContinue,
   isLoading = false
 }) => {
+  // Esto debe venir del contexto cuando se implemente completamente
+  const setActiveTab = (tab: string) => {
+    // Implementación temporal hasta que se conecte con el contexto real
+    console.log("Cambiando a pestaña:", tab);
+  };
+
+  const handleExerciseRequest = async () => {
+    // Simulación temporal hasta la implementación completa
+    onContinue();
+    return true;
+  };
+  
+  const { handleAction } = useContextualActions(setActiveTab, handleExerciseRequest);
+  
   // Determinar el icono según el tipo de prueba o habilidad
   const getSkillIcon = () => {
     if (!exercise) return <BookOpen size={18} />;
@@ -115,6 +131,31 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
       return "Ejercicio de aprendizaje";
     }
   };
+  
+  // Construir los elementos de migas de pan
+  const breadcrumbItems = [
+    { label: 'LectoGuía', active: false, onClick: () => {} },
+    { label: 'Ejercicios', active: true }
+  ];
+  
+  // Si hay un ejercicio, añadir su tipo como un elemento adicional
+  if (exercise?.prueba) {
+    const pruebaNames: Record<string, string> = {
+      'COMPETENCIA_LECTORA': 'Comprensión Lectora',
+      'MATEMATICA_1': 'Matemáticas Básica',
+      'MATEMATICA_2': 'Matemáticas Avanzada',
+      'CIENCIAS': 'Ciencias',
+      'HISTORIA': 'Historia'
+    };
+    
+    if (pruebaNames[exercise.prueba]) {
+      breadcrumbItems.splice(1, 0, {
+        label: pruebaNames[exercise.prueba],
+        active: false,
+        onClick: () => {}
+      });
+    }
+  }
 
   return (
     <Card className="border-border bg-card/50 backdrop-blur-sm">
@@ -128,8 +169,14 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
           </div>
         </CardHeader>
       )}
+      
+      {/* Breadcrumbs para navegación contextual */}
+      <div className="px-4 py-2 bg-muted/20">
+        <LectoGuiaBreadcrumb items={breadcrumbItems} />
+      </div>
+      
       <CardContent className={`p-6 ${exercise?.nodeId ? 'pt-4' : 'pt-6'}`}>
-        <div className="h-[calc(100vh-280px)] min-h-[500px] overflow-auto custom-scrollbar">
+        <div className="h-[calc(100vh-350px)] min-h-[450px] overflow-auto custom-scrollbar">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
@@ -145,7 +192,20 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
             />
           )}
         </div>
+        
+        {/* Botones de acción contextual */}
+        {exercise && !isLoading && (
+          <div className="border-t border-border mt-4 pt-4">
+            <ContextualActionButtons 
+              context="exercise"
+              skill={exercise.skill as any}
+              prueba={exercise.prueba as any}
+              onAction={handleAction}
+              className="justify-center md:justify-start"
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
-}
+};

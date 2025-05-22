@@ -7,6 +7,7 @@ import { ProgressTab } from "@/components/lectoguia/ProgressTab";
 import { ChatMessage } from "@/components/ai/ChatInterface";
 import { Exercise } from "@/types/ai-types";
 import { TPAESHabilidad } from "@/types/system-types";
+import { motion } from "framer-motion";
 
 interface LectoGuiaTabsProps {
   activeTab: string;
@@ -27,6 +28,12 @@ interface LectoGuiaTabsProps {
   // Node selection
   onNodeSelect?: (nodeId: string) => void;
 }
+
+// Variantes de animación para las transiciones entre pestañas
+const tabVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+};
 
 export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
   activeTab,
@@ -62,30 +69,48 @@ export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
 
       <div className="mt-4">
         <TabsContent value="chat" className="m-0">
-          <ChatTab 
-            messages={messages}
-            onSendMessage={onSendMessage}
-            isTyping={isTyping}
-            activeSubject={activeSubject}
-            onSubjectChange={onSubjectChange}
-          />
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={tabVariants}
+          >
+            <ChatTab 
+              messages={messages}
+              onSendMessage={onSendMessage}
+              isTyping={isTyping}
+              activeSubject={activeSubject}
+              onSubjectChange={onSubjectChange}
+            />
+          </motion.div>
         </TabsContent>
 
         <TabsContent value="exercise" className="m-0">
-          <ExerciseTab
-            exercise={exercise}
-            selectedOption={selectedOption}
-            showFeedback={showFeedback}
-            onOptionSelect={onOptionSelect}
-            onContinue={onContinue}
-            isLoading={isLoading}
-          />
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={tabVariants}
+          >
+            <ExerciseTab
+              exercise={exercise}
+              selectedOption={selectedOption}
+              showFeedback={showFeedback}
+              onOptionSelect={onOptionSelect}
+              onContinue={onContinue}
+              isLoading={isLoading}
+            />
+          </motion.div>
         </TabsContent>
 
         <TabsContent value="progress" className="m-0">
-          <ProgressTab 
-            onNodeSelect={onNodeSelect}
-          />
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={tabVariants}
+          >
+            <ProgressTab 
+              onNodeSelect={onNodeSelect}
+            />
+          </motion.div>
         </TabsContent>
       </div>
     </Tabs>
