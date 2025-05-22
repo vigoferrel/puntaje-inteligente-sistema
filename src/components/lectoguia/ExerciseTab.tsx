@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Exercise } from "@/types/ai-types";
-import { BookOpen, PenTool, Calculator, Atom, History } from "lucide-react";
+import { BookOpen, PenTool, Calculator, Atom, History, Loader2 } from "lucide-react";
 import { ExerciseView } from "./exercise";
 
 interface ExerciseTabProps {
@@ -10,6 +11,7 @@ interface ExerciseTabProps {
   showFeedback: boolean;
   onOptionSelect: (index: number) => void;
   onContinue: () => void;
+  isLoading?: boolean; // Nuevo prop para mostrar estado de carga
 }
 
 export const ExerciseTab: React.FC<ExerciseTabProps> = ({
@@ -17,7 +19,8 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
   selectedOption,
   showFeedback,
   onOptionSelect,
-  onContinue
+  onContinue,
+  isLoading = false
 }) => {
   // Determinar el icono según el tipo de habilidad
   const getSkillIcon = () => {
@@ -95,15 +98,22 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
       )}
       <CardContent className={`p-6 ${exercise?.nodeId ? 'pt-4' : 'pt-6'}`}>
         <div className="h-[calc(100vh-280px)] min-h-[500px] overflow-auto custom-scrollbar">
-          <ExerciseView
-            exercise={exercise}
-            selectedOption={selectedOption}
-            showFeedback={showFeedback}
-            onOptionSelect={onOptionSelect}
-            onContinue={onContinue}
-          />
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Generando ejercicio...</p>
+            </div>
+          ) : (
+            <ExerciseView
+              exercise={exercise}
+              selectedOption={selectedOption}
+              showFeedback={showFeedback}
+              onOptionSelect={onOptionSelect}
+              onContinue={onContinue}
+            />
+          )}
         </div>
       </CardContent>
     </Card>
   );
-};
+}

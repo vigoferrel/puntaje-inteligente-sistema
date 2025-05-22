@@ -2,99 +2,76 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
-interface OpenRouterServiceOptions {
+interface OpenRouterRequest {
   action: string;
   payload: any;
 }
 
 /**
- * Función principal del servicio OpenRouter con manejo mejorado de errores
+ * Servicio central para llamar a las Edge Functions de OpenRouter
  */
-export const openRouterService = async <T>({ action, payload }: OpenRouterServiceOptions): Promise<T | null> => {
+export const openRouterService = async <T>(request: OpenRouterRequest): Promise<T | null> => {
   try {
-    console.log(`Calling OpenRouter service with action: ${action}`);
-    console.log('Payload:', JSON.stringify(payload).substring(0, 200) + (JSON.stringify(payload).length > 200 ? '...' : ''));
+    console.log(`OpenRouter: Iniciando petición a ${request.action}`, { payload: request.payload });
     
-    const startTime = Date.now();
-    const { data, error } = await supabase.functions.invoke('openrouter-ai', {
+    // Mostrar un mensaje visual mientras carga si es una acción de duración considerable
+    if (['generate_exercise', 'generate_exercises_batch', 'generate_diagnostic'].includes(request.action)) {
+      toast({
+        title: "Generando contenido",
+        description: "Esto puede tomar unos segundos...",
+      });
+    }
+    
+    const { data, error } = await supabase.functions.invoke<T>('openrouter-ai', {
       body: {
-        action,
-        payload
+        action: request.action,
+        payload: request.payload,
+        requestId: crypto.randomUUID() // Para seguimiento
       }
     });
     
-    const responseTime = Date.now() - startTime;
-    console.log(`OpenRouter response received in ${responseTime}ms:`, data);
-    
     if (error) {
-      console.error('Supabase functions error:', error);
-      throw new Error(`Error en la función de Supabase: ${error.message}`);
+      console.error(`OpenRouter Error (${request.action}):`, error);
+      throw new Error(`Error en OpenRouter: ${error.message}`);
     }
     
     if (!data) {
-      console.error('No data received from OpenRouter');
-      throw new Error('No se recibieron datos desde OpenRouter');
+      console.error(`OpenRouter: No hay datos en la respuesta para ${request.action}`);
+      throw new Error('No se recibieron datos de la función');
     }
     
-    // Si hay metadatos, registrarlos para análisis de rendimiento
-    if (data.metadata && data.metadata.modelUsed) {
-      console.log(`Respuesta generada usando el modelo: ${data.metadata.modelUsed}`);
-    }
+    console.log(`OpenRouter: Respuesta exitosa de ${request.action}`, data);
+    return data;
     
-    // Si hay un error pero también hay una respuesta de fallback, usamos esa respuesta
-    if (data.error) {
-      console.error('OpenRouter error:', data.error);
-      
-      // Si tenemos una respuesta de fallback, la usamos
-      if (data.result) {
-        console.log('Using result from error response:', data.result);
-        return data.result as T;
+  } catch (error) {
+    console.error('OpenRouter Service Error:', error);
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    throw new Error(`Error al contactar el servicio de IA: ${message}`);
+  }
+};
+
+/**
+ * Función específica para procesar imágenes a través de OpenRouter
+ */
+export const processImageWithOpenRouter = async (
+  imageData: string,
+  prompt?: string,
+  context?: string
+): Promise<any> => {
+  try {
+    console.log('OpenRouter: Procesando imagen');
+    const response = await openRouterService({
+      action: 'process_image',
+      payload: {
+        image: imageData,
+        prompt: prompt || "Describe esta imagen en detalle",
+        context: context
       }
-      
-      throw new Error(`Error de OpenRouter: ${data.error}`);
-    }
+    });
     
-    if (data && data.result) {
-      return data.result as T;
-    }
-    
-    // No result found in response
-    console.warn('No result found in OpenRouter response');
-    return null;
-  } catch (err) {
-    const message = err instanceof Error 
-      ? err.message 
-      : 'Error en la solicitud a OpenRouter';
-    
-    console.error('Error in OpenRouter service:', err);
-    
-    // Only show toast for user-initiated actions, not background tasks
-    if (!payload.suppressToast) {
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive"
-      });
-    }
-    
-    // Implement basic retry logic for transient errors
-    if (payload.retry && payload.retryCount < 3 && 
-        (message.includes('timeout') || message.includes('rate limit'))) {
-      console.log(`Retrying request (${payload.retryCount + 1}/3)...`);
-      
-      // Wait before retrying with exponential backoff
-      const backoff = Math.pow(2, payload.retryCount) * 1000;
-      await new Promise(resolve => setTimeout(resolve, backoff));
-      
-      return openRouterService<T>({
-        action,
-        payload: {
-          ...payload,
-          retryCount: (payload.retryCount || 0) + 1
-        }
-      });
-    }
-    
-    return null;
+    return response;
+  } catch (error) {
+    console.error('Error al procesar imagen con OpenRouter:', error);
+    throw error;
   }
 };

@@ -5,9 +5,11 @@ import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 import { useLectoGuiaExercise } from '@/hooks/use-lectoguia-exercise';
 import { useLectoGuiaSession } from '@/hooks/use-lectoguia-session';
 import { TPAESHabilidad } from '@/types/system-types';
+import { toast } from '@/components/ui/use-toast';
 
 /**
  * Hook para gestionar el flujo de ejercicios en LectoGuia
+ * Con mejor manejo de errores y feedback visual
  */
 export function useExerciseFlow(
   activeSubject: string,
@@ -15,13 +17,16 @@ export function useExerciseFlow(
 ) {
   const { addAssistantMessage } = useLectoGuiaChat();
   const { saveExerciseAttempt } = useLectoGuiaSession();
+  const [isGenerating, setIsGenerating] = useState(false);
+  
   const {
     currentExercise,
     selectedOption,
     showFeedback,
     generateExercise,
     resetExercise,
-    handleOptionSelect: selectOption
+    handleOptionSelect: selectOption,
+    isLoading
   } = useLectoGuiaExercise();
   
   // Mapeo de materias a habilidades
@@ -33,23 +38,61 @@ export function useExerciseFlow(
     'general': 'INTERPRET_RELATE'
   };
   
-  // Generar un ejercicio según la materia actual
+  // Generar un ejercicio según la materia actual con mejor manejo de errores
   const handleExerciseRequest = async () => {
-    const exercise = await generateExercise(skillMap[activeSubject]);
-    
-    if (exercise) {
-      setTimeout(() => setActiveTab("exercise"), 500);
+    try {
+      setIsGenerating(true);
       
-      // Agregar mensaje del asistente sobre el ejercicio generado
-      addAssistantMessage(
-        `He preparado un ejercicio de ${activeSubject === 'general' ? 'comprensión lectora' : activeSubject} para ti. ` +
-        `Es un ejercicio de dificultad ${exercise.difficulty || "intermedia"} que evalúa la habilidad de ` +
-        `${exercise.skill || "interpretación"}. Puedes resolverlo en la pestaña de Ejercicios.`
-      );
-      return true;
-    } else {
-      addAssistantMessage("Lo siento, no pude generar un ejercicio en este momento. Por favor, inténtalo más tarde.");
+      // Mostrar toast de carga
+      toast({
+        title: "Generando ejercicio",
+        description: "Estamos preparando un ejercicio para ti...",
+      });
+      
+      console.log(`Generando ejercicio para materia: ${activeSubject}, skill: ${skillMap[activeSubject]}`);
+      
+      const exercise = await generateExercise(skillMap[activeSubject]);
+      
+      if (exercise) {
+        setTimeout(() => setActiveTab("exercise"), 500);
+        
+        // Mensaje de éxito
+        toast({
+          title: "Ejercicio generado",
+          description: "Se ha creado un nuevo ejercicio para ti.",
+        });
+        
+        // Agregar mensaje del asistente sobre el ejercicio generado
+        addAssistantMessage(
+          `He preparado un ejercicio de ${activeSubject === 'general' ? 'comprensión lectora' : activeSubject} para ti. ` +
+          `Es un ejercicio de dificultad ${exercise.difficulty || "intermedia"} que evalúa la habilidad de ` +
+          `${exercise.skill || "interpretación"}. Puedes resolverlo en la pestaña de Ejercicios.`
+        );
+        return true;
+      } else {
+        // Mensaje de error específico para cuando no se pudo generar el ejercicio
+        toast({
+          title: "Error",
+          description: "No se pudo generar el ejercicio. Inténtalo de nuevo.",
+          variant: "destructive"
+        });
+        
+        addAssistantMessage("Lo siento, no pude generar un ejercicio en este momento. Por favor, inténtalo más tarde.");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error en handleExerciseRequest:", error);
+      
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al generar el ejercicio. Por favor intenta de nuevo.",
+        variant: "destructive"
+      });
+      
+      addAssistantMessage("Lo siento, ha ocurrido un error al intentar generar el ejercicio. Por favor, inténtalo de nuevo más tarde.");
       return false;
+    } finally {
+      setIsGenerating(false);
     }
   };
   
@@ -91,6 +134,7 @@ export function useExerciseFlow(
     handleExerciseRequest,
     handleOptionSelect,
     handleNewExercise,
-    skillMap
+    skillMap,
+    isLoading: isLoading || isGenerating
   };
 }

@@ -9,17 +9,42 @@ export function useOpenRouter() {
   const [loading, setLoading] = useState(false);
 
   /**
-   * Generic function to call the OpenRouter service
+   * Generic function to call the OpenRouter service with improved logging
    */
   const callOpenRouter = async <T,>(action: string, payload: any): Promise<T | null> => {
     try {
       setLoading(true);
-      console.log(`useOpenRouter: calling ${action} with payload`, payload);
+      console.log(`useOpenRouter: llamando a ${action}`, payload);
+      
+      // Validar payload antes de enviar
+      if (!payload) {
+        throw new Error("Payload es requerido");
+      }
+      
+      // Si estamos llamando a generate_exercise, asegurarnos que los parámetros sean válidos
+      if (action === "generate_exercise") {
+        if (!payload.skill) {
+          console.warn("Advertencia: 'skill' no especificada en generate_exercise");
+        }
+        if (!payload.prueba) {
+          console.warn("Advertencia: 'prueba' no especificada en generate_exercise");
+        }
+      }
+      
       const result = await openRouterService<T>({ action, payload });
+      
+      console.log(`useOpenRouter: respuesta de ${action}`, result);
+      
+      if (!result) {
+        throw new Error(`No se recibió respuesta para la acción ${action}`);
+      }
+      
       return result;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error en la solicitud a OpenRouter';
-      console.error('useOpenRouter error:', message);
+      console.error('useOpenRouter error:', error);
+      console.error('Detalles del error:', { action, payload });
+      
       toast({
         title: "Error",
         description: message,
@@ -38,7 +63,7 @@ export function useOpenRouter() {
     try {
       setLoading(true);
       
-      console.log('useOpenRouter: processing image with prompt:', prompt);
+      console.log('useOpenRouter: procesando imagen con prompt:', prompt);
       
       // Process the image and get the result
       const result = await processImageWithOpenRouter(imageData, prompt, context);

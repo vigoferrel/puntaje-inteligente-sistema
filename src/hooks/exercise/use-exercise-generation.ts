@@ -2,15 +2,17 @@
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Exercise } from '@/types/ai-types';
-import { TPAESHabilidad } from '@/types/system-types';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { TLearningNode } from '@/types/lectoguia-types';
 import { useOpenRouter } from '@/hooks/use-openrouter';
+import { toast } from '@/components/ui/use-toast';
 
 /**
  * Hook para manejar la generación de ejercicios
  */
 export function useExerciseGeneration() {
   const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { callOpenRouter } = useOpenRouter();
   
   // Generar un ejercicio básico
@@ -19,17 +21,24 @@ export function useExerciseGeneration() {
     difficulty: string = "INTERMEDIATE"
   ): Promise<Exercise | null> => {
     try {
-      // Generar un ejercicio usando OpenRouter
+      setIsLoading(true);
+      console.log(`Generando ejercicio para skill: ${skill}, dificultad: ${difficulty}`);
+      
+      // CORRECCIÓN: Usar el valor correcto del enum TPAESPrueba
+      const prueba: TPAESPrueba = "COMPETENCIA_LECTORA";
+      
+      // Generar un ejercicio usando OpenRouter con el valor correcto de prueba
+      console.log("Llamando a OpenRouter con params:", { skill, prueba, difficulty });
       const exercise = await callOpenRouter<Exercise>("generate_exercise", {
         skill,
-        prueba: "COMPREHENSION_LECTORA",
+        prueba: prueba, // Aseguramos usar el valor correcto del enum
         difficulty,
         previousExercises: [],
-        includeVisualContent: true // Solicitar contenido visual si es posible
+        includeVisualContent: true
       });
 
       if (exercise) {
-        console.log("Ejercicio generado:", exercise);
+        console.log("Ejercicio generado con éxito:", exercise);
         
         // Crear un objeto de ejercicio a partir de la respuesta
         const generatedExercise: Exercise = {
@@ -46,7 +55,6 @@ export function useExerciseGeneration() {
           explanation: exercise.explanation || "No se proporcionó explicación.",
           skill: exercise.skill || skill,
           difficulty: exercise.difficulty || difficulty,
-          // Propiedades relacionadas con contenido visual
           imageUrl: exercise.imageUrl || undefined,
           graphData: exercise.graphData || undefined,
           visualType: exercise.visualType,
@@ -56,28 +64,44 @@ export function useExerciseGeneration() {
         // Actualizar estado del ejercicio
         setCurrentExercise(generatedExercise);
         return generatedExercise;
+      } else {
+        console.error("La respuesta de OpenRouter no contiene datos de ejercicio");
+        toast({
+          title: "Error",
+          description: "No se pudo generar el ejercicio. La respuesta está vacía.",
+          variant: "destructive"
+        });
+        return null;
       }
-      return null;
     } catch (error) {
       console.error("Error al generar ejercicio:", error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al generar el ejercicio. Por favor intenta de nuevo.",
+        variant: "destructive"
+      });
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
   
   // Generar un ejercicio basado en un nodo de aprendizaje específico
   const generateExerciseForNode = async (node: TLearningNode): Promise<Exercise | null> => {
     try {
+      setIsLoading(true);
       // Obtener datos del nodo para generar un ejercicio más contextualizado
       const skill = node.skill;
       const difficulty = node.difficulty.toUpperCase();
+      // CORRECCIÓN: Asegurarse que prueba sea del tipo correcto TPAESPrueba
       const prueba = node.prueba;
       
-      console.log(`Generando ejercicio para nodo: ${node.id}, skill: ${skill}, dificultad: ${difficulty}`);
+      console.log(`Generando ejercicio para nodo: ${node.id}, skill: ${skill}, prueba: ${prueba}, dificultad: ${difficulty}`);
       
-      // Generar un ejercicio usando OpenRouter con contexto del nodo
+      // Generar un ejercicio usando OpenRouter con contexto del nodo y el valor correcto de prueba
       const exercise = await callOpenRouter<Exercise>("generate_exercise", {
         skill,
-        prueba,
+        prueba, // Usar el valor directamente del nodo
         difficulty,
         nodeContext: {
           title: node.title,
@@ -85,7 +109,7 @@ export function useExerciseGeneration() {
           position: node.position
         },
         previousExercises: [],
-        includeVisualContent: true // Solicitar contenido visual si es relevante para este nodo
+        includeVisualContent: true
       });
 
       if (exercise) {
@@ -107,7 +131,6 @@ export function useExerciseGeneration() {
           skill: skill,
           difficulty: difficulty,
           nodeId: node.id,
-          // Propiedades relacionadas con contenido visual
           imageUrl: exercise.imageUrl || undefined,
           graphData: exercise.graphData || undefined,
           visualType: exercise.visualType,
@@ -117,11 +140,25 @@ export function useExerciseGeneration() {
         // Actualizar estado del ejercicio
         setCurrentExercise(generatedExercise);
         return generatedExercise;
+      } else {
+        console.error("La respuesta de OpenRouter para el nodo no contiene datos de ejercicio");
+        toast({
+          title: "Error",
+          description: "No se pudo generar el ejercicio para este nodo. La respuesta está vacía.",
+          variant: "destructive"
+        });
+        return null;
       }
-      return null;
     } catch (error) {
       console.error("Error al generar ejercicio para nodo:", error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al generar el ejercicio para este nodo. Por favor intenta de nuevo.",
+        variant: "destructive"
+      });
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -129,6 +166,7 @@ export function useExerciseGeneration() {
     currentExercise,
     setCurrentExercise,
     generateExercise,
-    generateExerciseForNode
+    generateExerciseForNode,
+    isLoading
   };
 }

@@ -24,7 +24,8 @@ const LectoGuia = () => {
     handleNewExercise,
     handleStartSimulation,
     skillLevels,
-    handleNodeSelect
+    handleNodeSelect,
+    isLoading
   } = useLectoGuia();
 
   return (
@@ -47,6 +48,7 @@ const LectoGuia = () => {
               showFeedback={showFeedback}
               onOptionSelect={handleExerciseOptionSelect}
               onContinue={handleNewExercise}
+              isLoading={isLoading}
               skillLevels={skillLevels}
               onStartSimulation={handleStartSimulation}
               onNodeSelect={handleNodeSelect}

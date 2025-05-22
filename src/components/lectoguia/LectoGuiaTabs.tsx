@@ -23,6 +23,7 @@ interface LectoGuiaTabsProps {
   showFeedback: boolean;
   onOptionSelect: (index: number) => void;
   onContinue: () => void;
+  isLoading?: boolean;
   // Progress props
   skillLevels: Record<LectoGuiaSkill, number>;
   onStartSimulation: () => void;
@@ -43,6 +44,7 @@ export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
   showFeedback,
   onOptionSelect,
   onContinue,
+  isLoading = false,
   skillLevels,
   onStartSimulation,
   onNodeSelect
@@ -81,6 +83,7 @@ export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
             showFeedback={showFeedback}
             onOptionSelect={onOptionSelect}
             onContinue={onContinue}
+            isLoading={isLoading}
           />
         </TabsContent>
 
