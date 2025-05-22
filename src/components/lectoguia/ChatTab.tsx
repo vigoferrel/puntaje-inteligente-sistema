@@ -68,7 +68,8 @@ export const ChatTab: React.FC<ChatTabProps> = ({
     
     breadcrumbItems.push({
       label: subjectNames[activeSubject] || activeSubject,
-      active: true
+      active: true,
+      onClick: () => {} // Añadimos la propiedad onClick que faltaba
     });
   }
   
