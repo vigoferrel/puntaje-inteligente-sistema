@@ -5,19 +5,18 @@
 
 // Export types from paes-types.ts
 export {
-  TPAESPrueba,
-  TPAESHabilidad,
   getPruebaDisplayName,
   getHabilidadDisplayName
 } from './paes-types';
+export type { TPAESPrueba, TPAESHabilidad } from './paes-types';
 
 // Export types from learning-cycle-types.ts
 export {
-  TLearningCyclePhase,
   LEARNING_CYCLE_PHASES_ORDER,
   getLearningCyclePhaseDisplayName,
   getLearningCyclePhaseDescription
 } from './learning-cycle-types';
+export type { TLearningCyclePhase } from './learning-cycle-types';
 
 // Export types from learning-node-types.ts
-export { TLearningNode } from './learning-node-types';
+export type { TLearningNode } from './learning-node-types';
