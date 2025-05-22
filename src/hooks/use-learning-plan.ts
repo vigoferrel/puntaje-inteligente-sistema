@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLearningPlanContext } from '@/contexts/LearningPlanContext';
+import { useLearningPlanContext } from '@/contexts/learning-plan';
 
 export const useLearningPlan = () => {
   const { profile } = useAuth();
