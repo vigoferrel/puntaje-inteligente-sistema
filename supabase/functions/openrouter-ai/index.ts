@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
 import { 
@@ -50,7 +51,7 @@ serve(async (req) => {
         status: serviceHealthy ? 'healthy' : 'degraded',
         uptime: `${uptime} segundos`,
         metrics,
-        version: '3.1.0', // Versión actualizada para cascada con GPT-4.1-mini
+        version: '3.2.0', // Versión actualizada 
         model: 'google/gemini-2.5-flash-preview',
         fallback_models: ['google/gemini-2.0-flash-exp:free', 'openai/gpt-4.1-mini']
       }), {
@@ -61,13 +62,47 @@ serve(async (req) => {
         }
       });
     }
+
+    // Endpoint de verificación de disponibilidad (usada por el cliente para comprobar si el servicio está activo)
+    if (url.pathname.endsWith('/health_check')) {
+      return new Response(JSON.stringify({
+        success: true,
+        result: { status: 'available', timestamp: new Date().toISOString() }
+      }), {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
     
-    const requestBody = await req.json();
+    // Para peticiones POST normales, procesar según la acción
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      MonitoringService.error('Error al analizar el cuerpo de la solicitud JSON:', parseError);
+      return new Response(JSON.stringify({ 
+        error: 'Formato de solicitud inválido', 
+        success: false 
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
     const { action, payload, requestId } = requestBody;
 
     if (!action) {
       MonitoringService.warn('Request sin acción especificada');
-      return new Response(JSON.stringify({ error: 'Acción no especificada' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Acción no especificada',
+        success: false
+      }), {
         status: 400,
         headers: {
           ...corsHeaders,
@@ -86,6 +121,15 @@ serve(async (req) => {
     
     try {
       switch (action) {
+        case 'health_check':
+          response = {
+            success: true,
+            result: {
+              status: 'available',
+              timestamp: new Date().toISOString()
+            }
+          };
+          break;
         case 'generate_exercise':
           response = await generateExercise(payload);
           break;
@@ -107,7 +151,8 @@ serve(async (req) => {
         default:
           response = {
             error: `Acción desconocida: ${action}`,
-            status: 400
+            status: 400,
+            success: false
           };
       }
       
@@ -123,7 +168,8 @@ serve(async (req) => {
       MonitoringService.error(`Error executing action ${action} after ${actionDuration}ms:`, handlerError);
       response = {
         error: `Error ejecutando acción ${action}: ${handlerError.message}`,
-        status: 500
+        status: 500,
+        success: false
       };
       
       // Si hay muchos errores consecutivos, marcar el servicio como degradado
@@ -141,7 +187,7 @@ serve(async (req) => {
       }
     });
   } catch (error) {
-    MonitoringService.error(`Error en edge function:`, error);
+    MonitoringService.error(`Error crítico en edge function:`, error);
     
     // Marcar el servicio como degradado si hay error crítico
     serviceHealthy = false;
@@ -149,6 +195,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: `Error en edge function: ${error.message}`,
+        success: false,
         result: {
           response: "Lo siento, hubo un error procesando tu solicitud. Por favor intenta de nuevo."
         }

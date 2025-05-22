@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useOpenRouter } from '@/hooks/use-openrouter';
 import { toast } from '@/components/ui/use-toast';
 import { useChatMessages } from './use-chat-messages';
@@ -17,11 +17,26 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   const { isProcessing, handleImageProcessing } = useImageProcessing();
   
   // API communication
-  const { callOpenRouter } = useOpenRouter();
+  const { callOpenRouter, lastError, retryLastOperation } = useOpenRouter();
   
   // Local state
   const [isTyping, setIsTyping] = useState(false);
   const [activeSubject, setActiveSubject] = useState('general');
+  const [consecutiveErrors, setConsecutiveErrors] = useState(0);
+  
+  // Efecto para mostrar un mensaje de error persistente si hay demasiados errores consecutivos
+  useEffect(() => {
+    if (consecutiveErrors >= 3) {
+      toast({
+        title: "Problemas de conexión persistentes",
+        description: "Estamos experimentando dificultades técnicas. Por favor, intenta de nuevo más tarde.",
+        variant: "destructive",
+        duration: 10000
+      });
+      // Resetear contador después de mostrar el mensaje
+      setConsecutiveErrors(0);
+    }
+  }, [consecutiveErrors]);
   
   /**
    * Change the active subject for the chat
@@ -50,6 +65,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       if (imageData) {
         const response = await handleImageProcessing(imageData, message);
         addAssistantMessage(response);
+        setConsecutiveErrors(0); // Resetear contador de errores si hay éxito
         return response;
       } 
       
@@ -61,26 +77,81 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       
       // Request response directly from feedback service with mejor manejo de errores
       console.log('Enviando mensaje al servicio de feedback con contexto:', activeSubject);
-      const responseData = await provideChatFeedback(
-        message,
-        `PAES preparation, subject: ${activeSubject}, full platform assistance`,
-        getRecentMessages(6)
-      );
-      
-      // Caso especial: si no hay respuesta pero no es un error crítico
-      if (!responseData) {
-        console.log('No se recibió respuesta del servicio, utilizando respuesta de respaldo');
-        const fallbackContent = "Lo siento, en este momento no puedo acceder a toda mi información. ¿Puedo ayudarte con algo más básico sobre el tema?";
-        addAssistantMessage(fallbackContent);
-        return fallbackContent;
+      try {
+        const responseData = await provideChatFeedback(
+          message,
+          `PAES preparation, subject: ${activeSubject}, full platform assistance`,
+          getRecentMessages(6)
+        );
+        
+        // Caso especial: si no hay respuesta pero no es un error crítico
+        if (!responseData) {
+          console.log('No se recibió respuesta del servicio, utilizando respuesta de respaldo');
+          const fallbackContent = "Lo siento, en este momento no puedo acceder a toda mi información. ¿Puedo ayudarte con algo más básico sobre el tema?";
+          addAssistantMessage(fallbackContent);
+          
+          // Incrementar contador de errores
+          setConsecutiveErrors(prev => prev + 1);
+          
+          return fallbackContent;
+        }
+        
+        console.log('Respuesta procesada:', responseData);
+        
+        // Añadir la respuesta al chat
+        addAssistantMessage(responseData);
+        setConsecutiveErrors(0); // Resetear contador de errores si hay éxito
+        return responseData;
+      } catch (serviceError) {
+        console.error("Error al comunicarse con el servicio:", serviceError);
+        
+        // Incrementar contador de errores
+        setConsecutiveErrors(prev => prev + 1);
+        
+        // Intentar reintentar automáticamente si es el primer o segundo error
+        if (consecutiveErrors < 2) {
+          toast({
+            title: "Reintentando conexión",
+            description: "Estamos intentando restablecer la comunicación...",
+          });
+          
+          // Añadir un pequeño retraso antes de reintentar
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          try {
+            const retryResponse = await provideChatFeedback(
+              message,
+              `PAES preparation, subject: ${activeSubject}, retry attempt`,
+              getRecentMessages(2) // Usar menos contexto en el reintento
+            );
+            
+            if (retryResponse) {
+              addAssistantMessage(retryResponse);
+              setConsecutiveErrors(0); // Resetear contador si el reintento tiene éxito
+              return retryResponse;
+            }
+          } catch (retryError) {
+            console.error("Error en reintento:", retryError);
+          }
+        }
+        
+        // Si todo falla, enviar un mensaje de error comprensible para el usuario
+        const errorResponse = "Lo siento, estoy teniendo problemas para conectarme. Por favor, intenta de nuevo en unos momentos.";
+        addAssistantMessage(errorResponse);
+        
+        toast({
+          title: "Error de conexión",
+          description: "Hubo un problema al conectar con el servicio. Inténtalo de nuevo.",
+          variant: "destructive",
+          action: (
+            <button onClick={retryLastOperation} className="px-3 py-2 rounded bg-primary text-primary-foreground text-xs">
+              Reintentar
+            </button>
+          )
+        });
+        
+        return errorResponse;
       }
-      
-      console.log('Respuesta procesada:', responseData);
-      
-      // Añadir la respuesta al chat
-      addAssistantMessage(responseData);
-      return responseData;
-      
     } catch (error) {
       // Handle errors with improved error reporting
       console.error('Error procesando mensaje:', error);
@@ -91,6 +162,9 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         : "Hubo un problema al procesar tu mensaje.";
       
       addAssistantMessage(errorContent);
+      
+      // Incrementar contador de errores
+      setConsecutiveErrors(prev => prev + 1);
       
       // Notificar al usuario sobre el problema
       toast({

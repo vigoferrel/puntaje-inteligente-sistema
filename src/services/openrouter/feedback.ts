@@ -13,29 +13,60 @@ export const provideExerciseFeedback = async (
   try {
     console.log('Solicitando feedback para respuesta:', exerciseAttempt);
     
-    const result = await openRouterService<AIFeedback>({
-      action: "provide_exercise_feedback",
-      payload: {
-        exerciseAttempt,
-        correctAnswer,
-        explanation,
-        requestedAt: new Date().toISOString()
+    // Implementar reintentos automáticos para mejorar la fiabilidad
+    let attempts = 0;
+    const maxAttempts = 2;
+    let result = null;
+    
+    while (attempts < maxAttempts && result === null) {
+      try {
+        result = await openRouterService<AIFeedback>({
+          action: "provide_exercise_feedback",
+          payload: {
+            exerciseAttempt,
+            correctAnswer,
+            explanation,
+            requestedAt: new Date().toISOString()
+          }
+        });
+        
+        if (!result) {
+          console.log(`Intento ${attempts + 1} fallido, reintentando...`);
+          attempts++;
+          
+          if (attempts < maxAttempts) {
+            // Esperar un poco antes de reintentar (retroceso exponencial)
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
+          }
+        }
+      } catch (attemptError) {
+        console.error(`Error en intento ${attempts + 1}:`, attemptError);
+        attempts++;
+        
+        if (attempts < maxAttempts) {
+          // Esperar un poco antes de reintentar
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
+        } else {
+          throw attemptError; // Relanzar el último error si agotamos los intentos
+        }
       }
-    });
+    }
     
     if (!result) {
-      throw new Error("No se recibió respuesta del servicio de feedback");
+      throw new Error("No se recibió respuesta del servicio de feedback después de múltiples intentos");
     }
     
     console.log('Feedback recibido:', result);
     return result;
   } catch (error) {
     console.error('Error al obtener feedback de ejercicio:', error);
-    // Return a valid AIFeedback object without the errorMessage property
+    // Return a valid AIFeedback object with the error information in the explanation
     return {
       isCorrect: false,
       feedback: "Lo siento, no pude evaluar tu respuesta. Por favor intenta de nuevo más tarde.",
-      explanation: error instanceof Error ? `Error: ${error.message}` : "Error desconocido al procesar la respuesta",
+      explanation: error instanceof Error 
+        ? `Error: ${error.message}` 
+        : "Error desconocido al procesar la respuesta",
       tips: ["Intenta de nuevo más tarde", "Verifica tu conexión a internet"]
     };
   }
@@ -53,20 +84,47 @@ export const provideChatFeedback = async (
   try {
     console.log('Solicitando respuesta para mensaje:', userMessage);
     
-    const result = await openRouterService<any>({
-      action: "provide_feedback",
-      payload: {
-        userMessage,
-        context: context || "general assistance",
-        previousMessages: previousMessages || [],
-        timestamp: new Date().toISOString() // Añadir timestamp para evitar respuestas en caché
-      }
-    });
+    // Implementar sistema de reintentos
+    let attempts = 0;
+    const maxAttempts = 2;
+    let result = null;
     
-    // Si no hay respuesta, devolver mensaje de error controlado
+    while (attempts < maxAttempts && result === null) {
+      try {
+        result = await openRouterService<any>({
+          action: "provide_feedback",
+          payload: {
+            userMessage,
+            context: context || "general assistance",
+            previousMessages: previousMessages || [],
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+        if (!result) {
+          console.log(`Intento ${attempts + 1} fallido, reintentando...`);
+          attempts++;
+          
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
+          }
+        }
+      } catch (attemptError) {
+        console.error(`Error en intento ${attempts + 1}:`, attemptError);
+        attempts++;
+        
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
+        } else {
+          throw attemptError;
+        }
+      }
+    }
+    
+    // Si después de todos los intentos no hay respuesta
     if (!result) {
-      console.log('No se recibió respuesta del servicio');
-      return "Lo siento, estoy teniendo problemas para conectarme al servicio en este momento. ¿Podrías intentarlo de nuevo?";
+      console.log('No se recibió respuesta del servicio después de múltiples intentos');
+      return "Lo siento, estoy teniendo problemas para conectarme al servicio en este momento. ¿Podrías intentarlo de nuevo en unos momentos?";
     }
     
     console.log('Respuesta recibida del servicio:', typeof result, result);

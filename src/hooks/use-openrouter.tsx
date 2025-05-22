@@ -10,6 +10,22 @@ const API_TIMEOUT = 25000;
 
 export function useOpenRouter() {
   const [loading, setLoading] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
+
+  // Función para verificar si la función está disponible
+  const checkFunctionAvailability = async (): Promise<boolean> => {
+    try {
+      // Realizar una solicitud simple para verificar si la función responde
+      const result = await openRouterService({
+        action: "health_check",
+        payload: { timestamp: new Date().toISOString() }
+      });
+      return result !== null;
+    } catch (error) {
+      console.error("Error verificando disponibilidad de la función:", error);
+      return false;
+    }
+  };
 
   /**
    * Generic function to call the OpenRouter service with improved logging and timeout handling
@@ -17,10 +33,12 @@ export function useOpenRouter() {
   const callOpenRouter = async <T,>(action: string, payload: any): Promise<T | null> => {
     try {
       setLoading(true);
+      setLastError(null);
       console.log(`useOpenRouter: llamando a ${action}`, payload);
       
       if (!payload) {
         console.error("Error: Payload es requerido");
+        setLastError("Payload es requerido");
         throw new Error("Payload es requerido");
       }
       
@@ -32,6 +50,19 @@ export function useOpenRouter() {
         if (!payload.prueba) {
           console.warn("Advertencia: 'prueba' no especificada en generate_exercise");
         }
+      }
+      
+      // Verificar disponibilidad de la función antes de continuar
+      const isAvailable = await checkFunctionAvailability();
+      if (!isAvailable) {
+        console.error("La función OpenRouter no está disponible actualmente");
+        toast({
+          title: "Servicio no disponible",
+          description: "El servicio de IA no está disponible en este momento. Por favor, inténtalo más tarde.",
+          variant: "destructive"
+        });
+        setLastError("Servicio no disponible");
+        return null;
       }
       
       // Crear la promesa para la llamada al servicio
@@ -48,6 +79,7 @@ export function useOpenRouter() {
       console.log(`useOpenRouter: respuesta de ${action}`, result);
       
       if (!result) {
+        setLastError("No se recibió respuesta");
         throw new Error(`No se recibió respuesta para la acción ${action}`);
       }
       
@@ -59,6 +91,8 @@ export function useOpenRouter() {
       
       console.error('useOpenRouter error:', error);
       console.error('Detalles del error:', { action, payloadType: typeof payload });
+      
+      setLastError(message);
       
       // Mostrar mensaje de error apropiado según el tipo de error
       toast({
@@ -81,11 +115,28 @@ export function useOpenRouter() {
   const processImage = async (imageData: string, prompt?: string, context?: string): Promise<ImageAnalysisResult | null> => {
     try {
       setLoading(true);
+      setLastError(null);
       
       console.log('useOpenRouter: procesando imagen con prompt:', prompt);
       
       if (!imageData || imageData.length < 100) {
+        setLastError("Datos de imagen inválidos");
         throw new Error('Datos de imagen inválidos o incompletos');
+      }
+      
+      // Verificar disponibilidad de la función antes de continuar
+      const isAvailable = await checkFunctionAvailability();
+      if (!isAvailable) {
+        console.error("La función OpenRouter no está disponible para procesar imágenes");
+        toast({
+          title: "Servicio no disponible",
+          description: "El servicio de análisis de imágenes no está disponible. Inténtalo más tarde.",
+          variant: "destructive"
+        });
+        setLastError("Servicio de procesamiento de imágenes no disponible");
+        return { 
+          response: "El servicio de análisis de imágenes no está disponible en este momento. Por favor, inténtalo más tarde." 
+        };
       }
       
       // Process the image and get the result
@@ -94,6 +145,7 @@ export function useOpenRouter() {
       // If null result, return formatted error
       if (!result) {
         console.log('useOpenRouter: resultado nulo de processImageWithOpenRouter');
+        setLastError("No se pudo analizar la imagen");
         return { response: "No se pudo analizar la imagen. Intenta con una imagen de mejor calidad." };
       }
       
@@ -119,6 +171,8 @@ export function useOpenRouter() {
       const message = error instanceof Error ? error.message : 'Error procesando la imagen';
       console.error('useOpenRouter processImage error:', message);
       
+      setLastError(message);
+      
       toast({
         title: "Error en procesamiento de imagen",
         description: message,
@@ -133,9 +187,19 @@ export function useOpenRouter() {
     }
   };
 
+  const retryLastOperation = () => {
+    setLastError(null);
+    toast({
+      title: "Reintentando operación",
+      description: "Intentando conectar nuevamente con el servicio...",
+    });
+  };
+
   return {
     callOpenRouter,
     processImage,
-    loading
+    loading,
+    lastError,
+    retryLastOperation
   };
 }
