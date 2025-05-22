@@ -75,7 +75,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         changeSubject(detectedSubject);
       }
       
-      // Request response directly from feedback service with mejor manejo de errores
+      // Request response directly from feedback service con mejor manejo de errores
       console.log('Enviando mensaje al servicio de feedback con contexto:', activeSubject);
       try {
         const responseData = await provideChatFeedback(
