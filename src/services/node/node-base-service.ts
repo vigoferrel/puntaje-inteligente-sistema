@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { TLearningNode } from "@/types/system-types";
-// Modificamos la importación para usar el archivo barril
+// Importamos desde el archivo barril para asegurar las exportaciones
 import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/mappers";
 
 /**
