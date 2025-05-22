@@ -28,7 +28,21 @@ export function useOpenRouter() {
   const processImage = async (imageData: string, prompt?: string, context?: string): Promise<ImageAnalysisResult | null> => {
     try {
       setLoading(true);
-      return await processImageWithOpenRouter(imageData, prompt, context);
+      // La función processImageWithOpenRouter debe devolver un objeto que incluya 'response'
+      const result = await processImageWithOpenRouter(imageData, prompt, context);
+      
+      // Si el resultado es null, aseguramos que retornemos null (no un objeto vacío)
+      if (!result) return null;
+      
+      // Si el resultado no tiene la propiedad 'response', la añadimos con un valor por defecto
+      if (!result.response) {
+        return {
+          ...result,
+          response: "No se pudo procesar correctamente la imagen."
+        } as ImageAnalysisResult;
+      }
+      
+      return result;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error procesando la imagen';
       toast({

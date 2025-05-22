@@ -1,20 +1,31 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { DiagnosticQuestion } from '@/types/diagnostic';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 
 export async function fetchQuestionById(questionId: string): Promise<DiagnosticQuestion | null> {
   try {
-    // Using the correct table name from the database
+    // Usamos la tabla correcta de diagnostic_tests y aceptamos que la respuesta sea transformada
     const { data, error } = await supabase
-      .from('diagnostic_questions')
-      .select('*')
+      .from('diagnostic_tests')
+      .select('*, questions:exercises(id, question, options, correct_answer, skill, prueba, explanation)')
       .eq('id', questionId)
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
-    if (!data) return null;
+    if (!data || !data.questions || !data.questions[0]) return null;
     
-    return data as DiagnosticQuestion;
+    // Mapear los datos al formato DiagnosticQuestion
+    const question = data.questions[0];
+    return {
+      id: question.id,
+      question: question.question,
+      options: Array.isArray(question.options) ? question.options : JSON.parse(question.options || '[]'),
+      correctAnswer: question.correct_answer,
+      skill: question.skill as TPAESHabilidad,
+      prueba: question.prueba as TPAESPrueba,
+      explanation: question.explanation
+    };
   } catch (error) {
     console.error('Error fetching question by ID:', error);
     return null;
@@ -29,31 +40,42 @@ export async function fetchQuestionsByIds(
       return [];
     }
     
-    // Using the correct table name from the database
+    // Usamos la tabla correcta exercises para obtener las preguntas
     const { data, error } = await supabase
-      .from('diagnostic_questions')
-      .select('*')
+      .from('exercises')
+      .select('id, question, options, correct_answer, skill, prueba, explanation')
       .in('id', questionIds);
 
     if (error) throw error;
     
-    return (data || []) as DiagnosticQuestion[];
+    if (!data) return [];
+    
+    // Transformar los datos al formato DiagnosticQuestion
+    return data.map(item => ({
+      id: item.id,
+      question: item.question,
+      options: Array.isArray(item.options) ? item.options : JSON.parse(item.options || '[]'),
+      correctAnswer: item.correct_answer,
+      skill: item.skill as TPAESHabilidad,
+      prueba: item.prueba as TPAESPrueba,
+      explanation: item.explanation
+    }));
   } catch (error) {
     console.error('Error fetching questions by IDs:', error);
     return [];
   }
 }
 
-// Add the missing exported function that was being imported by other files
+// Implementar la función que realmente se usa en otras partes del código
 export async function fetchDiagnosticQuestions(
   diagnosticId: string,
   testId: number
 ): Promise<DiagnosticQuestion[]> {
   try {
-    // Get questions for specific diagnostic test from the database
+    // Primero intentamos obtener preguntas para el diagnóstico específico
     const { data, error } = await supabase
-      .from('diagnostic_questions')
-      .select('*')
+      .from('exercises')
+      .select('id, question, options, correct_answer, skill, prueba, explanation')
       .eq('diagnostic_id', diagnosticId)
       .eq('prueba', testId)
       .order('id');
@@ -66,8 +88,8 @@ export async function fetchDiagnosticQuestions(
     if (!data || data.length === 0) {
       // Fallback: fetch questions just by test ID if none found for specific diagnostic
       const { data: fallbackData, error: fallbackError } = await supabase
-        .from('diagnostic_questions')
-        .select('*')
+        .from('exercises')
+        .select('id, question, options, correct_answer, skill, prueba, explanation')
         .eq('prueba', testId)
         .order('id');
         
@@ -76,10 +98,30 @@ export async function fetchDiagnosticQuestions(
         return [];
       }
       
-      return (fallbackData || []) as unknown as DiagnosticQuestion[];
+      if (!fallbackData) return [];
+      
+      // Transformar los datos al formato DiagnosticQuestion
+      return fallbackData.map(item => ({
+        id: item.id,
+        question: item.question,
+        options: Array.isArray(item.options) ? item.options : JSON.parse(item.options || '[]'),
+        correctAnswer: item.correct_answer,
+        skill: item.skill as TPAESHabilidad,
+        prueba: item.prueba as TPAESPrueba,
+        explanation: item.explanation
+      }));
     }
     
-    return data as unknown as DiagnosticQuestion[];
+    // Transformar los datos al formato DiagnosticQuestion
+    return data.map(item => ({
+      id: item.id,
+      question: item.question,
+      options: Array.isArray(item.options) ? item.options : JSON.parse(item.options || '[]'),
+      correctAnswer: item.correct_answer,
+      skill: item.skill as TPAESHabilidad,
+      prueba: item.prueba as TPAESPrueba,
+      explanation: item.explanation
+    }));
   } catch (error) {
     console.error('Error in fetchDiagnosticQuestions:', error);
     return [];
