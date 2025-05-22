@@ -9,8 +9,27 @@ import {
   provideFeedback, 
   processImage 
 } from "./handlers/action-handlers.ts";
+import { MonitoringService, LogLevel } from "./services/monitoring-service.ts";
+import { CacheService } from "./services/cache-service.ts";
 
 console.log("OpenRouter AI Edge Function Started");
+
+// Variable para el estado de salud del servicio
+let serviceHealthy = true;
+let startTime = Date.now();
+
+// Programar limpieza de caché cada 30 minutos
+const CACHE_CLEANUP_INTERVAL = 30 * 60 * 1000; // 30 minutos en ms
+setInterval(() => {
+  try {
+    const removedCount = CacheService.cleanExpired();
+    if (removedCount > 0) {
+      MonitoringService.info(`Limpieza de caché completada: ${removedCount} elementos eliminados`);
+    }
+  } catch (error) {
+    MonitoringService.error('Error en limpieza programada de caché:', error);
+  }
+}, CACHE_CLEANUP_INTERVAL);
 
 serve(async (req) => {
   // This is needed if you're planning to invoke your function from a browser.
@@ -19,9 +38,31 @@ serve(async (req) => {
   }
 
   try {
+    const url = new URL(req.url);
+    
+    // Endpoint de salud y estado
+    if (url.pathname.endsWith('/health') || url.pathname.endsWith('/status')) {
+      const uptime = Math.floor((Date.now() - startTime) / 1000);
+      const metrics = MonitoringService.getMetrics();
+      
+      return new Response(JSON.stringify({
+        status: serviceHealthy ? 'healthy' : 'degraded',
+        uptime: `${uptime} segundos`,
+        metrics,
+        version: '2.0.0'
+      }), {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
     const { action, payload } = await req.json();
 
     if (!action) {
+      MonitoringService.warn('Request sin acción especificada');
       return new Response(JSON.stringify({ error: 'Acción no especificada' }), {
         status: 400,
         headers: {
@@ -31,9 +72,11 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Processing action: ${action}`);
+    MonitoringService.info(`Processing action: ${action}`, { payloadSize: JSON.stringify(payload).length });
     
     let response;
+    const actionStartTime = Date.now();
+    
     try {
       switch (action) {
         case 'generate_exercise':
@@ -60,12 +103,26 @@ serve(async (req) => {
             status: 400
           };
       }
+      
+      const actionDuration = Date.now() - actionStartTime;
+      MonitoringService.info(`Action ${action} completed in ${actionDuration}ms`);
+      
+      // Si la respuesta fue exitosa, marcar el servicio como saludable
+      if (!response.error) {
+        serviceHealthy = true;
+      }
     } catch (handlerError) {
-      console.error(`Error executing action ${action}:`, handlerError);
+      const actionDuration = Date.now() - actionStartTime;
+      MonitoringService.error(`Error executing action ${action} after ${actionDuration}ms:`, handlerError);
       response = {
         error: `Error ejecutando acción ${action}: ${handlerError.message}`,
         status: 500
       };
+      
+      // Si hay muchos errores consecutivos, marcar el servicio como degradado
+      if (actionDuration > 10000) { // Si tarda más de 10 segundos
+        serviceHealthy = false;
+      }
     }
 
     const statusCode = response.status || (response.error ? 500 : 200);
@@ -77,7 +134,10 @@ serve(async (req) => {
       }
     });
   } catch (error) {
-    console.error(`Error en edge function:`, error);
+    MonitoringService.error(`Error en edge function:`, error);
+    
+    // Marcar el servicio como degradado si hay error crítico
+    serviceHealthy = false;
     
     return new Response(
       JSON.stringify({

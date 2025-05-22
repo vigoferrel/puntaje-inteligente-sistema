@@ -1,6 +1,7 @@
 
 import { config, MODELS } from "../config.ts";
 import { getOpenRouterHeaders, createErrorResponse, ServiceResult } from "./base-service.ts";
+import { handleApiError, processSuccessfulResponse } from "./error-handler.ts";
 
 /**
  * Intenta llamar a un modelo de OpenRouter con los prompts dados

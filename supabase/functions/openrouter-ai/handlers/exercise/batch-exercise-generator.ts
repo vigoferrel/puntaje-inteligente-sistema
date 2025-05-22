@@ -1,87 +1,198 @@
 
-import { callOpenRouter } from "../../services/openrouter-service.ts";
-import { createSuccessResponse, createErrorResponse } from "../../utils/response-utils.ts";
+import { callOpenRouter } from "../../services/model-service.ts";
+import { MonitoringService } from "../../services/monitoring-service.ts";
+import { CacheService } from "../../services/cache-service.ts";
+import { FallbackService, FallbackOperation } from "../../services/fallback-service.ts";
+import { extractJsonFromContent } from "../../utils/json-extractor.ts";
 
 /**
- * Genera un lote de ejercicios según los parámetros especificados
+ * Genera un lote de ejercicios utilizando IA
+ * Implementa sistemas de caché y proceso por lotes para optimizar rendimiento
  */
 export async function generateExercisesBatch(payload: any): Promise<any> {
+  const { skill, test, count = 3, difficulty = "MIXED" } = payload;
+  
+  // Iniciar métricas de rendimiento
+  const startTime = MonitoringService.startRequest();
+  MonitoringService.info(`Generando lote de ${count} ejercicios para skill: ${skill}, test: ${test}, dificultad: ${difficulty}`);
+  
   try {
-    const { nodeId, skill, testId, count, difficulty } = payload;
-    const batchSize = count && !isNaN(Number(count)) ? Number(count) : 5;
-    
-    // Validate required parameters
-    if (!skill) {
-      return createErrorResponse('Se requiere especificar una habilidad');
-    }
-    
-    const systemPrompt = `Eres un asistente educativo especializado en crear lotes de ejercicios para la preparación de la PAES.
-    Tu tarea es crear ${batchSize} ejercicios de alta calidad adaptados a las especificaciones solicitadas.
-    Cada ejercicio debe tener contexto, pregunta, opciones, respuesta correcta y explicación.
-    Tu ÚNICA respuesta debe ser un array JSON válido y bien formateado, sin texto adicional.
-    No utilices comillas simples dentro de las cadenas, utiliza comillas dobles escapadas.`;
-
-    const userPrompt = `Crea ${batchSize} ejercicios diferentes de práctica para la prueba con ID ${testId || 1} 
-    que evalúen la habilidad ${skill} con nivel de dificultad ${difficulty || 'MIXED'}.
-    
-    Cada ejercicio debe incluir:
-    1. Un contexto relevante y diferente para cada uno
-    2. Una pregunta clara que evalúe la habilidad especificada
-    3. Cuatro opciones de respuesta (A, B, C, D)
-    4. La respuesta correcta
-    5. Una explicación de por qué esa es la respuesta correcta
-    
-    Responde ÚNICAMENTE con un array JSON con este formato exacto:
-    [
-      { 
-        "id": "id-único-generado-1", 
-        "context": "texto o contexto 1", 
-        "question": "pregunta 1", 
-        "options": ["opción A", "opción B", "opción C", "opción D"], 
-        "correctAnswer": "opción correcta", 
-        "explanation": "explicación",
-        "skill": "${skill}",
-        "difficulty": "BASIC|INTERMEDIATE|ADVANCED"
-      },
-      ... resto de ejercicios
-    ]
-    
-    IMPORTANTE:
-    - No incluyas backticks (\`\`\`) al principio o final del JSON
-    - No escribas "json" ni ningún otro texto antes o después del array
-    - No incluyas comentarios ni explicaciones adicionales
-    - Asegúrate de escapar correctamente cualquier comilla dentro de las cadenas`;
-
-    console.log('Generating exercise batch with improved JSON format prompt');
-    const result = await callOpenRouter(systemPrompt, userPrompt);
-
-    if (result.error) {
-      console.error('Error generating exercise batch:', result.error);
-      return createErrorResponse(result.error, 500, result.fallbackResponse);
-    }
-    
-    // Asegurar que el resultado sea un array
-    let exercises = result.result;
-    if (!Array.isArray(exercises)) {
-      try {
-        if (typeof exercises === 'string') {
-          exercises = JSON.parse(exercises);
-        } else if (typeof exercises === 'object') {
-          exercises = [exercises];
-        }
-      } catch (e) {
-        console.error('Error parsing exercises array:', e);
-        exercises = [];
+    // Si la cantidad solicitada es pequeña (<=2), intentar usar ejercicios en caché
+    if (count <= 2) {
+      const cacheKey = CacheService.generateExerciseCacheKey(skill, test, difficulty);
+      const cachedExercises = CacheService.get(cacheKey);
+      
+      if (cachedExercises) {
+        MonitoringService.info(`Ejercicios recuperados de caché: ${cacheKey}`);
+        MonitoringService.endRequest(startTime, true);
+        return { result: Array.isArray(cachedExercises) ? cachedExercises : [cachedExercises] };
       }
     }
     
-    if (!Array.isArray(exercises)) {
-      return createErrorResponse('Formato de respuesta inválido', 500);
-    }
+    const systemPrompt = `Eres un asistente especializado en generar ejercicios educativos para la prueba PAES.
+    Debes crear ${count} ejercicios de dificultad ${difficulty} que evalúen la habilidad/competencia ${skill} 
+    para la prueba de tipo ${test}.
+    
+    Formatea tu respuesta como un array de objetos JSON con esta estructura exacta:
+    [
+      {
+        "question": "pregunta completa del primer ejercicio",
+        "options": ["opción 1", "opción 2", "opción 3", "opción 4"],
+        "correctAnswer": "opción correcta (texto exacto)",
+        "explanation": "explicación detallada",
+        "difficulty": "BASIC|INTERMEDIATE|ADVANCED",
+        "skill": "${skill}"
+      },
+      // Más ejercicios...
+    ]`;
 
-    return createSuccessResponse(exercises);
+    const userPrompt = `Genera ${count} ejercicios diferentes de dificultad ${difficulty} para evaluar la habilidad ${skill} 
+    en la prueba ${test}. Asegúrate de que sean ejercicios variados, contextualizados y que evalúen efectivamente la habilidad.
+    Si la dificultad es MIXED, crea ejercicios de diferentes niveles de dificultad.`;
+
+    const response = await callOpenRouter(systemPrompt, userPrompt);
+    
+    if (response.error) {
+      MonitoringService.error(`Error en la generación del lote de ejercicios:`, response.error);
+      
+      // Registrar fallo para modo degradado
+      const failureCount = FallbackService.recordFailure(FallbackOperation.GENERATE_EXERCISE);
+      if (failureCount >= 3) {
+        MonitoringService.warn(`Entrando en modo degradado para generación de ejercicios después de ${failureCount} fallos`);
+      }
+      
+      // Generar ejercicios de fallback
+      const fallbackExercises = generateFallbackExercises(count, skill, test, difficulty);
+      
+      MonitoringService.endRequest(startTime, false);
+      return {
+        error: response.error,
+        result: fallbackExercises
+      };
+    }
+    
+    // Procesar la respuesta
+    const exercises = processExercisesBatchResponse(response.result);
+    
+    // Guardar en caché si son válidos y son pocos (<=3)
+    if (exercises.length > 0 && exercises.length <= 3) {
+      const cacheKey = CacheService.generateExerciseCacheKey(skill, test, difficulty);
+      CacheService.set(cacheKey, exercises);
+      
+      // Restablecer contador de fallos
+      FallbackService.resetFailureCounter(FallbackOperation.GENERATE_EXERCISE);
+    }
+    
+    MonitoringService.endRequest(startTime, true);
+    return { result: exercises };
   } catch (error) {
-    console.error('Error in generateExercisesBatch handler:', error);
-    return createErrorResponse(`Error al generar lote de ejercicios: ${error.message}`, 500);
+    MonitoringService.logException(error, { skill, test, count, difficulty });
+    
+    // Generar ejercicios de fallback
+    const fallbackExercises = generateFallbackExercises(count, skill, test, difficulty);
+    
+    MonitoringService.endRequest(startTime, false);
+    return {
+      error: `Error inesperado: ${error instanceof Error ? error.message : 'Desconocido'}`,
+      result: fallbackExercises
+    };
   }
+}
+
+/**
+ * Procesa la respuesta del modelo y extrae los ejercicios
+ */
+function processExercisesBatchResponse(content: any): any[] {
+  // Si ya es un array, validarlo directamente
+  if (Array.isArray(content)) {
+    return content.map(validateExercise).filter(isValidExercise);
+  }
+  
+  // Si es un objeto pero no un array (un solo ejercicio)
+  if (typeof content === 'object' && content !== null) {
+    const validatedExercise = validateExercise(content);
+    return isValidExercise(validatedExercise) ? [validatedExercise] : [];
+  }
+  
+  // Si es un string, intentar extraer JSON
+  if (typeof content === 'string') {
+    try {
+      const extractedJson = extractJsonFromContent(content);
+      if (extractedJson) {
+        if (Array.isArray(extractedJson)) {
+          return extractedJson.map(validateExercise).filter(isValidExercise);
+        } else {
+          const validatedExercise = validateExercise(extractedJson);
+          return isValidExercise(validatedExercise) ? [validatedExercise] : [];
+        }
+      }
+    } catch (error) {
+      MonitoringService.error('Error al procesar respuesta de lote de ejercicios:', error);
+    }
+  }
+  
+  // Si llegamos aquí, la respuesta no es válida
+  return [];
+}
+
+/**
+ * Valida y sanitiza un ejercicio generado
+ */
+function validateExercise(exercise: any): any {
+  if (!exercise || typeof exercise.question !== 'string') {
+    return null;
+  }
+  
+  // Asegurar que options sea un array
+  const options = Array.isArray(exercise.options) ? 
+    exercise.options : 
+    typeof exercise.options === 'string' ? [exercise.options] : [];
+  
+  // Crear un ejercicio sanitizado
+  return {
+    id: exercise.id || `gen-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    question: exercise.question,
+    options: options.length >= 2 ? options : ['Opción A', 'Opción B'],
+    correctAnswer: exercise.correctAnswer || options[0] || 'Opción A',
+    explanation: exercise.explanation || 'No se proporcionó explicación para este ejercicio.',
+    difficulty: exercise.difficulty || 'INTERMEDIATE',
+    skill: exercise.skill || 'GENERAL'
+  };
+}
+
+/**
+ * Verifica si un ejercicio cumple con los requisitos mínimos
+ */
+function isValidExercise(exercise: any): boolean {
+  return exercise &&
+         typeof exercise.question === 'string' && 
+         Array.isArray(exercise.options) && 
+         exercise.options.length >= 2 &&
+         typeof exercise.correctAnswer === 'string';
+}
+
+/**
+ * Genera ejercicios de fallback cuando el servicio AI falla
+ */
+function generateFallbackExercises(count: number, skill: any, test: any, difficulty: string): any[] {
+  const exercises = [];
+  
+  for (let i = 0; i < count; i++) {
+    const fallbackExercise = FallbackService.generateFallback(
+      FallbackOperation.GENERATE_EXERCISE, 
+      { 
+        skillId: skill, 
+        testId: test, 
+        difficulty,
+        index: i 
+      }
+    );
+    
+    // Asegurarse de que cada ejercicio tenga un ID único
+    fallbackExercise.id = `fallback-${Date.now()}-${i}`;
+    
+    exercises.push(fallbackExercise);
+  }
+  
+  return exercises;
 }
