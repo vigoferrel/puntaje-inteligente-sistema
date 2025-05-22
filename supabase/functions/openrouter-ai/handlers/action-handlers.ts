@@ -58,6 +58,165 @@ export async function generateExercise(payload: any) {
 }
 
 /**
+ * Handler for the 'generate_exercises_batch' action
+ */
+export async function generateExercisesBatch(payload: any) {
+  try {
+    const { nodeId, skill, testId, count, difficulty } = payload;
+    const batchSize = count && !isNaN(Number(count)) ? Number(count) : 5;
+    
+    // Validate required parameters
+    if (!skill) {
+      return createErrorResponse('Se requiere especificar una habilidad');
+    }
+    
+    const systemPrompt = `Eres un asistente educativo especializado en crear lotes de ejercicios para la preparación de la PAES.
+    Tu tarea es crear ${batchSize} ejercicios de alta calidad adaptados a las especificaciones solicitadas.
+    Cada ejercicio debe tener contexto, pregunta, opciones, respuesta correcta y explicación.`;
+
+    const userPrompt = `Crea ${batchSize} ejercicios diferentes de práctica para la prueba con ID ${testId || 1} 
+    que evalúen la habilidad ${skill} con nivel de dificultad ${difficulty || 'MIXED'}.
+    
+    Cada ejercicio debe incluir:
+    1. Un contexto relevante y diferente para cada uno
+    2. Una pregunta clara que evalúe la habilidad especificada
+    3. Cuatro opciones de respuesta (A, B, C, D)
+    4. La respuesta correcta
+    5. Una explicación de por qué esa es la respuesta correcta
+    
+    Responde SOLO con un array en formato JSON donde cada elemento tiene las siguientes propiedades:
+    [
+      { 
+        "id": "id-único-generado-1", 
+        "context": "texto o contexto 1", 
+        "question": "pregunta 1", 
+        "options": ["opción A", "opción B", "opción C", "opción D"], 
+        "correctAnswer": "opción correcta", 
+        "explanation": "explicación",
+        "skill": "${skill}",
+        "difficulty": "BASIC|INTERMEDIATE|ADVANCED"
+      },
+      ... resto de ejercicios
+    ]`;
+
+    console.log('Generating exercise batch with prompt:', userPrompt.substring(0, 100) + '...');
+    const result = await callOpenRouter(systemPrompt, userPrompt);
+
+    if (result.error) {
+      console.error('Error generating exercise batch:', result.error);
+      return createErrorResponse(result.error, 500, result.fallbackResponse);
+    }
+    
+    // Asegurar que el resultado sea un array
+    let exercises = result.result;
+    if (!Array.isArray(exercises)) {
+      try {
+        if (typeof exercises === 'string') {
+          exercises = JSON.parse(exercises);
+        } else if (typeof exercises === 'object') {
+          exercises = [exercises];
+        }
+      } catch (e) {
+        console.error('Error parsing exercises array:', e);
+        exercises = [];
+      }
+    }
+    
+    if (!Array.isArray(exercises)) {
+      return createErrorResponse('Formato de respuesta inválido', 500);
+    }
+
+    return createSuccessResponse(exercises);
+  } catch (error) {
+    console.error('Error in generateExercisesBatch handler:', error);
+    return createErrorResponse(`Error al generar lote de ejercicios: ${error.message}`, 500);
+  }
+}
+
+/**
+ * Handler for the 'generate_diagnostic' action
+ */
+export async function generateDiagnostic(payload: any) {
+  try {
+    const { testId, skills, exercisesPerSkill, difficulty } = payload;
+    const skillsArray = Array.isArray(skills) ? skills : skills ? [skills] : [];
+    const numExercisesPerSkill = exercisesPerSkill && !isNaN(Number(exercisesPerSkill)) ? 
+      Number(exercisesPerSkill) : 3;
+    
+    // Validate required parameters
+    if (!testId || skillsArray.length === 0) {
+      return createErrorResponse('Se requiere especificar un testId y al menos una habilidad');
+    }
+    
+    const systemPrompt = `Eres un asistente educativo especializado en crear diagnósticos para la preparación de la PAES.
+    Tu tarea es crear un diagnóstico completo que incluya un título, descripción, y una serie de ejercicios adaptados
+    a las habilidades especificadas. El diagnóstico evaluará el desempeño del estudiante en estas habilidades.`;
+
+    const userPrompt = `Crea un diagnóstico completo para la prueba con ID ${testId}
+    que evalúe las siguientes habilidades: ${skillsArray.join(', ')}.
+    
+    El diagnóstico debe incluir:
+    1. Un título descriptivo
+    2. Una descripción clara del propósito del diagnóstico
+    3. ${numExercisesPerSkill} ejercicios para cada una de las habilidades especificadas (total: ${numExercisesPerSkill * skillsArray.length} ejercicios)
+    
+    Cada ejercicio debe tener:
+    1. Un contexto relevante
+    2. Una pregunta clara que evalúe la habilidad correspondiente
+    3. Cuatro opciones de respuesta (A, B, C, D)
+    4. La respuesta correcta
+    5. Una explicación de por qué esa es la respuesta correcta
+    
+    Responde SOLO en formato JSON con las siguientes propiedades:
+    {
+      "title": "título descriptivo del diagnóstico",
+      "description": "descripción del propósito y alcance del diagnóstico",
+      "exercises": [
+        { 
+          "id": "id-único-1", 
+          "context": "texto o contexto", 
+          "question": "pregunta", 
+          "options": ["opción A", "opción B", "opción C", "opción D"], 
+          "correctAnswer": "opción correcta", 
+          "explanation": "explicación",
+          "skill": "habilidad correspondiente",
+          "difficulty": "BASIC|INTERMEDIATE|ADVANCED"
+        },
+        ... resto de ejercicios
+      ]
+    }`;
+
+    console.log('Generating diagnostic with prompt:', userPrompt.substring(0, 100) + '...');
+    const result = await callOpenRouter(systemPrompt, userPrompt);
+
+    if (result.error) {
+      console.error('Error generating diagnostic:', result.error);
+      return createErrorResponse(result.error, 500, result.fallbackResponse);
+    }
+    
+    // Procesar el resultado para asegurar el formato correcto
+    let diagnostic = result.result;
+    if (typeof diagnostic === 'string') {
+      try {
+        diagnostic = JSON.parse(diagnostic);
+      } catch (e) {
+        console.error('Error parsing diagnostic JSON:', e);
+        return createErrorResponse('Formato de respuesta inválido', 500);
+      }
+    }
+    
+    if (!diagnostic || typeof diagnostic !== 'object' || !diagnostic.exercises || !Array.isArray(diagnostic.exercises)) {
+      return createErrorResponse('Formato de respuesta inválido o incompleto', 500);
+    }
+
+    return createSuccessResponse(diagnostic);
+  } catch (error) {
+    console.error('Error in generateDiagnostic handler:', error);
+    return createErrorResponse(`Error al generar diagnóstico: ${error.message}`, 500);
+  }
+}
+
+/**
  * Handler for the 'analyze_performance' action
  */
 export async function analyzePerformance(payload: any) {

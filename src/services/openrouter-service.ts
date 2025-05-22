@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { ImageAnalysisResult, Exercise, AIAnalysis, AIFeedback } from "@/types/ai-types";
@@ -58,8 +57,8 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
           return data.result as unknown as T;
         }
         
-        // Para generate_exercise, el resultado ya debería ser un objeto
-        if (action === 'generate_exercise') {
+        // Para generate_exercise o generate_exercises_batch, el resultado ya debería ser un objeto o array
+        if (action === 'generate_exercise' || action === 'generate_exercises_batch') {
           console.log('Exercise data received:', data.result);
           return data.result as unknown as T;
         }
@@ -86,6 +85,12 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
               } as unknown as T;
             }
           }
+          return data.result as unknown as T;
+        }
+
+        // Para generate_diagnostic, convertir el resultado
+        if (action === 'generate_diagnostic') {
+          console.log('Diagnostic data received:', data.result);
           return data.result as unknown as T;
         }
         
@@ -253,6 +258,153 @@ export const provideFeedback = async (
     });
   } catch (error) {
     console.error('Error providing feedback:', error);
+    return null;
+  }
+};
+
+/**
+ * Genera un lote de ejercicios para un nodo y habilidad específicos
+ */
+export const generateExercisesBatch = async (
+  nodeId: string,
+  skill: string,
+  testId: number,
+  count: number = 5,
+  difficulty: string = 'INTERMEDIATE'
+): Promise<Exercise[]> => {
+  try {
+    console.log(`Generando lote de ${count} ejercicios para skill ${skill}, testId ${testId}`);
+    
+    const result = await openRouterService<Exercise[]>({
+      action: 'generate_exercises_batch',
+      payload: {
+        nodeId,
+        skill,
+        testId,
+        count,
+        difficulty,
+        retry: true,
+        retryCount: 0
+      }
+    });
+    
+    if (!result || !Array.isArray(result)) {
+      console.error('No se generaron ejercicios en el lote o el formato es inválido');
+      return [];
+    }
+    
+    console.log(`Generados ${result.length} ejercicios para el nodo ${nodeId}`);
+    return result;
+  } catch (error) {
+    console.error('Error al generar lote de ejercicios:', error);
+    return [];
+  }
+};
+
+/**
+ * Genera un diagnóstico completo para un conjunto de habilidades y test
+ */
+export const generateDiagnostic = async (
+  testId: number,
+  skills: string[],
+  exercisesPerSkill: number = 3,
+  difficulty: string = 'MIXED'
+): Promise<{title: string, description: string, exercises: Exercise[]}> => {
+  try {
+    console.log(`Generando diagnóstico para test ${testId} con ${skills.length} habilidades`);
+    
+    const result = await openRouterService<{title: string, description: string, exercises: Exercise[]}>({
+      action: 'generate_diagnostic',
+      payload: {
+        testId,
+        skills,
+        exercisesPerSkill,
+        difficulty,
+        retry: true,
+        retryCount: 0
+      }
+    });
+    
+    if (!result || !result.exercises || !Array.isArray(result.exercises)) {
+      console.error('No se generó el diagnóstico o el formato es inválido');
+      return {
+        title: `Diagnóstico para Test ${testId}`,
+        description: "Diagnóstico generado automáticamente",
+        exercises: []
+      };
+    }
+    
+    console.log(`Generado diagnóstico con ${result.exercises.length} ejercicios`);
+    return result;
+  } catch (error) {
+    console.error('Error al generar diagnóstico:', error);
+    return {
+      title: `Diagnóstico para Test ${testId}`,
+      description: "Error al generar el diagnóstico",
+      exercises: []
+    };
+  }
+};
+
+/**
+ * Guarda un diagnóstico generado en la base de datos
+ */
+export const saveDiagnostic = async (
+  diagnostic: {title: string, description: string, exercises: Exercise[]},
+  testId: number
+): Promise<string | null> => {
+  try {
+    // Crear el diagnóstico en la base de datos
+    const { data: diagnosticData, error: diagnosticError } = await supabase
+      .from('diagnostic_tests')
+      .insert({
+        title: diagnostic.title,
+        description: diagnostic.description,
+        test_id: testId
+      })
+      .select()
+      .single();
+    
+    if (diagnosticError) {
+      console.error('Error al guardar el diagnóstico:', diagnosticError);
+      return null;
+    }
+    
+    if (!diagnosticData) {
+      console.error('No se recibieron datos al guardar el diagnóstico');
+      return null;
+    }
+    
+    const diagnosticId = diagnosticData.id;
+    
+    // Guardar los ejercicios asociados al diagnóstico
+    const exercisesData = diagnostic.exercises.map(exercise => ({
+      diagnostic_id: diagnosticId,
+      test_id: testId,
+      skill_id: typeof exercise.skill === 'number' ? 
+        exercise.skill : 
+        1, // Default skill_id if not provided
+      question: exercise.question,
+      options: exercise.options,
+      correct_answer: exercise.correctAnswer,
+      explanation: exercise.explanation || '',
+      difficulty: (exercise.difficulty || 'INTERMEDIATE').toLowerCase()
+    }));
+    
+    if (exercisesData.length > 0) {
+      const { error: exercisesError } = await supabase
+        .from('exercises')
+        .insert(exercisesData);
+      
+      if (exercisesError) {
+        console.error('Error al guardar los ejercicios:', exercisesError);
+        // No retornamos null aquí para permitir al menos guardar el diagnóstico
+      }
+    }
+    
+    return diagnosticId;
+  } catch (error) {
+    console.error('Error al guardar diagnóstico en la base de datos:', error);
     return null;
   }
 };

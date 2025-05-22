@@ -1,98 +1,41 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { config } from "./config.ts";
 import { corsHeaders } from "./cors.ts";
-import { callOpenRouter, callVisionModel } from "./services/openrouter-service.ts";
-import { 
-  generateExercise, 
-  analyzePerformance, 
-  provideFeedback, 
-  processImage 
-} from "./handlers/action-handlers.ts";
-import { createErrorResponse, createSuccessResponse } from "./utils/response-utils.ts";
+import { generateExercise, generateExercisesBatch, generateDiagnostic, analyzePerformance, provideFeedback, processImage } from "./handlers/action-handlers.ts";
 
-// Main handler function
+console.log("OpenRouter AI Edge Function Started");
+
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // This is needed if you're planning to invoke your function from a browser.
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
-  
+
   try {
-    // Check if API key exists
-    if (!config.OPENROUTER_API_KEY) {
-      console.error('No OpenRouter API key found');
-      return createErrorResponse('OpenRouter API key no está configurado. Por favor, configura la clave en los secretos de Supabase.', 500);
+    const { action, payload } = await req.json();
+
+    if (!action) {
+      return new Response(JSON.stringify({ error: 'Acción no especificada' }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
     }
-    
-    console.log('Request received at:', new Date().toISOString());
 
-    // Parse request data
-    const { action, payload } = await parseRequestData(req);
+    console.log(`Processing action: ${action}`);
     
-    // Process the requested action
-    const response = await processAction(action, payload);
-    console.log('Response status:', response.status);
-    
-    return response;
-  } catch (error) {
-    console.error('Error in OpenRouter AI function:', error);
-    
-    // Provide a fallback response
-    const fallbackResponse = {
-      result: {
-        response: "Lo siento, estamos experimentando problemas técnicos. Por favor, intenta de nuevo más tarde."
-      }
-    };
-    
-    return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        fallbackResponse
-      }), 
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-  }
-});
-
-/**
- * Parses the request body to extract action and payload
- */
-async function parseRequestData(req: Request): Promise<{ action: string; payload: any }> {
-  try {
-    const requestData = await req.json();
-    const action = requestData.action;
-    const payload = requestData.payload;
-    
-    console.log(`Processing ${action} request with payload:`, JSON.stringify({
-      action: action,
-      payloadSummary: payload ? `${Object.keys(payload).length} fields` : 'empty'
-    }));
-    
-    return { action, payload };
-  } catch (jsonError) {
-    console.error("Error parsing request JSON:", jsonError);
-    throw new Error('Invalid JSON in request body');
-  }
-}
-
-/**
- * Routes the request to the appropriate handler based on the action
- */
-async function processAction(action: string, payload: any): Promise<Response> {
-  console.log(`Starting action: ${action}`);
-  const startTime = Date.now();
-  
-  try {
     let response;
-    
     switch (action) {
       case 'generate_exercise':
         response = await generateExercise(payload);
+        break;
+      case 'generate_exercises_batch':
+        response = await generateExercisesBatch(payload);
+        break;
+      case 'generate_diagnostic':
+        response = await generateDiagnostic(payload);
         break;
       case 'analyze_performance':
         response = await analyzePerformance(payload);
@@ -104,32 +47,38 @@ async function processAction(action: string, payload: any): Promise<Response> {
         response = await processImage(payload);
         break;
       default:
-        console.error(`Invalid action specified: ${action}`);
-        return createErrorResponse(`Acción inválida: ${action}`, 400);
+        response = {
+          error: `Acción desconocida: ${action}`,
+          status: 400
+        };
     }
-    
-    const duration = Date.now() - startTime;
-    console.log(`Action ${action} completed in ${duration}ms`);
-    
-    return response;
+
+    const statusCode = response.status || (response.error ? 500 : 200);
+
+    return new Response(JSON.stringify(response), {
+      status: statusCode,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
   } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error(`Action ${action} failed after ${duration}ms:`, error);
-    
-    // Return an error with a fallback response
-    const fallbackResponse = {
-      response: "Lo siento, hubo un problema procesando tu solicitud. Por favor, intenta de nuevo más tarde."
-    };
+    console.error(`Error en edge function:`, error);
     
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        fallbackResponse
-      }), 
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      JSON.stringify({
+        error: `Error en edge function: ${error.message}`,
+        fallbackResponse: {
+          response: "Lo siento, hubo un error procesando tu solicitud. Por favor intenta de nuevo."
+        }
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     );
   }
-}
+});
