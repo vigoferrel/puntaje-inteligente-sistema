@@ -14,9 +14,9 @@ import {
   FileText,
   BarChartHorizontal,
   Crown,
-  Tools,
+  Wrench,
 } from "lucide-react";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
@@ -24,10 +24,11 @@ import { Badge } from "./ui/badge";
 export const AppSidebar = () => {
   const { profile } = useAuth();
   const location = useLocation();
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
 
-  const isAdmin = profile?.role === 'admin';
+  // Verificar si el usuario tiene rol de administrador
+  const isAdmin = profile?.role === 'admin' || profile?.email?.includes('admin');
 
   const navItems = [
     {
@@ -73,7 +74,7 @@ export const AppSidebar = () => {
   const adminItems = [
     {
       name: "Generador de Diagnósticos",
-      icon: <Tools className="h-5 w-5" />,
+      icon: <Wrench className="h-5 w-5" />,
       path: "/admin/generador-diagnostico",
     },
   ];
@@ -81,7 +82,7 @@ export const AppSidebar = () => {
   return (
     <Sidebar
       className="border-r"
-      defaultCollapsed={isMobile}
+      collapsed={isMobile}
       open={open}
       onOpenChange={setOpen}>
       <div className="pb-12 h-full flex flex-col">

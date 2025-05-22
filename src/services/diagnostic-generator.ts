@@ -38,31 +38,49 @@ export const generateExercisesForNode = async (
       return false;
     }
     
-    // Convertir los ejercicios al formato de la base de datos
-    const exercisesData = exercises.map(exercise => ({
-      node_id: nodeId,
-      test_id: testId,
-      skill_id: skillId,
-      question: exercise.question,
-      options: exercise.options,
-      correct_answer: exercise.correctAnswer,
-      explanation: exercise.explanation || '',
-      difficulty: (exercise.difficulty || 'INTERMEDIATE').toLowerCase()
-    }));
+    // Convertir los ejercicios al formato de la base de datos y asegurar que difficulty sea compatible
+    const exercisesData = exercises.map(exercise => {
+      // Mapear el string de dificultad a uno de los valores permitidos
+      let mappedDifficulty: "basic" | "intermediate" | "advanced" = "intermediate";
+      
+      if (typeof exercise.difficulty === 'string') {
+        const difficultyLower = exercise.difficulty.toLowerCase();
+        if (difficultyLower === 'basic' || difficultyLower === 'easy') {
+          mappedDifficulty = 'basic';
+        } else if (difficultyLower === 'intermediate' || difficultyLower === 'medium') {
+          mappedDifficulty = 'intermediate';
+        } else if (difficultyLower === 'advanced' || difficultyLower === 'hard') {
+          mappedDifficulty = 'advanced';
+        }
+      }
+      
+      return {
+        node_id: nodeId,
+        test_id: testId,
+        skill_id: skillId,
+        question: exercise.question,
+        options: exercise.options,
+        correct_answer: exercise.correctAnswer,
+        explanation: exercise.explanation || '',
+        difficulty: mappedDifficulty
+      };
+    });
     
-    // Guardar los ejercicios en la base de datos
-    const { error } = await supabase
-      .from('exercises')
-      .insert(exercisesData);
-    
-    if (error) {
-      console.error('Error al guardar los ejercicios:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron guardar los ejercicios en la base de datos",
-        variant: "destructive"
-      });
-      return false;
+    // Guardar los ejercicios en la base de datos uno a uno o como un lote
+    for (const exerciseData of exercisesData) {
+      const { error } = await supabase
+        .from('exercises')
+        .insert(exerciseData);
+      
+      if (error) {
+        console.error('Error al guardar el ejercicio:', error);
+        toast({
+          title: "Error",
+          description: "Error al guardar un ejercicio en la base de datos",
+          variant: "destructive"
+        });
+        return false;
+      }
     }
     
     toast({
@@ -189,7 +207,7 @@ export const fetchAndGenerateDiagnostics = async (
       query = query.eq('test_id', testId);
     }
     
-    const { data: diagnostics, error } = await query;
+    const { data: dbDiagnostics, error } = await query;
     
     if (error) {
       console.error('Error al obtener los diagnósticos:', error);
@@ -203,6 +221,16 @@ export const fetchAndGenerateDiagnostics = async (
         generateNewDiagnostic: async () => null 
       };
     }
+    
+    // Transformar los datos de la base de datos a nuestro formato DiagnosticTest
+    const diagnostics: DiagnosticTest[] = (dbDiagnostics || []).map(diagnostic => ({
+      id: diagnostic.id,
+      title: diagnostic.title,
+      description: diagnostic.description || '',
+      testId: diagnostic.test_id,
+      questions: [], // Inicialmente vacío, se cargaría con otra consulta si es necesario
+      isCompleted: false // Por defecto no completado
+    }));
     
     // Función para generar un nuevo diagnóstico
     const generateNewDiagnostic = async (title?: string, description?: string): Promise<string | null> => {
@@ -219,7 +247,7 @@ export const fetchAndGenerateDiagnostics = async (
     };
     
     return {
-      diagnostics: diagnostics || [],
+      diagnostics,
       generateNewDiagnostic
     };
   } catch (error) {

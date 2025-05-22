@@ -377,28 +377,41 @@ export const saveDiagnostic = async (
     
     const diagnosticId = diagnosticData.id;
     
-    // Guardar los ejercicios asociados al diagnóstico
-    const exercisesData = diagnostic.exercises.map(exercise => ({
-      diagnostic_id: diagnosticId,
-      test_id: testId,
-      skill_id: typeof exercise.skill === 'number' ? 
-        exercise.skill : 
-        1, // Default skill_id if not provided
-      question: exercise.question,
-      options: exercise.options,
-      correct_answer: exercise.correctAnswer,
-      explanation: exercise.explanation || '',
-      difficulty: (exercise.difficulty || 'INTERMEDIATE').toLowerCase()
-    }));
-    
-    if (exercisesData.length > 0) {
-      const { error: exercisesError } = await supabase
-        .from('exercises')
-        .insert(exercisesData);
+    // Guardar los ejercicios asociados al diagnóstico uno por uno
+    for (const exercise of diagnostic.exercises) {
+      // Mapear el string de dificultad a uno de los valores permitidos
+      let mappedDifficulty: "basic" | "intermediate" | "advanced" = "intermediate";
       
-      if (exercisesError) {
-        console.error('Error al guardar los ejercicios:', exercisesError);
-        // No retornamos null aquí para permitir al menos guardar el diagnóstico
+      if (typeof exercise.difficulty === 'string') {
+        const difficultyLower = exercise.difficulty.toLowerCase();
+        if (difficultyLower === 'basic' || difficultyLower === 'easy') {
+          mappedDifficulty = 'basic';
+        } else if (difficultyLower === 'intermediate' || difficultyLower === 'medium') {
+          mappedDifficulty = 'intermediate';
+        } else if (difficultyLower === 'advanced' || difficultyLower === 'hard') {
+          mappedDifficulty = 'advanced';
+        }
+      }
+      
+      const { error: exerciseError } = await supabase
+        .from('exercises')
+        .insert({
+          diagnostic_id: diagnosticId,
+          node_id: '00000000-0000-0000-0000-000000000000', // Valor de marcador de posición para satisfacer el esquema
+          test_id: testId,
+          skill_id: typeof exercise.skill === 'number' ? 
+            exercise.skill : 
+            1, // Default skill_id if not provided
+          question: exercise.question,
+          options: exercise.options,
+          correct_answer: exercise.correctAnswer,
+          explanation: exercise.explanation || '',
+          difficulty: mappedDifficulty
+        });
+      
+      if (exerciseError) {
+        console.error('Error al guardar el ejercicio:', exerciseError);
+        // Continuar con el siguiente ejercicio incluso si uno falla
       }
     }
     
