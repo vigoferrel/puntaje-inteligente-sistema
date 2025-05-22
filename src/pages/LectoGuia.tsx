@@ -42,7 +42,7 @@ const LectoGuia = () => {
   
   // Hooks adicionales para acceder a datos de la plataforma
   const { tests } = useDiagnostic();
-  const { plan } = useLearningPlan();
+  const { plans, currentPlan } = useLearningPlan();
   
   // Manejar el envío de mensajes
   const handleSendMessage = async (message: string, imageData?: string) => {
@@ -101,10 +101,10 @@ const LectoGuia = () => {
       
       await processUserMessage(message);
       setTimeout(() => addAssistantMessage(diagnosticInfo), 1000);
-    } else if (isAboutPlan && plan) {
+    } else if (isAboutPlan && currentPlan) {
       // Responder con información sobre el plan de aprendizaje
       const planInfo = `Tu Plan de Aprendizaje está diseñado específicamente para mejorar tus habilidades PAES.
-      ${plan.title ? `Actualmente tienes un plan llamado "${plan.title}".` : "No tienes un plan activo en este momento."}
+      ${currentPlan.title ? `Actualmente tienes un plan llamado "${currentPlan.title}".` : "No tienes un plan activo en este momento."}
       ${message.toLowerCase().includes("como") ? "Para acceder a esta sección, ve al menú lateral y selecciona 'Plan'." : ""}`;
       
       await processUserMessage(message);

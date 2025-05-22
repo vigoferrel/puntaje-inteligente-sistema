@@ -4,7 +4,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { 
   BookOpen, 
   Calculator, 
-  Flask, 
+  Beaker, 
   GraduationCap, 
   Lightbulb,
 } from "lucide-react";
@@ -23,7 +23,7 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
     { id: "general", name: "General", icon: <GraduationCap className="h-4 w-4" /> },
     { id: "lectura", name: "Comprensión Lectora", icon: <BookOpen className="h-4 w-4" /> },
     { id: "matematicas", name: "Matemáticas", icon: <Calculator className="h-4 w-4" /> },
-    { id: "ciencias", name: "Ciencias", icon: <Flask className="h-4 w-4" /> },
+    { id: "ciencias", name: "Ciencias", icon: <Beaker className="h-4 w-4" /> },
     { id: "historia", name: "Historia", icon: <Lightbulb className="h-4 w-4" /> },
   ];
 

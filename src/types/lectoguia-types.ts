@@ -52,3 +52,12 @@ export interface UpdateSkillResult {
   newLevel?: number;
   error?: string;
 }
+
+// Extended skill types for LectoGuía
+export type LectoGuiaSkill = 
+  | 'TRACK_LOCATE' 
+  | 'INTERPRET_RELATE' 
+  | 'EVALUATE_REFLECT'
+  | 'ALGEBRA'
+  | 'PHYSICS'
+  | 'HISTORY';

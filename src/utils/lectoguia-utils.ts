@@ -1,4 +1,3 @@
-
 /**
  * Helper function to map skill codes to IDs
  * @param skillCode The code of the skill 
@@ -24,11 +23,16 @@ export const getSkillId = (skillCode: string): number | null => {
  * Helper function to get initial skill levels
  * @returns Object with default skill level values
  */
-export const getInitialSkillLevels = (): Record<string, number> => ({
-  'TRACK_LOCATE': 0,
-  'INTERPRET_RELATE': 0,
-  'EVALUATE_REFLECT': 0
-});
+export const getInitialSkillLevels = () => {
+  return {
+    'TRACK_LOCATE': 0,
+    'INTERPRET_RELATE': 0,
+    'EVALUATE_REFLECT': 0,
+    'ALGEBRA': 0,
+    'PHYSICS': 0,
+    'HISTORY': 0
+  };
+};
 
 /**
  * Helper function to get skill name from code
