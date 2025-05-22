@@ -1,19 +1,12 @@
 
 import { TPAESHabilidad } from "@/types/system-types";
 import { AIAnalysis } from "@/types/ai-types";
-import { openRouterService } from "./openrouter-service";
+import { analyzePerformance as analyzePerformanceApi } from "@/services/openrouter/performance-analysis";
 
 export const analyzePerformance = async (
   userId: string,
   skillLevels: Record<TPAESHabilidad, number>,
   exerciseResults: any[]
 ): Promise<AIAnalysis | null> => {
-  return await openRouterService<AIAnalysis>({
-    action: 'analyze_performance',
-    payload: {
-      userId,
-      skillLevels,
-      exerciseResults
-    }
-  });
+  return await analyzePerformanceApi(userId, skillLevels, exerciseResults);
 };

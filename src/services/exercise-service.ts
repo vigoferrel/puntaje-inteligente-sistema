@@ -1,7 +1,7 @@
 
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { Exercise } from "@/types/ai-types";
-import { openRouterService } from "./openrouter-service";
+import { generateExercise as generateExerciseApi } from "@/services/openrouter/exercise-generation";
 
 export const generateExercise = async (
   skill: TPAESHabilidad,
@@ -9,13 +9,5 @@ export const generateExercise = async (
   difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED',
   previousExercises: Exercise[] = []
 ): Promise<Exercise | null> => {
-  return await openRouterService<Exercise>({
-    action: 'generate_exercise',
-    payload: {
-      skill,
-      prueba,
-      difficulty,
-      previousExercises
-    }
-  });
+  return await generateExerciseApi(skill, prueba, difficulty, previousExercises);
 };

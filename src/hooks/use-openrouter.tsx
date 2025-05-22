@@ -1,8 +1,9 @@
 
 import { useState } from "react";
-import { openRouterService, processImageWithOpenRouter } from "@/services/openrouter-service";
 import { toast } from "@/components/ui/use-toast";
 import { ImageAnalysisResult } from "@/types/ai-types";
+import { openRouterService } from "@/services/openrouter/core";
+import { processImageWithOpenRouter } from "@/services/openrouter/image-processing";
 
 export function useOpenRouter() {
   const [loading, setLoading] = useState(false);
