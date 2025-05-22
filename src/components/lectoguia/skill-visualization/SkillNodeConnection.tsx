@@ -1,135 +1,129 @@
+import React from 'react';
+import { TLearningNode, TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
+import { NodeProgress } from '@/types/node-progress';
+import { Card } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatSkillLevel } from '@/utils/lectoguia-utils';
+import { getSkillsByPrueba } from '@/utils/lectoguia-utils';
 
-import React, { useState } from "react";
-import { TLearningNode, TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName, getPruebaDisplayName } from "@/types/system-types";
-import { NodeProgress } from "@/hooks/use-learning-nodes";
-import { SkillRadar } from "./SkillRadar";
-import { BloomTaxonomyViewer } from "./BloomTaxonomyViewer";
-import { SkillHierarchyChart } from "./SkillHierarchyChart";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ActiveLearningNodes } from "./ActiveLearningNodes";
-import { LearningNodesByBloomLevel } from "./LearningNodesByBloomLevel";
-import { TestSelector } from "./TestSelector";
-import { BloomRecommendations } from "./BloomRecommendations";
-import { SkillLearningPath } from "./SkillLearningPath";
-
-interface SkillNodeConnectionProps {
+export interface SkillNodeConnectionProps {
   skillLevels: Record<TPAESHabilidad, number>;
-  nodes?: TLearningNode[];
-  nodeProgress?: Record<string, NodeProgress>;
-  className?: string;
+  nodes: TLearningNode[];
+  nodeProgress: Record<string, NodeProgress>;
   onNodeSelect?: (nodeId: string) => void;
+  selectedTest?: TPAESPrueba;
+  className?: string;
 }
 
-export const SkillNodeConnection = ({
+export const SkillNodeConnection: React.FC<SkillNodeConnectionProps> = ({
   skillLevels,
-  nodes = [],
-  nodeProgress = {},
-  className = "",
-  onNodeSelect
-}: SkillNodeConnectionProps) => {
-  const [activeTab, setActiveTab] = useState<string>("radar");
-  const [selectedTest, setSelectedTest] = useState<TPAESPrueba | undefined>(undefined);
-  const [selectedTestId, setSelectedTestId] = useState<number>(1); // Default: Competencia lectora
-
-  // Update selectedTestId when selectedTest changes
-  React.useEffect(() => {
-    if (selectedTest) {
-      // Map the test enum to its ID
-      const testIdMap: Record<TPAESPrueba, number> = {
-        "COMPETENCIA_LECTORA": 1,
-        "MATEMATICA_1": 2,
-        "MATEMATICA_2": 3,
-        "CIENCIAS": 4,
-        "HISTORIA": 5
-      };
-      setSelectedTestId(testIdMap[selectedTest] || 1);
+  nodes,
+  nodeProgress,
+  onNodeSelect,
+  selectedTest,
+  className
+}) => {
+  // Filtrar nodos por la prueba seleccionada si existe
+  const filteredNodes = selectedTest 
+    ? nodes.filter(node => node.prueba === selectedTest)
+    : nodes;
+  
+  // Agrupar nodos por habilidad
+  const nodesBySkill: Record<TPAESHabilidad, TLearningNode[]> = {};
+  
+  filteredNodes.forEach(node => {
+    if (!nodesBySkill[node.skill]) {
+      nodesBySkill[node.skill] = [];
     }
-  }, [selectedTest]);
-
-  // Convert skill levels to format required by SkillRadar
-  const skillRadarData = Object.entries(skillLevels).map(([skill, level]) => ({
-    name: getHabilidadDisplayName(skill as TPAESHabilidad),
-    value: Math.round(level * 100),
-  }));
-
-  // Available tests based on active nodes
-  const availableTests = [...new Set(nodes.map(node => node.prueba))];
-
+    nodesBySkill[node.skill].push(node);
+  });
+  
+  // Obtener habilidades relevantes para la prueba seleccionada
+  const relevantSkills = selectedTest 
+    ? getSkillsByPrueba()[selectedTest] 
+    : Object.keys(skillLevels) as TPAESHabilidad[];
+  
   return (
-    <div className={`space-y-6 ${className}`}>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full justify-start overflow-x-auto">
-          <TabsTrigger value="radar">Radar de Habilidades</TabsTrigger>
-          <TabsTrigger value="bloom">Taxonomía de Bloom</TabsTrigger>
-          <TabsTrigger value="hierarchy">Jerarquía de Habilidades</TabsTrigger>
-          <TabsTrigger value="path">Ruta de Aprendizaje</TabsTrigger>
-          <TabsTrigger value="nodes">Nodos de Aprendizaje</TabsTrigger>
-          <TabsTrigger value="recommendations">Recomendaciones</TabsTrigger>
-        </TabsList>
-        
-        <div className="mt-4">
-          <TabsContent value="radar" className="m-0">
-            <SkillRadar skills={skillRadarData} title="Radar de Habilidades" />
-          </TabsContent>
-          
-          <TabsContent value="bloom" className="m-0">
-            <BloomTaxonomyViewer skillLevels={skillLevels} />
-          </TabsContent>
-          
-          <TabsContent value="hierarchy" className="m-0">
-            <div className="space-y-4">
-              {/* Test selector */}
-              <TestSelector 
-                availableTests={availableTests}
-                selectedTest={selectedTest}
-                onTestSelect={setSelectedTest}
-              />
-              
-              <SkillHierarchyChart skillLevels={skillLevels} selectedTest={selectedTest} />
+    <div className={`space-y-8 ${className || ''}`}>
+      <h3 className="text-xl font-semibold">Mapa de Aprendizaje</h3>
+      
+      {relevantSkills.map(skill => (
+        <Card key={skill} className="p-4">
+          <div className="mb-3 flex justify-between items-center">
+            <div>
+              <h4 className="font-medium">{skill}</h4>
+              <div className="text-sm text-muted-foreground">
+                Nivel actual: {formatSkillLevel(skillLevels[skill] || 0)}
+              </div>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="path" className="m-0">
-            <div className="space-y-4">
-              {/* Test selector */}
-              <TestSelector 
-                availableTests={availableTests}
-                selectedTest={selectedTest}
-                onTestSelect={setSelectedTest}
-              />
-              
-              <SkillLearningPath 
-                skillLevels={skillLevels} 
-                selectedTestId={selectedTestId} 
+            
+            {/* Barra de progreso para la habilidad */}
+            <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary" 
+                style={{ width: `${(skillLevels[skill] || 0) * 100}%` }}
               />
             </div>
-          </TabsContent>
+          </div>
           
-          <TabsContent value="nodes" className="m-0">
-            <LearningNodesByBloomLevel 
-              nodes={nodes}
-              nodeProgress={nodeProgress}
-              onNodeSelect={onNodeSelect}
-            />
-          </TabsContent>
-          
-          <TabsContent value="recommendations" className="m-0">
-            <BloomRecommendations 
-              skillLevels={skillLevels}
-              nodes={nodes}
-              nodeProgress={nodeProgress}
-              onNodeSelect={onNodeSelect}
-            />
-          </TabsContent>
+          {/* Nodos de la habilidad */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+            {nodesBySkill[skill]?.map(node => {
+              const progress = nodeProgress[node.id];
+              const status = progress?.status || 'locked';
+              
+              return (
+                <Tooltip key={node.id}>
+                  <TooltipTrigger asChild>
+                    <div 
+                      className={`
+                        p-3 rounded-md border cursor-pointer transition-all
+                        ${status === 'completed' ? 'bg-green-50 border-green-200' : 
+                          status === 'in_progress' ? 'bg-blue-50 border-blue-200' : 
+                          'bg-gray-50 border-gray-200'}
+                      `}
+                      onClick={() => onNodeSelect && onNodeSelect(node.id)}
+                    >
+                      <div className="text-sm font-medium truncate">{node.title}</div>
+                      <div className="text-xs text-muted-foreground">{node.difficulty}</div>
+                      
+                      {/* Indicador de progreso */}
+                      {progress && (
+                        <div className="mt-2 w-full h-1 bg-secondary rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary" 
+                            style={{ width: `${progress.progress * 100}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-medium">{node.title}</p>
+                    <p className="text-xs">{node.description}</p>
+                    {progress && (
+                      <p className="text-xs mt-1">
+                        Progreso: {Math.round(progress.progress * 100)}%
+                      </p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+            
+            {(!nodesBySkill[skill] || nodesBySkill[skill].length === 0) && (
+              <div className="col-span-full text-center py-4 text-sm text-muted-foreground">
+                No hay nodos disponibles para esta habilidad
+              </div>
+            )}
+          </div>
+        </Card>
+      ))}
+      
+      {relevantSkills.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          No hay habilidades disponibles para mostrar
         </div>
-      </Tabs>
-
-      {(activeTab !== "nodes" && activeTab !== "recommendations" && activeTab !== "path") && (
-        <ActiveLearningNodes 
-          nodes={nodes}
-          nodeProgress={nodeProgress}
-          onNodeSelect={onNodeSelect}
-        />
       )}
     </div>
   );

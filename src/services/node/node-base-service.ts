@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TLearningNode, TPAESHabilidad, TPAESPrueba, testIdToPrueba } from "@/types/system-types";
+import { TLearningNode, TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { getSkillId } from "@/utils/lectoguia-utils";
+import { testIdToPrueba } from "@/types/paes-types";
 
 /**
  * Maps database nodes to frontend type with better type consistency

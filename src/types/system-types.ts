@@ -6,7 +6,9 @@
 // Export types from paes-types.ts
 export {
   getPruebaDisplayName,
-  getHabilidadDisplayName
+  getHabilidadDisplayName,
+  testIdToPrueba,
+  pruebaToTestId
 } from './paes-types';
 export type { TPAESPrueba, TPAESHabilidad } from './paes-types';
 

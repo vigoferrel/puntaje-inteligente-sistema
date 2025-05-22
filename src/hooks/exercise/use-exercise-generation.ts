@@ -63,7 +63,7 @@ export function useExerciseGeneration() {
       if (exercise) {
         // Vincular el ejercicio con el nodo
         exercise.nodeId = node.id;
-        exercise.nodeName = node.title;
+        exercise.nodeName = node.title; // Asignar el título del nodo
         exercise.prueba = node.prueba;
         
         setCurrentExercise(exercise);
