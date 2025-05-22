@@ -8,11 +8,18 @@ import { cn } from "@/lib/utils";
 interface SkillProgressProps {
   skill: TPAESHabilidad;
   level: number;
+  showLabel?: boolean;
+  compact?: boolean;
 }
 
-export function SkillProgress({ skill, level }: SkillProgressProps) {
+export function SkillProgress({ 
+  skill, 
+  level, 
+  showLabel = true, 
+  compact = false 
+}: SkillProgressProps) {
   // Convert decimal to percentage (0-1 to 0-100)
-  const percentage = typeof level === 'number' ? Math.round(level) : 0;
+  const percentage = typeof level === 'number' ? Math.round(level * 100) : 0;
   
   // Determine skill color based on skill type
   const getSkillColor = (skill: TPAESHabilidad): {
@@ -74,12 +81,14 @@ export function SkillProgress({ skill, level }: SkillProgressProps) {
   const { bg, text, indicator } = getSkillColor(skill);
   
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between items-center text-sm">
-        <div className="font-medium">{getHabilidadDisplayName(skill)}</div>
-        <div className={cn("font-semibold", text)}>{percentage}%</div>
-      </div>
-      <Progress value={percentage} className={cn("h-2", bg)} indicatorClassName={indicator} />
+    <div className={cn("space-y-1.5", compact && "space-y-1")}>
+      {showLabel && (
+        <div className="flex justify-between items-center text-sm">
+          <div className={cn("font-medium", compact && "text-xs")}>{getHabilidadDisplayName(skill)}</div>
+          <div className={cn("font-semibold", text, compact && "text-xs")}>{percentage}%</div>
+        </div>
+      )}
+      <Progress value={percentage} className={cn("h-2", bg, compact && "h-1.5")} indicatorClassName={indicator} />
     </div>
   );
 }

@@ -12,9 +12,8 @@ import { useDiagnosticHistory } from "@/hooks/diagnostic/results/use-diagnostic-
 import { SkillProgress } from "@/components/skill-progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ChartContainer } from "@/components/ui/chart";
-import { motion } from "framer-motion";
 import { SkillRadarChart } from "./SkillRadarChart";
+import { motion } from "framer-motion";
 
 interface DiagnosticHistoryProps {
   onSelectResult?: (result: DiagnosticResult) => void;
@@ -234,21 +233,19 @@ export const DiagnosticHistory = ({ onSelectResult, className = "" }: Diagnostic
               {chartData.length > 1 ? (
                 <div className="space-y-4">
                   <div className="h-[300px]">
-                    <ChartContainer>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                          <XAxis 
-                            dataKey="date" 
-                            tick={{ fontSize: 12 }}
-                          />
-                          <YAxis domain={[0, 100]} />
-                          <Tooltip 
-                            formatter={(value) => [`${value}%`, '']}
-                          />
-                          {renderLines()}
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData}>
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis domain={[0, 100]} />
+                        <Tooltip 
+                          formatter={(value) => [`${value}%`, '']}
+                        />
+                        {renderLines()}
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
                   <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-2">
                     <div className="flex items-center gap-1">
@@ -310,8 +307,6 @@ export const DiagnosticHistory = ({ onSelectResult, className = "" }: Diagnostic
                                   key={skill}
                                   skill={skill as TPAESHabilidad}
                                   level={value}
-                                  showLabel={true}
-                                  compact={true}
                                 />
                               ))}
                             
@@ -389,7 +384,6 @@ export const DiagnosticHistory = ({ onSelectResult, className = "" }: Diagnostic
                           key={skill}
                           skill={skill as TPAESHabilidad}
                           level={value}
-                          showLabel={true}
                         />
                       ))}
                   </div>

@@ -152,6 +152,38 @@ const Diagnostico = () => {
             loadingMessage = "Cargando diagnóstico básico...";
           }
           
+          // Convertir DiagnosticResult a Record<TPAESHabilidad, number> cuando sea necesario
+          const getSkillResults = (result: any): Record<TPAESHabilidad, number> => {
+            if (!result) return {};
+            
+            // Si ya es un objeto con resultados, devuélvelo
+            if (result.results && typeof result.results === 'object') {
+              return result.results;
+            }
+            
+            // Inicializar valores por defecto
+            const defaultResults: Record<TPAESHabilidad, number> = {
+              SOLVE_PROBLEMS: 0,
+              REPRESENT: 0,
+              MODEL: 0,
+              INTERPRET_RELATE: 0,
+              EVALUATE_REFLECT: 0,
+              TRACK_LOCATE: 0,
+              ARGUE_COMMUNICATE: 0,
+              IDENTIFY_THEORIES: 0,
+              PROCESS_ANALYZE: 0,
+              APPLY_PRINCIPLES: 0,
+              SCIENTIFIC_ARGUMENT: 0,
+              TEMPORAL_THINKING: 0,
+              SOURCE_ANALYSIS: 0,
+              MULTICAUSAL_ANALYSIS: 0,
+              CRITICAL_THINKING: 0,
+              REFLECTION: 0
+            };
+            
+            return defaultResults;
+          };
+          
           // Si el test ha comenzado o está mostrando resultados, mostramos esa vista
           if (testStarted || resultSubmitted) {
             return (
@@ -187,7 +219,8 @@ const Diagnostico = () => {
                   {resultSubmitted ? (
                     <DetailedResultView 
                       onRestartDiagnostic={handleRestartDiagnostic} 
-                      results={testResults ? testResults : undefined}
+                      results={getSkillResults(testResults)}
+                      completedAt={testResults?.completedAt}
                     />
                   ) : (
                     <TestRunner 

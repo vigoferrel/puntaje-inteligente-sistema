@@ -30,12 +30,33 @@ export const DetailedResultView = ({
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("results");
   
+  // Inicializar un objeto de resultados por defecto con todas las habilidades en 0
+  const defaultResults: Record<TPAESHabilidad, number> = {
+    SOLVE_PROBLEMS: 0,
+    REPRESENT: 0,
+    MODEL: 0,
+    INTERPRET_RELATE: 0,
+    EVALUATE_REFLECT: 0,
+    TRACK_LOCATE: 0,
+    ARGUE_COMMUNICATE: 0,
+    IDENTIFY_THEORIES: 0,
+    PROCESS_ANALYZE: 0,
+    APPLY_PRINCIPLES: 0,
+    SCIENTIFIC_ARGUMENT: 0,
+    TEMPORAL_THINKING: 0,
+    SOURCE_ANALYSIS: 0,
+    MULTICAUSAL_ANALYSIS: 0,
+    CRITICAL_THINKING: 0,
+    REFLECTION: 0
+  };
+  
+  // Usar los resultados proporcionados o los predeterminados
+  const skillResults = results || defaultResults;
+  
   // Estructura para recomendaciones basadas en habilidades
   const getRecommendations = () => {
-    if (!results) return [];
-    
     // Determinar áreas de mejora (habilidades con puntuación menor a 60%)
-    const areasToImprove = Object.entries(results)
+    const areasToImprove = Object.entries(skillResults)
       .filter(([_, score]) => score < 0.6)
       .map(([skill]) => skill as TPAESHabilidad);
     
@@ -118,7 +139,7 @@ export const DetailedResultView = ({
     <div className="space-y-6">
       <TestResultView 
         onRestartDiagnostic={onRestartDiagnostic} 
-        results={results} 
+        results={skillResults} 
         completedAt={completedAt}
         diagnosticTitle={testTitle}
       />
@@ -145,7 +166,7 @@ export const DetailedResultView = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Radar chart of skills */}
                 <SkillRadarChart 
-                  skillScores={results || {}}
+                  skillScores={skillResults}
                   title="Visualización de habilidades" 
                   description="Representación visual de tus niveles en cada habilidad"
                   showLegend={true}
