@@ -7,6 +7,20 @@ import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { mapTestIdToEnum, mapSkillIdToEnum } from "@/utils/supabase-mappers";
 import { generateExercisesBatch, generateDiagnostic, saveDiagnostic } from "./openrouter-service";
 
+// Definir tipo para nivel de dificultad aceptado por la base de datos
+type DifficultLevel = "basic" | "intermediate" | "advanced";
+
+// Mapear cadenas de dificultad a valores aceptados
+const mapDifficulty = (difficulty: string): DifficultLevel => {
+  const difficultyLower = difficulty.toLowerCase();
+  if (difficultyLower === 'basic' || difficultyLower === 'easy') {
+    return 'basic';
+  } else if (difficultyLower === 'advanced' || difficultyLower === 'hard') {
+    return 'advanced';
+  }
+  return 'intermediate'; // valor por defecto
+};
+
 /**
  * Genera una serie de ejercicios para un nodo específico y los guarda en la base de datos
  */
@@ -41,32 +55,21 @@ export const generateExercisesForNode = async (
     // Convertir los ejercicios al formato de la base de datos y asegurar que difficulty sea compatible
     const exercisesData = exercises.map(exercise => {
       // Mapear el string de dificultad a uno de los valores permitidos
-      let mappedDifficulty: "basic" | "intermediate" | "advanced" = "intermediate";
-      
-      if (typeof exercise.difficulty === 'string') {
-        const difficultyLower = exercise.difficulty.toLowerCase();
-        if (difficultyLower === 'basic' || difficultyLower === 'easy') {
-          mappedDifficulty = 'basic';
-        } else if (difficultyLower === 'intermediate' || difficultyLower === 'medium') {
-          mappedDifficulty = 'intermediate';
-        } else if (difficultyLower === 'advanced' || difficultyLower === 'hard') {
-          mappedDifficulty = 'advanced';
-        }
-      }
+      const mappedDifficulty = mapDifficulty(exercise.difficulty || 'intermediate');
       
       return {
         node_id: nodeId,
         test_id: testId,
         skill_id: skillId,
         question: exercise.question,
-        options: exercise.options,
+        options: exercise.options, // Supabase convierte arrays a JSON automáticamente
         correct_answer: exercise.correctAnswer,
         explanation: exercise.explanation || '',
         difficulty: mappedDifficulty
       };
     });
     
-    // Guardar los ejercicios en la base de datos uno a uno o como un lote
+    // Guardar los ejercicios en la base de datos uno a uno
     for (const exerciseData of exercisesData) {
       const { error } = await supabase
         .from('exercises')

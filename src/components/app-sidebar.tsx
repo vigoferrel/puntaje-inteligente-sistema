@@ -28,7 +28,7 @@ export const AppSidebar = () => {
   const [open, setOpen] = React.useState(false);
 
   // Verificar si el usuario tiene rol de administrador
-  // Fix: Check if user email includes 'admin' instead of checking role property
+  // Check if user email includes 'admin' to determine if they're an admin
   const isAdmin = profile?.email?.includes('admin');
 
   const navItems = [
@@ -83,7 +83,7 @@ export const AppSidebar = () => {
   return (
     <Sidebar
       className="border-r"
-      collapsed={isMobile}
+      collapsible={isMobile}
       open={open}
       onOpenChange={setOpen}>
       <div className="pb-12 h-full flex flex-col">

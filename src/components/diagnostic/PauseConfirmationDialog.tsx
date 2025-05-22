@@ -1,14 +1,14 @@
 
 import React from "react";
-import { 
+import {
   AlertDialog,
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 interface PauseConfirmationDialogProps {
@@ -17,23 +17,25 @@ interface PauseConfirmationDialogProps {
   onConfirm: () => void;
 }
 
-export const PauseConfirmationDialog: React.FC<PauseConfirmationDialogProps> = ({
+export const PauseConfirmationDialog = ({
   open,
   onOpenChange,
-  onConfirm
-}) => {
+  onConfirm,
+}: PauseConfirmationDialogProps) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Pausar diagnóstico?</AlertDialogTitle>
+          <AlertDialogTitle>Pausar diagnóstico</AlertDialogTitle>
           <AlertDialogDescription>
-            Tu progreso será guardado y podrás continuar más tarde. ¿Estás seguro?
+            ¿Estás seguro de que deseas pausar este diagnóstico? Tu progreso será guardado y podrás continuar más tarde.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Confirmar</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm}>
+            Guardar y pausar
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
