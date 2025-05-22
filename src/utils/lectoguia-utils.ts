@@ -1,6 +1,6 @@
 
 import { TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName } from '@/types/system-types';
-import { SUBJECT_TO_PRUEBA_MAP } from '@/contexts/LectoGuiaContext';
+import { SUBJECT_TO_PRUEBA_MAP } from '@/contexts/lectoguia/types';
 
 // Helper para obtener un nombre amigable para cada habilidad
 export function getSkillName(skillCode: string): string {

@@ -8,7 +8,7 @@ import {
   SelectTrigger, 
   SelectValue
 } from "@/components/ui/select";
-import { SUBJECT_DISPLAY_NAMES } from '@/contexts/LectoGuiaContext';
+import { SUBJECT_DISPLAY_NAMES } from '@/contexts/lectoguia/types';
 
 interface SubjectSelectorProps {
   activeSubject: string;

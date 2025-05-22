@@ -1,4 +1,3 @@
-
 import React, { useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOpenRouter } from '@/hooks/use-openrouter';
@@ -8,7 +7,8 @@ import { Exercise } from '@/types/ai-types';
 import { TPAESHabilidad } from '@/types/system-types';
 import { v4 as uuidv4 } from 'uuid';
 
-import { LectoGuiaContext, LectoGuiaContextType, SUBJECT_TO_PRUEBA_MAP } from './types';
+import { LectoGuiaContextType, SUBJECT_TO_PRUEBA_MAP } from './types';
+import { LectoGuiaContext } from './useLectoGuia';
 import { useTabs } from './useTabs';
 import { useSubjects } from './useSubjects';
 import { useNodes } from './useNodes';
