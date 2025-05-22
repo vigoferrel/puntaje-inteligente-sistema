@@ -1,78 +1,58 @@
-
+import { callOpenRouter, callVisionModel, ServiceResult } from "../services/openrouter-service.ts";
 import { corsHeaders } from "../cors.ts";
-import { callOpenRouter, callVisionModel } from "../services/openrouter-service.ts";
-import { 
-  createErrorResponse, 
-  createSuccessResponse, 
-  processAIResponse, 
-  extractJsonFromContent,
-  createDiagnosticFallback 
-} from "../utils/response-utils.ts";
+import { createDiagnosticFallback, processAIResponse } from "../utils/response-utils.ts";
 
 /**
- * Handler for the 'generate_exercise' action
+ * Manejador para la acción de generación de ejercicios
  */
-export async function generateExercise(payload: any) {
-  try {
-    const { skill, prueba, difficulty, previousExercises } = payload;
+export async function generateExercise(payload: any): Promise<any> {
+  const { skill, prueba, difficulty } = payload;
+  
+  console.log(`Generando ejercicio para ${skill}, prueba ${prueba}, dificultad ${difficulty}`);
+  
+  const systemPrompt = `Eres un asistente especializado en crear ejercicios educativos para la prueba PAES.
+  Debes generar ejercicios de alta calidad para la habilidad ${skill} en la prueba ${prueba}.
+  Los ejercicios deben tener un nivel de dificultad: ${difficulty}.
+  Formatea tu respuesta como un objeto JSON con los siguientes campos:
+  {
+    "question": "pregunta completa",
+    "options": ["opción 1", "opción 2", "opción 3", "opción 4"],
+    "correctAnswer": "opción correcta (texto exacto)",
+    "explanation": "explicación detallada de la respuesta",
+    "skill": "${skill}",
+    "difficulty": "${difficulty}"
+  }`;
 
-    // Validate required parameters
-    if (!skill) {
-      return createErrorResponse('Se requiere especificar una habilidad');
-    }
+  const userPrompt = `Genera un ejercicio de ${skill} para la prueba ${prueba} con dificultad ${difficulty}.
+  Asegúrate de que sea desafiante pero factible para estudiantes de este nivel.
+  Si es relevante, incluye un contexto o lectura breve. Proporciona cuatro opciones de respuesta.`;
 
-    const systemPrompt = `Eres un asistente educativo especializado en crear ejercicios para la preparación de la PAES (Prueba de Acceso a la Educación Superior de Chile).
-    Tu tarea es crear ejercicios de alta calidad adaptados a las especificaciones solicitadas.
-    Tu ÚNICA salida debe ser un objeto JSON válido, sin texto adicional ni explicaciones.
-    Respeta estrictamente el esquema JSON proporcionado, sin agregar comentarios ni marcadores.`;
-
-    const userPrompt = `Crea un ejercicio de práctica para la prueba ${prueba || 'Comprensión Lectora'} 
-    que evalúe la habilidad ${skill || 'Interpretar y Relacionar'} 
-    con nivel de dificultad ${difficulty || 'intermedio'}.
-    
-    El ejercicio debe incluir:
-    1. Un breve texto o contexto relevante para la prueba
-    2. Una pregunta clara que evalúe la habilidad especificada
-    3. Cuatro opciones de respuesta (A, B, C, D)
-    4. La respuesta correcta
-    5. Una explicación de por qué esa es la respuesta correcta
-    
-    Responde con EXACTAMENTE este formato JSON sin ningún otro texto adicional:
-    { 
-      "id": "id-único-generado", 
-      "context": "texto o contexto", 
-      "question": "pregunta", 
-      "options": ["opción A", "opción B", "opción C", "opción D"], 
-      "correctAnswer": "opción correcta", 
-      "explanation": "explicación",  
-      "skill": "${skill || 'INTERPRET_RELATE'}", 
-      "prueba": "${prueba || 'COMPREHENSION_LECTORA'}", 
-      "difficulty": "${difficulty || 'INTERMEDIATE'}" 
-    }
-
-    IMPORTANTE: Asegúrate de que todas las comillas internas estén correctamente escapadas.
-    NO incluyas backticks, comentarios, ni marcadores alrededor del JSON.
-    NO incluyas ninguna información adicional ni explicaciones antes o después del JSON.`;
-
-    console.log('Generating exercise with improved JSON prompt');
-    const result = await callOpenRouter(systemPrompt, userPrompt);
-
-    if (result.error) {
-      console.error('Error generating exercise:', result.error);
-      return createErrorResponse(result.error, 500, result.fallbackResponse);
-    }
-
-    return createSuccessResponse(result.result);
-  } catch (error) {
-    console.error('Error in generateExercise handler:', error);
-    return createErrorResponse(`Error al generar ejercicio: ${error.message}`, 500);
+  const response = await callOpenRouter(systemPrompt, userPrompt);
+  
+  if (response.error) {
+    console.error('Error en la generación de ejercicio:', response.error);
+    return {
+      error: response.error,
+      result: response.fallbackResponse || { 
+        question: "¿Qué habilidad estamos practicando?", 
+        options: [`${skill}`, "Comprensión lectora", "Razonamiento matemático", "Conocimiento científico"],
+        correctAnswer: `${skill}`,
+        explanation: "Este es un ejercicio de respaldo generado debido a un error en la API.",
+        skill: skill,
+        difficulty: difficulty 
+      }
+    };
   }
+  
+  return {
+    result: processAIResponse(response.result)
+  };
 }
 
 /**
- * Handler for the 'generate_exercises_batch' action with improved JSON generation
+ * Manejador para la acción de generación de lotes de ejercicios
  */
-export async function generateExercisesBatch(payload: any) {
+export async function generateExercisesBatch(payload: any): Promise<any> {
   try {
     const { nodeId, skill, testId, count, difficulty } = payload;
     const batchSize = count && !isNaN(Number(count)) ? Number(count) : 5;
@@ -154,149 +134,54 @@ export async function generateExercisesBatch(payload: any) {
 }
 
 /**
- * Handler for the 'generate_diagnostic' action with improved JSON prompt and error handling
+ * Manejador para la acción de generación de diagnósticos
  */
-export async function generateDiagnostic(payload: any) {
-  try {
-    const { testId, skills, exercisesPerSkill, difficulty } = payload;
-    const skillsArray = Array.isArray(skills) ? skills : skills ? [skills] : [];
-    const numExercisesPerSkill = exercisesPerSkill && !isNaN(Number(exercisesPerSkill)) ? 
-      Number(exercisesPerSkill) : 3;
-    
-    // Log diagnostic generation request
-    console.log(`Generating diagnostic for test ${testId} with skills: ${skillsArray.join(", ")}`);
-    
-    // Validate required parameters
-    if (!testId || skillsArray.length === 0) {
-      return createErrorResponse(
-        'Se requiere especificar un testId y al menos una habilidad', 
-        400
-      );
-    }
-    
-    // Create a more structured system prompt specifically designed to ensure valid JSON responses
-    const systemPrompt = `Eres un asistente educativo especializado en crear diagnósticos para la preparación de la PAES.
-    Tu única tarea es generar un objeto JSON válido con la estructura exacta solicitada.
-    No debes incluir explicaciones, comentarios ni texto adicional en tu respuesta.
-    No uses backticks, marcadores de código ni formateadores.
-    Asegúrate de que todas las comillas estén correctamente escapadas.
-    Tu respuesta debe poder ser procesada directamente por JSON.parse() sin modificaciones.`;
+export async function generateDiagnostic(payload: any): Promise<any> {
+  const { testId, skills, exercisesPerSkill = 3, difficulty = 'MIXED' } = payload;
+  
+  console.log(`Generando diagnóstico para test ${testId}, habilidades: ${skills.join(', ')}`);
+  
+  const systemPrompt = `Eres un asistente especializado en crear diagnósticos educativos para la prueba PAES.
+  Debes generar un diagnóstico completo con ${exercisesPerSkill} ejercicios para cada una de estas habilidades: ${skills.join(', ')}.
+  La dificultad general debe ser: ${difficulty}.
+  Formatea tu respuesta como un objeto JSON con la siguiente estructura:
+  {
+    "title": "Título del diagnóstico",
+    "description": "Descripción del diagnóstico",
+    "exercises": [
+      {
+        "question": "pregunta completa",
+        "options": ["opción 1", "opción 2", "opción 3", "opción 4"],
+        "correctAnswer": "opción correcta (texto exacto)",
+        "explanation": "explicación detallada",
+        "skill": "habilidad específica",
+        "difficulty": "BASIC|INTERMEDIATE|ADVANCED"
+      },
+      // Más ejercicios...
+    ]
+  }`;
 
-    // Create a detailed user prompt with clear JSON structure requirements
-    const userPrompt = `Crea un diagnóstico completo para la prueba con ID ${testId}
-    que evalúe las siguientes habilidades: ${skillsArray.join(', ')}.
-    
-    Genera exactamente este objeto JSON, sin ningún texto adicional:
-    {
-      "title": "título descriptivo del diagnóstico",
-      "description": "descripción clara del propósito del diagnóstico",
-      "exercises": [
-        {
-          "id": "id-único-1",
-          "question": "pregunta concreta",
-          "options": ["opción A", "opción B", "opción C", "opción D"],
-          "correctAnswer": "texto exacto de la opción correcta",
-          "explanation": "explicación de la respuesta correcta",
-          "skill": "una de las habilidades solicitadas",
-          "difficulty": "BASIC"
-        },
-        ... más ejercicios (${numExercisesPerSkill} por cada habilidad)
-      ]
-    }
-    
-    REGLAS CRÍTICAS:
-    1. Genera EXACTAMENTE ${numExercisesPerSkill} ejercicios para CADA UNA de estas habilidades: ${skillsArray.join(', ')}
-    2. Usa SOLO las dificultades: "BASIC", "INTERMEDIATE", o "ADVANCED"
-    3. NO incluyas backticks, la palabra "json", ni ningún otro marcador
-    4. NO incluyas comentarios ni texto explicativo dentro o fuera del JSON
-    5. Asegúrate de que el valor de correctAnswer coincida EXACTAMENTE con una de las opciones
-    6. Escapa correctamente todas las comillas internas usando \\\"
-    7. La estructura debe ser exactamente la solicitada`;
+  const userPrompt = `Genera un diagnóstico completo para el test ${testId} que evalúe estas habilidades: ${skills.join(', ')}.
+  Incluye ${exercisesPerSkill} ejercicios por habilidad con una dificultad general ${difficulty}.
+  Asegúrate de que los ejercicios sean variados y midan efectivamente cada habilidad.`;
 
-    console.log('Generating diagnostic with improved JSON prompt');
-    
-    // First attempt with retry mechanism
-    let result;
-    let retryCount = 0;
-    const maxRetries = 3;
-    
-    // Implementación de sistema de reintentos más robusto
-    while (retryCount <= maxRetries) {
-      console.log(`Intento ${retryCount + 1}/${maxRetries + 1} para generar diagnóstico`);
-      
-      result = await callOpenRouter(systemPrompt, userPrompt);
-      
-      if (!result.error) {
-        try {
-          // Try to parse and validate the response
-          let diagnostic = result.result;
-          
-          // If string response, try to parse it with enhanced error handling
-          if (typeof diagnostic === 'string') {
-            try {
-              diagnostic = JSON.parse(diagnostic);
-              console.log('Successfully parsed diagnostic JSON string');
-            } catch (e) {
-              console.error('Error parsing diagnostic JSON string:', e);
-              // Try extracting JSON from the content with improved extractor
-              console.log('Attempting to extract JSON from response content');
-              diagnostic = extractJsonFromContent(diagnostic);
-            }
-          }
-          
-          // Basic validation of the structure
-          if (diagnostic && 
-              typeof diagnostic === 'object' &&
-              diagnostic.title && 
-              diagnostic.description && 
-              Array.isArray(diagnostic.exercises) && 
-              diagnostic.exercises.length > 0) {
-            
-            console.log(`Successfully generated diagnostic with ${diagnostic.exercises.length} exercises`);
-            return createSuccessResponse(diagnostic);
-          }
-          
-          console.error('Invalid diagnostic format received, retrying...');
-        } catch (parseError) {
-          console.error('Error processing diagnostic result:', parseError);
-        }
-      } else {
-        console.error(`Error from OpenRouter (attempt ${retryCount + 1}):`, result.error);
-      }
-      
-      retryCount++;
-      
-      // Wait before retrying with exponential backoff
-      if (retryCount <= maxRetries) {
-        const backoffTime = Math.pow(2, retryCount) * 500; // 1s, 2s, 4s
-        console.log(`Waiting ${backoffTime}ms before retry ${retryCount}...`);
-        await new Promise(resolve => setTimeout(resolve, backoffTime));
-      }
-    }
-    
-    // All attempts failed, return enhanced fallback diagnostic
-    console.error('All attempts to generate diagnostic failed, returning fallback');
-    const fallbackDiagnostic = createDiagnosticFallback(
-      testId,
-      `Diagnóstico para ${skillsArray.join(', ')}`,
-      `Este diagnóstico evalúa las habilidades: ${skillsArray.join(', ')} para la prueba ${testId}.`
-    );
-    
-    return createSuccessResponse(fallbackDiagnostic);
-  } catch (error) {
-    console.error('Error in generateDiagnostic handler:', error);
-    return createErrorResponse(
-      `Error al generar diagnóstico: ${error instanceof Error ? error.message : 'Unknown error'}`, 
-      500,
-      createDiagnosticFallback(payload.testId || 1)
-    );
+  const response = await callOpenRouter(systemPrompt, userPrompt);
+  
+  if (response.error) {
+    console.error('Error en la generación del diagnóstico:', response.error);
+    return {
+      error: response.error,
+      result: response.fallbackResponse || createDiagnosticFallback(testId)
+    };
   }
+  
+  return { result: processAIResponse(response.result) };
 }
 
 /**
- * Handler for the 'analyze_performance' action
+ * Manejador para la acción de análisis de rendimiento
  */
-export async function analyzePerformance(payload: any) {
+export async function analyzePerformance(payload: any): Promise<any> {
   try {
     const { answers } = payload;
 
@@ -343,9 +228,9 @@ export async function analyzePerformance(payload: any) {
 }
 
 /**
- * Handler for the 'provide_feedback' action with improved JSON format
+ * Manejador para la acción de retroalimentación
  */
-export async function provideFeedback(payload: any) {
+export async function provideFeedback(payload: any): Promise<any> {
   try {
     const { userMessage, context } = payload;
 
@@ -381,52 +266,42 @@ export async function provideFeedback(payload: any) {
 }
 
 /**
- * Handler for the 'process_image' action with improved prompt
+ * Manejador para la acción de procesamiento de imágenes
  */
-export async function processImage(payload: any) {
-  try {
-    const { image, prompt, context } = payload;
-
-    if (!image) {
-      return createErrorResponse('Se requiere una imagen para procesar');
-    }
-
-    const systemPrompt = `Eres un asistente educativo especializado en comprensión lectora y análisis de textos para la preparación de la PAES.
-    Tu tarea es analizar imágenes, extraer texto visible y proporcionar una respuesta clara y estructurada.
-    Prioriza la extracción precisa del texto y organiza tu respuesta de manera concisa y útil para el estudiante.`;
-
-    const userPrompt = prompt || "Analiza esta imagen y extrae todo el texto que puedas encontrar. Organiza el contenido de manera estructurada y fácil de comprender.";
-
-    console.log('Processing image with improved vision model prompt');
-    const result = await callVisionModel(systemPrompt, userPrompt, image);
-
-    if (result.error) {
-      console.error('Error processing image:', result.error);
-      return createErrorResponse(result.error, 500, result.fallbackResponse);
-    }
-
-    // Format the response
-    let response = {
-      response: result.result || "No se pudo extraer contenido de la imagen",
-      extractedText: null,
-      analysis: null
+export async function processImage(payload: any): Promise<any> {
+  const { image, prompt, context } = payload;
+  
+  if (!image) {
+    console.error('No se proporcionó imagen para procesar');
+    return {
+      error: 'No se proporcionó imagen para procesar',
+      result: { response: "Error: No se proporcionó una imagen para analizar." }
     };
-
-    return createSuccessResponse(response);
-  } catch (error) {
-    console.error('Error in processImage handler:', error);
-    
-    // Provide a helpful error message and fallback response
-    const fallbackResponse = {
-      response: "Lo siento, tuve problemas procesando esta imagen. Por favor, intenta con una imagen diferente o proporciona más detalles sobre lo que necesitas.",
-      extractedText: null,
-      analysis: null
-    };
-    
-    return createErrorResponse(
-      `Error al procesar imagen: ${error.message}`, 
-      500,
-      fallbackResponse
-    );
   }
+  
+  console.log('Procesando imagen con prompt:', prompt || 'prompt predeterminado');
+  
+  const systemPrompt = `Eres un asistente especializado en analizar y extraer información de imágenes.
+  Contexto: ${context || 'Análisis educativo'}.
+  Debes analizar la imagen proporcionada y responder a la consulta del usuario.
+  Si es posible, extrae cualquier texto visible en la imagen.
+  Estructura tu respuesta como JSON cuando sea apropiado.`;
+
+  const userPrompt = prompt || "Analiza esta imagen y extrae todo el texto que puedas encontrar. Describe brevemente su contenido.";
+
+  const response = await callVisionModel(systemPrompt, userPrompt, image);
+  
+  if (response.error) {
+    console.error('Error en el procesamiento de imagen:', response.error);
+    return {
+      error: response.error,
+      result: response.fallbackResponse || { 
+        response: "No se pudo analizar la imagen proporcionada debido a un error técnico." 
+      }
+    };
+  }
+  
+  return { 
+    result: processAIResponse(response.result) 
+  };
 }

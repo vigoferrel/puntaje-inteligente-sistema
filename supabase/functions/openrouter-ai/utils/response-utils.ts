@@ -1,79 +1,63 @@
 
-// Utility functions for processing responses from the OpenRouter AI service
+// Funciones de utilidad para procesar respuestas del servicio OpenRouter AI
 
 export function createSuccessResponse(result: any) {
-  return new Response(
-    JSON.stringify({
-      result,
-      success: true,
-    }),
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      status: 200,
-    }
-  );
+  return {
+    result,
+    success: true,
+  };
 }
 
 export function createErrorResponse(message: string, status: number = 400, fallbackResponse: any = null) {
-  return new Response(
-    JSON.stringify({
-      error: message,
-      success: false,
-      result: fallbackResponse,
-    }),
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      status,
-    }
-  );
+  return {
+    error: message,
+    success: false,
+    result: fallbackResponse,
+  };
 }
 
 /**
- * Process AI response to ensure consistent format
+ * Procesa la respuesta de la IA para asegurar un formato consistente
  */
 export function processAIResponse(response: any): any {
-  // If response is already an object, return it
+  // Si la respuesta ya es un objeto, devolverla
   if (typeof response === 'object' && response !== null) {
     return response;
   }
   
-  // If response is a string, try to parse it as JSON
+  // Si la respuesta es una cadena, intentar analizarla como JSON
   if (typeof response === 'string') {
     try {
       return JSON.parse(response);
     } catch (e) {
-      // Not valid JSON, return as text response
+      // No es un JSON válido, devolver como respuesta de texto
       return {
         response: response
       };
     }
   }
   
-  // Fallback if response is null or undefined
+  // Valor predeterminado si la respuesta es nula o indefinida
   return {
     response: response || "No se recibió una respuesta válida"
   };
 }
 
 /**
- * Mejorada función para extraer JSON válido de una respuesta de texto
+ * Función mejorada para extraer JSON válido de una respuesta de texto
  * Implementa múltiples estrategias para recuperar estructuras JSON
  */
 export function extractJsonFromContent(content: string): any {
   if (!content) {
-    console.log('Content is empty');
+    console.log('El contenido está vacío');
     return null;
   }
 
   try {
-    // Intento directo de parsear como JSON
+    // Intento directo de analizar como JSON
     return JSON.parse(content);
   } catch (e) {
-    console.log('Could not parse content as JSON, trying alternative methods');
+    console.log('No se pudo analizar el contenido como JSON, probando métodos alternativos');
   }
 
   try {
@@ -83,10 +67,10 @@ export function extractJsonFromContent(content: string): any {
     if (jsonObjectMatch && jsonObjectMatch[0]) {
       try {
         const cleanedJson = cleanJsonString(jsonObjectMatch[0]);
-        console.log('Found JSON object pattern, attempting to parse');
+        console.log('Se encontró patrón de objeto JSON, intentando analizar');
         return JSON.parse(cleanedJson);
       } catch (e) {
-        console.log('Found JSON object pattern but failed to parse:', e);
+        console.log('Se encontró patrón de objeto JSON pero falló al analizar:', e);
       }
     }
 
@@ -96,10 +80,10 @@ export function extractJsonFromContent(content: string): any {
     if (jsonArrayMatch && jsonArrayMatch[0]) {
       try {
         const cleanedJson = cleanJsonString(jsonArrayMatch[0]);
-        console.log('Found JSON array pattern, attempting to parse');
+        console.log('Se encontró patrón de array JSON, intentando analizar');
         return JSON.parse(cleanedJson);
       } catch (e) {
-        console.log('Found JSON array pattern but failed to parse:', e);
+        console.log('Se encontró patrón de array JSON pero falló al analizar:', e);
       }
     }
 
@@ -110,23 +94,23 @@ export function extractJsonFromContent(content: string): any {
     }
 
     // 4. Si todos los intentos fallan, intentar arreglar problemas comunes
-    console.log('All parse attempts failed, trying to fix common JSON issues');
+    console.log('Todos los intentos de análisis fallaron, intentando arreglar problemas comunes de JSON');
     const fixedContent = fixCommonJsonIssues(content);
     try {
       return JSON.parse(fixedContent);
     } catch (e) {
-      console.log('Could not parse content as JSON, returning raw content:', e);
+      console.log('No se pudo analizar el contenido como JSON, devolviendo contenido en crudo:', e);
       // Si todo falla, devolver el contenido tal cual
       return content;
     }
   } catch (error) {
-    console.error('Error in extractJsonFromContent:', error);
+    console.error('Error en extractJsonFromContent:', error);
     return content;
   }
 }
 
 /**
- * Limpia un string JSON de caracteres problemáticos comunes
+ * Limpia una cadena JSON de caracteres problemáticos comunes
  */
 function cleanJsonString(jsonString: string): string {
   // Eliminar backticks al principio y final
@@ -149,10 +133,10 @@ function extractJsonStructure(text: string): any {
   if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
     try {
       const jsonCandidate = text.substring(startIdx, endIdx + 1);
-      console.log('Found JSON candidate, trying to parse');
+      console.log('Se encontró candidato JSON, intentando analizar');
       return JSON.parse(jsonCandidate);
     } catch (e) {
-      console.log('Could not parse JSON candidate, trying full content');
+      console.log('No se pudo analizar el candidato JSON, probando con el contenido completo');
     }
   }
   
@@ -160,7 +144,7 @@ function extractJsonStructure(text: string): any {
 }
 
 /**
- * Intenta corregir problemas comunes en strings JSON
+ * Intenta corregir problemas comunes en cadenas JSON
  */
 function fixCommonJsonIssues(jsonString: string): string {
   // Eliminar caracteres no imprimibles
@@ -185,14 +169,14 @@ function fixCommonJsonIssues(jsonString: string): string {
 }
 
 /**
- * Create a fallback diagnostic when generation fails
+ * Crea un diagnóstico de respaldo cuando la generación falla
  */
 export function createDiagnosticFallback(
   testId: number, 
   title: string = "Diagnóstico de prueba",
   description: string = "Este es un diagnóstico generado automáticamente"
 ): any {
-  console.log(`Creating fallback diagnostic for test ID: ${testId}`);
+  console.log(`Creando diagnóstico de respaldo para ID de prueba: ${testId}`);
   
   // Definir habilidades básicas según el testId
   const skills = ['comprensión', 'análisis', 'interpretación', 'razonamiento'];
