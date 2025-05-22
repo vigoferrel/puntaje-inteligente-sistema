@@ -16,8 +16,8 @@ export function useOpenRouter() {
       setLoading(true);
       console.log(`useOpenRouter: llamando a ${action}`, payload);
       
-      // Validar payload antes de enviar
       if (!payload) {
+        console.error("Error: Payload es requerido");
         throw new Error("Payload es requerido");
       }
       
@@ -31,7 +31,13 @@ export function useOpenRouter() {
         }
       }
       
-      const result = await openRouterService<T>({ action, payload });
+      // Llamar al servicio con manejo de tiempo de espera
+      const timeoutPromise = new Promise<null>((_, reject) => {
+        setTimeout(() => reject(new Error("Tiempo de espera agotado")), 25000);
+      });
+      
+      const resultPromise = openRouterService<T>({ action, payload });
+      const result = await Promise.race([resultPromise, timeoutPromise]) as T;
       
       console.log(`useOpenRouter: respuesta de ${action}`, result);
       
@@ -46,8 +52,8 @@ export function useOpenRouter() {
       console.error('Detalles del error:', { action, payload });
       
       toast({
-        title: "Error",
-        description: message,
+        title: "Error de conexión",
+        description: "Hubo un problema al conectar con el servicio. Inténtalo de nuevo.",
         variant: "destructive"
       });
       return null;

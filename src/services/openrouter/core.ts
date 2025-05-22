@@ -1,77 +1,86 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
 interface OpenRouterRequest {
   action: string;
   payload: any;
+  requestId?: string;
 }
 
-/**
- * Servicio central para llamar a las Edge Functions de OpenRouter
- */
-export const openRouterService = async <T>(request: OpenRouterRequest): Promise<T | null> => {
-  try {
-    console.log(`OpenRouter: Iniciando petición a ${request.action}`, { payload: request.payload });
-    
-    // Mostrar un mensaje visual mientras carga si es una acción de duración considerable
-    if (['generate_exercise', 'generate_exercises_batch', 'generate_diagnostic'].includes(request.action)) {
-      toast({
-        title: "Generando contenido",
-        description: "Esto puede tomar unos segundos...",
-      });
-    }
-    
-    const { data, error } = await supabase.functions.invoke<T>('openrouter-ai', {
-      body: {
-        action: request.action,
-        payload: request.payload,
-        requestId: crypto.randomUUID() // Para seguimiento
-      }
-    });
-    
-    if (error) {
-      console.error(`OpenRouter Error (${request.action}):`, error);
-      throw new Error(`Error en OpenRouter: ${error.message}`);
-    }
-    
-    if (!data) {
-      console.error(`OpenRouter: No hay datos en la respuesta para ${request.action}`);
-      throw new Error('No se recibieron datos de la función');
-    }
-    
-    console.log(`OpenRouter: Respuesta exitosa de ${request.action}`, data);
-    return data;
-    
-  } catch (error) {
-    console.error('OpenRouter Service Error:', error);
-    const message = error instanceof Error ? error.message : 'Error desconocido';
-    throw new Error(`Error al contactar el servicio de IA: ${message}`);
-  }
+// Función para generar un UUID para seguimiento de solicitudes
+const generateRequestId = () => {
+  return 'req_' + Math.random().toString(36).substring(2, 11);
 };
 
 /**
- * Función específica para procesar imágenes a través de OpenRouter
+ * Servicio principal para comunicarse con la función de borde de OpenRouter
  */
-export const processImageWithOpenRouter = async (
-  imageData: string,
-  prompt?: string,
-  context?: string
-): Promise<any> => {
+export async function openRouterService<T>(request: OpenRouterRequest): Promise<T | null> {
   try {
-    console.log('OpenRouter: Procesando imagen');
-    const response = await openRouterService({
-      action: 'process_image',
-      payload: {
-        image: imageData,
-        prompt: prompt || "Describe esta imagen en detalle",
-        context: context
-      }
+    // Añadir un ID de solicitud para seguimiento si no existe
+    const requestWithId = {
+      ...request,
+      requestId: request.requestId || generateRequestId()
+    };
+    
+    // URL de la función de borde que maneja las solicitudes de OpenRouter
+    const functionUrl = '/functions/v1/openrouter-ai';
+    
+    console.log('OpenRouter: Enviando solicitud a', functionUrl, requestWithId);
+    
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestWithId),
     });
     
-    return response;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenRouter: Error en la respuesta:', response.status, errorText);
+      
+      // Manejo específico según el código de estado
+      if (response.status === 429) {
+        toast({
+          title: "Límite de solicitudes excedido",
+          description: "Por favor, espera un momento antes de intentar nuevamente.",
+          variant: "destructive"
+        });
+      } else if (response.status === 504 || response.status === 503) {
+        toast({
+          title: "Servicio no disponible",
+          description: "El servicio de IA está temporalmente no disponible. Inténtalo más tarde.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Error de comunicación",
+          description: `Error ${response.status}: Problema al comunicarse con el servicio.`,
+          variant: "destructive"
+        });
+      }
+      
+      throw new Error(`Error en solicitud OpenRouter: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Verificar estructura de respuesta esperada
+    if (data.error) {
+      console.error('OpenRouter: Error reportado en la respuesta:', data.error);
+      throw new Error(`Error de la API: ${data.error}`);
+    }
+    
+    console.log('OpenRouter: Respuesta exitosa de', request.action, data);
+    
+    // Devolver el resultado o un objeto vacío si es null/undefined
+    return data.result || null;
   } catch (error) {
-    console.error('Error al procesar imagen con OpenRouter:', error);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('OpenRouter service error:', errorMessage, error);
+    
+    // No mostrar notificación aquí - dejarlo para el nivel superior (useOpenRouter)
+    return null;
   }
-};
+}

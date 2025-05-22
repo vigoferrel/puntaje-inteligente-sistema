@@ -1,12 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useOpenRouter } from '@/hooks/use-openrouter';
 import { toast } from '@/components/ui/use-toast';
 import { useChatMessages } from './use-chat-messages';
 import { useImageProcessing } from './use-image-processing';
 import { subjectNames, detectSubjectFromMessage } from './subject-detection';
 import { handleMessageError, extractResponseContent } from './message-handling';
-import { ChatState, ChatActions } from './types';
+import { ChatState, ChatActions, ERROR_RATE_LIMIT_MESSAGE } from './types';
+import { provideChatFeedback } from '@/services/openrouter/feedback';
 
 export function useLectoGuiaChat(): ChatState & ChatActions {
   // Chat state management
@@ -58,43 +59,37 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         changeSubject(detectedSubject);
       }
       
-      // Request response from API
-      console.log('Enviando mensaje a OpenRouter:', message);
-      const responseData = await callOpenRouter<any>("provide_feedback", {
-        userMessage: message,
-        context: `PAES preparation, subject: ${activeSubject}, full platform assistance`,
-        previousMessages: getRecentMessages(6)
-      });
+      // Request response directly from feedback service
+      console.log('Enviando mensaje a servicio de feedback:', message);
+      const responseData = await provideChatFeedback(
+        message,
+        `PAES preparation, subject: ${activeSubject}, full platform assistance`,
+        getRecentMessages(6)
+      );
       
-      console.log('Respuesta recibida de OpenRouter:', responseData);
+      console.log('Respuesta del servicio de feedback:', responseData);
       
       // Manejar caso de error o respuesta nula
       if (!responseData) {
-        console.log('Respuesta nula recibida de OpenRouter');
+        console.log('Respuesta nula recibida del servicio');
         const errorContent = "Lo siento, no pude procesar tu solicitud. Por favor intenta de nuevo.";
         addAssistantMessage(errorContent);
         return errorContent;
       }
       
-      // Utilizar la función mejorada para extraer contenido de cualquier formato de respuesta
-      const botResponse = extractResponseContent(responseData);
-      console.log('Respuesta procesada:', botResponse);
-      
-      // Validar que la respuesta es utilizable
-      if (botResponse && typeof botResponse === 'string' && botResponse.length > 0) {
-        addAssistantMessage(botResponse);
-        return botResponse;
-      } else {
-        console.log('La respuesta procesada no es válida, usando respuesta por defecto');
-        const fallbackResponse = "Recibí una respuesta pero no pude procesarla correctamente. ¿Podrías reformular tu pregunta?";
-        addAssistantMessage(fallbackResponse);
-        return fallbackResponse;
-      }
+      // La respuesta ya debería estar en formato de texto
+      addAssistantMessage(responseData);
+      return responseData;
       
     } catch (error) {
       // Handle errors with improved error reporting
       console.error('Error procesando mensaje:', error);
-      const { errorContent } = handleMessageError(error);
+      const errorContent = error instanceof Error 
+        ? error.message.includes('rate limit') 
+          ? ERROR_RATE_LIMIT_MESSAGE
+          : "Lo siento, ocurrió un error. Por favor intenta de nuevo."
+        : "Hubo un problema al procesar tu mensaje.";
+      
       addAssistantMessage(errorContent);
       return null;
     } finally {
