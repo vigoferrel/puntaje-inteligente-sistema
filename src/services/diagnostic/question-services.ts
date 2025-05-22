@@ -51,7 +51,7 @@ export async function fetchQuestionsByIds(
     if (!data || !Array.isArray(data)) return [];
     
     // Transform each row into a DiagnosticQuestion
-    return data.map(mapExerciseToQuestion);
+    return data.map(exercise => mapExerciseToQuestion(exercise));
   } catch (error) {
     console.error('Error fetching questions by IDs:', error);
     return [];
@@ -95,11 +95,11 @@ export async function fetchDiagnosticQuestions(
       if (!fallbackData || !Array.isArray(fallbackData)) return [];
       
       // Map the data to our DiagnosticQuestion type
-      return fallbackData.map(mapExerciseToQuestion);
+      return fallbackData.map(exercise => mapExerciseToQuestion(exercise));
     }
     
     // Map the data to our DiagnosticQuestion type
-    return data.map(mapExerciseToQuestion);
+    return data.map(exercise => mapExerciseToQuestion(exercise));
   } catch (error) {
     console.error('Error in fetchDiagnosticQuestions:', error);
     return [];
@@ -114,13 +114,15 @@ function mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
   let options: string[] = [];
   
   try {
-    if (Array.isArray(exercise.options)) {
-      options = exercise.options;
-    } else if (typeof exercise.options === 'string') {
-      options = JSON.parse(exercise.options || '[]');
-    } else if (exercise.options && typeof exercise.options === 'object') {
-      // If options is already an object (from JSONB column)
-      options = Array.isArray(exercise.options) ? exercise.options : [];
+    if (exercise && exercise.options) {
+      if (Array.isArray(exercise.options)) {
+        options = exercise.options;
+      } else if (typeof exercise.options === 'string') {
+        options = JSON.parse(exercise.options || '[]');
+      } else if (typeof exercise.options === 'object') {
+        // If options is already an object (from JSONB column)
+        options = Array.isArray(exercise.options) ? exercise.options : [];
+      }
     }
   } catch (e) {
     console.error('Error parsing options:', e);
@@ -129,17 +131,17 @@ function mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
 
   // Map database fields to our type, with fallbacks for missing data
   return {
-    id: exercise.id || '',
-    question: exercise.question || '',
+    id: exercise?.id || '',
+    question: exercise?.question || '',
     options: options,
-    correctAnswer: exercise.correct_answer || '',
+    correctAnswer: exercise?.correct_answer || '',
     // If skill/prueba are stored as IDs, map them to the enum types
-    skill: typeof exercise.skill === 'number' 
+    skill: typeof exercise?.skill === 'number' 
       ? mapSkillIdToEnum(exercise.skill)
-      : (exercise.skill as TPAESHabilidad || 'SOLVE_PROBLEMS'),
-    prueba: typeof exercise.prueba === 'number'
+      : (exercise?.skill as TPAESHabilidad || 'SOLVE_PROBLEMS'),
+    prueba: typeof exercise?.prueba === 'number'
       ? mapTestIdToEnum(exercise.prueba)
-      : (exercise.prueba as TPAESPrueba || 'MATEMATICA_1'),
-    explanation: exercise.explanation || undefined
+      : (exercise?.prueba as TPAESPrueba || 'MATEMATICA_1'),
+    explanation: exercise?.explanation || undefined
   };
 }

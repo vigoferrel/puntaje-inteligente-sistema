@@ -47,9 +47,7 @@ export function useOpenRouter() {
       
       // Default fallback - ensure response property exists
       return { 
-        response: typeof result === 'object' && result !== null 
-          ? JSON.stringify(result) 
-          : "No se pudo procesar correctamente la imagen."
+        response: typeof result === 'object' ? JSON.stringify(result) : "No se pudo procesar correctamente la imagen."
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error procesando la imagen';
