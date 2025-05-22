@@ -28,7 +28,8 @@ export const AppSidebar = () => {
   const [open, setOpen] = React.useState(false);
 
   // Verificar si el usuario tiene rol de administrador
-  const isAdmin = profile?.role === 'admin' || profile?.email?.includes('admin');
+  // Fix: Check if user email includes 'admin' instead of checking role property
+  const isAdmin = profile?.email?.includes('admin');
 
   const navItems = [
     {
