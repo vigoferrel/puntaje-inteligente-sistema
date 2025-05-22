@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudyStreak } from "@/hooks/use-study-streak";
 
 const Plan = () => {
   const { user } = useUserData();
@@ -34,6 +35,11 @@ const Plan = () => {
     fetchUserNodeProgress,
     nodeProgress
   } = useLearningNodes();
+  
+  const {
+    streakData,
+    updateStreak
+  } = useStudyStreak();
   
   // Fetch node progress data when the component mounts and the user is authenticated
   useEffect(() => {
@@ -143,6 +149,8 @@ const Plan = () => {
           onCreatePlan={handleCreatePlan}
           onSelectPlan={selectPlan}
           onUpdateProgress={updateCurrentPlanProgress}
+          streakData={streakData}
+          onStudyActivity={updateStreak}
         />
       </div>
     </AppLayout>

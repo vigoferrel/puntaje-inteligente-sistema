@@ -6,10 +6,11 @@ import { CurrentPlan } from "./current-plan";
 import { PlanSelector } from "./PlanSelector";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, CalendarDays, BarChart2, CheckCircle } from "lucide-react";
+import { PlayCircle, CalendarDays, BarChart2, CheckCircle, Flame } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
+import { StudyStreakCard } from "./study-streak/StudyStreakCard";
 
 interface PlanContentProps {
   plans: LearningPlan[];
@@ -20,6 +21,13 @@ interface PlanContentProps {
   onCreatePlan: () => void;
   onSelectPlan: (plan: LearningPlan) => void;
   onUpdateProgress: () => void;
+  streakData?: {
+    currentStreak: number;
+    longestStreak: number;
+    lastStudyDate: string | null;
+    totalStudyDays: number;
+  };
+  onStudyActivity?: () => void;
 }
 
 export const PlanContent = ({
@@ -30,7 +38,9 @@ export const PlanContent = ({
   recommendedNodeId,
   onCreatePlan,
   onSelectPlan,
-  onUpdateProgress
+  onUpdateProgress,
+  streakData,
+  onStudyActivity
 }: PlanContentProps) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("current-plan");
@@ -56,16 +66,12 @@ export const PlanContent = ({
   
   const handleContinue = () => {
     if (continueNode) {
+      if (onStudyActivity) {
+        onStudyActivity();
+      }
       navigate(`/node/${continueNode.nodeId}`);
     }
   };
-  
-  const getStudyStreak = () => {
-    // Placeholder for study streak - would be calculated from actual data
-    return 3; // Example: 3 days streak
-  };
-  
-  const streak = getStudyStreak();
   
   return (
     <AnimatePresence mode="wait">
@@ -111,21 +117,7 @@ export const PlanContent = ({
                 </Card>
                 
                 {/* Study Streak */}
-                <Card className="col-span-1 hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center mr-4">
-                      <CalendarDays className="h-6 w-6 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Racha de estudio</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {streak > 0 ? 
-                          `${streak} día${streak !== 1 ? 's' : ''} consecutivo${streak !== 1 ? 's' : ''}` : 
-                          "Comienza hoy"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <StudyStreakCard streakData={streakData} />
                 
                 {/* Completion Status */}
                 <Card className="col-span-1 hover:shadow-md transition-shadow">
