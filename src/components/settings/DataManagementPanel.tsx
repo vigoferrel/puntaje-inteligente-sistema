@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDataInitialization } from '@/hooks/use-data-initialization';
-import { Database, Loader, RefreshCw, LogIn, AlertTriangle, Info } from 'lucide-react';
+import { Database, Loader, RefreshCw, LogIn, AlertTriangle, Info, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,12 +12,15 @@ import { Link } from 'react-router-dom';
 export function DataManagementPanel() {
   const {
     initializeLearningNodes,
+    initializePAESContent,
     checkDatabaseStatus,
     status,
     isLoading,
+    isLoadingPAES,
     message,
     error,
-    detailedError
+    detailedError,
+    paesContentStatus
   } = useDataInitialization();
   
   const { user } = useAuth();
@@ -105,7 +108,7 @@ export function DataManagementPanel() {
         
         <div className="space-y-2">
           <div className="text-sm font-medium">Estado de la base de datos:</div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StatusCard 
               title="Nodos de Aprendizaje" 
               status={status.learningNodes} 
@@ -121,16 +124,21 @@ export function DataManagementPanel() {
               status={status.paesTests} 
               description={getStatusDescription("paesTests", status.paesTests)}
             />
+            <StatusCard 
+              title="Contenido PAES" 
+              status={paesContentStatus || 'unknown'} 
+              description={getStatusDescription("paesContent", paesContentStatus || 'unknown')}
+            />
           </div>
         </div>
       </CardContent>
       
-      <CardFooter className="flex flex-col sm:flex-row gap-3">
+      <CardFooter className="flex flex-wrap gap-3">
         <Button
           variant="outline"
           onClick={checkDatabaseStatus}
-          disabled={isLoading}
-          className="w-full sm:w-auto"
+          disabled={isLoading || isLoadingPAES}
+          className="flex-1 min-w-[150px]"
         >
           {isLoading ? (
             <>
@@ -147,8 +155,8 @@ export function DataManagementPanel() {
         
         <Button
           onClick={initializeLearningNodes}
-          disabled={isLoading || !user}
-          className="w-full sm:w-auto"
+          disabled={isLoading || isLoadingPAES || !user}
+          className="flex-1 min-w-[150px]"
           title={!user ? "Debes iniciar sesión para inicializar los nodos" : ""}
         >
           {isLoading ? (
@@ -159,7 +167,27 @@ export function DataManagementPanel() {
           ) : (
             <>
               <Database className="mr-2 h-4 w-4" />
-              Inicializar Nodos de Aprendizaje
+              Inicializar Nodos Base
+            </>
+          )}
+        </Button>
+        
+        <Button
+          onClick={initializePAESContent}
+          disabled={isLoading || isLoadingPAES || !user || status.learningNodes === 'empty'}
+          variant="secondary"
+          className="flex-1 min-w-[150px]"
+          title={!user ? "Debes iniciar sesión para inicializar el contenido PAES" : (status.learningNodes === 'empty' ? "Debes inicializar los nodos base primero" : "")}
+        >
+          {isLoadingPAES ? (
+            <>
+              <Loader className="mr-2 h-4 w-4 animate-spin" />
+              Inicializando PAES...
+            </>
+          ) : (
+            <>
+              <BookOpen className="mr-2 h-4 w-4" />
+              Inicializar Contenido PAES
             </>
           )}
         </Button>
@@ -190,6 +218,13 @@ function getStatusDescription(tableType: string, status: 'loading' | 'empty' | '
       error: "Error al cargar las pruebas PAES",
       loading: "Verificando pruebas PAES...",
       unknown: "Estado de pruebas desconocido"
+    },
+    paesContent: {
+      empty: "No hay contenido PAES cargado",
+      populated: "Contenido PAES cargado correctamente",
+      error: "Error al cargar el contenido PAES",
+      loading: "Verificando contenido PAES...",
+      unknown: "Estado del contenido PAES desconocido"
     }
   };
 

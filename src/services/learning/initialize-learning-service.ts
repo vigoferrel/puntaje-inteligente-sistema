@@ -1,9 +1,9 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { initializeRLSPolicies } from "@/services/database/rls-service";
 import { mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
 import { v4 as uuidv4 } from 'uuid';
+import { initializePAESContent } from './paes-content-service';
 
 // First, check if paes_skills and paes_tests already exist before initializing nodes
 const checkRequiredTables = async (): Promise<{exists: boolean, skillIds: number[], testIds: number[]}> => {
@@ -314,6 +314,22 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       }
     }
     
+    // Initialize PAES content after basic nodes
+    console.log('Basic nodes created successfully, now initializing PAES educational content...');
+    try {
+      const paesResults = await initializePAESContent();
+      console.log('PAES content initialization results:', paesResults);
+      
+      if (paesResults.failed > 0) {
+        console.warn('Some PAES nodes failed to initialize:', paesResults.errors);
+      } else {
+        console.log('All PAES content initialized successfully');
+      }
+    } catch (paesError: any) {
+      console.error('Error initializing PAES content:', paesError);
+      // Don't throw here, as we already have basic nodes
+    }
+    
     console.log('Learning nodes initialized successfully');
     return true;
   } catch (error: any) {
@@ -325,5 +341,35 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
     }
     console.error('Error initializing learning nodes:', error);
     return false;
+  }
+};
+
+// Export a function specifically for initializing PAES content
+export const initializePAESNodesOnly = async (): Promise<{
+  success: number;
+  failed: number;
+  errors: string[];
+}> => {
+  try {
+    // First check if the user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Usuario no autenticado. Se requiere autenticación para inicializar los nodos de aprendizaje.');
+      return {
+        success: 0,
+        failed: 1,
+        errors: ['AUTH_REQUIRED: Debe iniciar sesión para realizar esta operación']
+      };
+    }
+    
+    return await initializePAESContent();
+  } catch (error: any) {
+    console.error('Error initializing PAES nodes:', error);
+    return {
+      success: 0,
+      failed: 1,
+      errors: [`Error: ${error?.message || 'Unknown error'}`]
+    };
   }
 };

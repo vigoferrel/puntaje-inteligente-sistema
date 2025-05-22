@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { ensureLearningNodesExist } from "@/services/learning/initialize-learning-service";
+import { ensureLearningNodesExist, initializePAESNodesOnly } from "@/services/learning/initialize-learning-service";
 import { useAuth } from "@/contexts/AuthContext";
 
 type DatabaseStatus = {
@@ -14,6 +14,7 @@ type DatabaseStatus = {
 export const useDataInitialization = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingPAES, setIsLoadingPAES] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [detailedError, setDetailedError] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export const useDataInitialization = () => {
     paesSkills: 'unknown',
     paesTests: 'unknown',
   });
+  const [paesContentStatus, setPaesContentStatus] = useState<'loading' | 'empty' | 'populated' | 'error' | 'unknown'>('unknown');
 
   const checkDatabaseStatus = useCallback(async () => {
     setIsLoading(true);
@@ -36,6 +38,7 @@ export const useDataInitialization = () => {
         paesSkills: 'loading',
         paesTests: 'loading',
       }));
+      setPaesContentStatus('loading');
       
       // Check learning nodes
       const { count: learningNodesCount, error: learningNodesError } = await supabase
@@ -51,6 +54,12 @@ export const useDataInitialization = () => {
       const { count: paesTestsCount, error: paesTestsError } = await supabase
         .from('paes_tests')
         .select('*', { count: 'exact', head: true });
+        
+      // Check PAES content (nodes with specific content types)
+      const { count: paesContentCount, error: paesContentError } = await supabase
+        .from('node_content')
+        .select('*', { count: 'exact', head: true })
+        .in('content_type', ['sistema_principal', 'prueba_principal', 'dimension', 'nodo_critico', 'eje', 'modulo', 'asignatura']);
         
       // Update status based on results
       setStatus({
@@ -71,13 +80,20 @@ export const useDataInitialization = () => {
             : 'empty',
       });
       
+      setPaesContentStatus(paesContentError
+        ? 'error'
+        : (paesContentCount && paesContentCount > 0)
+          ? 'populated'
+          : 'empty');
+      
       setMessage("Estado de la base de datos verificado correctamente.");
       
       // Log counts for debugging
       console.log("DB Status Check Results:", {
         learningNodes: learningNodesCount,
         paesSkills: paesSkillsCount,
-        paesTests: paesTestsCount
+        paesTests: paesTestsCount,
+        paesContent: paesContentCount
       });
     } catch (err: any) {
       console.error("Error checking database status:", err);
@@ -190,6 +206,87 @@ export const useDataInitialization = () => {
     }
   }, [checkDatabaseStatus, user]);
 
+  // New function for initializing PAES content
+  const initializePAESContent = useCallback(async () => {
+    setIsLoadingPAES(true);
+    setMessage(null);
+    setError(null);
+    setDetailedError(null);
+    
+    if (!user) {
+      setError("Debes iniciar sesión para inicializar el contenido PAES.");
+      toast({
+        title: "Acceso denegado",
+        description: "Debes iniciar sesión para inicializar el contenido PAES.",
+        variant: "destructive"
+      });
+      setIsLoadingPAES(false);
+      return;
+    }
+    
+    try {
+      const result = await initializePAESNodesOnly();
+      
+      if (result.success > 0) {
+        setMessage(`Contenido PAES inicializado correctamente. Se han creado ${result.success} nodos.`);
+        toast({
+          title: "¡Éxito!",
+          description: `Se ha inicializado el contenido PAES correctamente (${result.success} nodos creados).`,
+        });
+      } else if (result.errors[0] === 'PAES nodes already exist') {
+        setMessage("El contenido PAES ya estaba inicializado.");
+        toast({
+          title: "Información",
+          description: "El contenido PAES ya estaba inicializado anteriormente.",
+        });
+      } else if (result.failed > 0) {
+        throw new Error(result.errors.join(', '));
+      }
+      
+      // Update status after attempting initialization
+      await checkDatabaseStatus();
+    } catch (err: any) {
+      console.error("Error initializing PAES content:", err);
+      
+      let errorMessage: string;
+      let detailedErr: string | null = null;
+      
+      if (typeof err === 'object' && err !== null) {
+        detailedErr = JSON.stringify(err, null, 2);
+      }
+      
+      if (err.message?.includes('AUTH_REQUIRED')) {
+        errorMessage = "Necesitas iniciar sesión para inicializar el contenido PAES.";
+        toast({
+          title: "Autenticación requerida",
+          description: "Necesitas iniciar sesión para inicializar el contenido PAES.",
+          variant: "destructive"
+        });
+      } else if (err.message?.includes('Required data missing')) {
+        errorMessage = "Primero debes inicializar los datos base (habilidades y pruebas).";
+        toast({
+          title: "Datos faltantes",
+          description: "Primero debes inicializar los nodos base antes de cargar el contenido PAES.",
+          variant: "destructive"
+        });
+      } else {
+        errorMessage = `Error: ${err.message || "Ocurrió un error desconocido"}`;
+        toast({
+          title: "Error",
+          description: "No se pudo inicializar el contenido PAES.",
+          variant: "destructive"
+        });
+      }
+      
+      setError(errorMessage);
+      if (detailedErr) {
+        setDetailedError(detailedErr);
+      }
+    } finally {
+      setIsLoadingPAES(false);
+    }
+  }, [checkDatabaseStatus, user]);
+
   // Check status on component mount
   useEffect(() => {
     checkDatabaseStatus();
@@ -197,11 +294,14 @@ export const useDataInitialization = () => {
   
   return {
     initializeLearningNodes,
+    initializePAESContent,
     checkDatabaseStatus,
     status,
     isLoading,
+    isLoadingPAES,
     message,
     error,
-    detailedError
+    detailedError,
+    paesContentStatus
   };
 };
