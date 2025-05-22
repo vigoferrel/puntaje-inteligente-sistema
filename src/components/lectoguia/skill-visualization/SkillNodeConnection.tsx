@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TLearningNode, TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName } from "@/types/system-types";
+import { TLearningNode, TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName, getPruebaDisplayName } from "@/types/system-types";
 import { NodeProgress } from "@/hooks/use-learning-nodes";
 import { SkillRadar } from "./SkillRadar";
 import { Badge } from "@/components/ui/badge";
