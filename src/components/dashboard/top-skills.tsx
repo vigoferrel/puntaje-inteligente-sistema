@@ -18,36 +18,10 @@ interface TopSkillsProps {
 export const TopSkills = ({ loading, topSkills, skillLevels, skills, className }: TopSkillsProps) => {
   // Use skills prop if provided, otherwise use topSkills
   const skillsToDisplay = skills || topSkills;
-  
-  // Get skill display name
-  const getSkillDisplayName = (skill: TPAESHabilidad): string => {
-    const skillNames: Record<TPAESHabilidad, string> = {
-      'TRACK_LOCATE': 'Rastrear-Localizar',
-      'INTERPRET_RELATE': 'Interpretar-Relacionar',
-      'EVALUATE_REFLECT': 'Evaluar-Reflexionar',
-      'SOLVE_PROBLEMS': 'Resolver Problemas',
-      'MODEL': 'Usar Modelos', // Corregido de USE_MODELS a MODEL según los tipos
-      'REPRESENT': 'Representar',
-      'ARGUE_COMMUNICATE': 'Argumentar', // Corregido de ARGUE a ARGUE_COMMUNICATE
-      'COMMUNICATE': 'Comunicar',
-      'ALGORITHMIZE': 'Algoritmizar',
-      'IDENTIFY_THEORIES': 'Identificar Teorías',
-      'PROCESS_ANALYZE': 'Procesar y Analizar',
-      'APPLY_PRINCIPLES': 'Aplicar Principios',
-      'SCIENTIFIC_ARGUMENT': 'Argumentación Científica',
-      'TEMPORAL_THINKING': 'Pensamiento Temporal',
-      'SOURCE_ANALYSIS': 'Análisis de Fuentes',
-      'MULTICAUSAL_ANALYSIS': 'Análisis Multicausal',
-      'CRITICAL_THINKING': 'Pensamiento Crítico',
-      'REFLECTION': 'Reflexión'
-    };
-    
-    return skillNames[skill] || skill;
-  };
 
   // Get suggestion based on skill level
   const getSkillSuggestion = (skill: TPAESHabilidad, level: number): string => {
-    // Solo definimos algunas habilidades para las sugerencias, para el resto retornamos un valor predeterminado
+    // Definimos sugerencias para algunas habilidades específicas
     const suggestions: Partial<Record<TPAESHabilidad, string[]>> = {
       'TRACK_LOCATE': [
         'Ejercicios de identificación de información explícita',

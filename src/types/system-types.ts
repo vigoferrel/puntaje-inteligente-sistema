@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // ESTRUCTURA PAES UNIFICADA
@@ -81,7 +80,7 @@ export const LearningNode = z.object({
   })
 });
 
-// TIPOS EXPORTADOS
+// TIPOS EXPORTADOS - Usando type en lugar de inferencia para mayor claridad
 export type TPAESPrueba = z.infer<typeof PAESPruebas>;
 export type TPAESHabilidad = z.infer<typeof PAESHabilidades>;
 export type TAIConfig = z.infer<typeof AIConfig>;

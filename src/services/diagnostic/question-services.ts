@@ -4,8 +4,11 @@ import { DiagnosticQuestion } from '@/types/diagnostic';
 import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { mapSkillIdToEnum, mapTestIdToEnum } from '@/utils/supabase-mappers';
 
-// Importamos el tipo Json de Supabase para ayudar con la tipificación
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+// Define Json type explicitly to avoid circular references
+type JsonPrimitive = string | number | boolean | null;
+type JsonArray = JsonValue[];
+type JsonObject = { [key: string]: JsonValue };
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 
 /**
  * Fetches a question by its ID
@@ -110,12 +113,12 @@ export async function fetchDiagnosticQuestions(
 }
 
 /**
- * Definimos una interfaz para los datos crudos del ejercicio desde la base de datos
+ * Define a clear interface for the raw exercise data from database
  */
 interface RawExerciseData {
   id?: string;
   question?: string;
-  options?: Json; // Aquí cambiamos para aceptar Json, que puede manejar array, string o null
+  options?: JsonValue;
   correct_answer?: string;
   skill?: number | string;
   prueba?: number | string;
@@ -135,14 +138,14 @@ function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
   let options: string[] = [];
   
   try {
-    if (exercise?.options) {
+    if (exercise.options) {
       if (Array.isArray(exercise.options)) {
         options = exercise.options.map(String);
       } else if (typeof exercise.options === 'string') {
-        options = JSON.parse(exercise.options || '[]');
+        options = JSON.parse(exercise.options);
       } else if (typeof exercise.options === 'object') {
-        // Si options ya es un objeto (de una columna JSONB)
-        const optionsObj = exercise.options as unknown;
+        // Handle as object if it's already parsed JSON
+        const optionsObj = exercise.options;
         options = Array.isArray(optionsObj) ? optionsObj.map(String) : [];
       }
     }
@@ -151,53 +154,51 @@ function mapExerciseToQuestion(exercise: RawExerciseData): DiagnosticQuestion {
     options = [];
   }
 
-  // Map skill usando una función de ayuda segura
+  // Map skill using a safe helper function
   const safeMapSkill = (skillValue: number | string | undefined): TPAESHabilidad => {
     if (typeof skillValue === 'number') {
       return mapSkillIdToEnum(skillValue);
     } else if (typeof skillValue === 'string') {
-      // Verificamos si el string está en los valores permitidos de TPAESHabilidad
-      const validSkills = [
+      const validSkills: TPAESHabilidad[] = [
         'SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'INTERPRET_RELATE', 
         'EVALUATE_REFLECT', 'TRACK_LOCATE', 'ARGUE_COMMUNICATE', 
         'IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 
         'SCIENTIFIC_ARGUMENT', 'TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 
         'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION'
-      ];
+      ] as TPAESHabilidad[];
       
-      return validSkills.includes(skillValue) 
+      return validSkills.includes(skillValue as TPAESHabilidad) 
         ? skillValue as TPAESHabilidad 
         : 'SOLVE_PROBLEMS';
     }
-    return 'SOLVE_PROBLEMS'; // valor predeterminado
+    return 'SOLVE_PROBLEMS' as TPAESHabilidad;
   };
 
-  // Map prueba usando una función de ayuda segura
+  // Map prueba using a safe helper function
   const safeMapPrueba = (pruebaValue: number | string | undefined): TPAESPrueba => {
     if (typeof pruebaValue === 'number') {
       return mapTestIdToEnum(pruebaValue);
     } else if (typeof pruebaValue === 'string') {
-      // Verificamos si el string está en los valores permitidos de TPAESPrueba
-      const validPruebas = [
+      const validPruebas: TPAESPrueba[] = [
         'COMPETENCIA_LECTORA', 'MATEMATICA_1', 'MATEMATICA_2', 
         'CIENCIAS', 'HISTORIA'
-      ];
+      ] as TPAESPrueba[];
       
-      return validPruebas.includes(pruebaValue) 
+      return validPruebas.includes(pruebaValue as TPAESPrueba) 
         ? pruebaValue as TPAESPrueba 
         : 'MATEMATICA_1';
     }
-    return 'MATEMATICA_1'; // valor predeterminado
+    return 'MATEMATICA_1' as TPAESPrueba;
   };
 
   // Return the mapped question with explicitly typed properties
   return {
-    id: exercise?.id || '',
-    question: exercise?.question || '',
+    id: exercise.id || '',
+    question: exercise.question || '',
     options: options,
-    correctAnswer: exercise?.correct_answer || '',
-    skill: safeMapSkill(exercise?.skill),
-    prueba: safeMapPrueba(exercise?.prueba),
-    explanation: exercise?.explanation || undefined
+    correctAnswer: exercise.correct_answer || '',
+    skill: safeMapSkill(exercise.skill),
+    prueba: safeMapPrueba(exercise.prueba),
+    explanation: exercise.explanation || undefined
   };
 }
