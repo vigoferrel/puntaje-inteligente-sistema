@@ -1,0 +1,106 @@
+
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { TPAESHabilidad, TPAESPrueba, getPruebaDisplayName, getHabilidadDisplayName } from "@/types/system-types";
+import { mapSkillToBloomLevel, BloomLevel } from "./BloomTaxonomyLevel";
+import { cn } from "@/lib/utils";
+
+interface SkillHierarchyChartProps {
+  skillLevels: Record<string, number>;
+  selectedTest?: TPAESPrueba;
+  className?: string;
+}
+
+// Define the colors for each Bloom level
+const bloomLevelColors: Record<BloomLevel, string> = {
+  remember: "bg-blue-500",
+  understand: "bg-green-500",
+  apply: "bg-yellow-500",
+  analyze: "bg-orange-500",
+  evaluate: "bg-red-500",
+  create: "bg-purple-500"
+};
+
+// Group skills by test type
+const skillsByTest: Record<TPAESPrueba, TPAESHabilidad[]> = {
+  "COMPETENCIA_LECTORA": ["TRACK_LOCATE", "INTERPRET_RELATE", "EVALUATE_REFLECT"],
+  "MATEMATICA_1": ["SOLVE_PROBLEMS", "REPRESENT", "MODEL", "ARGUE_COMMUNICATE"],
+  "MATEMATICA_2": ["SOLVE_PROBLEMS", "REPRESENT", "MODEL", "ARGUE_COMMUNICATE"],
+  "CIENCIAS": ["IDENTIFY_THEORIES", "PROCESS_ANALYZE", "APPLY_PRINCIPLES", "SCIENTIFIC_ARGUMENT"],
+  "HISTORIA": ["TEMPORAL_THINKING", "SOURCE_ANALYSIS", "MULTICAUSAL_ANALYSIS", "CRITICAL_THINKING", "REFLECTION"]
+};
+
+export const SkillHierarchyChart: React.FC<SkillHierarchyChartProps> = ({
+  skillLevels,
+  selectedTest,
+  className
+}) => {
+  // If a test is selected, only show skills for that test
+  const testsToShow: TPAESPrueba[] = selectedTest 
+    ? [selectedTest] 
+    : ["COMPETENCIA_LECTORA", "MATEMATICA_1", "CIENCIAS", "HISTORIA"];
+  
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>Jerarquía de Habilidades</CardTitle>
+        <CardDescription>
+          Habilidades organizadas por prueba y nivel cognitivo
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {testsToShow.map((test) => (
+            <div key={test} className="space-y-3">
+              <h3 className="font-semibold text-lg">{getPruebaDisplayName(test)}</h3>
+              
+              {/* Group skills by bloom level */}
+              {(["remember", "understand", "apply", "analyze", "evaluate", "create"] as BloomLevel[]).map((bloomLevel) => {
+                // Filter skills for this test and bloom level
+                const skillsForLevel = skillsByTest[test]?.filter(
+                  skill => mapSkillToBloomLevel(skill) === bloomLevel
+                ) || [];
+                
+                if (skillsForLevel.length === 0) return null;
+                
+                return (
+                  <div key={`${test}-${bloomLevel}`} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${bloomLevelColors[bloomLevel]}`}></div>
+                      <span className="text-sm font-medium capitalize">{bloomLevel}</span>
+                    </div>
+                    
+                    <div className="pl-4 space-y-2 border-l-2 border-dashed">
+                      {skillsForLevel.map((skill) => {
+                        const skillLevel = skillLevels[skill] || 0;
+                        const bloomColor = bloomLevelColors[mapSkillToBloomLevel(skill)];
+                        
+                        return (
+                          <div key={skill} className="space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm">{getHabilidadDisplayName(skill)}</span>
+                              <Badge variant="outline" className={cn("text-xs", 
+                                bloomColor.replace("bg-", "text-"))}>
+                                {Math.round(skillLevel * 100)}%
+                              </Badge>
+                            </div>
+                            <Progress 
+                              value={skillLevel * 100} 
+                              className={`h-1.5 ${bloomColor.replace("bg-", "bg-opacity-20")} [&>div]:${bloomColor}`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
