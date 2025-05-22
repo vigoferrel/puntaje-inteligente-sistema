@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Exercise } from "@/types/ai-types";
-import { BookOpen, PenTool, Calculator, Atom, History, Loader2 } from "lucide-react";
+import { BookOpen, PenTool, Calculator, Atom, History, Loader2, BarChart3 } from "lucide-react";
 import { ExerciseView } from "./exercise";
 
 interface ExerciseTabProps {
@@ -30,8 +30,10 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
     if (exercise.prueba) {
       if (exercise.prueba === 'COMPETENCIA_LECTORA') {
         return <BookOpen size={18} />;
-      } else if (exercise.prueba === 'MATEMATICA_1' || exercise.prueba === 'MATEMATICA_2') {
+      } else if (exercise.prueba === 'MATEMATICA_1') {
         return <Calculator size={18} />;
+      } else if (exercise.prueba === 'MATEMATICA_2') {
+        return <BarChart3 size={18} />;
       } else if (exercise.prueba === 'CIENCIAS') {
         return <Atom size={18} />;
       } else if (exercise.prueba === 'HISTORIA') {
@@ -75,8 +77,10 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
     if (exercise.prueba) {
       if (exercise.prueba === 'COMPETENCIA_LECTORA') {
         return "Ejercicio de comprensión lectora";
-      } else if (exercise.prueba === 'MATEMATICA_1' || exercise.prueba === 'MATEMATICA_2') {
-        return "Ejercicio de matemáticas";
+      } else if (exercise.prueba === 'MATEMATICA_1') {
+        return "Ejercicio de matemáticas (7° a 2° medio)";
+      } else if (exercise.prueba === 'MATEMATICA_2') {
+        return "Ejercicio de matemáticas (3° y 4° medio)";
       } else if (exercise.prueba === 'CIENCIAS') {
         return "Ejercicio de ciencias";
       } else if (exercise.prueba === 'HISTORIA') {

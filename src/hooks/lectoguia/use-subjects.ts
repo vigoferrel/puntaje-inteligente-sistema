@@ -12,7 +12,8 @@ export function useSubjects() {
   const subjectNames: Record<string, string> = {
     general: 'modo general',
     lectura: 'Comprensión Lectora',
-    matematicas: 'Matemáticas',
+    'matematicas-basica': 'Matemáticas 7° a 2° medio',
+    'matematicas-avanzada': 'Matemáticas 3° y 4° medio',
     ciencias: 'Ciencias',
     historia: 'Historia'
   };

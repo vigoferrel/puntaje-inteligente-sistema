@@ -7,6 +7,7 @@ import {
   Beaker, 
   GraduationCap, 
   Lightbulb,
+  BarChart3
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -22,7 +23,8 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
   const subjects = [
     { id: "general", name: "General", icon: <GraduationCap className="h-4 w-4" /> },
     { id: "lectura", name: "Comprensión Lectora", icon: <BookOpen className="h-4 w-4" /> },
-    { id: "matematicas", name: "Matemáticas", icon: <Calculator className="h-4 w-4" /> },
+    { id: "matematicas-basica", name: "Matemáticas 7° a 2° medio", icon: <Calculator className="h-4 w-4" /> },
+    { id: "matematicas-avanzada", name: "Matemáticas 3° y 4° medio", icon: <BarChart3 className="h-4 w-4" /> },
     { id: "ciencias", name: "Ciencias", icon: <Beaker className="h-4 w-4" /> },
     { id: "historia", name: "Historia", icon: <Lightbulb className="h-4 w-4" /> },
   ];

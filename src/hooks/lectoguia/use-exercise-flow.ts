@@ -32,7 +32,8 @@ export function useExerciseFlow(
   // Mapeo de materias a habilidades
   const skillMap: Record<string, TPAESHabilidad> = {
     'lectura': 'TRACK_LOCATE',
-    'matematicas': 'SOLVE_PROBLEMS',
+    'matematicas-basica': 'SOLVE_PROBLEMS',
+    'matematicas-avanzada': 'SOLVE_PROBLEMS',
     'ciencias': 'IDENTIFY_THEORIES',
     'historia': 'TEMPORAL_THINKING',
     'general': 'INTERPRET_RELATE'
@@ -41,7 +42,8 @@ export function useExerciseFlow(
   // Mapeo de materias a pruebas PAES
   const pruebaMap: Record<string, TPAESPrueba> = {
     'lectura': 'COMPETENCIA_LECTORA',
-    'matematicas': 'MATEMATICA_1',
+    'matematicas-basica': 'MATEMATICA_1',      // 7° a 2° medio
+    'matematicas-avanzada': 'MATEMATICA_2',    // 3° y 4° medio
     'ciencias': 'CIENCIAS',
     'historia': 'HISTORIA',
     'general': 'COMPETENCIA_LECTORA'
@@ -74,9 +76,15 @@ export function useExerciseFlow(
           description: "Se ha creado un nuevo ejercicio para ti.",
         });
         
+        // Determinar el nombre de la materia para el mensaje
+        let materiaName = activeSubject === 'general' ? 'comprensión lectora' : 
+          activeSubject === 'matematicas-basica' ? 'matemáticas para 7° a 2° medio' :
+          activeSubject === 'matematicas-avanzada' ? 'matemáticas para 3° y 4° medio' :
+          activeSubject;
+        
         // Agregar mensaje del asistente sobre el ejercicio generado
         addAssistantMessage(
-          `He preparado un ejercicio de ${activeSubject === 'general' ? 'comprensión lectora' : activeSubject} para ti. ` +
+          `He preparado un ejercicio de ${materiaName} para ti. ` +
           `Es un ejercicio de dificultad ${exercise.difficulty || "intermedia"} que evalúa la habilidad de ` +
           `${exercise.skill || "interpretación"}. Puedes resolverlo en la pestaña de Ejercicios.`
         );

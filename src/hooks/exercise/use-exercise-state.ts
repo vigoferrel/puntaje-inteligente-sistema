@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Exercise } from '@/types/ai-types';
 import { useExerciseGeneration } from './use-exercise-generation';
 import { useExerciseInteraction } from './use-exercise-interaction';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 
 /**
  * Hook que combina la generación de ejercicios y la interacción del usuario
@@ -34,10 +35,10 @@ export function useExerciseState() {
   };
   
   // Función mejorada para generar un ejercicio con manejo de estados
-  const generateExerciseWithState = async (skill: any, difficulty: string = "INTERMEDIATE") => {
+  const generateExerciseWithState = async (skill: TPAESHabilidad, prueba?: TPAESPrueba, difficulty: string = "INTERMEDIATE") => {
     setProcessingAction(true);
     try {
-      const result = await generateExercise(skill, difficulty);
+      const result = await generateExercise(skill, prueba, difficulty);
       return result;
     } finally {
       setProcessingAction(false);
