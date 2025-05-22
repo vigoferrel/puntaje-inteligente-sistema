@@ -99,6 +99,46 @@ const Diagnostico = () => {
     // Aquí podrías redirigir al detalle del nodo o iniciar un diagnóstico específico
   };
   
+  // Función para convertir cualquier resultado a un Record<TPAESHabilidad, number> completo
+  const getSkillResults = (result: any): Record<TPAESHabilidad, number> => {
+    // Inicializar valores por defecto
+    const defaultResults: Record<TPAESHabilidad, number> = {
+      SOLVE_PROBLEMS: 0,
+      REPRESENT: 0,
+      MODEL: 0,
+      INTERPRET_RELATE: 0,
+      EVALUATE_REFLECT: 0,
+      TRACK_LOCATE: 0,
+      ARGUE_COMMUNICATE: 0,
+      IDENTIFY_THEORIES: 0,
+      PROCESS_ANALYZE: 0,
+      APPLY_PRINCIPLES: 0,
+      SCIENTIFIC_ARGUMENT: 0,
+      TEMPORAL_THINKING: 0,
+      SOURCE_ANALYSIS: 0,
+      MULTICAUSAL_ANALYSIS: 0,
+      CRITICAL_THINKING: 0,
+      REFLECTION: 0
+    };
+    
+    // Si no hay resultado o es un objeto vacío, devolver los valores por defecto
+    if (!result || Object.keys(result).length === 0) {
+      return defaultResults;
+    }
+    
+    // Si hay resultados existentes, combinarlos con los valores predeterminados
+    if (result.results && typeof result.results === 'object') {
+      return { ...defaultResults, ...result.results };
+    }
+    
+    // Si el objeto ya es un Record de habilidades, combinarlo con los valores predeterminados
+    if (typeof result === 'object') {
+      return { ...defaultResults, ...result };
+    }
+    
+    return defaultResults;
+  };
+  
   return (
     <AppLayout>
       <DiagnosticController>
@@ -151,38 +191,6 @@ const Diagnostico = () => {
           } else if (generatingDiagnostic) {
             loadingMessage = "Cargando diagnóstico básico...";
           }
-          
-          // Convertir DiagnosticResult a Record<TPAESHabilidad, number> cuando sea necesario
-          const getSkillResults = (result: any): Record<TPAESHabilidad, number> => {
-            if (!result) return {};
-            
-            // Si ya es un objeto con resultados, devuélvelo
-            if (result.results && typeof result.results === 'object') {
-              return result.results;
-            }
-            
-            // Inicializar valores por defecto
-            const defaultResults: Record<TPAESHabilidad, number> = {
-              SOLVE_PROBLEMS: 0,
-              REPRESENT: 0,
-              MODEL: 0,
-              INTERPRET_RELATE: 0,
-              EVALUATE_REFLECT: 0,
-              TRACK_LOCATE: 0,
-              ARGUE_COMMUNICATE: 0,
-              IDENTIFY_THEORIES: 0,
-              PROCESS_ANALYZE: 0,
-              APPLY_PRINCIPLES: 0,
-              SCIENTIFIC_ARGUMENT: 0,
-              TEMPORAL_THINKING: 0,
-              SOURCE_ANALYSIS: 0,
-              MULTICAUSAL_ANALYSIS: 0,
-              CRITICAL_THINKING: 0,
-              REFLECTION: 0
-            };
-            
-            return defaultResults;
-          };
           
           // Si el test ha comenzado o está mostrando resultados, mostramos esa vista
           if (testStarted || resultSubmitted) {

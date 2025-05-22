@@ -42,10 +42,16 @@ export const useDiagnosticHistory = () => {
           REFLECTION: 0
         };
         
+        // Verificar si result.results es un objeto válido
+        let resultSkills: Partial<Record<TPAESHabilidad, number>> = {};
+        if (result.results && typeof result.results === 'object') {
+          resultSkills = result.results;
+        }
+        
         // Combinar con los resultados existentes
         return {
           ...result,
-          results: { ...defaultSkills, ...result.results }
+          results: { ...defaultSkills, ...resultSkills }
         };
       });
       
