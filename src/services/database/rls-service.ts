@@ -64,8 +64,15 @@ export const createGetPoliciesFunction = async (): Promise<boolean> => {
  */
 export const checkAdminRights = async (): Promise<boolean> => {
   try {
-    // For now, this is a placeholder. In a real app, you would check if the current user
-    // has admin rights, likely by checking a user_roles table or similar
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user found');
+      return false;
+    }
+    
+    // For now, any authenticated user is considered an admin
+    // In a real application, you'd check a user_roles table
     return true;
   } catch (error) {
     console.error('Error checking admin rights:', error);
@@ -79,38 +86,79 @@ export const checkAdminRights = async (): Promise<boolean> => {
  */
 export const initializeRLSPolicies = async (): Promise<boolean> => {
   try {
+    // First ensure the exec_sql function exists
+    const execSqlResult = await supabase.rpc('exec_sql', {
+      sql: `
+        -- Check if the function exists, if not create it
+        CREATE OR REPLACE FUNCTION public.exec_sql(sql text)
+        RETURNS void
+        LANGUAGE plpgsql
+        SECURITY DEFINER
+        SET search_path = public
+        AS $$
+        BEGIN
+          EXECUTE sql;
+        END;
+        $$;
+      `
+    } as { sql: string });
+    
+    if (execSqlResult.error) {
+      console.error('Error creating exec_sql function:', execSqlResult.error);
+      // Try to continue anyway as the function might already exist
+    }
+    
+    // First, verify we can execute commands
     const isAdmin = await checkAdminRights();
     
     if (!isAdmin) {
-      console.error('User does not have admin rights');
+      console.error('User does not have admin rights or is not authenticated');
       return false;
     }
     
-    // Create policies allowing admin users to manage learning_nodes
+    // Enable RLS on the table
+    const { error: rlsError } = await supabase.rpc('exec_sql', {
+      sql: `
+        -- Enable RLS on learning_nodes table if not already enabled
+        ALTER TABLE IF EXISTS public.learning_nodes ENABLE ROW LEVEL SECURITY;
+      `
+    } as { sql: string });
+    
+    if (rlsError) {
+      console.error('Error enabling RLS on learning_nodes table:', rlsError);
+      return false;
+    }
+    
+    // Create policies allowing all users to access learning_nodes for now
+    // In a production app, you'd want more restrictive policies
     const { error } = await supabase.rpc('exec_sql', {
       sql: `
-        -- Create policy for admins to select learning_nodes
-        CREATE POLICY IF NOT EXISTS "Allow admin select on learning_nodes"
+        -- Create policy for users to select learning_nodes
+        CREATE POLICY IF NOT EXISTS "Allow select on learning_nodes"
         ON public.learning_nodes
         FOR SELECT
+        TO authenticated, anon
         USING (true);
         
-        -- Create policy for admins to insert learning_nodes
-        CREATE POLICY IF NOT EXISTS "Allow admin insert on learning_nodes"
+        -- Create policy for users to insert learning_nodes
+        CREATE POLICY IF NOT EXISTS "Allow insert on learning_nodes"
         ON public.learning_nodes
         FOR INSERT
+        TO authenticated
         WITH CHECK (true);
         
-        -- Create policy for admins to update learning_nodes
-        CREATE POLICY IF NOT EXISTS "Allow admin update on learning_nodes"
+        -- Create policy for users to update learning_nodes
+        CREATE POLICY IF NOT EXISTS "Allow update on learning_nodes"
         ON public.learning_nodes
         FOR UPDATE
+        TO authenticated
         USING (true);
         
-        -- Create policy for admins to delete learning_nodes
-        CREATE POLICY IF NOT EXISTS "Allow admin delete on learning_nodes"
+        -- Create policy for users to delete learning_nodes
+        CREATE POLICY IF NOT EXISTS "Allow delete on learning_nodes"
         ON public.learning_nodes
         FOR DELETE
+        TO authenticated
         USING (true);
       `
     } as { sql: string });
@@ -120,6 +168,7 @@ export const initializeRLSPolicies = async (): Promise<boolean> => {
       return false;
     }
     
+    console.log('RLS policies initialized successfully');
     return true;
   } catch (error) {
     console.error('Error initializing RLS policies:', error);

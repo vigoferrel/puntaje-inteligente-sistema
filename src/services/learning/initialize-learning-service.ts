@@ -6,7 +6,7 @@ import { mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
 
 const initialLearningNodes = [
   {
-    id: '1',
+    id: 'a1b2c3d4-e5f6-4a1b-8c9d-0e1f2a3b4c5d', // Valid UUID format
     title: 'Introducción a la Competencia Lectora',
     description: 'Aprende los fundamentos de la competencia lectora y cómo abordar diferentes tipos de textos.',
     code: 'INTRO_LECTORA',
@@ -20,7 +20,7 @@ const initialLearningNodes = [
     updated_at: new Date().toISOString(),
   },
   {
-    id: '2',
+    id: 'b2c3d4e5-f6a7-4b1c-9d2e-0f1a2b3c4d5', // Valid UUID format
     title: 'Resolución de Problemas Matemáticos',
     description: 'Desarrolla tus habilidades para resolver problemas matemáticos complejos paso a paso.',
     code: 'PROB_MATEMATICOS',
@@ -34,7 +34,7 @@ const initialLearningNodes = [
     updated_at: new Date().toISOString(),
   },
   {
-    id: '3',
+    id: 'c3d4e5f6-a7b8-4c1d-9e2f-0a1b2c3d4e5', // Valid UUID format
     title: 'Análisis de Datos Científicos',
     description: 'Aprende a interpretar y analizar datos científicos para extraer conclusiones significativas.',
     code: 'ANAL_CIENTIFICOS',
@@ -67,8 +67,16 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       return true;
     }
     
-    // No nodes exist, so let's initialize
-    console.log('No learning nodes found, initializing...');
+    // No nodes exist, so first ensure RLS policies are properly configured
+    console.log('No learning nodes found, initializing RLS policies first...');
+    const rlsPoliciesInitialized = await initializeRLSPolicies();
+    
+    if (!rlsPoliciesInitialized) {
+      console.error('Failed to initialize RLS policies, cannot continue with node initialization');
+      return false;
+    }
+    
+    console.log('RLS policies initialized, now inserting learning nodes...');
     
     // Insert initial learning nodes
     const { error: insertError } = await supabase
@@ -76,19 +84,26 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       .insert(initialLearningNodes);
     
     if (insertError) {
-      console.error('Error inserting initial learning nodes:', insertError);
+      if (insertError.message.includes('permission denied')) {
+        console.error('Permission denied error while inserting nodes. This is likely due to Row Level Security (RLS) policies. Please check your authentication status and permissions.', insertError);
+      } else if (insertError.message.includes('duplicate key')) {
+        console.error('Duplicate key error while inserting nodes. Nodes with these IDs may already exist.', insertError);
+      } else {
+        console.error('Error inserting initial learning nodes:', insertError);
+      }
       return false;
     }
     
-    // Check current RLS policies
+    // Check current RLS policies again to ensure everything is set up correctly
     const { data: policies, error: policiesError } = await supabase.rpc('get_policies_for_table', { 
       table_name: 'learning_nodes' 
     } as { table_name: string });
     
-    // If there are RLS issues, try to fix them
-    if (policiesError || !policies || (policies as any[]).length === 0) {
-      console.warn('RLS policies issue detected, attempting to initialize policies');
-      await initializeRLSPolicies();
+    // If there are RLS issues, log them but don't try to fix them again since we already attempted
+    if (policiesError) {
+      console.warn('Could not verify RLS policies after insertion:', policiesError);
+    } else {
+      console.log(`Found ${(policies as any[])?.length || 0} RLS policies for learning_nodes table`);
     }
     
     console.log('Learning nodes initialized successfully');
