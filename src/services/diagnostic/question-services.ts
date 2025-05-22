@@ -1,108 +1,175 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { DiagnosticQuestion } from '@/types/diagnostic';
-import { TPAESPrueba } from '@/types/system-types';
-import { RawExerciseData } from './types';
-import { mapExerciseToQuestion } from './mappers';
+import { DiagnosticQuestion, QuestionFeedback, QuestionStatus } from '../diagnostic/types';
+import { TPAESHabilidad } from "@/types/system-types";
+import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from '@/contexts/auth-utils';
+import { v4 as uuidv4 } from 'uuid';
+import { 
+  calculateQuestionPenalty,
+  calculateSkillLevelChange 
+} from './skill-services';
 
-/**
- * Fetches a question by its ID
- */
-export async function fetchQuestionById(questionId: string): Promise<DiagnosticQuestion | null> {
+// Fetch a batch of questions for a specific test
+export const fetchQuestionBatch = async (
+  testId: string,
+  batchSize: number = 10,
+  previousQuestions: string[] = []
+): Promise<DiagnosticQuestion[]> => {
   try {
-    // Query directly from exercises table
+    let query = supabase
+      .from('questions')
+      .select('*')
+      .eq('test_id', testId)
+      .not('id', 'in', `(${previousQuestions.join(',')})`)
+      .limit(batchSize);
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data as DiagnosticQuestion[];
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    return [];
+  }
+};
+
+// Get a single question by ID
+export const getQuestionById = async (questionId: string): Promise<DiagnosticQuestion | null> => {
+  try {
     const { data, error } = await supabase
-      .from('exercises')
+      .from('questions')
       .select('*')
       .eq('id', questionId)
-      .maybeSingle();
+      .single();
 
     if (error) throw error;
-    
-    // Check if we got data back
-    if (!data) return null;
-    
-    // Transform the raw DB data into our DiagnosticQuestion type
-    return mapExerciseToQuestion(data as RawExerciseData);
+    return data as DiagnosticQuestion;
   } catch (error) {
-    console.error('Error fetching question by ID:', error);
+    console.error('Error fetching question:', error);
     return null;
   }
-}
+};
 
-/**
- * Fetches questions by an array of IDs
- */
-export async function fetchQuestionsByIds(
-  questionIds: string[]
-): Promise<DiagnosticQuestion[]> {
+// Record the user's answer to a question
+export const recordAnswer = async (
+  questionId: string,
+  selectedOption: string,
+  isCorrect: boolean,
+  timeSpentSeconds: number,
+  skillsAssessed: TPAESHabilidad[]
+): Promise<boolean> => {
+  const user = await getAuthUser();
+  if (!user) return false;
+
   try {
-    if (!questionIds || questionIds.length === 0) {
-      return [];
-    }
-    
-    // Query from exercises table
-    const { data, error } = await supabase
-      .from('exercises')
-      .select('*')
-      .in('id', questionIds);
+    // Insert the answer into the database
+    const { error } = await supabase
+      .from('user_answers')
+      .insert({
+        id: uuidv4(),
+        user_id: user.id,
+        question_id: questionId,
+        selected_option: selectedOption,
+        is_correct: isCorrect,
+        time_spent_seconds: timeSpentSeconds
+      });
 
     if (error) throw error;
-    
-    if (!data || !Array.isArray(data)) return [];
-    
-    // Transform each row into a DiagnosticQuestion
-    return data.map(exercise => mapExerciseToQuestion(exercise as RawExerciseData));
-  } catch (error) {
-    console.error('Error fetching questions by IDs:', error);
-    return [];
-  }
-}
 
-/**
- * Fetches diagnostic questions for a specific diagnostic and test
- */
-export async function fetchDiagnosticQuestions(
-  diagnosticId: string,
-  testId: number
-): Promise<DiagnosticQuestion[]> {
+    // Update skill levels if needed
+    for (const skill of skillsAssessed) {
+      const penalty = calculateQuestionPenalty(timeSpentSeconds, isCorrect);
+      const levelChange = calculateSkillLevelChange(isCorrect, penalty);
+      
+      // We'll implement this function in skill-services.ts
+      await updateUserSkillLevel(user.id, skill, levelChange);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error recording answer:', error);
+    return false;
+  }
+};
+
+// Update user's skill level
+const updateUserSkillLevel = async (
+  userId: string,
+  skill: TPAESHabilidad,
+  levelChange: number
+): Promise<boolean> => {
   try {
-    // First try to get exercises for the specific diagnostic
+    // First get current skill level if exists
     const { data, error } = await supabase
-      .from('exercises')
-      .select('*')
-      .eq('diagnostic_id', diagnosticId)
-      .eq('prueba', testId)
-      .order('id');
-    
-    if (error) {
-      console.error('Error fetching diagnostic questions:', error);
+      .from('user_skill_levels')
+      .select('level')
+      .eq('user_id', userId)
+      .eq('skill_id', skill)
+      .single();
+
+    if (error && error.code !== 'PGSQL_NO_ROWS_RETURNED') {
       throw error;
     }
-    
-    // If no specific diagnostic questions found, fall back to general test exercises
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('exercises')
-        .select('*')
-        .eq('prueba', testId)
-        .order('id');
-        
-      if (fallbackError) {
-        console.error('Error fetching fallback questions:', fallbackError);
-        return [];
-      }
-      
-      if (!fallbackData || !Array.isArray(fallbackData)) return [];
-      
-      // Map the fallback data
-      return fallbackData.map(exercise => mapExerciseToQuestion(exercise as RawExerciseData));
-    }
-    
-    // Map the data
-    return data.map(exercise => mapExerciseToQuestion(exercise as RawExerciseData));
+
+    const currentLevel = data ? data.level : 0.5; // Default to middle if not found
+    const newLevel = Math.max(0.1, Math.min(0.99, currentLevel + levelChange));
+
+    // Insert or update the skill level
+    const { error: upsertError } = await supabase
+      .from('user_skill_levels')
+      .upsert({
+        user_id: userId,
+        skill_id: skill,
+        level: newLevel
+      });
+
+    if (upsertError) throw upsertError;
+    return true;
   } catch (error) {
-    console.error('Error in fetchDiagnosticQuestions:', error);
-    return [];
+    console.error('Error updating skill level:', error);
+    return false;
   }
-}
+};
+
+// Get question feedback based on user answer
+export const getQuestionFeedback = async (
+  questionId: string,
+  isCorrect: boolean
+): Promise<QuestionFeedback> => {
+  // For correct answers, simple congratulation
+  if (isCorrect) {
+    return {
+      message: "¡Respuesta correcta!",
+      explanation: "Has contestado correctamente a esta pregunta.",
+      tips: ["Continúa con el mismo nivel de concentración."],
+      status: QuestionStatus.CORRECT
+    };
+  }
+
+  // For incorrect answers, fetch explanation if available
+  try {
+    const question = await getQuestionById(questionId);
+    
+    if (!question) {
+      throw new Error("Question not found");
+    }
+
+    return {
+      message: "Respuesta incorrecta",
+      explanation: question.explanation || "La respuesta seleccionada no es la correcta.",
+      tips: [
+        "Revisa el contenido relacionado con esta pregunta.",
+        "Presta atención a los detalles en preguntas similares."
+      ],
+      status: QuestionStatus.INCORRECT
+    };
+  } catch (error) {
+    console.error('Error getting question feedback:', error);
+    return {
+      message: "Respuesta incorrecta",
+      explanation: "No se pudo obtener la explicación detallada.",
+      tips: ["Intenta revisar el contenido relacionado."],
+      status: QuestionStatus.INCORRECT
+    };
+  }
+};

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
-import { TLearningCyclePhase } from "@/types/system-types";
+import { TLearningCyclePhase, LEARNING_CYCLE_PHASES_ORDER } from "@/types/system-types";
 import { toast } from "@/components/ui/use-toast";
 import { generatePerformanceInsights } from "@/services/openrouter-service";
 
