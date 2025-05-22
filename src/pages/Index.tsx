@@ -1,18 +1,21 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
-import { StatCards } from "@/components/dashboard/stat-cards";
-import { AIFeatures } from "@/components/dashboard/ai-features";
 import { WelcomeHeader } from "@/components/dashboard/welcome-header";
-import { FeatureCards } from "@/components/dashboard/feature-cards";
+import { WelcomeTour } from "@/components/dashboard/welcome-tour";
+import { StatCards } from "@/components/dashboard/stat-cards";
+import { SearchBar } from "@/components/dashboard/search-bar";
 import { DashboardContentGrid } from "@/components/dashboard/dashboard-content-grid";
 import { DiagnosticSummary } from "@/components/dashboard/diagnostic-summary";
+import { AiFeatures } from "@/components/dashboard/ai-features";
+import { FeatureCards } from "@/components/dashboard/feature-cards";
+import { useUserData } from "@/hooks/use-user-data";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
-import { fetchDiagnosticTests, fetchDiagnosticResults } from "@/services/diagnostic";
+import { useMobile } from "@/hooks/use-mobile";
+import { useAiFeatures } from "@/hooks/use-ai-features";
 import { useAuth } from "@/contexts/AuthContext";
-import { DiagnosticResult } from "@/types/diagnostic";
-import { WelcomeTour } from "@/components/dashboard/welcome-tour";
-import { motion } from "framer-motion";
+import { useDiagnosticHistory } from "@/hooks/diagnostic/results/use-diagnostic-history";
+import { useLearningWorkflow } from "@/hooks/use-learning-workflow";
+import { useDiagnosticRecommendations } from "@/hooks/use-diagnostic-recommendations";
 
 const Index = () => {
   const {
@@ -159,7 +162,7 @@ const Index = () => {
         </motion.div>
         
         <motion.div variants={itemVariants}>
-          <AIFeatures />
+          <AiFeatures />
         </motion.div>
       </motion.div>
     </AppLayout>

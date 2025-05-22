@@ -1,7 +1,11 @@
+
 import { createBrowserRouter } from "react-router-dom";
-import App from "./App";
-import Diagnostico from "./pages/Diagnostico";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
 import Plan from "./pages/Plan";
+import LectoGuia from "./pages/LectoGuia";
+import Diagnostico from "./pages/Diagnostico";
 import Entrenamiento from "./pages/Entrenamiento";
 import Contenido from "./pages/Contenido";
 import Evaluaciones from "./pages/Evaluaciones";
@@ -10,51 +14,69 @@ import Reforzamiento from "./pages/Reforzamiento";
 import Simulaciones from "./pages/Simulaciones";
 import NodeDetail from "./pages/NodeDetail";
 import AdminUtils from "./pages/AdminUtils";
+import Settings from "./pages/Settings";
+import { ProtectedRoute } from './components/protected-route';
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <Index />,
   },
   {
-    path: "/diagnostico",
-    element: <Diagnostico />,
+    path: "/auth",
+    element: <Auth />,
   },
   {
     path: "/plan",
-    element: <Plan />,
+    element: <ProtectedRoute><Plan /></ProtectedRoute>,
+  },
+  {
+    path: "/lectoguia",
+    element: <ProtectedRoute><LectoGuia /></ProtectedRoute>,
+  },
+  {
+    path: "/diagnostico",
+    element: <ProtectedRoute><Diagnostico /></ProtectedRoute>,
   },
   {
     path: "/entrenamiento",
-    element: <Entrenamiento />,
+    element: <ProtectedRoute><Entrenamiento /></ProtectedRoute>,
   },
   {
     path: "/contenido",
-    element: <Contenido />,
+    element: <ProtectedRoute><Contenido /></ProtectedRoute>,
   },
   {
     path: "/evaluaciones",
-    element: <Evaluaciones />,
+    element: <ProtectedRoute><Evaluaciones /></ProtectedRoute>,
   },
   {
     path: "/analisis",
-    element: <Analisis />,
+    element: <ProtectedRoute><Analisis /></ProtectedRoute>,
   },
   {
     path: "/reforzamiento",
-    element: <Reforzamiento />,
+    element: <ProtectedRoute><Reforzamiento /></ProtectedRoute>,
   },
   {
     path: "/simulaciones",
-    element: <Simulaciones />,
+    element: <ProtectedRoute><Simulaciones /></ProtectedRoute>,
   },
   {
     path: "/node/:nodeId",
-    element: <NodeDetail />,
+    element: <ProtectedRoute><NodeDetail /></ProtectedRoute>,
   },
   {
     path: "/admin",
-    element: <AdminUtils />,
+    element: <ProtectedRoute><AdminUtils /></ProtectedRoute>,
+  },
+  {
+    path: "/settings",
+    element: <ProtectedRoute><Settings /></ProtectedRoute>,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 

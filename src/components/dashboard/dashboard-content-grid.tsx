@@ -2,12 +2,15 @@
 import React from "react";
 import { LearningWorkflow } from "@/components/dashboard/learning-workflow";
 import { TopSkills } from "@/components/dashboard/top-skills";
-import { TPAESHabilidad } from "@/types/system-types";
+import { NextRecommendedStep } from "@/components/dashboard/next-recommended-step";
+import { TPAESHabilidad, TLearningCyclePhase } from "@/types/system-types";
 
 interface DashboardContentGridProps {
   loading: boolean;
   topSkills: TPAESHabilidad[];
   skillLevels: Record<TPAESHabilidad, number>;
+  currentPhase: TLearningCyclePhase;
+  nextRecommendedNodeId?: string | null;
   className?: string;
 }
 
@@ -15,6 +18,8 @@ export const DashboardContentGrid = ({
   loading,
   topSkills,
   skillLevels,
+  currentPhase,
+  nextRecommendedNodeId,
   className
 }: DashboardContentGridProps) => {
   return (
@@ -22,12 +27,16 @@ export const DashboardContentGrid = ({
       <div className="md:col-span-4">
         <LearningWorkflow className="h-full" />
       </div>
-      <div className="md:col-span-3">
+      <div className="md:col-span-3 space-y-6">
         <TopSkills 
           loading={loading} 
           topSkills={topSkills} 
           skillLevels={skillLevels} 
           className="h-full" 
+        />
+        <NextRecommendedStep 
+          currentPhase={currentPhase} 
+          nextNodeId={nextRecommendedNodeId} 
         />
       </div>
     </div>
