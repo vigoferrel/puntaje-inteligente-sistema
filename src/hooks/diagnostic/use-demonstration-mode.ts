@@ -36,7 +36,7 @@ export function useDemonstrationMode() {
             options: ["Opción A", "Opción B", "Opción C", "Opción D"],
             correctAnswer: "Opción B",
             skill: "TRACK_LOCATE" as TPAESHabilidad,
-            prueba: "L",
+            prueba: "COMPETENCIA_LECTORA",
             explanation: "La idea principal se encuentra en el segundo párrafo."
           },
           {
@@ -45,7 +45,7 @@ export function useDemonstrationMode() {
             options: ["Inferencia 1", "Inferencia 2", "Inferencia 3", "Inferencia 4"],
             correctAnswer: "Inferencia 3",
             skill: "INTERPRET_RELATE" as TPAESHabilidad,
-            prueba: "L",
+            prueba: "COMPETENCIA_LECTORA",
             explanation: "El último párrafo sugiere esta conclusión."
           },
           {
@@ -54,7 +54,7 @@ export function useDemonstrationMode() {
             options: ["Informar", "Persuadir", "Entretener", "Explicar"],
             correctAnswer: "Persuadir",
             skill: "EVALUATE_REFLECT" as TPAESHabilidad,
-            prueba: "L",
+            prueba: "COMPETENCIA_LECTORA",
             explanation: "El lenguaje utilizado indica intención persuasiva."
           }
         ]
@@ -72,7 +72,7 @@ export function useDemonstrationMode() {
             options: ["x = 5", "x = 7", "x = 10", "x = 15"],
             correctAnswer: "x = 5",
             skill: "SOLVE_PROBLEMS" as TPAESHabilidad,
-            prueba: "M1",
+            prueba: "MATEMATICA_1",
             explanation: "2x + 5 = 15 → 2x = 10 → x = 5"
           },
           {
@@ -81,7 +81,7 @@ export function useDemonstrationMode() {
             options: ["16π cm²", "8π cm²", "4π cm²", "12π cm²"],
             correctAnswer: "16π cm²",
             skill: "SOLVE_PROBLEMS" as TPAESHabilidad,
-            prueba: "M1",
+            prueba: "MATEMATICA_1",
             explanation: "A = πr² = π × 4² = 16π cm²"
           }
         ]
@@ -102,7 +102,19 @@ export function useDemonstrationMode() {
         "TRACK_LOCATE": 65,
         "INTERPRET_RELATE": 78,
         "EVALUATE_REFLECT": 82,
-        "SOLVE_PROBLEMS": 70
+        "SOLVE_PROBLEMS": 70,
+        "REPRESENT": 60,
+        "MODEL": 65,
+        "ARGUE_COMMUNICATE": 75,
+        "IDENTIFY_THEORIES": 60,
+        "PROCESS_ANALYZE": 68,
+        "APPLY_PRINCIPLES": 72,
+        "SCIENTIFIC_ARGUMENT": 68,
+        "TEMPORAL_THINKING": 65,
+        "SOURCE_ANALYSIS": 70,
+        "MULTICAUSAL_ANALYSIS": 68,
+        "CRITICAL_THINKING": 75,
+        "REFLECTION": 80
       }
     };
   }, []);

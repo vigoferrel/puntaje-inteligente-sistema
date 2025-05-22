@@ -79,7 +79,7 @@ export default function Diagnostico() {
             ) : (
               <>
                 {isDemoMode && (
-                  <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
+                  <Alert className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
                     <Info className="h-4 w-4 text-amber-600" />
                     <AlertDescription>
                       Modo de demostración activado. Los datos mostrados son ejemplos y no se guardarán en tu perfil.
