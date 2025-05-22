@@ -5,5 +5,6 @@ export * from './fetch-services';
 export * from './submit-services';
 export * from './skill-services';
 export * from './question/index';
+export * from './results/index';
 export * from './types';
 export * from './mappers';

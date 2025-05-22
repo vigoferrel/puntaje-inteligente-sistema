@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from '@/types/diagnostic';
 import { mapExerciseToQuestion } from '../mappers';
-import { RawExerciseData } from '../types';
 
 /**
  * Fetch diagnostic questions from Supabase for a specific diagnostic test
@@ -20,7 +19,7 @@ export const fetchDiagnosticQuestions = async (
     if (error) throw error;
     
     // Convert the database format to our application format using our mapper
-    return (data || []).map(item => mapExerciseToQuestion(item, testId));
+    return data ? data.map(item => mapExerciseToQuestion(item, testId)) : [];
   } catch (error) {
     console.error('Error fetching diagnostic questions:', error);
     return [];
@@ -36,6 +35,7 @@ export const fetchQuestionBatch = async (
   previousQuestions: string[] = []
 ): Promise<DiagnosticQuestion[]> => {
   try {
+    // Using a more direct approach to avoid type instantiation issues
     let query = supabase
       .from('exercises')
       .select('*')
@@ -52,7 +52,7 @@ export const fetchQuestionBatch = async (
     if (error) throw error;
     
     // Use our mapper to convert database records to DiagnosticQuestion objects
-    return (data || []).map(item => mapExerciseToQuestion(item, Number(testId)));
+    return data ? data.map(item => mapExerciseToQuestion(item, Number(testId))) : [];
   } catch (error) {
     console.error('Error fetching questions:', error);
     return [];
