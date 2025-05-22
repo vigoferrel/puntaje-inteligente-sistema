@@ -6,7 +6,7 @@ import { DiagnosticTest } from "@/types/diagnostic";
 import { DiagnosticGeneratorService } from "./types";
 
 /**
- * Genera un diagnóstico completo para un test específico
+ * Genera un diagnóstico completo para un test específico con manejo mejorado de errores
  */
 export const generateDiagnosticTest = async (
   testId: number,
@@ -14,6 +14,14 @@ export const generateDiagnosticTest = async (
   description?: string
 ): Promise<string | null> => {
   try {
+    console.log(`Iniciando generación de diagnóstico para test ID: ${testId}`);
+    
+    // Mostrar toast informativo
+    toast({
+      title: "Generando diagnóstico",
+      description: "Este proceso puede tardar unos segundos...",
+    });
+    
     // Obtener todas las habilidades para el test especificado
     const { data: skills, error: skillsError } = await supabase
       .from('paes_skills')
@@ -41,8 +49,9 @@ export const generateDiagnosticTest = async (
     
     // Convertir las skill_id a códigos de habilidades
     const skillCodes = skills.map(skill => skill.code);
+    console.log(`Habilidades seleccionadas: ${skillCodes.join(', ')}`);
     
-    // Generar el diagnóstico
+    // Generar el diagnóstico con manejo de errores mejorado
     const generatedDiagnostic = await generateDiagnostic(
       testId,
       skillCodes,
@@ -50,10 +59,21 @@ export const generateDiagnosticTest = async (
       'MIXED' // Mezcla de dificultades
     );
     
-    if (!generatedDiagnostic || !generatedDiagnostic.exercises || generatedDiagnostic.exercises.length === 0) {
+    if (!generatedDiagnostic) {
+      console.error('No se recibió respuesta del servicio de diagnóstico');
       toast({
         title: "Error",
-        description: "No se pudo generar el diagnóstico",
+        description: "No se pudo generar el diagnóstico: servicio no disponible",
+        variant: "destructive"
+      });
+      return null;
+    }
+    
+    if (!generatedDiagnostic.exercises || !Array.isArray(generatedDiagnostic.exercises) || generatedDiagnostic.exercises.length === 0) {
+      console.error('Diagnóstico generado sin ejercicios válidos', generatedDiagnostic);
+      toast({
+        title: "Error",
+        description: "El diagnóstico generado no contiene ejercicios válidos",
         variant: "destructive"
       });
       return null;
@@ -65,6 +85,8 @@ export const generateDiagnosticTest = async (
       title: title || generatedDiagnostic.title,
       description: description || generatedDiagnostic.description
     };
+    
+    console.log(`Guardando diagnóstico con ${diagnosticToSave.exercises.length} ejercicios`);
     
     // Guardar el diagnóstico en la base de datos
     const diagnosticId = await saveDiagnostic(diagnosticToSave, testId);

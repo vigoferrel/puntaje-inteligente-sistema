@@ -8,7 +8,7 @@ interface OpenRouterServiceOptions {
 }
 
 /**
- * Main service function for OpenRouter API calls
+ * Main service function for OpenRouter API calls with enhanced error handling
  */
 export const openRouterService = async <T>({ action, payload }: OpenRouterServiceOptions): Promise<T | null> => {
   try {
@@ -41,76 +41,16 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
       console.error('OpenRouter error:', data.error);
       
       // Si tenemos una respuesta de fallback, la usamos
-      if (data.fallbackResponse) {
-        console.log('Using fallback response:', data.fallbackResponse);
-        return data.fallbackResponse as T;
+      if (data.result) {
+        console.log('Using result from error response:', data.result);
+        return data.result as T;
       }
       
       throw new Error(`Error de OpenRouter: ${data.error}`);
     }
     
     if (data && data.result) {
-      try {
-        // For image processing
-        if (action === 'process_image') {
-          console.log('Image processing result received:', data.result);
-          return data.result as unknown as T;
-        }
-        
-        // Para generate_exercise o generate_exercises_batch, el resultado ya debería ser un objeto o array
-        if (action === 'generate_exercise' || action === 'generate_exercises_batch') {
-          console.log('Exercise data received:', data.result);
-          return data.result as unknown as T;
-        }
-        
-        // Para provide_feedback, asegurarse de que tenemos una respuesta
-        if (action === 'provide_feedback') {
-          if (typeof data.result === 'string') {
-            return { response: data.result } as unknown as T;
-          }
-          return data.result as unknown as T;
-        }
-
-        // Para analyze_performance, convertir el resultado a AIAnalysis
-        if (action === 'analyze_performance') {
-          if (typeof data.result === 'string') {
-            try {
-              return JSON.parse(data.result) as T;
-            } catch (e) {
-              return { 
-                strengths: [], 
-                areasForImprovement: [], 
-                recommendations: [],
-                nextSteps: []
-              } as unknown as T;
-            }
-          }
-          return data.result as unknown as T;
-        }
-
-        // Para generate_diagnostic, convertir el resultado
-        if (action === 'generate_diagnostic') {
-          console.log('Diagnostic data received:', data.result);
-          return data.result as unknown as T;
-        }
-        
-        // Para otros casos, intentar parsear si es un string
-        if (typeof data.result === 'string') {
-          try {
-            return JSON.parse(data.result) as T;
-          } catch (e) {
-            console.log('Result is a string but not JSON, returning as is');
-            return data.result as unknown as T;
-          }
-        }
-        return data.result as unknown as T;
-      } catch (parseError) {
-        console.error('Error parsing result:', parseError);
-        console.log('Raw result:', data.result);
-        
-        // Return the raw result if parsing fails
-        return data.result as unknown as T;
-      }
+      return data.result as T;
     }
     
     // No result found in response
@@ -302,7 +242,7 @@ export const generateExercisesBatch = async (
 };
 
 /**
- * Genera un diagnóstico completo para un conjunto de habilidades y test
+ * Genera un diagnóstico completo para un conjunto de habilidades y test con mejor manejo de errores
  */
 export const generateDiagnostic = async (
   testId: number,
@@ -325,17 +265,54 @@ export const generateDiagnostic = async (
       }
     });
     
-    if (!result || !result.exercises || !Array.isArray(result.exercises)) {
-      console.error('No se generó el diagnóstico o el formato es inválido');
+    // Validación mejorada del resultado
+    if (!result) {
+      console.error('No se recibió resultado al generar el diagnóstico');
       return {
         title: `Diagnóstico para Test ${testId}`,
-        description: "Diagnóstico generado automáticamente",
+        description: "No se pudo generar el diagnóstico automáticamente",
+        exercises: []
+      };
+    }
+    
+    if (!result.exercises || !Array.isArray(result.exercises)) {
+      console.error('El formato del diagnóstico recibido es inválido', result);
+      return {
+        title: result.title || `Diagnóstico para Test ${testId}`,
+        description: result.description || "El diagnóstico generado tiene un formato inválido",
+        exercises: []
+      };
+    }
+    
+    // Validar que hay al menos un ejercicio
+    if (result.exercises.length === 0) {
+      console.error('El diagnóstico generado no contiene ejercicios');
+      return {
+        title: result.title || `Diagnóstico para Test ${testId}`,
+        description: result.description || "El diagnóstico generado no contiene ejercicios",
         exercises: []
       };
     }
     
     console.log(`Generado diagnóstico con ${result.exercises.length} ejercicios`);
-    return result;
+    
+    // Validar cada ejercicio
+    const validExercises = result.exercises.filter(exercise => 
+      exercise.question && 
+      Array.isArray(exercise.options) && 
+      exercise.options.length > 0 &&
+      exercise.correctAnswer
+    );
+    
+    if (validExercises.length < result.exercises.length) {
+      console.warn(`Se filtraron ${result.exercises.length - validExercises.length} ejercicios inválidos`);
+    }
+    
+    return {
+      title: result.title,
+      description: result.description,
+      exercises: validExercises
+    };
   } catch (error) {
     console.error('Error al generar diagnóstico:', error);
     return {
@@ -347,13 +324,20 @@ export const generateDiagnostic = async (
 };
 
 /**
- * Guarda un diagnóstico generado en la base de datos
+ * Guarda un diagnóstico generado en la base de datos con mejor validación
  */
 export const saveDiagnostic = async (
   diagnostic: {title: string, description: string, exercises: Exercise[]},
   testId: number
 ): Promise<string | null> => {
   try {
+    // Validar el diagnóstico antes de guardarlo
+    if (!diagnostic.title || !diagnostic.description || 
+        !Array.isArray(diagnostic.exercises) || diagnostic.exercises.length === 0) {
+      console.error('Diagnóstico inválido', diagnostic);
+      return null;
+    }
+    
     // Crear el diagnóstico en la base de datos
     const { data: diagnosticData, error: diagnosticError } = await supabase
       .from('diagnostic_tests')
@@ -376,43 +360,73 @@ export const saveDiagnostic = async (
     }
     
     const diagnosticId = diagnosticData.id;
+    console.log(`Diagnóstico creado con ID: ${diagnosticId}, guardando ${diagnostic.exercises.length} ejercicios`);
+    
+    // Contador para ejercicios guardados correctamente
+    let successCount = 0;
     
     // Guardar los ejercicios asociados al diagnóstico uno por uno
     for (const exercise of diagnostic.exercises) {
-      // Mapear el string de dificultad a uno de los valores permitidos
-      let mappedDifficulty: "basic" | "intermediate" | "advanced" = "intermediate";
-      
-      if (typeof exercise.difficulty === 'string') {
-        const difficultyLower = exercise.difficulty.toLowerCase();
-        if (difficultyLower === 'basic' || difficultyLower === 'easy') {
-          mappedDifficulty = 'basic';
-        } else if (difficultyLower === 'intermediate' || difficultyLower === 'medium') {
-          mappedDifficulty = 'intermediate';
-        } else if (difficultyLower === 'advanced' || difficultyLower === 'hard') {
-          mappedDifficulty = 'advanced';
+      try {
+        // Mapear el string de dificultad a uno de los valores permitidos
+        let mappedDifficulty: "basic" | "intermediate" | "advanced" = "intermediate";
+        
+        if (typeof exercise.difficulty === 'string') {
+          const difficultyLower = exercise.difficulty.toLowerCase();
+          if (difficultyLower === 'basic' || difficultyLower === 'easy') {
+            mappedDifficulty = 'basic';
+          } else if (difficultyLower === 'intermediate' || difficultyLower === 'medium') {
+            mappedDifficulty = 'intermediate';
+          } else if (difficultyLower === 'advanced' || difficultyLower === 'hard') {
+            mappedDifficulty = 'advanced';
+          }
         }
+        
+        // Validar que las opciones sean correctas
+        const options = Array.isArray(exercise.options) ? 
+          exercise.options : 
+          typeof exercise.options === 'string' ? [exercise.options] : [];
+        
+        const { error: exerciseError } = await supabase
+          .from('exercises')
+          .insert({
+            diagnostic_id: diagnosticId,
+            node_id: '00000000-0000-0000-0000-000000000000', // Valor de marcador de posición
+            test_id: testId,
+            skill_id: typeof exercise.skill === 'number' ? 
+              exercise.skill : 
+              1, // Default skill_id if not provided
+            question: exercise.question,
+            options: options,
+            correct_answer: exercise.correctAnswer,
+            explanation: exercise.explanation || '',
+            difficulty: mappedDifficulty
+          });
+        
+        if (exerciseError) {
+          console.error('Error al guardar el ejercicio:', exerciseError);
+          // Continuar con el siguiente ejercicio incluso si uno falla
+        } else {
+          successCount++;
+        }
+      } catch (exerciseError) {
+        console.error('Error al procesar ejercicio:', exerciseError);
       }
+    }
+    
+    console.log(`Guardados ${successCount}/${diagnostic.exercises.length} ejercicios correctamente`);
+    
+    // Si no se guardó ningún ejercicio, considerarlo un fallo
+    if (successCount === 0 && diagnostic.exercises.length > 0) {
+      console.error('No se pudo guardar ningún ejercicio');
       
-      const { error: exerciseError } = await supabase
-        .from('exercises')
-        .insert({
-          diagnostic_id: diagnosticId,
-          node_id: '00000000-0000-0000-0000-000000000000', // Valor de marcador de posición para satisfacer el esquema
-          test_id: testId,
-          skill_id: typeof exercise.skill === 'number' ? 
-            exercise.skill : 
-            1, // Default skill_id if not provided
-          question: exercise.question,
-          options: exercise.options,
-          correct_answer: exercise.correctAnswer,
-          explanation: exercise.explanation || '',
-          difficulty: mappedDifficulty
-        });
-      
-      if (exerciseError) {
-        console.error('Error al guardar el ejercicio:', exerciseError);
-        // Continuar con el siguiente ejercicio incluso si uno falla
-      }
+      // Eliminar el diagnóstico vacío
+      await supabase
+        .from('diagnostic_tests')
+        .delete()
+        .eq('id', diagnosticId);
+        
+      return null;
     }
     
     return diagnosticId;

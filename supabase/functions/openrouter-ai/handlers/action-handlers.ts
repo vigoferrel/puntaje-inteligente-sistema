@@ -1,6 +1,12 @@
 import { corsHeaders } from "../cors.ts";
 import { callOpenRouter, callVisionModel } from "../services/openrouter-service.ts";
-import { createErrorResponse, createSuccessResponse, processAIResponse } from "../utils/response-utils.ts";
+import { 
+  createErrorResponse, 
+  createSuccessResponse, 
+  processAIResponse, 
+  extractJsonFromContent,
+  createDiagnosticFallback 
+} from "../utils/response-utils.ts";
 
 /**
  * Handler for the 'generate_exercise' action
@@ -134,7 +140,7 @@ export async function generateExercisesBatch(payload: any) {
 }
 
 /**
- * Handler for the 'generate_diagnostic' action
+ * Handler for the 'generate_diagnostic' action with improved error handling
  */
 export async function generateDiagnostic(payload: any) {
   try {
@@ -143,15 +149,40 @@ export async function generateDiagnostic(payload: any) {
     const numExercisesPerSkill = exercisesPerSkill && !isNaN(Number(exercisesPerSkill)) ? 
       Number(exercisesPerSkill) : 3;
     
+    // Log diagnostic generation request
+    console.log(`Generating diagnostic for test ${testId} with skills: ${skillsArray.join(", ")}`);
+    
     // Validate required parameters
     if (!testId || skillsArray.length === 0) {
-      return createErrorResponse('Se requiere especificar un testId y al menos una habilidad');
+      return createErrorResponse(
+        'Se requiere especificar un testId y al menos una habilidad', 
+        400
+      );
     }
     
+    // Create a more structured system prompt
     const systemPrompt = `Eres un asistente educativo especializado en crear diagnósticos para la preparación de la PAES.
-    Tu tarea es crear un diagnóstico completo que incluya un título, descripción, y una serie de ejercicios adaptados
-    a las habilidades especificadas. El diagnóstico evaluará el desempeño del estudiante en estas habilidades.`;
+    Tu tarea es crear un diagnóstico completo con la siguiente estructura JSON:
+    {
+      "title": "título descriptivo del diagnóstico",
+      "description": "descripción del propósito y alcance del diagnóstico",
+      "exercises": [
+        { 
+          "id": "id-único-1", 
+          "question": "pregunta", 
+          "options": ["opción A", "opción B", "opción C", "opción D"], 
+          "correctAnswer": "opción correcta", 
+          "explanation": "explicación",
+          "skill": "habilidad correspondiente",
+          "difficulty": "BASIC|INTERMEDIATE|ADVANCED"
+        },
+        ...más ejercicios
+      ]
+    }
+    
+    IMPORTANTE: Responde SOLAMENTE con el JSON válido, sin explicaciones ni texto adicional.`;
 
+    // Create a detailed user prompt
     const userPrompt = `Crea un diagnóstico completo para la prueba con ID ${testId}
     que evalúe las siguientes habilidades: ${skillsArray.join(', ')}.
     
@@ -161,58 +192,87 @@ export async function generateDiagnostic(payload: any) {
     3. ${numExercisesPerSkill} ejercicios para cada una de las habilidades especificadas (total: ${numExercisesPerSkill * skillsArray.length} ejercicios)
     
     Cada ejercicio debe tener:
-    1. Un contexto relevante
+    1. Un ID único generado aleatoriamente (puedes usar un formato como "id-123456")
     2. Una pregunta clara que evalúe la habilidad correspondiente
-    3. Cuatro opciones de respuesta (A, B, C, D)
-    4. La respuesta correcta
+    3. Cuatro opciones de respuesta (que comiencen con "Opción A:", "Opción B:", etc.)
+    4. La respuesta correcta (debe coincidir exactamente con una de las opciones)
     5. Una explicación de por qué esa es la respuesta correcta
+    6. La habilidad que evalúa (una de: ${skillsArray.join(', ')})
+    7. La dificultad: BASIC, INTERMEDIATE o ADVANCED
     
-    Responde SOLO en formato JSON con las siguientes propiedades:
-    {
-      "title": "título descriptivo del diagnóstico",
-      "description": "descripción del propósito y alcance del diagnóstico",
-      "exercises": [
-        { 
-          "id": "id-único-1", 
-          "context": "texto o contexto", 
-          "question": "pregunta", 
-          "options": ["opción A", "opción B", "opción C", "opción D"], 
-          "correctAnswer": "opción correcta", 
-          "explanation": "explicación",
-          "skill": "habilidad correspondiente",
-          "difficulty": "BASIC|INTERMEDIATE|ADVANCED"
-        },
-        ... resto de ejercicios
-      ]
-    }`;
+    Responde SOLAMENTE con el JSON, sin comentarios ni texto adicional.`;
 
     console.log('Generating diagnostic with prompt:', userPrompt.substring(0, 100) + '...');
-    const result = await callOpenRouter(systemPrompt, userPrompt);
-
-    if (result.error) {
-      console.error('Error generating diagnostic:', result.error);
-      return createErrorResponse(result.error, 500, result.fallbackResponse);
-    }
     
-    // Procesar el resultado para asegurar el formato correcto
-    let diagnostic = result.result;
-    if (typeof diagnostic === 'string') {
-      try {
-        diagnostic = JSON.parse(diagnostic);
-      } catch (e) {
-        console.error('Error parsing diagnostic JSON:', e);
-        return createErrorResponse('Formato de respuesta inválido', 500);
+    // First attempt with retry mechanism
+    let result;
+    let retryCount = 0;
+    const maxRetries = 2;
+    
+    while (retryCount <= maxRetries) {
+      result = await callOpenRouter(systemPrompt, userPrompt);
+      console.log(`Attempt ${retryCount + 1}: OpenRouter response received`);
+      
+      if (!result.error) {
+        try {
+          // Try to parse and validate the response
+          let diagnostic = result.result;
+          
+          // If string response, try to parse it
+          if (typeof diagnostic === 'string') {
+            try {
+              diagnostic = JSON.parse(diagnostic);
+            } catch (e) {
+              console.error('Error parsing diagnostic JSON string:', e);
+              // Try extracting JSON from the content
+              diagnostic = extractJsonFromContent(diagnostic);
+            }
+          }
+          
+          // Basic validation of the structure
+          if (diagnostic && 
+              typeof diagnostic === 'object' &&
+              diagnostic.title && 
+              diagnostic.description && 
+              Array.isArray(diagnostic.exercises) && 
+              diagnostic.exercises.length > 0) {
+            
+            console.log(`Successfully generated diagnostic with ${diagnostic.exercises.length} exercises`);
+            return createSuccessResponse(diagnostic);
+          }
+          
+          console.error('Invalid diagnostic format received, retrying...');
+        } catch (parseError) {
+          console.error('Error processing diagnostic result:', parseError);
+        }
+      } else {
+        console.error('Error from OpenRouter:', result.error);
+      }
+      
+      retryCount++;
+      
+      // Wait before retrying
+      if (retryCount <= maxRetries) {
+        console.log(`Waiting before retry ${retryCount}...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
     
-    if (!diagnostic || typeof diagnostic !== 'object' || !diagnostic.exercises || !Array.isArray(diagnostic.exercises)) {
-      return createErrorResponse('Formato de respuesta inválido o incompleto', 500);
-    }
-
-    return createSuccessResponse(diagnostic);
+    // All attempts failed, return fallback diagnostic
+    console.error('All attempts to generate diagnostic failed, returning fallback');
+    const fallbackDiagnostic = createDiagnosticFallback(
+      testId,
+      `Diagnóstico de prueba para ${skillsArray.join(', ')}`
+    );
+    
+    return createSuccessResponse(fallbackDiagnostic);
   } catch (error) {
     console.error('Error in generateDiagnostic handler:', error);
-    return createErrorResponse(`Error al generar diagnóstico: ${error.message}`, 500);
+    return createErrorResponse(
+      `Error al generar diagnóstico: ${error instanceof Error ? error.message : 'Unknown error'}`, 
+      500,
+      createDiagnosticFallback(payload.testId || 1)
+    );
   }
 }
 

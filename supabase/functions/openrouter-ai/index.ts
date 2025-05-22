@@ -27,34 +27,41 @@ serve(async (req) => {
     console.log(`Processing action: ${action}`);
     
     let response;
-    switch (action) {
-      case 'generate_exercise':
-        response = await generateExercise(payload);
-        break;
-      case 'generate_exercises_batch':
-        response = await generateExercisesBatch(payload);
-        break;
-      case 'generate_diagnostic':
-        response = await generateDiagnostic(payload);
-        break;
-      case 'analyze_performance':
-        response = await analyzePerformance(payload);
-        break;
-      case 'provide_feedback':
-        response = await provideFeedback(payload);
-        break;
-      case 'process_image':
-        response = await processImage(payload);
-        break;
-      default:
-        response = {
-          error: `Acción desconocida: ${action}`,
-          status: 400
-        };
+    try {
+      switch (action) {
+        case 'generate_exercise':
+          response = await generateExercise(payload);
+          break;
+        case 'generate_exercises_batch':
+          response = await generateExercisesBatch(payload);
+          break;
+        case 'generate_diagnostic':
+          response = await generateDiagnostic(payload);
+          break;
+        case 'analyze_performance':
+          response = await analyzePerformance(payload);
+          break;
+        case 'provide_feedback':
+          response = await provideFeedback(payload);
+          break;
+        case 'process_image':
+          response = await processImage(payload);
+          break;
+        default:
+          response = {
+            error: `Acción desconocida: ${action}`,
+            status: 400
+          };
+      }
+    } catch (handlerError) {
+      console.error(`Error executing action ${action}:`, handlerError);
+      response = {
+        error: `Error ejecutando acción ${action}: ${handlerError.message}`,
+        status: 500
+      };
     }
 
     const statusCode = response.status || (response.error ? 500 : 200);
-
     return new Response(JSON.stringify(response), {
       status: statusCode,
       headers: {
@@ -68,7 +75,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: `Error en edge function: ${error.message}`,
-        fallbackResponse: {
+        result: {
           response: "Lo siento, hubo un error procesando tu solicitud. Por favor intenta de nuevo."
         }
       }),

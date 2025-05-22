@@ -8,6 +8,7 @@ export const useDiagnosticoGenerator = () => {
   const [selectedTestId, setSelectedTestId] = useState<number | undefined>(undefined);
   const [tests, setTests] = useState<{id: number, name: string}[]>([]);
   const [loadingTests, setLoadingTests] = useState(true);
+  const [lastError, setLastError] = useState<string | null>(null);
   
   const { 
     loading, 
@@ -21,13 +22,18 @@ export const useDiagnosticoGenerator = () => {
     const fetchTests = async () => {
       try {
         setLoadingTests(true);
+        
         const { data, error } = await supabase
           .from('paes_tests')
           .select('id, name');
         
-        if (error) throw error;
+        if (error) {
+          setLastError(`Error al cargar tests: ${error.message}`);
+          throw error;
+        }
         
         setTests(data || []);
+        setLastError(null);
       } catch (error) {
         console.error('Error al cargar tests:', error);
         toast({
@@ -45,28 +51,56 @@ export const useDiagnosticoGenerator = () => {
   
   // Cargar diagnósticos cuando cambie el test seleccionado
   useEffect(() => {
-    if (selectedTestId) {
-      loadDiagnostics(selectedTestId);
-    }
+    const fetchDiagnostics = async () => {
+      if (selectedTestId) {
+        try {
+          await loadDiagnostics(selectedTestId);
+        } catch (error) {
+          console.error('Error al cargar diagnósticos:', error);
+          setLastError(`Error al cargar diagnósticos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+        }
+      }
+    };
+    
+    fetchDiagnostics();
   }, [selectedTestId, loadDiagnostics]);
   
-  // Manejar la creación de un nuevo diagnóstico
+  // Manejar la creación de un nuevo diagnóstico con mejor feedback
   const handleCreateDiagnostic = async (
     testId: number,
     title: string,
     description: string
   ) => {
-    const diagnosticId = await generateFullDiagnostic(
-      testId,
-      title || undefined,
-      description || undefined
-    );
+    setLastError(null);
     
-    if (diagnosticId) {
+    try {
+      const diagnosticId = await generateFullDiagnostic(
+        testId,
+        title || undefined,
+        description || undefined
+      );
+      
+      if (diagnosticId) {
+        toast({
+          title: "Éxito",
+          description: "Diagnóstico creado correctamente",
+        });
+        return diagnosticId;
+      } else {
+        setLastError("No se pudo crear el diagnóstico (ID no recibido)");
+        return null;
+      }
+    } catch (error) {
+      console.error('Error en handleCreateDiagnostic:', error);
+      setLastError(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      
       toast({
-        title: "Éxito",
-        description: "Diagnóstico creado correctamente",
+        title: "Error",
+        description: "No se pudo crear el diagnóstico",
+        variant: "destructive"
       });
+      
+      return null;
     }
   };
   
@@ -77,6 +111,7 @@ export const useDiagnosticoGenerator = () => {
     loadingTests,
     selectedTestId,
     setSelectedTestId,
-    handleCreateDiagnostic
+    handleCreateDiagnostic,
+    lastError
   };
 };
