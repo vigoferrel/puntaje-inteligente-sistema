@@ -82,8 +82,11 @@ export const getQuestionById = async (questionId: string): Promise<DiagnosticQue
     
     if (!data) return null;
     
-    // Use our mapper to convert the database record
-    return mapExerciseToQuestion(data);
+    // Extract the test_id from the data and convert it to a number
+    const testId = data.test_id ? Number(data.test_id) : undefined;
+    
+    // Use our mapper to convert the database record, passing testId as a number
+    return mapExerciseToQuestion(data, testId);
   } catch (error) {
     console.error('Error fetching question:', error);
     return null;
