@@ -6,7 +6,7 @@ import { toast } from "@/components/ui/use-toast";
 import { createLearningPlan } from "@/services/plan";
 import { TPAESHabilidad } from "@/types/system-types";
 
-// Add the missing UserProfile type export to fix the build errors
+// Actualizada la interfaz UserProfile para incluir todas las propiedades necesarias
 export interface UserProfile {
   id: string;
   name?: string;
@@ -15,6 +15,13 @@ export interface UserProfile {
   preferences?: Record<string, any>;
   targetCareer?: string;
   learningCyclePhase?: string;
+  progress?: {
+    completedNodes: string[];
+    completedExercises: number;
+    correctExercises: number;
+    totalTimeMinutes: number;
+  };
+  skillLevels?: Record<TPAESHabilidad, number>;
 }
 
 export const useUserData = () => {

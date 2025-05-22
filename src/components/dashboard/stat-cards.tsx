@@ -18,7 +18,7 @@ export interface StatCardItem {
 
 interface StatCardsProps {
   loading: boolean;
-  stats?: StatCardItem[];
+  stats?: StatCardItem[] | { totalNodes: number; completedNodes: number; totalPlans: number; };
   className?: string;
   completedExercises?: number;
   accuracyPercentage?: number;
@@ -30,9 +30,9 @@ export const StatCards = ({
   loading,
   stats,
   className,
-  completedExercises,
-  accuracyPercentage,
-  totalTimeMinutes,
+  completedExercises = 0,
+  accuracyPercentage = 0,
+  totalTimeMinutes = 0,
   skillMap
 }: StatCardsProps) => {
   const container = {
@@ -69,8 +69,8 @@ export const StatCards = ({
     }
   };
 
-  // If stats are provided, use them
-  if (stats && stats.length > 0) {
+  // Check if stats is an array of StatCardItem
+  if (stats && Array.isArray(stats)) {
     return (
       <motion.div 
         className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 ${className || ''}`}
@@ -177,7 +177,39 @@ export const StatCards = ({
     );
   }
 
-  // Legacy usage
+  // Generate default stat cards with available data
+  const defaultStatCards = [
+    {
+      title: "Ejercicios Completados",
+      value: loading ? "..." : completedExercises,
+      icon: <CheckCircle className="h-5 w-5 text-stp-primary" />,
+      trend: { value: 12, positive: true },
+      tooltipText: "Número total de ejercicios que has completado"
+    },
+    {
+      title: "Precisión",
+      value: `${loading ? "..." : accuracyPercentage}%`,
+      icon: <BookOpen className="h-5 w-5 text-stp-primary" />,
+      trend: { value: 5, positive: true },
+      tooltipText: "Porcentaje de respuestas correctas"
+    },
+    {
+      title: "Tiempo de Estudio",
+      value: `${loading ? "..." : totalTimeMinutes} min`,
+      icon: <Hourglass className="h-5 w-5 text-stp-primary" />,
+      trend: { value: 8, positive: true },
+      tooltipText: "Tiempo total dedicado al estudio"
+    },
+    {
+      title: "Días Consecutivos",
+      value: "3",
+      icon: <CalendarDays className="h-5 w-5 text-stp-primary" />,
+      trend: { value: 2, positive: true },
+      tooltipText: "Días consecutivos de actividad"
+    }
+  ];
+
+  // Return default stat cards
   return (
     <motion.div 
       className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 ${className || ''}`}
@@ -185,45 +217,26 @@ export const StatCards = ({
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={item} whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-        <StatCard 
-          title="Ejercicios Completados" 
-          value={loading ? "..." : completedExercises} 
-          icon={<CheckCircle className="h-5 w-5 text-stp-primary" />}
-          trend={{ value: 12, positive: true }}
-          className="hover:shadow-md transition-all duration-300 border-2 hover:border-primary/20"
-        />
-      </motion.div>
-      
-      <motion.div variants={item} whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-        <StatCard 
-          title="Precisión" 
-          value={`${loading ? "..." : accuracyPercentage}%`} 
-          icon={<BookOpen className="h-5 w-5 text-stp-primary" />}
-          trend={{ value: 5, positive: true }}
-          className="hover:shadow-md transition-all duration-300 border-2 hover:border-primary/20"
-        />
-      </motion.div>
-      
-      <motion.div variants={item} whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-        <StatCard 
-          title="Tiempo de Estudio" 
-          value={`${loading ? "..." : totalTimeMinutes} min`} 
-          icon={<Hourglass className="h-5 w-5 text-stp-primary" />}
-          trend={{ value: 8, positive: true }}
-          className="hover:shadow-md transition-all duration-300 border-2 hover:border-primary/20"
-        />
-      </motion.div>
-      
-      <motion.div variants={item} whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-        <StatCard 
-          title="Días Consecutivos" 
-          value="3" 
-          icon={<CalendarDays className="h-5 w-5 text-stp-primary" />}
-          trend={{ value: 2, positive: true }}
-          className="hover:shadow-md transition-all duration-300 border-2 hover:border-primary/20"
-        />
-      </motion.div>
+      {defaultStatCards.map((stat, index) => (
+        <TooltipProvider key={index} delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.div variants={item} whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                <StatCard 
+                  title={stat.title} 
+                  value={stat.value} 
+                  icon={stat.icon}
+                  trend={stat.trend}
+                  className="hover:shadow-md transition-all duration-300 border-2 hover:border-primary/20"
+                />
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{stat.tooltipText}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
     </motion.div>
   );
 };

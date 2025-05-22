@@ -1,3 +1,4 @@
+
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "./use-user-data";
@@ -84,13 +85,14 @@ export const useAuthProfile = () => {
           name: data.name || 'Usuario',
           email: data.email || '',
           targetCareer: data.target_career || undefined,
+          learningCyclePhase,
           progress: {
             completedNodes: [],
             completedExercises: 0,
             correctExercises: 0,
             totalTimeMinutes: 0
           },
-          learningCyclePhase
+          skillLevels
         };
         
         return userProfile;

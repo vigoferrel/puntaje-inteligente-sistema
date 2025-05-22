@@ -16,8 +16,8 @@ interface TopSkillsProps {
 }
 
 export const TopSkills = ({ loading, topSkills, skillLevels, skills, className }: TopSkillsProps) => {
-  // Use skills prop if provided, otherwise use topSkills
-  const skillsToDisplay = skills || topSkills;
+  // Use skills prop if provided, otherwise use topSkills, ensure it's always an array
+  const skillsToDisplay = skills || topSkills || [];
 
   // Get suggestion based on skill level
   const getSkillSuggestion = (skill: TPAESHabilidad, level: number): string => {
@@ -75,6 +75,11 @@ export const TopSkills = ({ loading, topSkills, skillLevels, skills, className }
             <div className="h-10 bg-gray-200 animate-pulse rounded" />
             <div className="h-10 bg-gray-200 animate-pulse rounded" />
             <div className="h-10 bg-gray-200 animate-pulse rounded" />
+          </div>
+        ) : skillsToDisplay.length === 0 ? (
+          <div className="text-center py-4">
+            <p className="text-muted-foreground">No se han detectado habilidades todavía</p>
+            <p className="text-sm mt-2">Completa ejercicios para identificar tus fortalezas</p>
           </div>
         ) : (
           skillsToDisplay.map((skill) => (
