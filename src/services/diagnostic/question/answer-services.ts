@@ -1,92 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DiagnosticQuestion } from '@/types/diagnostic';
-import { QuestionFeedback, QuestionStatus, RawExerciseData } from './types';
-import { TPAESHabilidad } from "@/types/system-types";
-import { getAuthUser } from '@/contexts/auth-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  calculateQuestionPenalty,
-  calculateSkillLevelChange 
-} from './skill-services';
-import { mapExerciseToQuestion } from './mappers';
+import { getAuthUser } from '@/contexts/auth-utils';
+import { TPAESHabilidad } from "@/types/system-types";
+import { QuestionFeedback, QuestionStatus } from '../types';
+import { calculateQuestionPenalty, calculateSkillLevelChange } from '../skill-services';
+import { getQuestionById } from './fetch-questions';
 
-// Fetch diagnostic questions from Supabase
-export const fetchDiagnosticQuestions = async (
-  diagnosticId: string,
-  testId: number
-): Promise<DiagnosticQuestion[]> => {
-  try {
-    // Since we're seeing errors with the "questions" table, let's use "exercises" instead
-    // which appears to be in our Supabase schema
-    const { data, error } = await supabase
-      .from('exercises')
-      .select('*')
-      .eq('diagnostic_id', diagnosticId);
-
-    if (error) throw error;
-    
-    // Convert the database format to our application format using our mapper
-    return (data || []).map(item => mapExerciseToQuestion(item, testId));
-  } catch (error) {
-    console.error('Error fetching diagnostic questions:', error);
-    return [];
-  }
-};
-
-// Fetch a batch of questions for a specific test
-export const fetchQuestionBatch = async (
-  testId: string,
-  batchSize: number = 10,
-  previousQuestions: string[] = []
-): Promise<DiagnosticQuestion[]> => {
-  try {
-    // Since we're seeing errors with the "questions" table, let's use "exercises" instead
-    let query = supabase
-      .from('exercises')
-      .select('*')
-      .eq('test_id', testId);
-      
-    if (previousQuestions.length > 0) {
-      query = query.not('id', 'in', `(${previousQuestions.join(',')})`);
-    }
-    
-    query = query.limit(batchSize);
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    
-    // Use our mapper to convert database records to DiagnosticQuestion objects
-    return (data || []).map(item => mapExerciseToQuestion(item, Number(testId)));
-  } catch (error) {
-    console.error('Error fetching questions:', error);
-    return [];
-  }
-};
-
-// Get a single question by ID
-export const getQuestionById = async (questionId: string): Promise<DiagnosticQuestion | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('exercises')
-      .select('*')
-      .eq('id', questionId)
-      .single();
-
-    if (error) throw error;
-    
-    if (!data) return null;
-    
-    // Use our mapper to convert the database record
-    return mapExerciseToQuestion(data);
-  } catch (error) {
-    console.error('Error fetching question:', error);
-    return null;
-  }
-};
-
-// Record the user's answer to a question
+/**
+ * Record the user's answer to a question
+ */
 export const recordAnswer = async (
   questionId: string,
   selectedOption: string,
@@ -100,11 +23,11 @@ export const recordAnswer = async (
 
     // Insert the answer into the database
     const { error } = await supabase
-      .from('user_exercise_attempts')  // Changed from user_answers to user_exercise_attempts
+      .from('user_exercise_attempts')
       .insert({
         id: uuidv4(),
         user_id: user.id,
-        exercise_id: questionId,  // Changed from question_id to exercise_id
+        exercise_id: questionId,
         answer: selectedOption,
         is_correct: isCorrect,
         time_taken_seconds: timeSpentSeconds
@@ -117,7 +40,6 @@ export const recordAnswer = async (
       const penalty = calculateQuestionPenalty(timeSpentSeconds, isCorrect);
       const levelChange = calculateSkillLevelChange(isCorrect, penalty);
       
-      // Implementamos esta función para actualizar el nivel de habilidad del usuario
       await updateUserSkillLevel(user.id, skill, levelChange);
     }
 
@@ -128,14 +50,16 @@ export const recordAnswer = async (
   }
 };
 
-// Update user's skill level
-const updateUserSkillLevel = async (
+/**
+ * Update user's skill level
+ */
+export const updateUserSkillLevel = async (
   userId: string,
   skill: TPAESHabilidad,
   levelChange: number
 ): Promise<boolean> => {
   try {
-    // Convertir skill a number usando mapEnumToSkillId desde supabase-mappers
+    // Convert skill to number using mapEnumToSkillId
     const { mapEnumToSkillId } = await import('@/utils/supabase-mappers');
     const skillId = mapEnumToSkillId(skill);
 
@@ -159,7 +83,7 @@ const updateUserSkillLevel = async (
       .from('user_skill_levels')
       .upsert({
         user_id: userId,
-        skill_id: skillId, // Use the numeric skill_id
+        skill_id: skillId,
         level: newLevel
       });
 
@@ -171,7 +95,9 @@ const updateUserSkillLevel = async (
   }
 };
 
-// Get question feedback based on user answer
+/**
+ * Get question feedback based on user answer
+ */
 export const getQuestionFeedback = async (
   questionId: string,
   isCorrect: boolean
