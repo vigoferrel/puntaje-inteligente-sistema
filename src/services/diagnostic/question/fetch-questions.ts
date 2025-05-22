@@ -38,11 +38,14 @@ export const fetchQuestionBatch = async (
   previousQuestions: string[] = []
 ): Promise<DiagnosticQuestion[]> => {
   try {
+    // Convert the string testId to number at the beginning of the function
+    const numericTestId = Number(testId);
+    
     // Using a more direct approach to avoid type instantiation issues
     let query = supabase
       .from('exercises')
       .select('*')
-      .eq('test_id', testId);
+      .eq('test_id', numericTestId); // Use the numeric version here
       
     if (previousQuestions.length > 0) {
       query = query.not('id', 'in', `(${previousQuestions.join(',')})`);
@@ -55,10 +58,7 @@ export const fetchQuestionBatch = async (
 
     if (error) throw error;
     
-    // Convert string testId to number for the mapper function
-    const numericTestId = Number(testId);
-    
-    // Use our mapper to convert database records to DiagnosticQuestion objects
+    // Use the numeric testId for the mapper function
     return data ? data.map(item => mapExerciseToQuestion(item, numericTestId)) : [];
   } catch (error) {
     console.error('Error fetching questions:', error);
