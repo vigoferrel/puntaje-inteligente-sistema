@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { 
   DiagnosticTest, 
@@ -9,7 +8,7 @@ import {
   fetchDiagnosticTests,
   fetchDiagnosticResults,
   submitDiagnosticResult,
-  generateDefaultDiagnostic
+  ensureDefaultDiagnosticsExist
 } from "@/services/diagnostic";
 import { toast } from "@/components/ui/use-toast";
 
@@ -39,35 +38,31 @@ export const useDiagnostic = () => {
   /**
    * Ensures that at least one default diagnostic test exists
    */
-  const ensureDefaultDiagnosticsExist = async () => {
+  const ensureDefaultDiagnostics = async () => {
     try {
       setLoading(true);
       
-      // Si no hay tests, intentar crear uno por defecto
-      const created = await generateDefaultDiagnostic();
+      // Asegurarse que exista al menos un diagnóstico por defecto
+      const hasTests = await ensureDefaultDiagnosticsExist();
       
-      if (created) {
-        toast({
-          title: "Diagnóstico creado",
-          description: "Se ha generado un diagnóstico de prueba",
-        });
-        
-        // Refrescar la lista
+      if (hasTests) {
+        // Refrescar la lista si se crearon diagnósticos
         if (tests.length === 0) {
           const updatedTests = await fetchTests("auto-generated");
-          return updatedTests;
+          return updatedTests.length > 0;
         }
+        return true;
       }
       
-      return tests;
+      return false;
     } catch (error) {
-      console.error('Error al generar diagnóstico por defecto:', error);
+      console.error('Error al asegurar diagnósticos por defecto:', error);
       toast({
         title: "Error",
         description: "No se pudo generar un diagnóstico de prueba",
         variant: "destructive"
       });
-      return tests;
+      return false;
     } finally {
       setLoading(false);
     }
@@ -144,7 +139,7 @@ export const useDiagnostic = () => {
     currentTest,
     results,
     fetchDiagnosticTests: fetchTests,
-    ensureDefaultDiagnosticsExist,
+    ensureDefaultDiagnosticsExist: ensureDefaultDiagnostics,
     startDiagnosticTest,
     submitDiagnosticResult: submitResult,
     fetchDiagnosticResults: fetchResults

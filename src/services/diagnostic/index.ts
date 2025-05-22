@@ -13,4 +13,4 @@ export * from './mappers';
 export * from './default-diagnostics';
 export * from './test-services';
 // Exportamos el servicio para generar diagnósticos por defecto
-export { generateDefaultDiagnostic } from './default-services';
+export { generateDefaultDiagnostic, ensureDefaultDiagnosticsExist } from './default-services';

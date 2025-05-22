@@ -8,15 +8,17 @@ interface DashboardContentGridProps {
   loading: boolean;
   topSkills: TPAESHabilidad[];
   skillLevels: Record<TPAESHabilidad, number>;
+  className?: string;
 }
 
 export const DashboardContentGrid = ({
   loading,
   topSkills,
-  skillLevels
+  skillLevels,
+  className
 }: DashboardContentGridProps) => {
   return (
-    <div className="grid gap-6 md:grid-cols-7 mb-8">
+    <div className={`grid gap-6 md:grid-cols-7 ${className || ''}`}>
       <div className="md:col-span-4">
         <LearningWorkflow className="h-full" />
       </div>
