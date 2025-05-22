@@ -205,7 +205,7 @@ export const useDataInitialization = () => {
     }
   }, [checkDatabaseStatus, user]);
 
-  // New function for initializing PAES content
+  // Updated function for initializing PAES content with better error handling
   const initializePAESContent = useCallback(async () => {
     setIsLoadingPAES(true);
     setMessage(null);
@@ -224,7 +224,9 @@ export const useDataInitialization = () => {
     }
     
     try {
+      console.log("Comenzando la inicialización de contenido PAES...");
       const result = await initializePAESNodesOnly();
+      console.log("Resultado de inicialización PAES:", result);
       
       if (result.success > 0) {
         setMessage(`Contenido PAES inicializado correctamente. Se han creado ${result.success} nodos.`);
@@ -239,7 +241,8 @@ export const useDataInitialization = () => {
           description: "El contenido PAES ya estaba inicializado anteriormente.",
         });
       } else if (result.failed > 0) {
-        throw new Error(result.errors.join(', '));
+        const errorDetails = result.errors.join(', ');
+        throw new Error(`Error en la inicialización PAES: ${errorDetails}`);
       }
       
       // Update status after attempting initialization
@@ -268,6 +271,21 @@ export const useDataInitialization = () => {
           description: "Primero debes inicializar los nodos base antes de cargar el contenido PAES.",
           variant: "destructive"
         });
+      } else if (err.message?.includes('violates foreign key constraint')) {
+        errorMessage = "Error de clave foránea. Asegúrate de que las tablas de habilidades y pruebas estén inicializadas con los IDs correctos.";
+        toast({
+          title: "Error de referencia",
+          description: "Error en las referencias de datos. Verifica que las tablas base estén inicializadas correctamente.",
+          variant: "destructive"
+        });
+      } else if (err.message?.includes('violates row-level security policy')) {
+        errorMessage = "Error de seguridad. No tienes permisos para realizar esta operación.";
+        toast({
+          title: "Error de permisos",
+          description: "No tienes permisos suficientes para realizar esta operación.",
+          variant: "destructive"
+        });
+        console.log("RLS Error:", err.message);
       } else {
         errorMessage = `Error: ${err.message || "Ocurrió un error desconocido"}`;
         toast({

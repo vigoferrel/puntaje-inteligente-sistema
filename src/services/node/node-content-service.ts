@@ -60,8 +60,8 @@ export const createEducationalNode = async (
   title: string, 
   description: string,
   code: string,
-  skillId: number,
-  testId: number,
+  skillId: number | null,
+  testId: number | null,
   contentType: string,
   contentText: string,
   position: number = 1,
@@ -71,7 +71,7 @@ export const createEducationalNode = async (
     // Generate UUID for the new node
     const nodeId = uuidv4();
     
-    // Create node record
+    // Create node record - properly handle null values for skill_id and test_id
     const { error: nodeError } = await supabase
       .from('learning_nodes')
       .insert({
@@ -79,8 +79,8 @@ export const createEducationalNode = async (
         title,
         description,
         code,
-        skill_id: skillId,
-        test_id: testId,
+        skill_id: skillId, // Will be null if skillId is null
+        test_id: testId, // Will be null if testId is null
         position,
         difficulty
       });
@@ -122,8 +122,8 @@ export const batchCreateEducationalNodes = async (
     title: string;
     description?: string;
     code: string;
-    skillId: number;
-    testId: number;
+    skillId: number | null;
+    testId: number | null;
     contentType: string;
     contentText: string;
     position?: number;
@@ -142,8 +142,8 @@ export const batchCreateEducationalNodes = async (
         node.title,
         node.description || '',
         node.code,
-        node.skillId,
-        node.testId,
+        node.skillId, // Pass null if it's null
+        node.testId, // Pass null if it's null
         node.contentType,
         node.contentText,
         node.position || 1,

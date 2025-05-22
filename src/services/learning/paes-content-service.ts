@@ -25,8 +25,8 @@ const formatNodeForBatch = (node: TPAESNodeData) => {
     title: node.title,
     description: node.description || '',
     code: node.code,
-    skillId: node.skill_id || 0,
-    testId: node.test_id || 0,
+    skillId: node.skill_id, // Keep as null if it's null
+    testId: node.test_id, // Keep as null if it's null
     contentType: node.content_type,
     contentText: node.content,
     position: node.position || 1,
