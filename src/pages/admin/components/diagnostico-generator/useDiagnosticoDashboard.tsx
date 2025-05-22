@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { DiagnosticTest } from "@/types/diagnostic";
 import { TPAESPrueba } from "@/types/system-types";
 import { supabase } from "@/integrations/supabase/client";
-import { useDiagnosticGenerator } from "./useDiagnosticoGenerator";
+import { useDiagnosticoGenerator } from "./useDiagnosticoGenerator";
 
 export const useDiagnosticoDashboard = () => {
   const {
@@ -15,7 +14,7 @@ export const useDiagnosticoDashboard = () => {
     selectedTestId,
     setSelectedTestId,
     handleCreateDiagnostic
-  } = useDiagnosticGenerator();
+  } = useDiagnosticoGenerator();
 
   const [filteredDiagnostics, setFilteredDiagnostics] = useState<DiagnosticTest[]>(diagnostics);
   const [searchTerm, setSearchTerm] = useState("");

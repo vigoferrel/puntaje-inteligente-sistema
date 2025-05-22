@@ -25,7 +25,7 @@ export const DiagnosticoList = ({
   onViewExercises
 }: DiagnosticoListProps) => {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Diagnósticos Existentes</CardTitle>
         <CardDescription>

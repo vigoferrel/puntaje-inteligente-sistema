@@ -1,63 +1,28 @@
 
 import { useState, useEffect } from "react";
+import { useDiagnosticState } from "./diagnostic/use-diagnostic-state";
+import { useDiagnosticInitialization } from "./diagnostic/use-diagnostic-initialization";
 import { useDiagnosticTestSelection } from "./diagnostic/use-diagnostic-test-selection";
 import { useDiagnosticTestExecution } from "./diagnostic/use-diagnostic-test-execution";
 import { useDiagnosticProgress } from "./diagnostic/use-diagnostic-progress";
 import { useDiagnosticResults } from "./diagnostic/use-diagnostic-results";
 import { useDiagnostic } from "@/hooks/use-diagnostic";
-import { toast } from "@/components/ui/use-toast";
 
 export const useDiagnosticController = () => {
-  // State used across multiple hooks
-  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
-  const [testStarted, setTestStarted] = useState(false);
-  const [initializing, setInitializing] = useState(true);
-  const [generatingDiagnostic, setGeneratingDiagnostic] = useState(false);
+  // Diagnostic state hooks
+  const { selectedTestId, testStarted, setSelectedTestId, setTestStarted } = useDiagnosticState();
+  
+  // Initialization hook
+  const { initializing, generatingDiagnostic } = useDiagnosticInitialization();
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
   
-  // Initialize data
-  useEffect(() => {
-    const initDiagnostics = async () => {
-      try {
-        // This will ensure at least one test exists
-        setInitializing(true);
-        
-        // Generate a test if none exist
-        if (diagnosticService.tests.length === 0) {
-          setGeneratingDiagnostic(true);
-          const success = await diagnosticService.ensureDefaultDiagnosticsExist();
-          
-          if (success) {
-            toast({
-              title: "Diagnóstico creado",
-              description: "Se ha generado un diagnóstico inicial para ti",
-            });
-          }
-          setGeneratingDiagnostic(false);
-        }
-      } catch (error) {
-        console.error("Error initializing diagnostics:", error);
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los diagnósticos iniciales",
-          variant: "destructive"
-        });
-        setGeneratingDiagnostic(false);
-      } finally {
-        setInitializing(false);
-      }
-    };
-    
-    initDiagnostics();
-  }, [diagnosticService]);
-  
   // Compose the sub-hooks
   const selectionState = useDiagnosticTestSelection({
+    selectedTestId,
     setSelectedTestId,
-    setTestStarted,
-    selectedTestId
+    setTestStarted
   });
   
   const executionState = useDiagnosticTestExecution({
@@ -84,9 +49,11 @@ export const useDiagnosticController = () => {
   });
   
   return {
-    // State from hooks
+    // State from initialization
     initializing,
     generatingDiagnostic,
+    
+    // State from hooks
     tests: selectionState.tests,
     loading: selectionState.loading || initializing || generatingDiagnostic,
     selectedTestId,
