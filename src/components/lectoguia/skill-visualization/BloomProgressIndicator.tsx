@@ -1,10 +1,10 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
-import { BloomLevel, bloomLevelMap } from "./BloomTaxonomyViewer";
+import { BloomLevel } from "./BloomTaxonomyLevel";
+import { bloomLevelMap } from "./BloomTaxonomyViewer";
 import { CheckIcon, ArrowRightIcon } from "lucide-react";
 
 interface BloomProgressIndicatorProps {
