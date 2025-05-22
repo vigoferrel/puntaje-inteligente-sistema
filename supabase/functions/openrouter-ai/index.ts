@@ -20,19 +20,42 @@ serve(async (req) => {
   }
   
   try {
-    // Verify API key exists
+    // Check if API key exists
     if (!config.OPENROUTER_API_KEY) {
+      console.error('No OpenRouter API key found');
       return createErrorResponse('OpenRouter API key no está configurado. Por favor, configura la clave en los secretos de Supabase.', 500);
     }
+    
+    console.log('Request received at:', new Date().toISOString());
 
     // Parse request data
     const { action, payload } = await parseRequestData(req);
     
     // Process the requested action
-    return await processAction(action, payload);
+    const response = await processAction(action, payload);
+    console.log('Response status:', response.status);
+    
+    return response;
   } catch (error) {
     console.error('Error in OpenRouter AI function:', error);
-    return createErrorResponse(error.message, 500);
+    
+    // Provide a fallback response
+    const fallbackResponse = {
+      result: {
+        response: "Lo siento, estamos experimentando problemas técnicos. Por favor, intenta de nuevo más tarde."
+      }
+    };
+    
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        fallbackResponse
+      }), 
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 });
 
@@ -44,7 +67,12 @@ async function parseRequestData(req: Request): Promise<{ action: string; payload
     const requestData = await req.json();
     const action = requestData.action;
     const payload = requestData.payload;
-    console.log(`Processing ${action} request with payload:`, JSON.stringify(payload));
+    
+    console.log(`Processing ${action} request with payload:`, JSON.stringify({
+      action: action,
+      payloadSummary: payload ? `${Object.keys(payload).length} fields` : 'empty'
+    }));
+    
     return { action, payload };
   } catch (jsonError) {
     console.error("Error parsing request JSON:", jsonError);
@@ -56,17 +84,52 @@ async function parseRequestData(req: Request): Promise<{ action: string; payload
  * Routes the request to the appropriate handler based on the action
  */
 async function processAction(action: string, payload: any): Promise<Response> {
-  switch (action) {
-    case 'generate_exercise':
-      return await generateExercise(payload);
-    case 'analyze_performance':
-      return await analyzePerformance(payload);
-    case 'provide_feedback':
-      return await provideFeedback(payload);
-    case 'process_image':
-      return await processImage(payload);
-    default:
-      console.error(`Invalid action specified: ${action}`);
-      return createErrorResponse(`Acción inválida: ${action}`, 400);
+  console.log(`Starting action: ${action}`);
+  const startTime = Date.now();
+  
+  try {
+    let response;
+    
+    switch (action) {
+      case 'generate_exercise':
+        response = await generateExercise(payload);
+        break;
+      case 'analyze_performance':
+        response = await analyzePerformance(payload);
+        break;
+      case 'provide_feedback':
+        response = await provideFeedback(payload);
+        break;
+      case 'process_image':
+        response = await processImage(payload);
+        break;
+      default:
+        console.error(`Invalid action specified: ${action}`);
+        return createErrorResponse(`Acción inválida: ${action}`, 400);
+    }
+    
+    const duration = Date.now() - startTime;
+    console.log(`Action ${action} completed in ${duration}ms`);
+    
+    return response;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`Action ${action} failed after ${duration}ms:`, error);
+    
+    // Return an error with a fallback response
+    const fallbackResponse = {
+      response: "Lo siento, hubo un problema procesando tu solicitud. Por favor, intenta de nuevo más tarde."
+    };
+    
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        fallbackResponse
+      }), 
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 }

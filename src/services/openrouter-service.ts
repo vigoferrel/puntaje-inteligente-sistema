@@ -1,17 +1,22 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { ImageAnalysisResult } from "@/types/ai-types";
 
 interface OpenRouterServiceOptions {
   action: string;
   payload: any;
 }
 
+/**
+ * Main service function for OpenRouter API calls
+ */
 export const openRouterService = async <T>({ action, payload }: OpenRouterServiceOptions): Promise<T | null> => {
   try {
     console.log(`Calling OpenRouter service with action: ${action}`);
-    console.log('Payload:', JSON.stringify(payload));
+    console.log('Payload:', JSON.stringify(payload).substring(0, 200) + (JSON.stringify(payload).length > 200 ? '...' : ''));
     
+    const startTime = Date.now();
     const { data, error } = await supabase.functions.invoke('openrouter-ai', {
       body: {
         action,
@@ -19,12 +24,13 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
       }
     });
     
+    const responseTime = Date.now() - startTime;
+    console.log(`OpenRouter response received in ${responseTime}ms:`, data);
+    
     if (error) {
       console.error('Supabase functions error:', error);
       throw new Error(`Error en la función de Supabase: ${error.message}`);
     }
-    
-    console.log('OpenRouter response received:', data);
     
     if (!data) {
       console.error('No data received from OpenRouter');
@@ -71,6 +77,7 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
           try {
             return JSON.parse(data.result) as T;
           } catch (e) {
+            console.log('Result is a string but not JSON, returning as is');
             return data.result as unknown as T;
           }
         }
@@ -78,10 +85,14 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
       } catch (parseError) {
         console.error('Error parsing result:', parseError);
         console.log('Raw result:', data.result);
+        
+        // Return the raw result if parsing fails
         return data.result as unknown as T;
       }
     }
     
+    // No result found in response
+    console.warn('No result found in OpenRouter response');
     return null;
   } catch (err) {
     const message = err instanceof Error 
@@ -96,6 +107,8 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
       variant: "destructive"
     });
     
+    // Add retry logic here in the future if needed
+    
     return null;
   }
 };
@@ -103,10 +116,11 @@ export const openRouterService = async <T>({ action, payload }: OpenRouterServic
 /**
  * Processes an image and returns analysis from the AI
  */
-export const processImageWithOpenRouter = async (imageData: string, prompt?: string, context?: string) => {
+export const processImageWithOpenRouter = async (imageData: string, prompt?: string, context?: string): Promise<ImageAnalysisResult | null> => {
   try {
     // Validate image data
     if (!imageData) {
+      console.error('No image data provided for processing');
       toast({
         title: "Error",
         description: "No se proporcionó una imagen para procesar",
@@ -115,7 +129,20 @@ export const processImageWithOpenRouter = async (imageData: string, prompt?: str
       return null;
     }
 
-    return await openRouterService({
+    console.log('Processing image with prompt:', prompt || 'default prompt');
+    
+    // Ensure the image data is either a base64 string or a URL
+    if (!imageData.startsWith('data:') && !imageData.startsWith('http')) {
+      console.error('Invalid image data format');
+      toast({
+        title: "Error",
+        description: "Formato de imagen inválido",
+        variant: "destructive"
+      });
+      return null;
+    }
+
+    const result = await openRouterService<ImageAnalysisResult>({
       action: 'process_image',
       payload: {
         image: imageData,
@@ -123,6 +150,9 @@ export const processImageWithOpenRouter = async (imageData: string, prompt?: str
         context: context || "Análisis de imagen para comprensión lectora"
       }
     });
+
+    console.log('Image processing result:', result);
+    return result;
   } catch (error) {
     const message = error instanceof Error
       ? error.message

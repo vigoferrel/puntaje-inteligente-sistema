@@ -50,8 +50,8 @@ export async function fetchQuestionsByIds(
     
     if (!data || !Array.isArray(data)) return [];
     
-    // Transform each row into a DiagnosticQuestion
-    return data.map(exercise => mapExerciseToQuestion(exercise));
+    // Transform each row into a DiagnosticQuestion - making sure to pass exercise directly
+    return data.map((exercise) => mapExerciseToQuestion(exercise));
   } catch (error) {
     console.error('Error fetching questions by IDs:', error);
     return [];
@@ -94,12 +94,12 @@ export async function fetchDiagnosticQuestions(
       
       if (!fallbackData || !Array.isArray(fallbackData)) return [];
       
-      // Map the data to our DiagnosticQuestion type
-      return fallbackData.map(exercise => mapExerciseToQuestion(exercise));
+      // Map the data with explicit exercise parameter
+      return fallbackData.map((exercise) => mapExerciseToQuestion(exercise));
     }
     
-    // Map the data to our DiagnosticQuestion type
-    return data.map(exercise => mapExerciseToQuestion(exercise));
+    // Map the data with explicit exercise parameter
+    return data.map((exercise) => mapExerciseToQuestion(exercise));
   } catch (error) {
     console.error('Error in fetchDiagnosticQuestions:', error);
     return [];

@@ -26,17 +26,33 @@ export async function callOpenRouter(systemPrompt: string, userPrompt: string) {
       const currentModel = MODELS[attempts];
       console.log(`Attempting with model: ${currentModel} (attempt ${attempts + 1}/${maxAttempts})`);
       
-      response = await attemptModelRequest(currentModel, systemPrompt, userPrompt);
-      
-      if (response.ok) {
-        break;
-      } else if (response.status === 429) {
-        // Rate limit encountered, try next model
-        console.warn(`Rate limit hit for model ${currentModel}, trying next model...`);
+      try {
+        response = await attemptModelRequest(currentModel, systemPrompt, userPrompt);
+        
+        if (response.ok) {
+          console.log(`Model ${currentModel} responded successfully with status:`, response.status);
+          break;
+        } else if (response.status === 429) {
+          // Rate limit encountered, try next model
+          console.warn(`Rate limit hit for model ${currentModel}, trying next model...`);
+          attempts++;
+        } else {
+          // Other error, log and try next model
+          const errorText = await response.text().catch(() => 'Could not read error response');
+          console.error(`Error with model ${currentModel}: ${response.status}`, errorText);
+          attempts++;
+          
+          if (attempts >= maxAttempts) {
+            throw new Error(`All models failed. Last error: Status ${response.status}`);
+          }
+        }
+      } catch (fetchError) {
+        console.error(`Fetch error with model ${currentModel}:`, fetchError);
         attempts++;
-      } else {
-        // Other error, break and handle below
-        break;
+        
+        if (attempts >= maxAttempts) {
+          throw new Error(`Network error: ${fetchError.message}`);
+        }
       }
     }
 
@@ -50,7 +66,16 @@ export async function callOpenRouter(systemPrompt: string, userPrompt: string) {
     return await processSuccessfulResponse(response);
   } catch (error) {
     console.error('Error calling OpenRouter:', error);
-    return { error: `Error calling OpenRouter: ${error.message}` };
+    
+    // Create a fallback response
+    const fallbackResponse = {
+      response: "Lo siento, estoy experimentando problemas de conexión en este momento. Por favor, intenta de nuevo más tarde."
+    };
+    
+    return { 
+      error: `Error calling OpenRouter: ${error.message}`,
+      fallbackResponse: fallbackResponse
+    };
   }
 }
 
@@ -131,7 +156,16 @@ export async function callVisionModel(systemPrompt: string, userPrompt: string, 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenRouter API vision error response:', errorText);
-      return { error: `Error procesando imagen (${response.status}): ${errorText}` };
+      
+      // Provide a fallback response
+      const fallbackResponse = {
+        response: "Lo siento, no he podido analizar esta imagen. Por favor, intenta con otra o proporciona más detalles sobre lo que necesitas."
+      };
+      
+      return { 
+        error: `Error procesando imagen (${response.status}): ${errorText}`,
+        fallbackResponse
+      };
     }
 
     const responseText = await response.text();
@@ -153,7 +187,16 @@ export async function callVisionModel(systemPrompt: string, userPrompt: string, 
     return { result: content };
   } catch (error) {
     console.error('Error calling vision model:', error);
-    return { error: `Error llamando al modelo de visión: ${error.message}` };
+    
+    // Provide a fallback response
+    const fallbackResponse = {
+      response: "Lo siento, no he podido analizar esta imagen debido a un error técnico. Por favor, intenta de nuevo más tarde."
+    };
+    
+    return { 
+      error: `Error llamando al modelo de visión: ${error.message}`,
+      fallbackResponse
+    };
   }
 }
 
@@ -175,18 +218,24 @@ export async function attemptModelRequest(
     max_tokens: 1000
   });
   
-  console.log('Request body:', requestBody.substring(0, 200) + '...');
+  console.log(`Making request to model ${model}`);
   
-  return await fetch(`${config.OPENROUTER_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${config.OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': config.APP_URL,
-      'X-Title': 'PAES Preparation Platform'
-    },
-    body: requestBody
-  });
+  try {
+    return await fetch(`${config.OPENROUTER_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${config.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': config.APP_URL,
+        'X-Title': 'PAES Preparation Platform',
+        'User-Agent': 'PAES-App/1.0'
+      },
+      body: requestBody
+    });
+  } catch (error) {
+    console.error(`Network error during request to ${model}:`, error);
+    throw error;
+  }
 }
 
 /**
@@ -206,16 +255,26 @@ export async function handleApiError(response: Response, allModelsAttempted: boo
   const errorMessage = errorData.error?.message || errorText || 'Unknown error';
   const statusCode = response.status;
   
+  // Provide informative message based on error type
+  let userMessage = 'Se produjo un error al comunicarse con el modelo de IA.';
+  
   if (statusCode === 429 && allModelsAttempted) {
-    return { 
-      error: `Todos los modelos están experimentando rate limiting. Por favor, intenta de nuevo más tarde.`,
-      fallbackResponse: {
-        response: "Lo siento, estoy experimentando alta demanda en este momento. Por favor, intenta de nuevo en unos minutos."
-      }
-    };
+    userMessage = "Todos los modelos están experimentando alta demanda actualmente. Por favor, intenta de nuevo más tarde.";
+  } else if (statusCode === 401 || statusCode === 403) {
+    userMessage = "Error de autenticación con el servicio de IA. Por favor, verifica la configuración.";
+  } else if (statusCode >= 500) {
+    userMessage = "El servicio de IA está experimentando problemas técnicos. Por favor, intenta de nuevo más tarde.";
   }
   
-  return { error: `Error de OpenRouter (${statusCode}): ${errorMessage}` };
+  // Create a fallback response
+  const fallbackResponse = {
+    response: userMessage
+  };
+  
+  return { 
+    error: `Error de OpenRouter (${statusCode}): ${errorMessage}`,
+    fallbackResponse
+  };
 }
 
 /**
@@ -230,7 +289,12 @@ export async function processSuccessfulResponse(response: Response): Promise<any
     data = JSON.parse(responseText);
   } catch (e) {
     console.error('Error parsing JSON response:', e);
-    return { error: `Error parsing JSON response: ${e.message}` };
+    return { 
+      error: `Error parsing JSON response: ${e.message}`,
+      fallbackResponse: {
+        response: "Recibí una respuesta del modelo que no pude procesar correctamente."
+      }
+    };
   }
   
   console.log('OpenRouter response received, first 200 chars of content:', 
