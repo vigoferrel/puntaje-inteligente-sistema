@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { initializeRLSPolicies } from "@/services/database/rls-service";
 import { mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
+import { v4 as uuidv4 } from 'uuid';
 
+// Using proper UUID generation instead of hardcoded strings
 const initialLearningNodes = [
   {
-    id: 'a1b2c3d4-e5f6-4a1b-8c9d-0e1f2a3b4c5d', // Valid UUID format
+    id: uuidv4(), // Generate valid UUID
     title: 'Introducción a la Competencia Lectora',
     description: 'Aprende los fundamentos de la competencia lectora y cómo abordar diferentes tipos de textos.',
     code: 'INTRO_LECTORA',
@@ -20,7 +22,7 @@ const initialLearningNodes = [
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'b2c3d4e5-f6a7-4b1c-9d2e-0f1a2b3c4d5', // Valid UUID format
+    id: uuidv4(), // Generate valid UUID
     title: 'Resolución de Problemas Matemáticos',
     description: 'Desarrolla tus habilidades para resolver problemas matemáticos complejos paso a paso.',
     code: 'PROB_MATEMATICOS',
@@ -34,7 +36,7 @@ const initialLearningNodes = [
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'c3d4e5f6-a7b8-4c1d-9e2f-0a1b2c3d4e5', // Valid UUID format
+    id: uuidv4(), // Generate valid UUID
     title: 'Análisis de Datos Científicos',
     description: 'Aprende a interpretar y analizar datos científicos para extraer conclusiones significativas.',
     code: 'ANAL_CIENTIFICOS',
@@ -51,6 +53,15 @@ const initialLearningNodes = [
 
 export const ensureLearningNodesExist = async (): Promise<boolean> => {
   try {
+    // First check if the user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Usuario no autenticado. Se requiere autenticación para inicializar los nodos de aprendizaje.');
+      // Return a specific error that we can handle in the UI
+      throw new Error('AUTH_REQUIRED');
+    }
+    
     // Check if there are already nodes in the database
     const { count, error: countError } = await supabase
       .from('learning_nodes')
@@ -85,31 +96,24 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
     
     if (insertError) {
       if (insertError.message.includes('permission denied')) {
-        console.error('Permission denied error while inserting nodes. This is likely due to Row Level Security (RLS) policies. Please check your authentication status and permissions.', insertError);
+        console.error('Error de permisos al insertar nodos. Esto probablemente se debe a políticas RLS. Por favor, verifica tu estado de autenticación y permisos.', insertError);
+        throw new Error('PERMISSION_DENIED');
       } else if (insertError.message.includes('duplicate key')) {
-        console.error('Duplicate key error while inserting nodes. Nodes with these IDs may already exist.', insertError);
+        console.error('Error de clave duplicada al insertar nodos. Es posible que los nodos con estos IDs ya existan.', insertError);
+        throw new Error('DUPLICATE_KEY');
       } else {
-        console.error('Error inserting initial learning nodes:', insertError);
+        console.error('Error insertando nodos de aprendizaje iniciales:', insertError);
+        throw new Error('INSERT_ERROR');
       }
-      return false;
-    }
-    
-    // Check current RLS policies again to ensure everything is set up correctly
-    const { data: policies, error: policiesError } = await supabase.rpc('get_policies_for_table', { 
-      table_name: 'learning_nodes' 
-    } as { table_name: string });
-    
-    // If there are RLS issues, log them but don't try to fix them again since we already attempted
-    if (policiesError) {
-      console.warn('Could not verify RLS policies after insertion:', policiesError);
-    } else {
-      console.log(`Found ${(policies as any[])?.length || 0} RLS policies for learning_nodes table`);
     }
     
     console.log('Learning nodes initialized successfully');
-    
     return true;
-  } catch (error) {
+  } catch (error: any) {
+    // Propagate specific error types we explicitly threw
+    if (error.message === 'AUTH_REQUIRED' || error.message === 'PERMISSION_DENIED' || error.message === 'DUPLICATE_KEY') {
+      throw error;
+    }
     console.error('Error initializing learning nodes:', error);
     return false;
   }

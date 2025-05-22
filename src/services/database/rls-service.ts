@@ -112,7 +112,7 @@ export const initializeRLSPolicies = async (): Promise<boolean> => {
     const isAdmin = await checkAdminRights();
     
     if (!isAdmin) {
-      console.error('User does not have admin rights or is not authenticated');
+      console.error('Usuario no autenticado o no tiene permisos de administrador.');
       return false;
     }
     
@@ -129,33 +129,36 @@ export const initializeRLSPolicies = async (): Promise<boolean> => {
       return false;
     }
     
-    // Create policies allowing all users to access learning_nodes for now
-    // In a production app, you'd want more restrictive policies
+    // Create more permissive policies for authenticated users
     const { error } = await supabase.rpc('exec_sql', {
       sql: `
-        -- Create policy for users to select learning_nodes
-        CREATE POLICY IF NOT EXISTS "Allow select on learning_nodes"
+        -- Drop existing policies to avoid conflicts
+        DROP POLICY IF EXISTS "Allow select on learning_nodes" ON public.learning_nodes;
+        DROP POLICY IF EXISTS "Allow insert on learning_nodes" ON public.learning_nodes;
+        DROP POLICY IF EXISTS "Allow update on learning_nodes" ON public.learning_nodes;
+        DROP POLICY IF EXISTS "Allow delete on learning_nodes" ON public.learning_nodes;
+        
+        -- Create policy for users to select learning_nodes - any user can read
+        CREATE POLICY "Allow select on learning_nodes"
         ON public.learning_nodes
         FOR SELECT
         TO authenticated, anon
         USING (true);
         
-        -- Create policy for users to insert learning_nodes
-        CREATE POLICY IF NOT EXISTS "Allow insert on learning_nodes"
+        -- Only authenticated users can modify data
+        CREATE POLICY "Allow insert on learning_nodes"
         ON public.learning_nodes
         FOR INSERT
         TO authenticated
         WITH CHECK (true);
         
-        -- Create policy for users to update learning_nodes
-        CREATE POLICY IF NOT EXISTS "Allow update on learning_nodes"
+        CREATE POLICY "Allow update on learning_nodes"
         ON public.learning_nodes
         FOR UPDATE
         TO authenticated
         USING (true);
         
-        -- Create policy for users to delete learning_nodes
-        CREATE POLICY IF NOT EXISTS "Allow delete on learning_nodes"
+        CREATE POLICY "Allow delete on learning_nodes"
         ON public.learning_nodes
         FOR DELETE
         TO authenticated

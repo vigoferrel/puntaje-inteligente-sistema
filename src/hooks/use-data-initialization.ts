@@ -1,7 +1,9 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ensureLearningNodesExist } from "@/services/learning/initialize-learning-service";
+import { useAuth } from "@/contexts/AuthContext";
 
 type DatabaseStatus = {
   learningNodes: 'loading' | 'empty' | 'populated' | 'error' | 'unknown';
@@ -10,6 +12,7 @@ type DatabaseStatus = {
 };
 
 export const useDataInitialization = () => {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -80,48 +83,65 @@ export const useDataInitialization = () => {
     setMessage(null);
     setError(null);
     
+    if (!user) {
+      setError("Debes iniciar sesión para inicializar los nodos de aprendizaje.");
+      toast({
+        title: "Acceso denegado",
+        description: "Debes iniciar sesión para inicializar los nodos de aprendizaje.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+    
     try {
-      // First check if there's an admin policy for learning_nodes
-      // This is needed because we're seeing RLS errors in the logs
-      const { data: policies, error: policiesError } = await supabase
-        .rpc('get_policies_for_table', { table_name: 'learning_nodes' } as { table_name: string });
-        
-      if (policiesError) {
-        console.error("Error checking policies:", policiesError);
-      }
+      await ensureLearningNodesExist();
       
-      // Try to create learning nodes
-      const success = await ensureLearningNodesExist();
+      setMessage("Nodos de aprendizaje inicializados correctamente.");
+      toast({
+        title: "¡Éxito!",
+        description: "Los nodos de aprendizaje se han inicializado correctamente.",
+      });
       
-      if (success) {
-        setMessage("Nodos de aprendizaje inicializados correctamente.");
+      // Update status after successful initialization
+      await checkDatabaseStatus();
+    } catch (err: any) {
+      console.error("Error initializing learning nodes:", err);
+      
+      // Handle specific error types
+      if (err.message === 'AUTH_REQUIRED') {
+        setError("Necesitas iniciar sesión para inicializar los nodos de aprendizaje.");
         toast({
-          title: "¡Éxito!",
-          description: "Los nodos de aprendizaje se han inicializado correctamente.",
+          title: "Autenticación requerida",
+          description: "Necesitas iniciar sesión para inicializar los nodos de aprendizaje.",
+          variant: "destructive"
         });
-        
-        // Update status after successful initialization
-        await checkDatabaseStatus();
+      } else if (err.message === 'PERMISSION_DENIED') {
+        setError("No tienes permisos suficientes para inicializar los nodos de aprendizaje.");
+        toast({
+          title: "Permisos insuficientes",
+          description: "No tienes permisos suficientes para inicializar los nodos de aprendizaje.",
+          variant: "destructive"
+        });
+      } else if (err.message === 'DUPLICATE_KEY') {
+        setError("Los nodos de aprendizaje ya existen con esos identificadores.");
+        toast({
+          title: "Datos duplicados",
+          description: "Los nodos de aprendizaje ya existen con esos identificadores.",
+          variant: "destructive"
+        });
       } else {
-        setError("No se pudieron inicializar los nodos de aprendizaje. Revisar los permisos de la base de datos.");
+        setError(`Error: ${err.message || "Ocurrió un error desconocido"}`);
         toast({
           title: "Error",
           description: "No se pudieron inicializar los nodos de aprendizaje.",
           variant: "destructive"
         });
       }
-    } catch (err: any) {
-      console.error("Error initializing learning nodes:", err);
-      setError(`Error: ${err.message || "Ocurrió un error desconocido"}`);
-      toast({
-        title: "Error",
-        description: "No se pudieron inicializar los nodos de aprendizaje.",
-        variant: "destructive"
-      });
     } finally {
       setIsLoading(false);
     }
-  }, [checkDatabaseStatus]);
+  }, [checkDatabaseStatus, user]);
 
   // Check status on component mount
   useEffect(() => {
