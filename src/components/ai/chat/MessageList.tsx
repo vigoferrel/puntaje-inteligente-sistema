@@ -20,7 +20,10 @@ export function MessageList({ messages, isTyping = false }: MessageListProps) {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
       {messages.map((message) => (
-        <ChatMessage key={message.id} message={message} />
+        <ChatMessage 
+          key={message.id} 
+          {...message} // Spread the message properties directly instead of passing as a prop
+        />
       ))}
       
       {isTyping && <TypingIndicator />}
