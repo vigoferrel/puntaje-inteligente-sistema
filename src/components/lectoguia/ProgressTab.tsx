@@ -6,6 +6,7 @@ import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useAuth } from "@/contexts/AuthContext";
 import { TPAESPrueba } from "@/types/system-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
 
 interface ProgressTabProps {
   skillLevels: Record<string, number>;
@@ -40,6 +41,18 @@ export function ProgressTab({ skillLevels, onStartSimulation }: ProgressTabProps
     setSelectedTestId(parseInt(value, 10));
   };
 
+  // Manejar selección de nodo
+  const handleNodeSelect = (nodeId: string) => {
+    // Here you would navigate to the node content page or start the node session
+    toast({
+      title: "Nodo seleccionado",
+      description: `Iniciando nodo de aprendizaje: ${nodeId}`,
+    });
+    
+    // In a real implementation, you would navigate to the node page:
+    // router.push(`/lectoguia/nodes/${nodeId}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -67,6 +80,7 @@ export function ProgressTab({ skillLevels, onStartSimulation }: ProgressTabProps
         skillLevels={skillLevels as any} 
         nodes={nodes}
         nodeProgress={nodeProgress}
+        onNodeSelect={handleNodeSelect}
         className="mt-8"
       />
     </div>

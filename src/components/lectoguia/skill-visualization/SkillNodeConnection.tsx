@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { TLearningNode, TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName } from "@/types/system-types";
+import { TLearningNode, TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName, getPruebaDisplayName } from "@/types/system-types";
 import { NodeProgress } from "@/hooks/use-learning-nodes";
 import { SkillRadar } from "./SkillRadar";
 import { BloomTaxonomyViewer } from "./BloomTaxonomyViewer";
@@ -9,12 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActiveLearningNodes } from "./ActiveLearningNodes";
 import { LearningNodesByBloomLevel } from "./LearningNodesByBloomLevel";
 import { TestSelector } from "./TestSelector";
+import { BloomRecommendations } from "./BloomRecommendations";
 
 interface SkillNodeConnectionProps {
   skillLevels: Record<TPAESHabilidad, number>;
   nodes?: TLearningNode[];
   nodeProgress?: Record<string, NodeProgress>;
   className?: string;
+  onNodeSelect?: (nodeId: string) => void;
 }
 
 export const SkillNodeConnection = ({
@@ -22,6 +24,7 @@ export const SkillNodeConnection = ({
   nodes = [],
   nodeProgress = {},
   className = "",
+  onNodeSelect
 }: SkillNodeConnectionProps) => {
   const [activeTab, setActiveTab] = useState<string>("radar");
   const [selectedTest, setSelectedTest] = useState<TPAESPrueba | undefined>(undefined);
@@ -43,6 +46,7 @@ export const SkillNodeConnection = ({
           <TabsTrigger value="bloom">Taxonomía de Bloom</TabsTrigger>
           <TabsTrigger value="hierarchy">Jerarquía de Habilidades</TabsTrigger>
           <TabsTrigger value="nodes">Nodos de Aprendizaje</TabsTrigger>
+          <TabsTrigger value="recommendations">Recomendaciones</TabsTrigger>
         </TabsList>
         
         <div className="mt-4">
@@ -73,10 +77,19 @@ export const SkillNodeConnection = ({
               nodeProgress={nodeProgress}
             />
           </TabsContent>
+          
+          <TabsContent value="recommendations" className="m-0">
+            <BloomRecommendations 
+              skillLevels={skillLevels}
+              nodes={nodes}
+              nodeProgress={nodeProgress}
+              onNodeSelect={onNodeSelect}
+            />
+          </TabsContent>
         </div>
       </Tabs>
 
-      {activeTab !== "nodes" && (
+      {activeTab !== "nodes" && activeTab !== "recommendations" && (
         <ActiveLearningNodes 
           nodes={nodes}
           nodeProgress={nodeProgress}
