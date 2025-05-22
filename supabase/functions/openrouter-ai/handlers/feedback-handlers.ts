@@ -66,12 +66,14 @@ export async function provideFeedback(payload: any): Promise<any> {
       return createErrorResponse(result.error, 500, result.fallbackResponse);
     }
 
-    // Process the AI response to ensure proper format
+    // Procesar la respuesta de la IA para asegurar formato adecuado
     const processedResponse = processAIResponse(result.result);
     
-    // Log the processed response for debugging
-    console.log('Processed response for client:', typeof processedResponse, 
-                Object.keys(processedResponse).length > 0 ? Object.keys(processedResponse) : 'Sin propiedades');
+    // Registrar la respuesta procesada para depuración
+    console.log('Processed response for client:', 
+                typeof processedResponse, 
+                Object.keys(processedResponse).length > 0 ? 
+                  Object.keys(processedResponse) : 'Sin propiedades');
     
     return createSuccessResponse(processedResponse);
   } catch (error) {

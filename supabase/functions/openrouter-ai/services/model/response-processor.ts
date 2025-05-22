@@ -54,7 +54,7 @@ export const processResponse = {
     const responseText = await response.text();
     MonitoringService.debug('Texto de respuesta crudo:', responseText.substring(0, 200) + '...');
     
-    // Si la respuesta es texto vacío o muy corta
+    // Si la respuesta está vacía o es muy corta
     if (!responseText || responseText.trim().length < 3) {
       return {
         error: 'Respuesta vacía o inválida del modelo',
@@ -90,12 +90,12 @@ export const processResponse = {
       return { result: content || data || null };
       
     } catch (e) {
-      // Si no es JSON, manejar como texto plano
+      // CASO CRÍTICO: Si no es JSON, procesar como texto plano
       MonitoringService.debug('Respuesta no es JSON, procesando como texto plano:', responseText.substring(0, 200) + '...');
       
-      // Procesar la respuesta para asegurar un formato consistente
+      // Utilizar el procesador mejorado para garantizar un formato consistente
       const processedResult = processAIResponse(responseText);
-      console.log("Processed result for client:", processedResult);
+      MonitoringService.debug("Resultado procesado para cliente:", processedResult);
       
       return { result: processedResult };
     }

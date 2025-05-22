@@ -58,94 +58,105 @@ export function handleMessageError(error: unknown): { errorContent: string, isRa
 
 /**
  * Extract response content from various API response formats
- * Con manejo mejorado de texto plano y respuestas complejas
+ * Versión mejorada con un enfoque gradual y detallado para manejar todo tipo de respuestas
  */
 export function extractResponseContent(response: any): string {
-  console.log("Procesando respuesta:", response);
+  console.log("Extrayendo contenido de respuesta:", typeof response);
+  console.log("Contenido de respuesta:", response);
   
+  // Caso 1: Respuesta vacía o nula
   if (!response) {
-    console.log('La respuesta está vacía');
+    console.log('La respuesta está vacía o es nula');
     return "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con cualquier materia de la PAES si lo deseas.";
   }
   
-  // Manejar respuestas de OpenRouter con estructura success/result
+  // Caso 2: Respuesta como cadena de texto (más común desde el Edge Function con texto plano)
+  if (typeof response === 'string') {
+    console.log('Respuesta es una cadena de texto directa');
+    return response;
+  } 
+  
+  // Caso 3: Respuesta formateada por Edge Function con estructura {success: true, result: {...}}
   if (typeof response === 'object' && 'success' in response && response.success === true) {
     console.log('Detectada respuesta con formato success/result:', response.result);
-    if (response.result) {
-      // Si result es un objeto con propiedad 'response'
-      if (typeof response.result === 'object' && 'response' in response.result) {
-        return response.result.response;
+    
+    // Si result es un objeto con propiedad 'response'
+    if (typeof response.result === 'object' && response.result !== null && 'response' in response.result) {
+      console.log('Extrayendo response de result:', response.result.response);
+      return response.result.response;
+    }
+    
+    // Si result es una cadena
+    if (typeof response.result === 'string') {
+      console.log('Result es una cadena:', response.result);
+      return response.result;
+    }
+    
+    // Si result es otro tipo de objeto sin propiedad response
+    if (typeof response.result === 'object' && response.result !== null) {
+      // Buscar cualquier propiedad de tipo string para usar como respuesta
+      for (const key of Object.keys(response.result)) {
+        if (typeof response.result[key] === 'string' && response.result[key].trim().length > 0) {
+          console.log(`Usando propiedad ${key} como respuesta:`, response.result[key]);
+          return response.result[key];
+        }
       }
-      // Si result es texto plano
-      if (typeof response.result === 'string') {
-        return response.result;
-      }
-      // Si result es otro tipo de objeto, intentar convertirlo
-      if (typeof response.result === 'object') {
-        const stringProps = Object.values(response.result).find(val => typeof val === 'string');
-        if (stringProps) return stringProps as string;
+      
+      // Si no hay strings utilizables, stringificar el objeto
+      try {
+        console.log('Convirtiendo result a string:', response.result);
         return JSON.stringify(response.result);
+      } catch (e) {
+        console.error('Error al convertir result a string:', e);
       }
     }
   }
   
-  // Manejar respuestas de texto plano directamente
-  if (typeof response === 'string') {
-    return response;
-  } 
-  
-  // Manejar objetos con propiedad 'response' directa
-  if (typeof response === 'object' && 'response' in response) {
+  // Caso 4: Respuesta con propiedad 'response' directa (formato estándar del edge function)
+  if (typeof response === 'object' && response !== null && 'response' in response) {
+    console.log('La respuesta tiene propiedad response directa:', response.response);
     return response.response;
   }
   
-  // Para compatibilidad con el formato OpenRouter de OpenAI
-  if (typeof response === 'object' && 'choices' in response && Array.isArray(response.choices) && response.choices.length > 0) {
+  // Caso 5: Formato estándar de OpenAI (choices > message > content)
+  if (typeof response === 'object' && 'choices' in response && 
+      Array.isArray(response.choices) && response.choices.length > 0) {
     const choice = response.choices[0];
     if ('message' in choice && 'content' in choice.message) {
+      console.log('Extraído contenido de formato OpenAI:', choice.message.content);
       return choice.message.content;
     }
   }
   
-  // Extraer información útil de cualquier objeto
+  // Caso 6: Último recurso - buscar cualquier propiedad de texto en el objeto
   if (typeof response === 'object' && response !== null) {
-    // Buscar propiedades que puedan contener la respuesta
+    // Verificar propiedades comunes que podrían contener texto
     for (const key of ['text', 'content', 'message', 'data', 'result']) {
       if (key in response && typeof response[key] === 'string') {
+        console.log(`Encontrada propiedad ${key} con texto:`, response[key]);
         return response[key];
       }
     }
     
-    // Buscar cualquier propiedad string que no esté vacía
+    // Buscar cualquier propiedad de tipo string
     for (const key of Object.keys(response)) {
-      const value = response[key];
-      if (typeof value === 'string' && value.trim().length > 0) {
-        return value;
+      if (typeof response[key] === 'string' && response[key].trim().length > 0) {
+        console.log(`Usando propiedad ${key} como respuesta:`, response[key]);
+        return response[key];
       }
     }
     
-    // Si es un objeto anidado, intentar buscar recursivamente
-    for (const key of Object.keys(response)) {
-      if (typeof response[key] === 'object' && response[key] !== null) {
-        // Evitar recursión infinita
-        if (response[key] !== response) {
-          const nestedContent = extractResponseContent(response[key]);
-          if (nestedContent && nestedContent.length > 5) { 
-            return nestedContent;
-          }
-        }
-      }
-    }
-    
-    // Si todo falla, convertir el objeto a string
+    // Intentar stringificar el objeto completo
     try {
+      console.log('Convertir objeto completo a string:', response);
       return JSON.stringify(response);
     } catch (e) {
-      console.error("Error al convertir respuesta a texto:", e);
+      console.error('Error al convertir objeto a string:', e);
     }
   }
   
-  // Respuesta por defecto
+  // Caso 7: Valor por defecto si todo lo demás falla
+  console.log('No se pudo extraer contenido significativo de la respuesta');
   return "He recibido tu mensaje, pero tuve dificultades procesando la respuesta. ¿En qué tema de la PAES puedo ayudarte?";
 }
 

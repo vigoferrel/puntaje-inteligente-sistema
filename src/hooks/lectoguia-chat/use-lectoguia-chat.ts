@@ -59,38 +59,41 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       }
       
       // Request response from API
-      console.log('Sending message to OpenRouter:', message);
+      console.log('Enviando mensaje a OpenRouter:', message);
       const responseData = await callOpenRouter<any>("provide_feedback", {
         userMessage: message,
         context: `PAES preparation, subject: ${activeSubject}, full platform assistance`,
         previousMessages: getRecentMessages(6)
       });
       
-      console.log('Response received from OpenRouter:', responseData);
+      console.log('Respuesta recibida de OpenRouter:', responseData);
       
+      // Manejar caso de error o respuesta nula
       if (!responseData) {
+        console.log('Respuesta nula recibida de OpenRouter');
         const errorContent = "Lo siento, no pude procesar tu solicitud. Por favor intenta de nuevo.";
         addAssistantMessage(errorContent);
         return errorContent;
       }
       
-      // Utilizar la función mejorada de extracción de contenido
+      // Utilizar la función mejorada para extraer contenido de cualquier formato de respuesta
       const botResponse = extractResponseContent(responseData);
-      console.log('Processed bot response:', botResponse);
+      console.log('Respuesta procesada:', botResponse);
       
-      // Solo agregar respuesta al chat si es válida
+      // Validar que la respuesta es utilizable
       if (botResponse && typeof botResponse === 'string' && botResponse.length > 0) {
         addAssistantMessage(botResponse);
         return botResponse;
       } else {
+        console.log('La respuesta procesada no es válida, usando respuesta por defecto');
         const fallbackResponse = "Recibí una respuesta pero no pude procesarla correctamente. ¿Podrías reformular tu pregunta?";
         addAssistantMessage(fallbackResponse);
         return fallbackResponse;
       }
       
     } catch (error) {
-      // Handle errors
-      console.error('Error processing message:', error);
+      // Handle errors with improved error reporting
+      console.error('Error procesando mensaje:', error);
       const { errorContent } = handleMessageError(error);
       addAssistantMessage(errorContent);
       return null;
