@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +27,7 @@ const Plan = () => {
   
   const [planProgress, setPlanProgress] = useState<PlanProgress | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [recommendedNodeId, setRecommendedNodeId] = useState<string | null>(null);
   
   useEffect(() => {
     const initializeData = async () => {
@@ -139,10 +139,23 @@ const Plan = () => {
               {currentPlan && (
                 <CurrentPlan 
                   plan={currentPlan}
-                  planProgress={planProgress}
-                  hasMultiplePlans={plans.length > 1}
-                  onNavigateToTraining={() => navigate("/entrenamiento")}
-                  onNavigateHome={() => navigate("/")}
+                  loading={loading}
+                  progress={planProgress}
+                  recommendedNodeId={recommendedNodeId}
+                  onUpdateProgress={() => {
+                    if (profile && currentPlan) {
+                      updatePlanProgress(profile.id, currentPlan.id).then(progress => {
+                        if (progress) {
+                          setPlanProgress(progress);
+                          toast({
+                            title: "Progreso actualizado",
+                            description: "Se ha actualizado el progreso de tu plan",
+                          });
+                        }
+                      });
+                    }
+                  }}
+                  onCreatePlan={handleCreatePlan}
                 />
               )}
               

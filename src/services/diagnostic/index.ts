@@ -14,7 +14,6 @@ export * from './default-diagnostics';
 export * from './test-services';
 // Exportamos el servicio para generar diagnósticos por defecto
 export { 
-  generateDefaultDiagnostic, 
   ensureDefaultDiagnosticsExist, 
   createLocalFallbackDiagnostics 
 } from './default-services';

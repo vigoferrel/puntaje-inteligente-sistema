@@ -95,12 +95,11 @@ export const createLearningPlan = async (
       "IDENTIFY_THEORIES": 0.5,
       "PROCESS_ANALYZE": 0.5,
       "APPLY_PRINCIPLES": 0.5,
-      "REWRITE_TEXT": 0.5,
-      "REVISE_TEXT": 0.5,
-      "MONITOR_ADJUST": 0.5,
-      "ARTICULATE_CONTENT": 0.5,
-      "ORGANIZATION": 0.5,
-      "DEVELOPMENT": 0.5,
+      "SCIENTIFIC_ARGUMENT": 0.5,
+      "TEMPORAL_THINKING": 0.5,
+      "SOURCE_ANALYSIS": 0.5,
+      "MULTICAUSAL_ANALYSIS": 0.5,
+      "CRITICAL_THINKING": 0.5,
       "REFLECTION": 0.5
     };
     
