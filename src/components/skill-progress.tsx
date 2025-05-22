@@ -12,7 +12,7 @@ interface SkillProgressProps {
 
 export function SkillProgress({ skill, level }: SkillProgressProps) {
   // Convert decimal to percentage (0-1 to 0-100)
-  const percentage = Math.round(level * 100);
+  const percentage = typeof level === 'number' ? Math.round(level) : 0;
   
   // Determine skill color based on skill type
   const getSkillColor = (skill: TPAESHabilidad): {

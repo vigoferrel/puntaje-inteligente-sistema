@@ -8,5 +8,5 @@ export interface NodeProgress {
   status: 'not_started' | 'in_progress' | 'completed';
   progress: number;
   timeSpentMinutes: number;
+  learningPhase?: string; // Añadimos la propiedad learningPhase como opcional
 }
-

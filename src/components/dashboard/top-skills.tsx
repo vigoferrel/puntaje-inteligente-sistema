@@ -26,11 +26,20 @@ export const TopSkills = ({ loading, topSkills, skillLevels, skills, className }
       'INTERPRET_RELATE': 'Interpretar-Relacionar',
       'EVALUATE_REFLECT': 'Evaluar-Reflexionar',
       'SOLVE_PROBLEMS': 'Resolver Problemas',
-      'USE_MODELS': 'Usar Modelos',
+      'MODEL': 'Usar Modelos', // Corregido de USE_MODELS a MODEL según los tipos
       'REPRESENT': 'Representar',
-      'ARGUE': 'Argumentar',
+      'ARGUE_COMMUNICATE': 'Argumentar', // Corregido de ARGUE a ARGUE_COMMUNICATE
       'COMMUNICATE': 'Comunicar',
-      'ALGORITHMIZE': 'Algoritmizar'
+      'ALGORITHMIZE': 'Algoritmizar',
+      'IDENTIFY_THEORIES': 'Identificar Teorías',
+      'PROCESS_ANALYZE': 'Procesar y Analizar',
+      'APPLY_PRINCIPLES': 'Aplicar Principios',
+      'SCIENTIFIC_ARGUMENT': 'Argumentación Científica',
+      'TEMPORAL_THINKING': 'Pensamiento Temporal',
+      'SOURCE_ANALYSIS': 'Análisis de Fuentes',
+      'MULTICAUSAL_ANALYSIS': 'Análisis Multicausal',
+      'CRITICAL_THINKING': 'Pensamiento Crítico',
+      'REFLECTION': 'Reflexión'
     };
     
     return skillNames[skill] || skill;
@@ -38,7 +47,8 @@ export const TopSkills = ({ loading, topSkills, skillLevels, skills, className }
 
   // Get suggestion based on skill level
   const getSkillSuggestion = (skill: TPAESHabilidad, level: number): string => {
-    const suggestions: Record<TPAESHabilidad, string[]> = {
+    // Solo definimos algunas habilidades para las sugerencias, para el resto retornamos un valor predeterminado
+    const suggestions: Partial<Record<TPAESHabilidad, string[]>> = {
       'TRACK_LOCATE': [
         'Ejercicios de identificación de información explícita',
         'Práctica de lectura rápida',
@@ -53,12 +63,25 @@ export const TopSkills = ({ loading, topSkills, skillLevels, skills, className }
         'Cuestionamiento crítico de textos',
         'Análisis de argumentos',
         'Debates y discusiones de puntos de vista'
+      ],
+      'SOLVE_PROBLEMS': [
+        'Ejercicios básicos de resolución de problemas',
+        'Práctica con problemas de dificultad media',
+        'Desafíos avanzados de resolución de problemas'
       ]
     };
     
-    if (level < 40) return suggestions[skill]?.[0] || 'Realizar más ejercicios';
-    if (level < 70) return suggestions[skill]?.[1] || 'Profundizar conceptos';
-    return suggestions[skill]?.[2] || 'Practicar con ejemplos avanzados';
+    const skillSuggestions = suggestions[skill];
+    if (!skillSuggestions) {
+      // Si no hay sugerencias específicas para esta habilidad
+      if (level < 40) return 'Realizar más ejercicios básicos';
+      if (level < 70) return 'Continuar con ejercicios de nivel intermedio';
+      return 'Practicar con ejemplos avanzados';
+    }
+    
+    if (level < 40) return skillSuggestions[0] || 'Realizar más ejercicios';
+    if (level < 70) return skillSuggestions[1] || 'Profundizar conceptos';
+    return skillSuggestions[2] || 'Practicar con ejemplos avanzados';
   };
 
   return (
@@ -84,7 +107,6 @@ export const TopSkills = ({ loading, topSkills, skillLevels, skills, className }
             <div key={skill} className="space-y-1">
               <SkillProgress 
                 skill={skill} 
-                label={getSkillDisplayName(skill)}
                 level={skillLevels[skill] || 0} 
               />
               <p className="text-xs text-muted-foreground ml-1">
