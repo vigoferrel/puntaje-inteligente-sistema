@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { toast } from "@/components/ui/use-toast";
-import { saveTestProgress } from "@/utils/test-storage";
 import { DiagnosticTest } from "@/types/diagnostic";
+import { toast } from "@/components/ui/use-toast";
+import { saveTestProgress, clearTestProgress } from "@/utils/test-storage";
 
 interface ProgressProps {
   testStarted: boolean;
@@ -30,27 +30,31 @@ export const useDiagnosticProgress = ({
   };
   
   const confirmPauseTest = () => {
-    if (testStarted && currentTest && timeStarted) {
-      saveTestProgress(
-        currentTest,
-        currentQuestionIndex,
-        answers,
-        timeStarted
-      );
-      
-      setTestStarted(false);
-      setSelectedTestId(null);
-      toast({
-        title: "Diagnóstico pausado",
-        description: "Tu progreso ha sido guardado. Puedes continuar más tarde.",
-      });
-    }
+    if (!currentTest || !timeStarted) return;
+    
+    // Save progress to localStorage
+    saveTestProgress(
+      currentTest,
+      currentQuestionIndex,
+      answers,
+      timeStarted
+    );
+    
+    toast({
+      title: "Diagnóstico pausado",
+      description: "Tu progreso ha sido guardado y podrás continuar más tarde.",
+    });
+    
+    // Reset test state
+    setTestStarted(false);
+    setSelectedTestId(null);
     setShowPauseConfirmation(false);
   };
   
   return {
     showPauseConfirmation,
     handlePauseTest,
-    confirmPauseTest
+    confirmPauseTest,
+    setShowPauseConfirmation
   };
 };
