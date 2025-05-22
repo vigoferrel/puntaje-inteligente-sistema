@@ -17,9 +17,16 @@ export const ChatMessage = ({
   const { settings } = useChatSettings();
   const [isImageExpanded, setIsImageExpanded] = React.useState(settings.autoExpandImages);
   
-  // Format timestamp if present
-  const formattedTime = timestamp
-    ? format(new Date(timestamp), "HH:mm", { locale: es })
+  // Format timestamp if present and valid
+  const formattedTime = timestamp && timestamp !== ""
+    ? (() => {
+        try {
+          return format(new Date(timestamp), "HH:mm", { locale: es });
+        } catch (error) {
+          console.error("Error formatting timestamp:", error);
+          return "";
+        }
+      })()
     : "";
 
   // Different styles based on role
@@ -94,7 +101,7 @@ export const ChatMessage = ({
         </Card>
 
         {/* Timestamp */}
-        {settings.showTimestamps && timestamp && (
+        {settings.showTimestamps && formattedTime && (
           <span className="mt-1 text-xs text-muted-foreground">
             {formattedTime}
           </span>
