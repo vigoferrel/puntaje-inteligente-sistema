@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/app-layout";
 import { LectoGuiaHeader } from "@/components/lectoguia/LectoGuiaHeader";
 import { LectoGuiaTabs } from "@/components/lectoguia/LectoGuiaTabs";
 import { useLectoGuia } from "@/hooks/use-lectoguia";
+import { Toaster } from "@/components/ui/toaster";
 
 // Componente principal de LectoGuía convertido en asistente completo
 const LectoGuia = () => {
@@ -48,6 +49,7 @@ const LectoGuia = () => {
           />
         </div>
       </div>
+      <Toaster />
     </AppLayout>
   );
 };

@@ -13,6 +13,7 @@ interface ChatInputProps {
 export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..." }: ChatInputProps) {
   const [input, setInput] = useState("");
   const [imageData, setImageData] = useState<string | null>(null);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleSendMessage = () => {
@@ -43,9 +44,24 @@ export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..."
       return;
     }
 
+    setIsProcessingImage(true);
+    
     const reader = new FileReader();
     reader.onload = () => {
       setImageData(reader.result as string);
+      setIsProcessingImage(false);
+      toast({
+        title: "Imagen cargada",
+        description: "La imagen se ha cargado correctamente",
+      });
+    };
+    reader.onerror = () => {
+      setIsProcessingImage(false);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar la imagen",
+        variant: "destructive"
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -59,6 +75,10 @@ export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..."
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    toast({
+      title: "Imagen eliminada",
+      description: "La imagen ha sido eliminada",
+    });
   };
   
   return (
@@ -111,6 +131,7 @@ export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..."
         <Button
           type="button"
           onClick={handleImageUploadClick}
+          disabled={isProcessingImage}
           className="bg-secondary hover:bg-secondary/90 text-foreground rounded-full h-8 w-8 p-0 flex items-center justify-center"
         >
           <ImagePlus className="h-4 w-4" />
@@ -119,7 +140,7 @@ export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..."
         {/* Send message button */}
         <Button
           onClick={handleSendMessage}
-          disabled={!input.trim() && !imageData}
+          disabled={(!input.trim() && !imageData) || isProcessingImage}
           className="bg-primary hover:bg-primary/90 text-white rounded-full h-8 w-8 p-0 flex items-center justify-center"
         >
           <PaperAirplaneIcon className="h-4 w-4" />

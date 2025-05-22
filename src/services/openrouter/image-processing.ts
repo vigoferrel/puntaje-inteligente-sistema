@@ -45,6 +45,15 @@ export const processImageWithOpenRouter = async (
       }
     });
 
+    if (!result) {
+      toast({
+        title: "Error",
+        description: "No se recibió respuesta del servicio de análisis de imagen",
+        variant: "destructive"
+      });
+      return null;
+    }
+
     console.log('Image processing result:', result);
     return result;
   } catch (error) {
