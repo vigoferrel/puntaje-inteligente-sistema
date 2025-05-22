@@ -28,7 +28,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
           {onSubjectChange && (
             <SubjectSelector 
               activeSubject={activeSubject} 
-              onSubjectChange={onSubjectChange}
+              onSelectSubject={onSubjectChange}
             />
           )}
           <ChatSettingsButton />

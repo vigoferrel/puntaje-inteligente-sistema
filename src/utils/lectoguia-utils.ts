@@ -1,3 +1,4 @@
+
 import { TPAESHabilidad } from '@/types/system-types';
 
 // Helper para obtener un nombre amigable para cada habilidad
@@ -68,4 +69,28 @@ export function getSkillsByPrueba(): Record<string, string[]> {
     'CIENCIAS': ['IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT'],
     'HISTORIA': ['TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION']
   };
+}
+
+// Función para obtener el ID de una habilidad a partir de su código
+export function getSkillId(skillCode: string): number | null {
+  const skillIds: Record<string, number> = {
+    'TRACK_LOCATE': 1,
+    'INTERPRET_RELATE': 2,
+    'EVALUATE_REFLECT': 3,
+    'SOLVE_PROBLEMS': 4,
+    'REPRESENT': 5,
+    'MODEL': 6,
+    'ARGUE_COMMUNICATE': 7,
+    'IDENTIFY_THEORIES': 8,
+    'PROCESS_ANALYZE': 9,
+    'APPLY_PRINCIPLES': 10,
+    'SCIENTIFIC_ARGUMENT': 11,
+    'TEMPORAL_THINKING': 12,
+    'SOURCE_ANALYSIS': 13,
+    'MULTICAUSAL_ANALYSIS': 14,
+    'CRITICAL_THINKING': 15,
+    'REFLECTION': 16
+  };
+  
+  return skillIds[skillCode] || null;
 }
