@@ -11,6 +11,8 @@ import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { fetchDiagnosticTests, fetchDiagnosticResults } from "@/services/diagnostic";
 import { useAuth } from "@/contexts/AuthContext";
 import { DiagnosticResult } from "@/types/diagnostic";
+import { WelcomeTour } from "@/components/dashboard/welcome-tour";
+import { motion } from "framer-motion";
 
 const Index = () => {
   const {
@@ -31,6 +33,18 @@ const Index = () => {
   const [latestResult, setLatestResult] = useState<DiagnosticResult | undefined>(undefined);
   const [availableDiagnostics, setAvailableDiagnostics] = useState(0);
   const [completedDiagnostics, setCompletedDiagnostics] = useState(0);
+  const [showTour, setShowTour] = useState(false);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
+
+  // Check if first-time user
+  useEffect(() => {
+    const firstVisit = localStorage.getItem('firstDashboardVisit') !== 'false';
+    if (firstVisit && profile) {
+      setIsFirstVisit(true);
+      setShowTour(true);
+      localStorage.setItem('firstDashboardVisit', 'false');
+    }
+  }, [profile]);
 
   // Cargar datos de diagnóstico para el dashboard
   useEffect(() => {
@@ -70,46 +84,84 @@ const Index = () => {
   }, [profile]);
 
   const pendingDiagnostics = Math.max(0, availableDiagnostics - completedDiagnostics);
+  
+  const pageVariants = {
+    initial: { opacity: 0 },
+    animate: { 
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      } 
+    }
+  };
+  
+  const itemVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 }
+  };
 
   return (
     <AppLayout>
-      <div className="p-6">
-        <WelcomeHeader 
-          userName={user?.name} 
-          loading={loading}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+      {showTour && (
+        <WelcomeTour 
+          userName={user?.name}
+          onComplete={() => setShowTour(false)}
         />
+      )}
+      
+      <motion.div 
+        className="p-6"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+      >
+        <motion.div variants={itemVariants}>
+          <WelcomeHeader 
+            userName={user?.name} 
+            loading={loading}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+        </motion.div>
 
-        <StatCards
-          loading={loading}
-          stats={stats}
-          completedExercises={completedExercises}
-          accuracyPercentage={accuracyPercentage}
-          totalTimeMinutes={totalTimeMinutes}
-          className="mb-8"
-        />
+        <motion.div variants={itemVariants}>
+          <StatCards
+            loading={loading}
+            stats={stats}
+            completedExercises={completedExercises}
+            accuracyPercentage={accuracyPercentage}
+            totalTimeMinutes={totalTimeMinutes}
+            className="mb-8"
+          />
+        </motion.div>
 
-        <DashboardContentGrid 
-          loading={loading}
-          topSkills={topSkills}
-          skillLevels={skillLevels}
-          className="mb-8"
-        />
+        <motion.div variants={itemVariants}>
+          <DashboardContentGrid 
+            loading={loading}
+            topSkills={topSkills}
+            skillLevels={skillLevels}
+            className="mb-8"
+          />
+        </motion.div>
         
         {/* Diagnóstico y Recomendaciones */}
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
-          <DiagnosticSummary 
-            loading={diagnosticLoading}
-            latestResult={latestResult}
-            hasAvailableDiagnostics={availableDiagnostics > 0}
-            pendingDiagnostics={pendingDiagnostics}
-          />
-          <FeatureCards />
-        </div>
+        <motion.div variants={itemVariants}>
+          <div className="grid gap-6 md:grid-cols-2 mb-8">
+            <DiagnosticSummary 
+              loading={diagnosticLoading}
+              latestResult={latestResult}
+              hasAvailableDiagnostics={availableDiagnostics > 0}
+              pendingDiagnostics={pendingDiagnostics}
+            />
+            <FeatureCards />
+          </div>
+        </motion.div>
         
-        <AIFeatures />
-      </div>
+        <motion.div variants={itemVariants}>
+          <AIFeatures />
+        </motion.div>
+      </motion.div>
     </AppLayout>
   );
 };
