@@ -1,28 +1,47 @@
 
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { ProgressView } from "@/components/lectoguia/ProgressView";
-import { LectoGuiaSkill } from "@/types/lectoguia-types";
+import React, { useEffect } from "react";
+import { ProgressView } from "./ProgressView";
+import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
+import { useLearningNodes } from "@/hooks/use-learning-nodes";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProgressTabProps {
-  skillLevels: Record<LectoGuiaSkill, number>;
+  skillLevels: Record<string, number>;
   onStartSimulation: () => void;
 }
 
-export const ProgressTab: React.FC<ProgressTabProps> = ({
-  skillLevels,
-  onStartSimulation
-}) => {
+export function ProgressTab({ skillLevels, onStartSimulation }: ProgressTabProps) {
+  const { user } = useAuth();
+  const { 
+    nodes, 
+    fetchLearningNodes,
+    nodeProgress,
+    fetchUserNodeProgress
+  } = useLearningNodes();
+  
+  // Cargar datos de nodos y progreso al iniciar
+  useEffect(() => {
+    const loadData = async () => {
+      if (user?.id) {
+        await fetchLearningNodes(1); // Competencia lectora por defecto
+        await fetchUserNodeProgress(user.id);
+      }
+    };
+    
+    loadData();
+  }, [user?.id, fetchLearningNodes, fetchUserNodeProgress]);
+
   return (
-    <Card className="border-border bg-card/50 backdrop-blur-sm">
-      <CardContent className="p-6">
-        <div className="h-[calc(100vh-280px)] min-h-[500px] overflow-auto custom-scrollbar">
-          <ProgressView 
-            skillLevels={skillLevels}
-            onStartSimulation={onStartSimulation}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <ProgressView skillLevels={skillLevels} onStartSimulation={onStartSimulation} />
+      
+      {/* Nuevo componente de visualización de habilidades y nodos */}
+      <SkillNodeConnection 
+        skillLevels={skillLevels as any} 
+        nodes={nodes}
+        nodeProgress={nodeProgress}
+        className="mt-8"
+      />
+    </div>
   );
-};
+}
