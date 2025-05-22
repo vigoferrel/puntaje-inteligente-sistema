@@ -1,6 +1,6 @@
 import { callOpenRouter, callVisionModel, ServiceResult } from "../services/openrouter-service.ts";
 import { corsHeaders } from "../cors.ts";
-import { createDiagnosticFallback, processAIResponse } from "../utils/response-utils.ts";
+import { createDiagnosticFallback, processAIResponse, createSuccessResponse, createErrorResponse } from "../utils/response-utils.ts";
 
 /**
  * Manejador para la acción de generación de ejercicios

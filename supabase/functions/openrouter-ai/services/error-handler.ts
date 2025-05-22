@@ -1,6 +1,7 @@
 
 import { corsHeaders } from "../cors.ts";
 import { ServiceResult } from "./base-service.ts";
+import { extractJsonFromContent } from "../utils/json-extractor.ts";
 
 /**
  * Maneja errores de la API de OpenRouter
@@ -65,9 +66,6 @@ export async function processSuccessfulResponse(response: Response): Promise<Ser
     data.choices?.[0]?.message?.content?.substring(0, 200) + '...');
   
   const content = data.choices?.[0]?.message?.content || null;
-  
-  // Importamos extractJsonFromContent desde el archivo de utilidades
-  const { extractJsonFromContent } = await import("../utils/response-utils.ts");
   
   const parsedContent = extractJsonFromContent(content);
   
