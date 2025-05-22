@@ -48,7 +48,8 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
           nodeDescription: item.node.description,
           nodeDifficulty: item.node.difficulty,
           nodeSkill: item.node.skill.code as TPAESHabilidad,
-          position: item.position
+          position: item.position,
+          planId: plan.id // Add planId since it's required in LearningPlanNode
         }));
         
         // Return the plan with its nodes
@@ -164,8 +165,10 @@ export const createLearningPlan = async (
         nodeName: node.title,
         nodeDescription: node.description || '',
         nodeDifficulty: node.difficulty,
-        nodeSkill: node.skill?.code as TPAESHabilidad || 'MODEL', // Fallback to a default skill
-        position: i
+        // Fix: Don't access .code on skill, since TPAESHabilidad is already the skill code
+        nodeSkill: node.skill || 'MODEL', // Default to MODEL if skill is undefined
+        position: i,
+        planId: plan.id
       });
     }
     
