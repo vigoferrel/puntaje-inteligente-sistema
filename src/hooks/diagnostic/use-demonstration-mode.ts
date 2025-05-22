@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { DiagnosticTest, DiagnosticResult } from "@/types/diagnostic";
-import { TPAESHabilidad } from "@/types/system-types";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 
 /**
  * Hook que proporciona datos de diagnóstico de demostración 
@@ -36,7 +36,7 @@ export function useDemonstrationMode() {
             options: ["Opción A", "Opción B", "Opción C", "Opción D"],
             correctAnswer: "Opción B",
             skill: "TRACK_LOCATE" as TPAESHabilidad,
-            prueba: "COMPETENCIA_LECTORA",
+            prueba: "COMPETENCIA_LECTORA" as TPAESPrueba,
             explanation: "La idea principal se encuentra en el segundo párrafo."
           },
           {
@@ -45,23 +45,14 @@ export function useDemonstrationMode() {
             options: ["Inferencia 1", "Inferencia 2", "Inferencia 3", "Inferencia 4"],
             correctAnswer: "Inferencia 3",
             skill: "INTERPRET_RELATE" as TPAESHabilidad,
-            prueba: "COMPETENCIA_LECTORA",
+            prueba: "COMPETENCIA_LECTORA" as TPAESPrueba,
             explanation: "El último párrafo sugiere esta conclusión."
-          },
-          {
-            id: "demo-q3",
-            question: "¿Cuál es el propósito del autor al escribir este texto?",
-            options: ["Informar", "Persuadir", "Entretener", "Explicar"],
-            correctAnswer: "Persuadir",
-            skill: "EVALUATE_REFLECT" as TPAESHabilidad,
-            prueba: "COMPETENCIA_LECTORA",
-            explanation: "El lenguaje utilizado indica intención persuasiva."
           }
         ]
       },
       {
         id: "demo-test-2",
-        title: "Diagnóstico de Matemáticas (M1)",
+        title: "Diagnóstico de Matemáticas Básicas",
         description: "Evaluación de habilidades matemáticas fundamentales",
         testId: 2,
         isCompleted: false,
@@ -72,17 +63,8 @@ export function useDemonstrationMode() {
             options: ["x = 5", "x = 7", "x = 10", "x = 15"],
             correctAnswer: "x = 5",
             skill: "SOLVE_PROBLEMS" as TPAESHabilidad,
-            prueba: "MATEMATICA_1",
+            prueba: "MATEMATICA_1" as TPAESPrueba,
             explanation: "2x + 5 = 15 → 2x = 10 → x = 5"
-          },
-          {
-            id: "demo-m2",
-            question: "¿Cuál es el área de un círculo con radio 4 cm?",
-            options: ["16π cm²", "8π cm²", "4π cm²", "12π cm²"],
-            correctAnswer: "16π cm²",
-            skill: "SOLVE_PROBLEMS" as TPAESHabilidad,
-            prueba: "MATEMATICA_1",
-            explanation: "A = πr² = π × 4² = 16π cm²"
           }
         ]
       }

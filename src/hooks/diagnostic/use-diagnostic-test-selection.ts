@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDiagnostic } from "@/hooks/use-diagnostic";
 import { useDemonstrationMode } from "./use-demonstration-mode";
 import { toast } from "@/components/ui/use-toast";
@@ -19,34 +18,17 @@ export const useDiagnosticTestSelection = ({
   setTestStarted,
   isDemoMode = false
 }: TestSelectionProps) => {
-  const { profile } = useAuth();
   const { 
     tests, 
     loading,
-    fetchDiagnosticTests,
     startDiagnosticTest
   } = useDiagnostic();
   
-  // Demo mode hooks
-  const { getDemoDiagnosticTests } = useDemonstrationMode();
-  
   const [pausedProgress, setPausedProgress] = useState<StoredTestProgress | null>(null);
   
+  // Solo verificamos el progreso guardado una vez al cargar
   useEffect(() => {
-    // Si estamos en modo demo, no intentamos cargar de la DB
-    if (isDemoMode) {
-      return;
-    }
-    
-    if (profile) {
-      fetchDiagnosticTests(profile.id).catch(error => {
-        console.error("Error cargando diagnósticos:", error);
-      });
-    }
-  }, [profile, fetchDiagnosticTests, isDemoMode]);
-  
-  useEffect(() => {
-    // Check for saved progress when tests are loaded
+    // Verificar si hay progreso guardado
     const savedProgress = getTestProgress();
     if (savedProgress && tests.some(test => test.id === savedProgress.testId)) {
       setPausedProgress(savedProgress);

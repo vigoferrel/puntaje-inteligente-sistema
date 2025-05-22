@@ -54,28 +54,32 @@ export const useSubmitResult = ({
       const endTime = new Date();
       const timeSpentMinutes = Math.round((endTime.getTime() - timeStarted.getTime()) / 60000);
       
-      let result: DiagnosticResult | null = null;
-      
-      // Si estamos en modo demostración, generar resultados locales
+      // Si estamos en modo demostración o detectamos algún error, generar resultados locales
       if (demoActivated) {
-        result = getDemoDiagnosticResult();
+        const result = getDemoDiagnosticResult();
         
         toast({
           title: "Resultados generados",
           description: "Se han generado resultados de demostración",
         });
-      } else {
-        // Si no estamos en demo, usar el flujo normal
-        if (!profile) {
-          toast({
-            title: "Error",
-            description: "Debes iniciar sesión para guardar resultados",
-            variant: "destructive"
-          });
-          return null;
-        }
         
-        result = await submitDiagnosticResult(
+        return result;
+      } 
+      
+      // Solo intentamos guardar en la base de datos si NO estamos en modo demostración
+      if (!profile) {
+        toast({
+          title: "Error",
+          description: "Debes iniciar sesión para guardar resultados",
+          variant: "destructive"
+        });
+        
+        // Devolver resultados de demostración como fallback
+        return getDemoDiagnosticResult();
+      }
+      
+      try {
+        const result = await submitDiagnosticResult(
           profile.id,
           currentTest.id,
           answers,
@@ -87,26 +91,36 @@ export const useSubmitResult = ({
             title: "Diagnóstico completado",
             description: "Tus resultados han sido guardados correctamente",
           });
+          return result;
+        } else {
+          // Si submitDiagnosticResult falla, usar resultados de demostración
+          const demoResult = getDemoDiagnosticResult();
+          toast({
+            title: "Resultados generados",
+            description: "Se han generado resultados de demostración debido a un error",
+          });
+          return demoResult;
         }
+      } catch (error) {
+        console.error("Error al enviar resultados:", error);
+        // Usar resultados de demostración como fallback
+        const demoResult = getDemoDiagnosticResult();
+        toast({
+          title: "Resultados de demostración",
+          description: "Se han generado resultados de demostración debido a un error de guardado",
+        });
+        return demoResult;
       }
-      
-      return result;
     } catch (error) {
-      console.error("Error al finalizar el diagnóstico:", error);
+      console.error("Error general al finalizar el diagnóstico:", error);
       
-      // Mostrar mensaje de error al usuario
+      // Si hay cualquier error, usar resultados de demostración
+      const demoResult = getDemoDiagnosticResult();
       toast({
-        title: "Error",
-        description: "Ocurrió un error al procesar tus resultados. Intenta nuevamente más tarde.",
-        variant: "destructive"
+        title: "Resultados de demostración",
+        description: "Se muestran resultados de ejemplo debido a un error",
       });
-      
-      // Si hay error pero estamos en modo demostración, generar resultados locales
-      if (demoActivated) {
-        return getDemoDiagnosticResult();
-      }
-      
-      return null;
+      return demoResult;
     }
   }, [currentTest, answers, timeStarted, profile, submitDiagnosticResult, demoActivated, getDemoDiagnosticResult]);
   

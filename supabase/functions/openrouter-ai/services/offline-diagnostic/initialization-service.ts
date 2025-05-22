@@ -4,25 +4,33 @@ import { ExerciseBankService } from "./exercise-bank-service.ts";
 
 /**
  * Service responsible for initializing the offline diagnostic service
+ * Versión simplificada para reducir la carga
  */
 export class InitializationService {
+  // Flag para evitar múltiples inicializaciones
+  private static initialized = false;
+  
   /**
    * Inicializa el servicio con ejercicios pregenerados
    * Esto debería llamarse al iniciar la función
    */
   static initialize(): void {
-    this.loadPregeneratedExercises();
+    // Solo inicializar una vez
+    if (this.initialized) {
+      MonitoringService.info("Servicio de diagnóstico offline ya estaba inicializado");
+      return;
+    }
+    
+    this.initialized = true;
+    this.loadMinimalExercises();
     MonitoringService.info("Servicio de diagnóstico offline inicializado");
   }
   
   /**
-   * Carga ejercicios pregenerados desde archivo o memoria
+   * Carga un conjunto mínimo de ejercicios para reducir la carga
    */
-  private static loadPregeneratedExercises(): void {
-    // En una implementación real, cargaríamos de un archivo o base de datos
-    // Por ahora, usamos algunos ejercicios de ejemplo duros
-    
-    // Matemáticas - Resolución de problemas
+  private static loadMinimalExercises(): void {
+    // Matemáticas - Resolución de problemas (solo un ejercicio)
     ExerciseBankService.addExercisesToBank(2, "SOLVE_PROBLEMS", [
       {
         id: "math-sp-1",
@@ -31,18 +39,10 @@ export class InitializationService {
         correctAnswer: "4",
         explanation: "Resolvemos 3x + 5 = 17, restando 5 a ambos lados: 3x = 12, luego dividimos por 3: x = 4",
         difficulty: "BASIC"
-      },
-      {
-        id: "math-sp-2",
-        question: "En un triángulo rectángulo, los catetos miden 6 cm y 8 cm. ¿Cuál es la longitud de la hipotenusa?",
-        options: ["10 cm", "14 cm", "12 cm", "9 cm"],
-        correctAnswer: "10 cm",
-        explanation: "Aplicamos el teorema de Pitágoras: h² = 6² + 8² = 36 + 64 = 100, por lo tanto h = 10 cm",
-        difficulty: "INTERMEDIATE"
       }
     ]);
     
-    // Lectura - Localizar información
+    // Lectura - Localizar información (solo un ejercicio)
     ExerciseBankService.addExercisesToBank(1, "TRACK_LOCATE", [
       {
         id: "read-tl-1",
