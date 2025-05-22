@@ -11,6 +11,7 @@ import Diagnostico from './pages/Diagnostico';
 import { Toaster } from './components/ui/toaster';
 import { ProtectedRoute } from './components/protected-route';
 import GeneradorDiagnostico from './pages/admin/GeneradorDiagnostico';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/plan" element={<ProtectedRoute><Plan /></ProtectedRoute>} />
             <Route path="/lectoguia" element={<ProtectedRoute><LectoGuia /></ProtectedRoute>} />
             <Route path="/diagnostico" element={<ProtectedRoute><Diagnostico /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/admin/generador-diagnostico" element={<ProtectedRoute><GeneradorDiagnostico /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

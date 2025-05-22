@@ -15,6 +15,7 @@ import {
   BarChartHorizontal,
   Crown,
   Wrench,
+  Database,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./ui/button";
@@ -77,6 +78,11 @@ export const AppSidebar = () => {
       name: "Generador de Diagnósticos",
       icon: <Wrench className="h-5 w-5" />,
       path: "/admin/generador-diagnostico",
+    },
+    {
+      name: "Configuración",
+      icon: <Database className="h-5 w-5" />,
+      path: "/settings",
     },
   ];
 

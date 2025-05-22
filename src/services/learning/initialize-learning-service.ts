@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TLearningNode, TPAESPrueba, TPAESHabilidad } from "@/types/system-types";
 import { toast } from "@/components/ui/use-toast";
 import { mapDatabaseNodeToLearningNode } from "@/services/node/node-base-service";
+import { createGetPoliciesFunction, initializeRLSPolicies } from "@/services/database/rls-service";
 
 /**
  * Verifica si existen nodos de aprendizaje en la base de datos
@@ -30,6 +31,20 @@ export const checkLearningNodesExist = async (): Promise<boolean> => {
  */
 export const ensureLearningNodesExist = async (): Promise<boolean> => {
   try {
+    // Ensure we have RLS functions created
+    await createGetPoliciesFunction();
+    
+    // Check current RLS policies
+    const { data: policies, error: policiesError } = await supabase.rpc('get_policies_for_table', { 
+      table_name: 'learning_nodes' 
+    });
+    
+    // If there are RLS issues, try to fix them
+    if (policiesError || !policies || policies.length === 0) {
+      console.warn('RLS policies issue detected, attempting to initialize policies');
+      await initializeRLSPolicies();
+    }
+    
     const nodesExist = await checkLearningNodesExist();
     
     if (!nodesExist) {
