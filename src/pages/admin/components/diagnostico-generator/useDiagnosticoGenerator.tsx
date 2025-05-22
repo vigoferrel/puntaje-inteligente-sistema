@@ -70,7 +70,7 @@ export const useDiagnosticoGenerator = () => {
     testId: number,
     title: string,
     description: string
-  ) => {
+  ): Promise<string | null> => {
     setLastError(null);
     
     try {

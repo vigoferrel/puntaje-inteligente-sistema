@@ -14,7 +14,7 @@ interface DiagnosticoFormProps {
   tests: { id: number; name: string }[];
   loading: boolean;
   loadingTests: boolean;
-  onCreateDiagnostic: (testId: number, title: string, description: string) => Promise<void>;
+  onCreateDiagnostic: (testId: number, title: string, description: string) => Promise<string | null>;
 }
 
 export const DiagnosticoForm = ({ 
@@ -49,7 +49,7 @@ export const DiagnosticoForm = ({
     }, 1000);
     
     try {
-      await onCreateDiagnostic(selectedTestId, title, description);
+      const diagnosticId = await onCreateDiagnostic(selectedTestId, title, description);
       
       // Completar el progreso
       setProgress(100);
