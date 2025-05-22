@@ -9,9 +9,21 @@ interface DiagnosticoListProps {
   diagnostics: DiagnosticTest[];
   loading: boolean;
   selectedTestId: number | undefined;
+  onView?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onViewExercises?: (id: string) => void;
 }
 
-export const DiagnosticoList = ({ diagnostics, loading, selectedTestId }: DiagnosticoListProps) => {
+export const DiagnosticoList = ({ 
+  diagnostics, 
+  loading, 
+  selectedTestId,
+  onView,
+  onEdit,
+  onDelete,
+  onViewExercises
+}: DiagnosticoListProps) => {
   return (
     <Card>
       <CardHeader>
@@ -30,7 +42,14 @@ export const DiagnosticoList = ({ diagnostics, loading, selectedTestId }: Diagno
         ) : diagnostics.length > 0 ? (
           <div className="space-y-4">
             {diagnostics.map((diagnostic) => (
-              <DiagnosticoCard key={diagnostic.id} diagnostic={diagnostic} />
+              <DiagnosticoCard 
+                key={diagnostic.id} 
+                diagnostic={diagnostic}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onViewExercises={onViewExercises}
+              />
             ))}
           </div>
         ) : (
