@@ -1,5 +1,5 @@
 
-import { DiagnosticQuestion, QuestionFeedback, QuestionStatus } from '../diagnostic/types';
+import { DiagnosticQuestion, QuestionFeedback, QuestionStatus } from './types';
 import { TPAESHabilidad } from "@/types/system-types";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from '@/contexts/auth-utils';
@@ -9,6 +9,37 @@ import {
   calculateSkillLevelChange 
 } from './skill-services';
 
+// Fetch diagnostic questions from Supabase
+export const fetchDiagnosticQuestions = async (
+  diagnosticId: string,
+  testId: number
+): Promise<DiagnosticQuestion[]> => {
+  try {
+    // Since we're seeing errors with the "questions" table, let's use "exercises" instead
+    // which appears to be in our Supabase schema
+    const { data, error } = await supabase
+      .from('exercises')
+      .select('*')
+      .eq('diagnostic_id', diagnosticId);
+
+    if (error) throw error;
+    
+    // Convert the database format to our application format
+    return (data || []).map(item => ({
+      id: item.id,
+      question: item.question,
+      options: Array.isArray(item.options) ? item.options : [],
+      correctAnswer: item.correct_answer,
+      skill: item.skill,
+      prueba: testId,
+      explanation: item.explanation
+    })) as DiagnosticQuestion[];
+  } catch (error) {
+    console.error('Error fetching diagnostic questions:', error);
+    return [];
+  }
+};
+
 // Fetch a batch of questions for a specific test
 export const fetchQuestionBatch = async (
   testId: string,
@@ -16,17 +47,31 @@ export const fetchQuestionBatch = async (
   previousQuestions: string[] = []
 ): Promise<DiagnosticQuestion[]> => {
   try {
+    // Since we're seeing errors with the "questions" table, let's use "exercises" instead
     let query = supabase
-      .from('questions')
+      .from('exercises')
       .select('*')
-      .eq('test_id', testId)
-      .not('id', 'in', `(${previousQuestions.join(',')})`)
-      .limit(batchSize);
+      .eq('test_id', testId);
+      
+    if (previousQuestions.length > 0) {
+      query = query.not('id', 'in', `(${previousQuestions.join(',')})`);
+    }
+    
+    query = query.limit(batchSize);
 
     const { data, error } = await query;
 
     if (error) throw error;
-    return data as DiagnosticQuestion[];
+    
+    return (data || []).map(item => ({
+      id: item.id,
+      question: item.question,
+      options: Array.isArray(item.options) ? item.options : [],
+      correctAnswer: item.correct_answer,
+      skill: item.skill,
+      prueba: Number(testId),
+      explanation: item.explanation
+    })) as DiagnosticQuestion[];
   } catch (error) {
     console.error('Error fetching questions:', error);
     return [];
@@ -37,13 +82,24 @@ export const fetchQuestionBatch = async (
 export const getQuestionById = async (questionId: string): Promise<DiagnosticQuestion | null> => {
   try {
     const { data, error } = await supabase
-      .from('questions')
+      .from('exercises')
       .select('*')
       .eq('id', questionId)
       .single();
 
     if (error) throw error;
-    return data as DiagnosticQuestion;
+    
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      question: data.question,
+      options: Array.isArray(data.options) ? data.options : [],
+      correctAnswer: data.correct_answer,
+      skill: data.skill,
+      prueba: data.test_id,
+      explanation: data.explanation
+    } as DiagnosticQuestion;
   } catch (error) {
     console.error('Error fetching question:', error);
     return null;
@@ -58,20 +114,20 @@ export const recordAnswer = async (
   timeSpentSeconds: number,
   skillsAssessed: TPAESHabilidad[]
 ): Promise<boolean> => {
-  const user = await getAuthUser();
-  if (!user) return false;
-
   try {
+    const user = await getAuthUser();
+    if (!user) return false;
+
     // Insert the answer into the database
     const { error } = await supabase
-      .from('user_answers')
+      .from('user_exercise_attempts')  // Changed from user_answers to user_exercise_attempts
       .insert({
         id: uuidv4(),
         user_id: user.id,
-        question_id: questionId,
-        selected_option: selectedOption,
+        exercise_id: questionId,  // Changed from question_id to exercise_id
+        answer: selectedOption,
         is_correct: isCorrect,
-        time_spent_seconds: timeSpentSeconds
+        time_taken_seconds: timeSpentSeconds
       });
 
     if (error) throw error;
@@ -114,12 +170,12 @@ const updateUserSkillLevel = async (
     const currentLevel = data ? data.level : 0.5; // Default to middle if not found
     const newLevel = Math.max(0.1, Math.min(0.99, currentLevel + levelChange));
 
-    // Insert or update the skill level
+    // Insert or update the skill level - assuming skill_id is a string in this table
     const { error: upsertError } = await supabase
       .from('user_skill_levels')
       .upsert({
         user_id: userId,
-        skill_id: skill,
+        skill_id: Number(skill), // Convert skill to number
         level: newLevel
       });
 
