@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLearningPlans } from "@/hooks/use-learning-plans";
@@ -29,60 +29,80 @@ const Plan = () => {
     retryFetchPlans,
     createLearningPlan,
     updatePlanProgress,
-    setCurrentPlan
+    setCurrentPlan,
+    getPlanProgress
   } = useLearningPlans();
   
-  const [planProgress, setPlanProgress] = useState<PlanProgress | null>(null);
   const [initializing, setInitializing] = useState(true);
   const [recommendedNodeId, setRecommendedNodeId] = useState<string | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
   
-  useEffect(() => {
-    const initializeData = async () => {
-      setInitializing(true);
-      
-      try {
-        // Asegurar que existan los nodos de aprendizaje en la BD
-        await ensureLearningNodesExist();
-        
-        // Continuar con la carga normal
-        if (profile) {
-          await fetchLearningPlans(profile.id);
-        }
-      } catch (error) {
-        console.error("Error initializing learning data:", error);
-        toast({
-          title: "Error",
-          description: "No se pudieron inicializar los datos de aprendizaje",
-          variant: "destructive"
-        });
-      } finally {
-        setInitializing(false);
-      }
-    };
+  // Función para cargar los datos necesarios en paralelo
+  const loadInitialData = useCallback(async () => {
+    if (!profile) return;
     
-    initializeData();
-  }, [profile, fetchLearningPlans]);
+    setInitializing(true);
+    console.log('Iniciando carga de datos...');
+    
+    try {
+      // Cargar en paralelo para optimizar el tiempo de inicialización
+      const [nodesExist, plansData] = await Promise.all([
+        ensureLearningNodesExist(),
+        fetchLearningPlans(profile.id)
+      ]);
+      
+      console.log('Datos iniciales cargados correctamente');
+      
+      // Si hay un plan actual, cargamos su progreso
+      if (currentPlan) {
+        loadPlanProgress(profile.id, currentPlan.id);
+      } else if (plansData && plansData.length > 0) {
+        // Si no hay plan actual pero se cargaron planes, usamos el primero
+        const firstPlan = plansData[0];
+        loadPlanProgress(profile.id, firstPlan.id);
+      }
+    } catch (error) {
+      console.error("Error en la carga inicial:", error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al cargar los datos. Intente de nuevo.",
+        variant: "destructive"
+      });
+    } finally {
+      setInitializing(false);
+    }
+  }, [profile, fetchLearningPlans, currentPlan]);
   
+  // Cargar datos iniciales
   useEffect(() => {
-    const loadPlanProgress = async () => {
-      if (!profile || !currentPlan) return;
-      
-      try {
-        setProgressLoading(true);
-        const progress = await updatePlanProgress(profile.id, currentPlan.id);
-        if (progress) {
-          setPlanProgress(progress);
-        }
-      } catch (error) {
-        console.error("Error loading plan progress:", error);
-      } finally {
-        setProgressLoading(false);
-      }
-    };
+    loadInitialData();
+  }, [loadInitialData]);
+  
+  // Función para cargar el progreso de un plan específico
+  const loadPlanProgress = useCallback(async (userId: string, planId: string) => {
+    if (!userId || !planId) return;
     
-    loadPlanProgress();
-  }, [profile, currentPlan, updatePlanProgress]);
+    try {
+      setProgressLoading(true);
+      console.log(`Cargando progreso para plan ${planId}...`);
+      
+      // Verificar si ya tenemos el progreso en caché
+      const cachedProgress = getPlanProgress(planId);
+      if (cachedProgress) {
+        console.log('Usando progreso en caché mientras se actualiza');
+      }
+      
+      const progress = await updatePlanProgress(userId, planId);
+      if (progress) {
+        // El progreso se actualiza en el hook
+        console.log('Progreso actualizado correctamente');
+      }
+    } catch (error) {
+      console.error("Error loading plan progress:", error);
+    } finally {
+      setProgressLoading(false);
+    }
+  }, [updatePlanProgress, getPlanProgress]);
   
   const handleCreatePlan = async () => {
     if (!profile) {
@@ -105,29 +125,25 @@ const Plan = () => {
     );
     
     if (newPlan) {
-      setPlanProgress(null); // Reset progress for new plan
-      
-      // If this is the user's first plan, update their learning phase
+      // Si este es el primer plan del usuario, actualizamos su fase de aprendizaje
       if (user?.learningCyclePhase === "DIAGNOSIS" || !user?.learningCyclePhase) {
         toast({
           title: "Fase actualizada",
           description: "Ahora estás en la fase de Entrenamiento de Habilidades",
         });
       }
+      
+      // Cargar el progreso del nuevo plan
+      loadPlanProgress(profile.id, newPlan.id);
     }
   };
   
   const handlePlanSelect = (plan) => {
     setCurrentPlan(plan);
-    setPlanProgress(null); // Reset progress while loading new plan
     
-    // Update plan progress after changing plan
+    // Cargar el progreso del plan seleccionado
     if (profile) {
-      updatePlanProgress(profile.id, plan.id).then(progress => {
-        if (progress) {
-          setPlanProgress(progress);
-        }
-      });
+      loadPlanProgress(profile.id, plan.id);
     }
   };
   
@@ -182,6 +198,9 @@ const Plan = () => {
     );
   }
   
+  // Obtener el progreso del plan actual
+  const currentPlanProgress = currentPlan ? getPlanProgress(currentPlan.id) : null;
+  
   return (
     <AppLayout>
       <div className="container py-8">
@@ -205,20 +224,14 @@ const Plan = () => {
                   <CurrentPlan 
                     plan={currentPlan}
                     loading={progressLoading}
-                    progress={planProgress}
+                    progress={currentPlanProgress}
                     recommendedNodeId={recommendedNodeId}
                     onUpdateProgress={() => {
                       if (profile && currentPlan) {
-                        setProgressLoading(true);
-                        updatePlanProgress(profile.id, currentPlan.id).then(progress => {
-                          setProgressLoading(false);
-                          if (progress) {
-                            setPlanProgress(progress);
-                            toast({
-                              title: "Progreso actualizado",
-                              description: "Se ha actualizado el progreso de tu plan",
-                            });
-                          }
+                        loadPlanProgress(profile.id, currentPlan.id);
+                        toast({
+                          title: "Actualizando",
+                          description: "Actualizando el progreso de tu plan...",
                         });
                       }
                     }}

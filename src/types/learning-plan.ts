@@ -6,7 +6,7 @@ export interface LearningPlan {
   description?: string;
   targetDate?: string | null;
   createdAt: string;
-  updatedAt?: string; // Añadimos el campo faltante
+  updatedAt?: string;
   nodes: LearningPlanNode[];
 }
 
@@ -14,11 +14,11 @@ export interface LearningPlanNode {
   id: string;
   nodeId: string;
   position: number;
-  nodeName?: string; // Para propósitos de visualización
-  nodeDescription?: string; // Para propósitos de visualización
-  nodeDifficulty?: string; // Para propósitos de visualización
-  nodeSkill?: string; // Para propósitos de visualización
-  planId?: string; // Hacemos opcional el planId para compatibilidad
+  nodeName?: string;
+  nodeDescription?: string;
+  nodeDifficulty?: string;
+  nodeSkill?: string;
+  planId?: string;
 }
 
 export interface PlanProgress {
@@ -26,4 +26,5 @@ export interface PlanProgress {
   completedNodes: number;
   inProgressNodes: number;
   overallProgress: number;
+  nodeProgress?: Record<string, number>; // Mapa de nodeId -> valor de progreso (0-100)
 }

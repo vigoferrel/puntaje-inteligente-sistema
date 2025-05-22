@@ -5,7 +5,6 @@ import { LearningPlanNode } from "@/types/learning-plan";
 import { TPAESHabilidad, getHabilidadDisplayName } from "@/types/system-types";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface PlanNodesListProps {
   nodes: LearningPlanNode[];
@@ -15,6 +14,7 @@ interface PlanNodesListProps {
     completedNodes: number;
     inProgressNodes: number;
     overallProgress: number;
+    nodeProgress?: Record<string, number>;
   } | null;
 }
 
@@ -41,10 +41,13 @@ export const PlanNodesList = ({ nodes, recommendedNodeId, progress }: PlanNodesL
     }
     
     if (index < progress.completedNodes + progress.inProgressNodes) {
-      // Para nodos en progreso, calculamos un progreso aleatorio entre 20% y 80%
-      // En un caso real, este valor vendría de la base de datos
-      const randomProgress = Math.floor(Math.random() * 60) + 20;
-      return { status: 'in-progress', label: 'En progreso', progress: randomProgress };
+      // Usamos el progreso específico del nodo si está disponible, o 50% por defecto
+      const nodeProgressValue = progress.nodeProgress?.[nodeId] || 50;
+      return { 
+        status: 'in-progress', 
+        label: 'En progreso', 
+        progress: nodeProgressValue 
+      };
     }
     
     if (nodeId === recommendedNodeId) {

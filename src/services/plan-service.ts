@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { LearningPlan, LearningPlanNode, PlanProgress } from "@/types/learning-plan";
 import { TPAESHabilidad } from "@/types/system-types";
@@ -10,6 +9,8 @@ import { mapUserNodeProgress } from "@/utils/learning-node-mappers";
  */
 export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]> => {
   try {
+    console.log(`Fetching learning plans for user ${userId}`);
+    
     // Fetch all plans for the user
     const { data: plans, error } = await supabase
       .from('learning_plans')
@@ -17,16 +18,24 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching plans:', error);
+      throw error;
+    }
     
     if (!plans || plans.length === 0) {
+      console.log('No plans found for user');
       return [];
     }
+    
+    console.log(`Found ${plans.length} plans for user`);
     
     // For each plan, fetch its nodes
     const plansWithNodes = await Promise.all(
       plans.map(async (plan) => {
         try {
+          console.log(`Fetching nodes for plan ${plan.id}`);
+          
           const { data: planNodes, error: nodesError } = await supabase
             .from('learning_plan_nodes')
             .select(`
@@ -39,7 +48,12 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
             .eq('plan_id', plan.id)
             .order('position', { ascending: true });
           
-          if (nodesError) throw nodesError;
+          if (nodesError) {
+            console.error(`Error fetching nodes for plan ${plan.id}:`, nodesError);
+            throw nodesError;
+          }
+          
+          console.log(`Found ${planNodes?.length || 0} nodes for plan ${plan.id}`);
           
           // Map the nodes to the expected format
           const nodes: LearningPlanNode[] = planNodes ? planNodes.map(item => ({
@@ -50,7 +64,7 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
             nodeDifficulty: item.node.difficulty,
             nodeSkill: item.node.skill?.code as TPAESHabilidad || 'MODEL',
             position: item.position,
-            planId: plan.id // Add planId since it's required in LearningPlanNode
+            planId: plan.id
           })) : [];
           
           // Return the plan with its nodes
@@ -220,46 +234,70 @@ export const createLearningPlan = async (
 };
 
 /**
- * Updates the progress for a learning plan
+ * Updates progress for a learning plan with improved error handling
  */
 export const updatePlanProgress = async (userId: string, planId: string): Promise<PlanProgress | false> => {
   try {
+    console.log(`Updating progress for plan ${planId} of user ${userId}`);
+    
     // Fetch the plan
-    const { data: plan } = await supabase
+    const { data: plan, error: planError } = await supabase
       .from('learning_plans')
       .select('id')
       .eq('id', planId)
       .eq('user_id', userId)
       .single();
     
-    if (!plan) return false;
+    if (planError) {
+      console.error('Error fetching plan:', planError);
+      throw planError;
+    }
+    
+    if (!plan) {
+      console.error('Plan not found');
+      return false;
+    }
     
     // Fetch plan nodes
-    const { data: planNodes } = await supabase
+    const { data: planNodes, error: nodesError } = await supabase
       .from('learning_plan_nodes')
       .select('id, node_id')
       .eq('plan_id', planId);
     
+    if (nodesError) {
+      console.error('Error fetching plan nodes:', nodesError);
+      throw nodesError;
+    }
+    
     if (!planNodes || planNodes.length === 0) {
+      console.log('No nodes found for plan');
       return {
         totalNodes: 0,
         completedNodes: 0,
         inProgressNodes: 0,
-        overallProgress: 0
+        overallProgress: 0,
+        nodeProgress: {}
       };
     }
     
     const nodeIds = planNodes.map(n => n.node_id);
+    console.log(`Found ${nodeIds.length} nodes for plan`);
     
     // Fetch progress for all nodes
-    const { data: progress } = await supabase
+    const { data: progress, error: progressError } = await supabase
       .from('user_node_progress')
       .select('*')
       .eq('user_id', userId)
       .in('node_id', nodeIds);
     
+    if (progressError) {
+      console.error('Error fetching node progress:', progressError);
+      throw progressError;
+    }
+    
     // Map progress data
     const nodeProgress = mapUserNodeProgress(progress || []);
+    console.log(`Found progress data for ${nodeProgress.length} nodes`);
     
     // Calculate metrics
     const totalNodes = planNodes.length;
@@ -267,11 +305,18 @@ export const updatePlanProgress = async (userId: string, planId: string): Promis
     const inProgressNodes = nodeProgress.filter(p => p.status === 'in_progress').length;
     const overallProgress = totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
     
+    // Create nodeProgress map for specific progress values
+    const nodeProgressMap: Record<string, number> = {};
+    nodeProgress.forEach(p => {
+      nodeProgressMap[p.nodeId] = p.progress;
+    });
+    
     return {
       totalNodes,
       completedNodes,
       inProgressNodes,
-      overallProgress
+      overallProgress,
+      nodeProgress: nodeProgressMap
     };
   } catch (error) {
     console.error("Error updating plan progress:", error);
