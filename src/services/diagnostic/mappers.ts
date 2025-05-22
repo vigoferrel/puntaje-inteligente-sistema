@@ -1,6 +1,6 @@
 
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
-import { mapSkillIdToEnum, mapTestIdToEnum, mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
+import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/supabase-mappers";
 import { DiagnosticQuestion } from "@/types/diagnostic";
 import { RawExerciseData, JsonValue } from "./types";
 

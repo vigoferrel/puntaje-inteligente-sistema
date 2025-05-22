@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from '@/types/diagnostic';
 import { mapExerciseToQuestion } from '../mappers';
+import { RawExerciseData } from '../types';
 
 /**
  * Fetch diagnostic questions from Supabase for a specific diagnostic test
@@ -15,7 +16,8 @@ export const fetchDiagnosticQuestions = async (
     const { data, error } = await supabase
       .from('exercises')
       .select('*')
-      .eq('diagnostic_id', diagnosticId);
+      .eq('diagnostic_id', diagnosticId)
+      .returns<RawExerciseData[]>();
 
     if (error) throw error;
     
@@ -49,7 +51,7 @@ export const fetchQuestionBatch = async (
     query = query.limit(batchSize);
 
     // Use explicit typing to avoid deep inference
-    const { data, error } = await query;
+    const { data, error } = await query.returns<RawExerciseData[]>();
 
     if (error) throw error;
     
@@ -70,7 +72,8 @@ export const getQuestionById = async (questionId: string): Promise<DiagnosticQue
       .from('exercises')
       .select('*')
       .eq('id', questionId)
-      .single();
+      .single()
+      .returns<RawExerciseData>();
 
     if (error) throw error;
     

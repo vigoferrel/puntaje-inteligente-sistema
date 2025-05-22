@@ -5,6 +5,7 @@ import { DiagnosticResult } from "@/types/diagnostic";
 import { TPAESHabilidad } from "@/types/system-types";
 import { updateUserSkillLevels } from "../skill-services";
 import { fetchDiagnosticQuestions } from "../question/fetch-questions";
+import { RawExerciseData } from "../types";
 
 /**
  * Submits diagnostic test results to Supabase

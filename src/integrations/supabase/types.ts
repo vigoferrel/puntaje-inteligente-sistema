@@ -75,34 +75,43 @@ export type Database = {
         Row: {
           correct_answer: string
           created_at: string | null
+          diagnostic_id: string | null
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           explanation: string | null
           id: string
           node_id: string
           options: Json | null
           question: string
+          skill_id: number | null
+          test_id: number | null
           updated_at: string | null
         }
         Insert: {
           correct_answer: string
           created_at?: string | null
+          diagnostic_id?: string | null
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           explanation?: string | null
           id?: string
           node_id: string
           options?: Json | null
           question: string
+          skill_id?: number | null
+          test_id?: number | null
           updated_at?: string | null
         }
         Update: {
           correct_answer?: string
           created_at?: string | null
+          diagnostic_id?: string | null
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           explanation?: string | null
           id?: string
           node_id?: string
           options?: Json | null
           question?: string
+          skill_id?: number | null
+          test_id?: number | null
           updated_at?: string | null
         }
         Relationships: [
