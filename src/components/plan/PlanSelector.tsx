@@ -1,8 +1,10 @@
 
 import React from "react";
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { LearningPlan } from "@/types/learning-plan";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { CalendarDays, CheckCircle, Clock } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface PlanSelectorProps {
   plans: LearningPlan[];
@@ -11,33 +13,73 @@ interface PlanSelectorProps {
 }
 
 export const PlanSelector = ({ plans, currentPlanId, onSelectPlan }: PlanSelectorProps) => {
-  if (plans.length <= 1) return null;
+  if (plans.length <= 1) {
+    return null; // No need for selector if there's only one plan
+  }
   
-  const otherPlans = plans.filter(plan => plan.id !== currentPlanId);
-  
-  if (otherPlans.length === 0) return null;
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("es-ES", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    }).format(date);
+  };
   
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Otros planes disponibles</h2>
-      
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Mis planes de estudio</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {otherPlans.map(plan => (
-          <Card 
-            key={plan.id} 
-            className="cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => onSelectPlan(plan)}
+        {plans.map((plan, index) => (
+          <motion.div
+            key={plan.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            whileHover={{ scale: 1.02 }}
           >
-            <CardHeader>
-              <CardTitle className="text-lg">{plan.title}</CardTitle>
-              <CardDescription className="line-clamp-2">{plan.description}</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => onSelectPlan(plan)}>
-                Seleccionar Plan
-              </Button>
-            </CardFooter>
-          </Card>
+            <Card
+              className={cn(
+                "cursor-pointer transition-all duration-200 h-full border-2",
+                plan.id === currentPlanId
+                  ? "border-primary/40 bg-primary/5"
+                  : "hover:border-primary/20"
+              )}
+              onClick={() => onSelectPlan(plan)}
+            >
+              <CardContent className="p-4">
+                <div className="flex flex-col h-full">
+                  <div className="mb-2 flex justify-between items-start">
+                    <h3 className="font-semibold line-clamp-2">{plan.title}</h3>
+                    {plan.id === currentPlanId && (
+                      <span className="flex items-center text-xs text-primary bg-primary/10 px-2 py-1 rounded-full">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Activo
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    {plan.description || "Plan de estudio personalizado"}
+                  </p>
+                  
+                  <div className="mt-auto space-y-2 text-xs text-muted-foreground">
+                    <div className="flex items-center">
+                      <CalendarDays className="h-3.5 w-3.5 mr-1.5" />
+                      <span>Creado: {formatDate(plan.createdAt)}</span>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Clock className="h-3.5 w-3.5 mr-1.5" />
+                      <span>
+                        {plan.nodes.length} {plan.nodes.length === 1 ? "módulo" : "módulos"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
     </div>

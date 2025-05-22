@@ -26,43 +26,58 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
     // For each plan, fetch its nodes
     const plansWithNodes = await Promise.all(
       plans.map(async (plan) => {
-        const { data: planNodes, error: nodesError } = await supabase
-          .from('learning_plan_nodes')
-          .select(`
-            id, position,
-            node:node_id (
-              id, code, title, description, difficulty, 
-              skill:skill_id (id, name, code)
-            )
-          `)
-          .eq('plan_id', plan.id)
-          .order('position', { ascending: true });
-        
-        if (nodesError) throw nodesError;
-        
-        // Map the nodes to the expected format
-        const nodes: LearningPlanNode[] = planNodes.map(item => ({
-          id: item.id,
-          nodeId: item.node.id,
-          nodeName: item.node.title,
-          nodeDescription: item.node.description,
-          nodeDifficulty: item.node.difficulty,
-          nodeSkill: item.node.skill.code as TPAESHabilidad,
-          position: item.position,
-          planId: plan.id // Add planId since it's required in LearningPlanNode
-        }));
-        
-        // Return the plan with its nodes
-        return {
-          id: plan.id,
-          title: plan.title,
-          description: plan.description || '',
-          userId: plan.user_id,
-          createdAt: plan.created_at,
-          updatedAt: plan.updated_at,
-          targetDate: plan.target_date || null,
-          nodes
-        };
+        try {
+          const { data: planNodes, error: nodesError } = await supabase
+            .from('learning_plan_nodes')
+            .select(`
+              id, position,
+              node:node_id (
+                id, code, title, description, difficulty, 
+                skill:skill_id (id, name, code)
+              )
+            `)
+            .eq('plan_id', plan.id)
+            .order('position', { ascending: true });
+          
+          if (nodesError) throw nodesError;
+          
+          // Map the nodes to the expected format
+          const nodes: LearningPlanNode[] = planNodes ? planNodes.map(item => ({
+            id: item.id,
+            nodeId: item.node.id,
+            nodeName: item.node.title,
+            nodeDescription: item.node.description,
+            nodeDifficulty: item.node.difficulty,
+            nodeSkill: item.node.skill?.code as TPAESHabilidad || 'MODEL',
+            position: item.position,
+            planId: plan.id // Add planId since it's required in LearningPlanNode
+          })) : [];
+          
+          // Return the plan with its nodes
+          return {
+            id: plan.id,
+            title: plan.title,
+            description: plan.description || '',
+            userId: plan.user_id,
+            createdAt: plan.created_at,
+            updatedAt: plan.updated_at,
+            targetDate: plan.target_date || null,
+            nodes
+          };
+        } catch (nodeError) {
+          console.error(`Error fetching nodes for plan ${plan.id}:`, nodeError);
+          // Return plan with empty nodes array if there was an error fetching nodes
+          return {
+            id: plan.id,
+            title: plan.title,
+            description: plan.description || '',
+            userId: plan.user_id,
+            createdAt: plan.created_at,
+            updatedAt: plan.updated_at,
+            targetDate: plan.target_date || null,
+            nodes: []
+          };
+        }
       })
     );
     
@@ -74,7 +89,7 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
 };
 
 /**
- * Creates a learning plan for a user
+ * Creates a learning plan for a user with improved error handling
  */
 export const createLearningPlan = async (
   userId: string, 
@@ -120,6 +135,10 @@ export const createLearningPlan = async (
     
     if (error) throw error;
     
+    if (!plan) {
+      throw new Error("No data returned after inserting learning plan");
+    }
+    
     // Get top skills to focus on (those with lowest scores)
     const skillsToFocus = Object.entries(priorities)
       .sort(([, a], [, b]) => a - b) // Sort by score ascending
@@ -127,7 +146,13 @@ export const createLearningPlan = async (
       .map(([skill]) => skill as TPAESHabilidad);
     
     // Fetch nodes for these skills
-    const nodes = await fetchNodesBySkills(skillsToFocus);
+    let nodes;
+    try {
+      nodes = await fetchNodesBySkills(skillsToFocus);
+    } catch (error) {
+      console.error("Error fetching nodes for skills:", error);
+      nodes = [];
+    }
     
     if (!nodes || nodes.length === 0) {
       console.warn("No nodes found for selected skills. Creating empty plan.");
@@ -146,30 +171,35 @@ export const createLearningPlan = async (
     // Add nodes to the plan
     const planNodes = [];
     for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      const { data: planNode, error } = await supabase
-        .from('learning_plan_nodes')
-        .insert({
-          plan_id: plan.id,
-          node_id: node.id,
-          position: i
-        })
-        .select('id')
-        .single();
-      
-      if (error) throw error;
-      
-      planNodes.push({
-        id: planNode.id,
-        nodeId: node.id,
-        nodeName: node.title,
-        nodeDescription: node.description || '',
-        nodeDifficulty: node.difficulty,
-        // Fix: Don't access .code on skill, since TPAESHabilidad is already the skill code
-        nodeSkill: node.skill || 'MODEL', // Default to MODEL if skill is undefined
-        position: i,
-        planId: plan.id
-      });
+      try {
+        const node = nodes[i];
+        const { data: planNode, error } = await supabase
+          .from('learning_plan_nodes')
+          .insert({
+            plan_id: plan.id,
+            node_id: node.id,
+            position: i
+          })
+          .select('id')
+          .single();
+        
+        if (error) throw error;
+        
+        planNodes.push({
+          id: planNode.id,
+          nodeId: node.id,
+          nodeName: node.title,
+          nodeDescription: node.description || '',
+          nodeDifficulty: node.difficulty,
+          // Fix: Don't access .code on skill, since TPAESHabilidad is already the skill code
+          nodeSkill: node.skill || 'MODEL', // Default to MODEL if skill is undefined
+          position: i,
+          planId: plan.id
+        });
+      } catch (nodeError) {
+        console.error(`Error adding node to plan for position ${i}:`, nodeError);
+        // Continue with next node on error
+      }
     }
     
     // Return the plan with nodes

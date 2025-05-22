@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { LearningPlan, PlanProgress } from "@/types/learning-plan";
 import { PlanNodesList } from "./PlanNodesList";
 import { TPAESHabilidad } from "@/types/system-types";
+import { RefreshCw } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface CurrentPlanProps {
   plan: LearningPlan | null;
@@ -72,99 +74,163 @@ export function CurrentPlan({
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2 mt-2" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-1/4" />
+                  <Skeleton className="h-4 w-1/6" />
+                </div>
+                <Skeleton className="h-2 w-full" />
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              </div>
+              <div className="space-y-2 pt-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Skeleton className="h-10 w-full" />
+          </CardFooter>
+        </Card>
+      </motion.div>
     );
   }
 
   if (!plan) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Ningún plan seleccionado</CardTitle>
-          <CardDescription>
-            No tienes ningún plan de estudio activo actualmente.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-6">
-            Un plan de estudio te ayudará a organizar tu aprendizaje y prepararte
-            efectivamente para la PAES. Crea tu primer plan para comenzar.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button
-            onClick={handleCreateSamplePlan}
-            disabled={creating}
-            className="w-full"
-          >
-            {creating ? "Creando plan..." : "Crear mi primer plan"}
-          </Button>
-        </CardFooter>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>Ningún plan seleccionado</CardTitle>
+            <CardDescription>
+              No tienes ningún plan de estudio activo actualmente.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-6">
+              Un plan de estudio te ayudará a organizar tu aprendizaje y prepararte
+              efectivamente para la PAES. Crea tu primer plan para comenzar.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button
+              onClick={handleCreateSamplePlan}
+              disabled={creating}
+              className="w-full"
+            >
+              {creating ? (
+                <>
+                  <span className="mr-2">Creando plan...</span>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                </>
+              ) : (
+                "Crear mi primer plan"
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </motion.div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{plan.title}</CardTitle>
-            <CardDescription>
-              {plan.description || "Plan de estudio personalizado"}
-            </CardDescription>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="overflow-hidden border-2 hover:border-primary/20 transition-all duration-300">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-xl md:text-2xl">{plan.title}</CardTitle>
+              <CardDescription>
+                {plan.description || "Plan de estudio personalizado"}
+              </CardDescription>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Progreso general</span>
-            <span className="font-medium">
-              {progress
-                ? `${Math.round(progress.overallProgress)}%`
-                : "0%"}
-            </span>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Progreso general</span>
+              <span className="font-medium">
+                {loading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin inline mr-2" />
+                ) : (
+                  progress ? 
+                    `${Math.round(progress.overallProgress)}%` : 
+                    "0%"
+                )}
+              </span>
+            </div>
+            <Progress
+              value={loading ? null : (progress ? progress.overallProgress : 0)}
+              className="h-2"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>
+                {loading ? (
+                  <span className="inline-flex items-center">
+                    <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                    Actualizando...
+                  </span>
+                ) : (
+                  progress ?
+                    `${progress.completedNodes}/${progress.totalNodes} módulos completados` :
+                    "0/0 módulos completados"
+                )}
+              </span>
+              <span>Fecha objetivo: {formatDate(plan.targetDate)}</span>
+            </div>
           </div>
-          <Progress
-            value={progress ? progress.overallProgress : 0}
-            className="h-2"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>
-              {progress
-                ? `${progress.completedNodes}/${progress.totalNodes} módulos completados`
-                : "0/0 módulos completados"}
-            </span>
-            <span>Fecha objetivo: {formatDate(plan.targetDate)}</span>
-          </div>
-        </div>
 
-        <div className="pt-2">
-          <PlanNodesList
-            nodes={plan.nodes}
-            recommendedNodeId={recommendedNodeId}
-            progress={progress}
-          />
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button onClick={onUpdateProgress} variant="outline" className="w-full">
-          Actualizar progreso
-        </Button>
-      </CardFooter>
-    </Card>
+          <div className="pt-2">
+            <PlanNodesList
+              nodes={plan.nodes}
+              recommendedNodeId={recommendedNodeId}
+              progress={progress}
+            />
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            onClick={onUpdateProgress} 
+            variant="outline" 
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                Actualizando progreso...
+              </>
+            ) : (
+              "Actualizar progreso"
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 }
