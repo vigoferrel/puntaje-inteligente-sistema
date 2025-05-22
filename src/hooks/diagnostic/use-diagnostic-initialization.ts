@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDiagnostic } from "@/hooks/use-diagnostic";
 import { toast } from "@/components/ui/use-toast";
 
@@ -8,35 +8,45 @@ interface DiagnosticInitializationResult {
   generatingDiagnostic: boolean;
   error: string | null;
   retryInitialization: () => Promise<void>;
+  retryCount: number;
 }
 
 export const useDiagnosticInitialization = (): DiagnosticInitializationResult => {
   const [initializing, setInitializing] = useState(true);
   const [generatingDiagnostic, setGeneratingDiagnostic] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
   
-  // Modified function to initialize diagnostics WITHOUT automatic generation
-  const initDiagnostics = async () => {
+  // Función mejorada para inicializar diagnósticos con mejor manejo de errores
+  const initDiagnostics = useCallback(async () => {
     try {
       // Reset states
       setError(null);
       setInitializing(true);
       
-      // Instead of generating new diagnostics, just try to load existing ones
+      // Intenta cargar diagnósticos existentes primero
       if (diagnosticService.tests.length === 0) {
-        // Use only local fallback diagnostics - no API calls
+        console.log("Intentando cargar diagnósticos locales...");
+        // Usar solo diagnósticos locales fallback
+        setGeneratingDiagnostic(true);
         const fallbackCreated = await diagnosticService.createLocalFallbackDiagnostics();
+        setGeneratingDiagnostic(false);
         
         if (fallbackCreated) {
           toast({
-            title: "Diagnosticos básicos cargados",
+            title: "Diagnósticos básicos cargados",
             description: "Se han cargado diagnósticos básicos predefinidos.",
           });
         } else {
-          setError("No se pudieron cargar diagnósticos. Por favor, contacte al administrador.");
+          // Si fallan los diagnósticos locales, intentar con el método por defecto
+          const defaultDiagnosticsCreated = await diagnosticService.ensureDefaultDiagnosticsExist();
+          
+          if (!defaultDiagnosticsCreated) {
+            setError("No se pudieron cargar diagnósticos. Por favor, reinicie la aplicación o contacte al administrador.");
+          }
         }
       }
     } catch (error) {
@@ -45,15 +55,16 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
     } finally {
       setInitializing(false);
     }
-  };
+  }, [diagnosticService]);
 
   // Initialize data
   useEffect(() => {
     initDiagnostics();
-  }, [diagnosticService]);
+  }, [initDiagnostics]);
 
-  // Function to retry initialization
+  // Function to retry initialization with count tracking
   const retryInitialization = async () => {
+    setRetryCount(prev => prev + 1);
     await initDiagnostics();
   };
 
@@ -61,6 +72,7 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
     initializing,
     generatingDiagnostic,
     error,
-    retryInitialization
+    retryInitialization,
+    retryCount
   };
 };

@@ -19,12 +19,36 @@ import { Info } from "lucide-react";
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useAuth } from "@/contexts/AuthContext";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../components/ui/breadcrumb";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const Diagnostico = () => {
   console.log("Renderizando página de Diagnóstico");
   const [activeTab, setActiveTab] = useState<string>("competency");
   const { nodes, loading: nodesLoading, fetchLearningNodes } = useLearningNodes();
   const { profile } = useAuth();
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingStep, setLoadingStep] = useState("Inicializando");
+  
+  // Simular progreso de carga
+  useEffect(() => {
+    if (loadingProgress < 100) {
+      const interval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = Math.min(prev + 5, 100);
+          if (newProgress > 30 && newProgress < 60) {
+            setLoadingStep("Cargando ejercicios");
+          } else if (newProgress >= 60) {
+            setLoadingStep("Preparando interfaz");
+          }
+          return newProgress;
+        });
+      }, 300);
+      
+      return () => clearInterval(interval);
+    }
+  }, [loadingProgress]);
   
   // Datos para simular las competencias por habilidad
   // En una implementación real, estos datos vendrían de la API
@@ -106,7 +130,8 @@ const Diagnostico = () => {
           handleNextQuestion,
           handleFinishTest,
           handleRestartDiagnostic,
-          handleRetryInitialization
+          handleRetryInitialization,
+          retryCount
         }) => {
           console.log("Estado actual:", { 
             loading, 
@@ -115,7 +140,8 @@ const Diagnostico = () => {
             testStarted, 
             resultSubmitted,
             testsCount: tests.length,
-            error
+            error,
+            retryCount
           });
           
           // Determine what message to show during loading
@@ -130,30 +156,54 @@ const Diagnostico = () => {
           if (testStarted || resultSubmitted) {
             return (
               <div className="container py-8">
-                <h1 className="text-3xl font-bold mb-2">Diagnóstico</h1>
-                <p className="text-gray-600 mb-6">
-                  Evalúa tus conocimientos y habilidades para crear un plan de estudio personalizado.
-                </p>
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild><Link to="/">Inicio</Link></BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild><Link to="/diagnostico">Diagnóstico</Link></BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink>{resultSubmitted ? "Resultados" : "Test en progreso"}</BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
                 
-                {resultSubmitted ? (
-                  <DetailedResultView 
-                    onRestartDiagnostic={handleRestartDiagnostic} 
-                    results={testResults ? testResults : undefined}
-                  />
-                ) : (
-                  <TestRunner 
-                    currentTest={currentTest}
-                    currentQuestionIndex={currentQuestionIndex}
-                    answers={answers}
-                    showHint={showHint}
-                    onAnswerSelect={handleAnswerSelect}
-                    onRequestHint={handleRequestHint}
-                    onPreviousQuestion={handlePreviousQuestion}
-                    onNextQuestion={handleNextQuestion}
-                    onPauseTest={handlePauseTest}
-                    onFinishTest={handleFinishTest}
-                  />
-                )}
+                <div className="my-4">
+                  <h1 className="text-3xl font-bold mb-2">Diagnóstico</h1>
+                  <p className="text-gray-600 mb-6">
+                    Evalúa tus conocimientos y habilidades para crear un plan de estudio personalizado.
+                  </p>
+                </div>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {resultSubmitted ? (
+                    <DetailedResultView 
+                      onRestartDiagnostic={handleRestartDiagnostic} 
+                      results={testResults ? testResults : undefined}
+                    />
+                  ) : (
+                    <TestRunner 
+                      currentTest={currentTest}
+                      currentQuestionIndex={currentQuestionIndex}
+                      answers={answers}
+                      showHint={showHint}
+                      onAnswerSelect={handleAnswerSelect}
+                      onRequestHint={handleRequestHint}
+                      onPreviousQuestion={handlePreviousQuestion}
+                      onNextQuestion={handleNextQuestion}
+                      onPauseTest={handlePauseTest}
+                      onFinishTest={handleFinishTest}
+                    />
+                  )}
+                </motion.div>
   
                 <PauseConfirmationDialog 
                   open={showPauseConfirmation} 
@@ -171,13 +221,31 @@ const Diagnostico = () => {
           // Vista principal con pestañas
           return (
             <div className="container py-8">
-              <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-                <Brain className="h-8 w-8 text-primary" />
-                Diagnóstico por Competencias
-              </h1>
-              <p className="text-gray-600 mb-6">
-                Evalúa tus conocimientos y habilidades para crear un plan de estudio personalizado.
-              </p>
+              <Breadcrumb className="mb-4">
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild><Link to="/">Inicio</Link></BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink>Diagnóstico</BreadcrumbLink>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+                  <Brain className="h-8 w-8 text-primary" />
+                  Diagnóstico por Competencias
+                </h1>
+                <p className="text-gray-600 mb-6">
+                  Evalúa tus conocimientos y habilidades para crear un plan de estudio personalizado.
+                </p>
+              </motion.div>
               
               <Alert className="mb-6 bg-blue-50 border-blue-100">
                 <Info className="h-4 w-4 text-blue-500" />
@@ -189,12 +257,18 @@ const Diagnostico = () => {
               </Alert>
               
               {pausedProgress && tests.length > 0 && tests.some(test => test.id === pausedProgress.testId) && (
-                <PausedTestBanner 
-                  testProgress={pausedProgress}
-                  test={tests.find(test => test.id === pausedProgress.testId)!}
-                  onResumeTest={handleResumeTest}
-                  onDiscardProgress={handleDiscardProgress}
-                />
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
+                  <PausedTestBanner 
+                    testProgress={pausedProgress}
+                    test={tests.find(test => test.id === pausedProgress.testId)!}
+                    onResumeTest={handleResumeTest}
+                    onDiscardProgress={handleDiscardProgress}
+                  />
+                </motion.div>
               )}
               
               {loading || error ? (
@@ -203,9 +277,15 @@ const Diagnostico = () => {
                     error={error}
                     message="Esto puede deberse a una conexión inestable o a un problema temporal con el sistema. Por favor, intenta nuevamente."
                     onRetry={handleRetryInitialization}
+                    retryCount={retryCount}
                   />
                 ) : (
-                  <DiagnosticSkeleton message={loadingMessage} generating={generatingDiagnostic} />
+                  <DiagnosticSkeleton 
+                    message={loadingMessage} 
+                    generating={generatingDiagnostic} 
+                    progress={loadingProgress}
+                    step={loadingStep}
+                  />
                 )
               ) : (
                 <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
@@ -220,50 +300,66 @@ const Diagnostico = () => {
                     </TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="competency" className="space-y-6">
-                    <SkillCompetencyView 
-                      skillLevels={skillCompetencies}
-                      availableNodes={nodes.map(node => ({
-                        id: node.id,
-                        title: node.title,
-                        description: node.description,
-                        skill: node.skill,
-                        difficulty: node.difficulty,
-                        estimatedTimeMinutes: node.estimatedTimeMinutes,
-                        dependsOn: node.dependsOn || [],
-                        progress: Math.random() // En una implementación real, esto vendría de user_node_progress
-                      }))}
-                      onStartDiagnostic={handleNavigateToTest}
-                      onSelectNode={handleSelectNode}
-                      loading={nodesLoading}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="tests">
-                    {tests.length > 0 ? (
-                      <DiagnosticSelector 
-                        tests={tests}
-                        selectedTestId={selectedTestId}
-                        onTestSelect={handleTestSelect}
-                        onStartTest={handleStartTest}
-                        loading={loading}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <TabsContent value="competency" className="space-y-6">
+                      <SkillCompetencyView 
+                        skillLevels={skillCompetencies}
+                        availableNodes={nodes.map(node => ({
+                          id: node.id,
+                          title: node.title,
+                          description: node.description,
+                          skill: node.skill,
+                          difficulty: node.difficulty,
+                          estimatedTimeMinutes: node.estimatedTimeMinutes,
+                          dependsOn: node.dependsOn || [],
+                          progress: Math.random() // En una implementación real, esto vendría de user_node_progress
+                        }))}
+                        onStartDiagnostic={handleNavigateToTest}
+                        onSelectNode={handleSelectNode}
+                        loading={nodesLoading}
                       />
-                    ) : (
-                      <div className="text-center p-8 border rounded-lg bg-background">
-                        <h3 className="text-xl font-medium mb-2">No hay diagnósticos disponibles</h3>
-                        <p className="text-muted-foreground mb-4">
-                          No se encontraron pruebas diagnósticas. Puede deberse a un problema de conexión o que aún no se han configurado.
-                        </p>
-                        <Button 
-                          onClick={handleRetryInitialization}
-                          className="flex items-center gap-2"
+                    </TabsContent>
+                    
+                    <TabsContent value="tests">
+                      {tests.length > 0 ? (
+                        <DiagnosticSelector 
+                          tests={tests}
+                          selectedTestId={selectedTestId}
+                          onTestSelect={handleTestSelect}
+                          onStartTest={handleStartTest}
+                          loading={loading}
+                        />
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="text-center p-8 border rounded-lg bg-background"
                         >
-                          <RefreshCw className="h-4 w-4" />
-                          Reintentar
-                        </Button>
-                      </div>
-                    )}
-                  </TabsContent>
+                          <div className="flex justify-center mb-4">
+                            <div className="rounded-full bg-blue-50 p-3">
+                              <Brain className="h-10 w-10 text-blue-600" />
+                            </div>
+                          </div>
+                          <h3 className="text-xl font-medium mb-2">No hay diagnósticos disponibles</h3>
+                          <p className="text-muted-foreground mb-4">
+                            No se encontraron pruebas diagnósticas. Puede deberse a un problema de conexión o que aún no se han configurado.
+                          </p>
+                          <Button 
+                            onClick={handleRetryInitialization}
+                            className="flex items-center gap-2"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            Reintentar
+                          </Button>
+                        </motion.div>
+                      )}
+                    </TabsContent>
+                  </motion.div>
                 </Tabs>
               )}
             </div>
