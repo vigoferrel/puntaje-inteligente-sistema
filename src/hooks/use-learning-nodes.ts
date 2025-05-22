@@ -7,7 +7,8 @@ import {
   fetchLearningNodes as fetchNodes, 
   fetchUserNodeProgress as fetchProgress,
   updateNodeProgress as updateProgress,
-  getLearningCyclePhase as getCyclePhase
+  getLearningCyclePhase as getCyclePhase,
+  fetchNodeContent as getNodeContent
 } from "@/services/node";
 
 export { type NodeProgress } from "@/types/node-progress";
@@ -92,6 +93,21 @@ export const useLearningNodes = () => {
     return await getCyclePhase(userId);
   }, []);
 
+  // Añadir el nuevo método para buscar contenido de un nodo
+  const fetchNodeContent = async (nodeId: string) => {
+    try {
+      return await getNodeContent(nodeId);
+    } catch (error) {
+      console.error('Error fetching node content:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar el contenido del nodo",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
   return {
     nodes,
     loading,
@@ -99,6 +115,7 @@ export const useLearningNodes = () => {
     fetchLearningNodes,
     fetchUserNodeProgress,
     updateNodeProgress,
-    getLearningCyclePhase
+    getLearningCyclePhase,
+    fetchNodeContent
   };
 };
