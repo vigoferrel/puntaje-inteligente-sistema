@@ -15,7 +15,7 @@ export function useChatMessages() {
       id: uuidv4(),
       role: "assistant",
       content: WELCOME_MESSAGE,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toISOString()
     }
   ]);
   
