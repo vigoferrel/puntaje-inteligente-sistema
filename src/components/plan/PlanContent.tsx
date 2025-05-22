@@ -1,7 +1,8 @@
+
 import React from "react";
 import { LearningPlan } from "@/types/learning-plan";
 import { EmptyPlanState } from "./EmptyPlanState";
-import { CurrentPlan } from "./CurrentPlan";
+import { CurrentPlan } from "./current-plan";
 import { PlanSelector } from "./PlanSelector";
 import { motion, AnimatePresence } from "framer-motion";
 
