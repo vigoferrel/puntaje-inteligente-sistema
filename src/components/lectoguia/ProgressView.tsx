@@ -3,11 +3,11 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { LectoGuiaSkill } from "@/types/lectoguia-types";
+import { TPAESHabilidad } from "@/types/system-types";
 import { formatSkillLevel, getSkillName } from "@/utils/lectoguia-utils";
 
 interface ProgressViewProps {
-  skillLevels: Record<LectoGuiaSkill, number>;
+  skillLevels: Record<TPAESHabilidad, number>;
   onStartSimulation: () => void;
 }
 
@@ -15,12 +15,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
   skillLevels,
   onStartSimulation
 }) => {
-  // Helper para agrupar habilidades por área
+  // Agrupar habilidades por área usando las habilidades correctas del sistema
   const skillGroups = {
     "Comprensión Lectora": ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT'],
-    "Matemáticas": ['ALGEBRA'],
-    "Ciencias": ['PHYSICS'],
-    "Historia": ['HISTORY']
+    "Matemáticas": ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE'],
+    "Ciencias": ['IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT'],
+    "Historia": ['TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION']
   };
   
   return (
@@ -36,10 +36,10 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
                 <div key={skill} className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span>{getSkillName(skill)}</span>
-                    <span className="font-medium">{formatSkillLevel(skillLevels[skill as LectoGuiaSkill] || 0)}</span>
+                    <span className="font-medium">{formatSkillLevel(skillLevels[skill as TPAESHabilidad] || 0)}</span>
                   </div>
                   <Progress 
-                    value={(skillLevels[skill as LectoGuiaSkill] || 0) * 100} 
+                    value={(skillLevels[skill as TPAESHabilidad] || 0) * 100} 
                     className="h-2"
                   />
                 </div>

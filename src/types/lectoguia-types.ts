@@ -1,6 +1,6 @@
 
 import { Exercise } from './ai-types';
-import { TLearningNode, TPAESHabilidad } from './system-types';
+import { TPAESHabilidad } from './system-types';
 
 export interface ExerciseAttempt {
   id: string;
@@ -54,14 +54,8 @@ export interface UpdateSkillResult {
   error?: string;
 }
 
-// Extended skill types for LectoGuía
-export type LectoGuiaSkill = 
-  | 'TRACK_LOCATE' 
-  | 'INTERPRET_RELATE' 
-  | 'EVALUATE_REFLECT'
-  | 'ALGEBRA'
-  | 'PHYSICS'
-  | 'HISTORY';
+// Use TPAESHabilidad from system-types.ts for LectoGuiaSkill
+export type LectoGuiaSkill = TPAESHabilidad;
 
 // Re-export TLearningNode for convenience
-export type { TLearningNode };
+export type { TLearningNode } from './system-types';

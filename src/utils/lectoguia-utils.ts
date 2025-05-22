@@ -11,9 +11,30 @@ export const getSkillId = (skillCode: string): number | null => {
   }
   
   switch (skillCode) {
+    // Comprensión Lectora
     case 'TRACK_LOCATE': return 1;
     case 'INTERPRET_RELATE': return 2;
     case 'EVALUATE_REFLECT': return 3;
+    
+    // Matemáticas
+    case 'SOLVE_PROBLEMS': return 4;
+    case 'REPRESENT': return 5;
+    case 'MODEL': return 6;
+    case 'ARGUE_COMMUNICATE': return 7;
+    
+    // Ciencias
+    case 'IDENTIFY_THEORIES': return 8;
+    case 'PROCESS_ANALYZE': return 9;
+    case 'APPLY_PRINCIPLES': return 10;
+    case 'SCIENTIFIC_ARGUMENT': return 11;
+    
+    // Historia
+    case 'TEMPORAL_THINKING': return 12;
+    case 'SOURCE_ANALYSIS': return 13;
+    case 'MULTICAUSAL_ANALYSIS': return 14;
+    case 'CRITICAL_THINKING': return 15;
+    case 'REFLECTION': return 16;
+    
     default: 
       console.warn(`Invalid skill code: ${skillCode}`);
       return null;
@@ -26,12 +47,29 @@ export const getSkillId = (skillCode: string): number | null => {
  */
 export const getInitialSkillLevels = () => {
   return {
+    // Comprensión Lectora
     'TRACK_LOCATE': 0,
     'INTERPRET_RELATE': 0,
     'EVALUATE_REFLECT': 0,
-    'ALGEBRA': 0,
-    'PHYSICS': 0,
-    'HISTORY': 0
+    
+    // Matemáticas
+    'SOLVE_PROBLEMS': 0,
+    'REPRESENT': 0,
+    'MODEL': 0,
+    'ARGUE_COMMUNICATE': 0,
+    
+    // Ciencias
+    'IDENTIFY_THEORIES': 0,
+    'PROCESS_ANALYZE': 0, 
+    'APPLY_PRINCIPLES': 0,
+    'SCIENTIFIC_ARGUMENT': 0,
+    
+    // Historia
+    'TEMPORAL_THINKING': 0,
+    'SOURCE_ANALYSIS': 0,
+    'MULTICAUSAL_ANALYSIS': 0,
+    'CRITICAL_THINKING': 0,
+    'REFLECTION': 0
   };
 };
 
@@ -42,12 +80,30 @@ export const getInitialSkillLevels = () => {
  */
 export const getSkillName = (skillCode: string): string => {
   switch (skillCode) {
+    // Comprensión Lectora
     case 'TRACK_LOCATE': return 'Rastrear y Localizar';
     case 'INTERPRET_RELATE': return 'Interpretar y Relacionar';
     case 'EVALUATE_REFLECT': return 'Evaluar y Reflexionar';
-    case 'ALGEBRA': return 'Álgebra';
-    case 'PHYSICS': return 'Física';
-    case 'HISTORY': return 'Historia';
+    
+    // Matemáticas
+    case 'SOLVE_PROBLEMS': return 'Resolver Problemas';
+    case 'REPRESENT': return 'Representar';
+    case 'MODEL': return 'Modelar';
+    case 'ARGUE_COMMUNICATE': return 'Argumentar y Comunicar';
+    
+    // Ciencias
+    case 'IDENTIFY_THEORIES': return 'Identificar Teorías';
+    case 'PROCESS_ANALYZE': return 'Procesar y Analizar';
+    case 'APPLY_PRINCIPLES': return 'Aplicar Principios';
+    case 'SCIENTIFIC_ARGUMENT': return 'Argumentación Científica';
+    
+    // Historia
+    case 'TEMPORAL_THINKING': return 'Pensamiento Temporal';
+    case 'SOURCE_ANALYSIS': return 'Análisis de Fuentes';
+    case 'MULTICAUSAL_ANALYSIS': return 'Análisis Multicausal';
+    case 'CRITICAL_THINKING': return 'Pensamiento Crítico';
+    case 'REFLECTION': return 'Reflexión';
+    
     default: return skillCode || 'Desconocida';
   }
 };
@@ -58,7 +114,19 @@ export const getSkillName = (skillCode: string): string => {
  * @returns Boolean indicating if the code is valid
  */
 export const isValidSkillCode = (skillCode: string): boolean => {
-  return ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT', 'ALGEBRA', 'PHYSICS', 'HISTORY'].includes(skillCode);
+  return [
+    // Comprensión Lectora
+    'TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT',
+    
+    // Matemáticas
+    'SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE',
+    
+    // Ciencias
+    'IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT',
+    
+    // Historia
+    'TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION'
+  ].includes(skillCode);
 };
 
 /**

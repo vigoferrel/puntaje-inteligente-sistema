@@ -4,13 +4,13 @@ import { ProgressView } from "./ProgressView";
 import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useAuth } from "@/contexts/AuthContext";
-import { TPAESPrueba } from "@/types/system-types";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface ProgressTabProps {
-  skillLevels: Record<string, number>;
+  skillLevels: Record<TPAESHabilidad, number>;
   onStartSimulation: () => void;
   onNodeSelect?: (nodeId: string) => void;
 }
@@ -68,7 +68,7 @@ export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: Pr
         
         {/* Visualización avanzada de habilidades y nodos con jerarquía de Bloom */}
         <SkillNodeConnection 
-          skillLevels={skillLevels as any} 
+          skillLevels={skillLevels} 
           nodes={nodes}
           nodeProgress={nodeProgress}
           onNodeSelect={onNodeSelect}
