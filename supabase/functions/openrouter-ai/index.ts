@@ -1,7 +1,14 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
-import { generateExercise, generateExercisesBatch, generateDiagnostic, analyzePerformance, provideFeedback, processImage } from "./handlers/action-handlers.ts";
+import { 
+  generateExercise, 
+  generateExercisesBatch, 
+  generateDiagnostic, 
+  analyzePerformance, 
+  provideFeedback, 
+  processImage 
+} from "./handlers/action-handlers.ts";
 
 console.log("OpenRouter AI Edge Function Started");
 
