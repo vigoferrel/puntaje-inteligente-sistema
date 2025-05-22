@@ -43,7 +43,8 @@ export const DiagnosticResults = ({
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <DiagnosticResultsSummary results={results} />
+        {/* Pass the results.results (the nested record) to DiagnosticResultsSummary */}
+        <DiagnosticResultsSummary results={results.results} />
         
         <Card>
           <CardHeader>
@@ -53,6 +54,7 @@ export const DiagnosticResults = ({
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Use the DiagnosticResultRadar component that accepts DiagnosticResult */}
             <DiagnosticResultRadar results={results} />
           </CardContent>
         </Card>
