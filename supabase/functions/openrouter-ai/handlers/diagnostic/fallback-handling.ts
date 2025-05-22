@@ -1,62 +1,23 @@
 
-/**
- * Module for handling fallback scenarios and error cases
- */
-import { DEFAULT_CACHE_TTL } from "../../config.ts";
-import { CacheService } from "../../services/cache-service.ts";
-import { FallbackService, FallbackOperation } from "../../services/fallback-service.ts";
-import { MonitoringService } from "../../services/monitoring-service.ts";
 import { OfflineDiagnosticService } from "../../services/offline-diagnostic-service.ts";
+import { MonitoringService } from "../../services/monitoring-service.ts";
+import { createDiagnosticFallback } from "../../utils/fallback-generators.ts";
 
 /**
- * Genera una respuesta de fallback en caso de error durante la generación de diagnóstico
+ * Maneja la generación de diagnósticos de respaldo cuando la generación principal falla
  */
-export function generateFallbackResponse(
-  error: string, 
-  testId: number, 
-  skills: string[] = []
-): any {
-  MonitoringService.warn(`Generando respuesta de fallback para diagnóstico: ${error}`);
-  
-  // Registrar el fallo para determinar si entramos en modo degradado
-  const failureCount = FallbackService.recordFailure(FallbackOperation.GENERATE_DIAGNOSTIC);
-  if (failureCount >= 3) {
-    MonitoringService.warn(`Entrando en modo degradado para generación de diagnósticos después de ${failureCount} fallos`);
+export const generateFallbackDiagnostic = (
+  testId: number,
+  skills: string[],
+  exercisesPerSkill: number
+): any => {
+  try {
+    // Primero intentamos usar el servicio offline que puede tener ejercicios precargados de calidad
+    MonitoringService.info("Generando diagnóstico de respaldo desde OfflineDiagnosticService");
+    return OfflineDiagnosticService.generateOfflineDiagnostic(testId, skills, exercisesPerSkill);
+  } catch (error) {
+    // Si el servicio offline falla, usamos el generador de respaldo más simple
+    MonitoringService.error("Error en servicio offline, usando generador de respaldo básico: " + error.message);
+    return createDiagnosticFallback(testId);
   }
-  
-  // Generar un diagnóstico offline si está disponible
-  if (OfflineDiagnosticService.hasEnoughExercises(testId, skills[0], 1)) {
-    const offlineDiagnostic = OfflineDiagnosticService.generateOfflineDiagnostic(testId, skills, 2);
-    return {
-      error: `Error al generar diagnóstico: ${error}`,
-      result: offlineDiagnostic
-    };
-  }
-  
-  // Usar el servicio de fallback genérico en caso contrario
-  const fallbackDiagnostic = FallbackService.generateFallback(
-    FallbackOperation.GENERATE_DIAGNOSTIC,
-    { testId, skills }
-  );
-  
-  return { 
-    error: `Error inesperado: ${error}`,
-    result: fallbackDiagnostic
-  };
-}
-
-/**
- * Gestiona el almacenamiento en caché de diagnósticos
- */
-export async function cacheDiagnosticResult(
-  cacheKey: string, 
-  result: any
-): Promise<void> {
-  if (result && result.exercises && result.exercises.length > 0) {
-    await CacheService.set(cacheKey, result, DEFAULT_CACHE_TTL, true);
-    MonitoringService.info(`Diagnóstico guardado en caché con clave: ${cacheKey}`);
-    
-    // Resetear contador de fallos si la operación fue exitosa
-    FallbackService.resetFailureCounter(FallbackOperation.GENERATE_DIAGNOSTIC);
-  }
-}
+};
