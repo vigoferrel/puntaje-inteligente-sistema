@@ -1,3 +1,4 @@
+
 import { corsHeaders } from "../cors.ts";
 import { callOpenRouter, callVisionModel } from "../services/openrouter-service.ts";
 import { 
@@ -22,7 +23,8 @@ export async function generateExercise(payload: any) {
 
     const systemPrompt = `Eres un asistente educativo especializado en crear ejercicios para la preparación de la PAES (Prueba de Acceso a la Educación Superior de Chile).
     Tu tarea es crear ejercicios de alta calidad adaptados a las especificaciones solicitadas.
-    Debes proporcionar ejercicios con contexto, pregunta, opciones, respuesta correcta y explicación.`;
+    Tu ÚNICA salida debe ser un objeto JSON válido, sin texto adicional ni explicaciones.
+    Respeta estrictamente el esquema JSON proporcionado, sin agregar comentarios ni marcadores.`;
 
     const userPrompt = `Crea un ejercicio de práctica para la prueba ${prueba || 'Comprensión Lectora'} 
     que evalúe la habilidad ${skill || 'Interpretar y Relacionar'} 
@@ -35,7 +37,7 @@ export async function generateExercise(payload: any) {
     4. La respuesta correcta
     5. Una explicación de por qué esa es la respuesta correcta
     
-    Responde SOLO en formato JSON con las siguientes propiedades:
+    Responde con EXACTAMENTE este formato JSON sin ningún otro texto adicional:
     { 
       "id": "id-único-generado", 
       "context": "texto o contexto", 
@@ -46,9 +48,13 @@ export async function generateExercise(payload: any) {
       "skill": "${skill || 'INTERPRET_RELATE'}", 
       "prueba": "${prueba || 'COMPREHENSION_LECTORA'}", 
       "difficulty": "${difficulty || 'INTERMEDIATE'}" 
-    }`;
+    }
 
-    console.log('Generating exercise with prompt:', userPrompt.substring(0, 100) + '...');
+    IMPORTANTE: Asegúrate de que todas las comillas internas estén correctamente escapadas.
+    NO incluyas backticks, comentarios, ni marcadores alrededor del JSON.
+    NO incluyas ninguna información adicional ni explicaciones antes o después del JSON.`;
+
+    console.log('Generating exercise with improved JSON prompt');
     const result = await callOpenRouter(systemPrompt, userPrompt);
 
     if (result.error) {
@@ -64,7 +70,7 @@ export async function generateExercise(payload: any) {
 }
 
 /**
- * Handler for the 'generate_exercises_batch' action
+ * Handler for the 'generate_exercises_batch' action with improved JSON generation
  */
 export async function generateExercisesBatch(payload: any) {
   try {
@@ -78,7 +84,9 @@ export async function generateExercisesBatch(payload: any) {
     
     const systemPrompt = `Eres un asistente educativo especializado en crear lotes de ejercicios para la preparación de la PAES.
     Tu tarea es crear ${batchSize} ejercicios de alta calidad adaptados a las especificaciones solicitadas.
-    Cada ejercicio debe tener contexto, pregunta, opciones, respuesta correcta y explicación.`;
+    Cada ejercicio debe tener contexto, pregunta, opciones, respuesta correcta y explicación.
+    Tu ÚNICA respuesta debe ser un array JSON válido y bien formateado, sin texto adicional.
+    No utilices comillas simples dentro de las cadenas, utiliza comillas dobles escapadas.`;
 
     const userPrompt = `Crea ${batchSize} ejercicios diferentes de práctica para la prueba con ID ${testId || 1} 
     que evalúen la habilidad ${skill} con nivel de dificultad ${difficulty || 'MIXED'}.
@@ -90,7 +98,7 @@ export async function generateExercisesBatch(payload: any) {
     4. La respuesta correcta
     5. Una explicación de por qué esa es la respuesta correcta
     
-    Responde SOLO con un array en formato JSON donde cada elemento tiene las siguientes propiedades:
+    Responde ÚNICAMENTE con un array JSON con este formato exacto:
     [
       { 
         "id": "id-único-generado-1", 
@@ -103,9 +111,15 @@ export async function generateExercisesBatch(payload: any) {
         "difficulty": "BASIC|INTERMEDIATE|ADVANCED"
       },
       ... resto de ejercicios
-    ]`;
+    ]
+    
+    IMPORTANTE:
+    - No incluyas backticks (\`\`\`) al principio o final del JSON
+    - No escribas "json" ni ningún otro texto antes o después del array
+    - No incluyas comentarios ni explicaciones adicionales
+    - Asegúrate de escapar correctamente cualquier comilla dentro de las cadenas`;
 
-    console.log('Generating exercise batch with prompt:', userPrompt.substring(0, 100) + '...');
+    console.log('Generating exercise batch with improved JSON format prompt');
     const result = await callOpenRouter(systemPrompt, userPrompt);
 
     if (result.error) {
@@ -140,7 +154,7 @@ export async function generateExercisesBatch(payload: any) {
 }
 
 /**
- * Handler for the 'generate_diagnostic' action with improved error handling
+ * Handler for the 'generate_diagnostic' action with improved JSON prompt and error handling
  */
 export async function generateDiagnostic(payload: any) {
   try {
@@ -160,71 +174,72 @@ export async function generateDiagnostic(payload: any) {
       );
     }
     
-    // Create a more structured system prompt
+    // Create a more structured system prompt specifically designed to ensure valid JSON responses
     const systemPrompt = `Eres un asistente educativo especializado en crear diagnósticos para la preparación de la PAES.
-    Tu tarea es crear un diagnóstico completo con la siguiente estructura JSON:
-    {
-      "title": "título descriptivo del diagnóstico",
-      "description": "descripción del propósito y alcance del diagnóstico",
-      "exercises": [
-        { 
-          "id": "id-único-1", 
-          "question": "pregunta", 
-          "options": ["opción A", "opción B", "opción C", "opción D"], 
-          "correctAnswer": "opción correcta", 
-          "explanation": "explicación",
-          "skill": "habilidad correspondiente",
-          "difficulty": "BASIC|INTERMEDIATE|ADVANCED"
-        },
-        ...más ejercicios
-      ]
-    }
-    
-    IMPORTANTE: Responde SOLAMENTE con el JSON válido, sin explicaciones ni texto adicional.`;
+    Tu única tarea es generar un objeto JSON válido con la estructura exacta solicitada.
+    No debes incluir explicaciones, comentarios ni texto adicional en tu respuesta.
+    No uses backticks, marcadores de código ni formateadores.
+    Asegúrate de que todas las comillas estén correctamente escapadas.
+    Tu respuesta debe poder ser procesada directamente por JSON.parse() sin modificaciones.`;
 
-    // Create a detailed user prompt
+    // Create a detailed user prompt with clear JSON structure requirements
     const userPrompt = `Crea un diagnóstico completo para la prueba con ID ${testId}
     que evalúe las siguientes habilidades: ${skillsArray.join(', ')}.
     
-    El diagnóstico debe incluir:
-    1. Un título descriptivo
-    2. Una descripción clara del propósito del diagnóstico
-    3. ${numExercisesPerSkill} ejercicios para cada una de las habilidades especificadas (total: ${numExercisesPerSkill * skillsArray.length} ejercicios)
+    Genera exactamente este objeto JSON, sin ningún texto adicional:
+    {
+      "title": "título descriptivo del diagnóstico",
+      "description": "descripción clara del propósito del diagnóstico",
+      "exercises": [
+        {
+          "id": "id-único-1",
+          "question": "pregunta concreta",
+          "options": ["opción A", "opción B", "opción C", "opción D"],
+          "correctAnswer": "texto exacto de la opción correcta",
+          "explanation": "explicación de la respuesta correcta",
+          "skill": "una de las habilidades solicitadas",
+          "difficulty": "BASIC"
+        },
+        ... más ejercicios (${numExercisesPerSkill} por cada habilidad)
+      ]
+    }
     
-    Cada ejercicio debe tener:
-    1. Un ID único generado aleatoriamente (puedes usar un formato como "id-123456")
-    2. Una pregunta clara que evalúe la habilidad correspondiente
-    3. Cuatro opciones de respuesta (que comiencen con "Opción A:", "Opción B:", etc.)
-    4. La respuesta correcta (debe coincidir exactamente con una de las opciones)
-    5. Una explicación de por qué esa es la respuesta correcta
-    6. La habilidad que evalúa (una de: ${skillsArray.join(', ')})
-    7. La dificultad: BASIC, INTERMEDIATE o ADVANCED
-    
-    Responde SOLAMENTE con el JSON, sin comentarios ni texto adicional.`;
+    REGLAS CRÍTICAS:
+    1. Genera EXACTAMENTE ${numExercisesPerSkill} ejercicios para CADA UNA de estas habilidades: ${skillsArray.join(', ')}
+    2. Usa SOLO las dificultades: "BASIC", "INTERMEDIATE", o "ADVANCED"
+    3. NO incluyas backticks, la palabra "json", ni ningún otro marcador
+    4. NO incluyas comentarios ni texto explicativo dentro o fuera del JSON
+    5. Asegúrate de que el valor de correctAnswer coincida EXACTAMENTE con una de las opciones
+    6. Escapa correctamente todas las comillas internas usando \\\"
+    7. La estructura debe ser exactamente la solicitada`;
 
-    console.log('Generating diagnostic with prompt:', userPrompt.substring(0, 100) + '...');
+    console.log('Generating diagnostic with improved JSON prompt');
     
     // First attempt with retry mechanism
     let result;
     let retryCount = 0;
-    const maxRetries = 2;
+    const maxRetries = 3;
     
+    // Implementación de sistema de reintentos más robusto
     while (retryCount <= maxRetries) {
+      console.log(`Intento ${retryCount + 1}/${maxRetries + 1} para generar diagnóstico`);
+      
       result = await callOpenRouter(systemPrompt, userPrompt);
-      console.log(`Attempt ${retryCount + 1}: OpenRouter response received`);
       
       if (!result.error) {
         try {
           // Try to parse and validate the response
           let diagnostic = result.result;
           
-          // If string response, try to parse it
+          // If string response, try to parse it with enhanced error handling
           if (typeof diagnostic === 'string') {
             try {
               diagnostic = JSON.parse(diagnostic);
+              console.log('Successfully parsed diagnostic JSON string');
             } catch (e) {
               console.error('Error parsing diagnostic JSON string:', e);
-              // Try extracting JSON from the content
+              // Try extracting JSON from the content with improved extractor
+              console.log('Attempting to extract JSON from response content');
               diagnostic = extractJsonFromContent(diagnostic);
             }
           }
@@ -246,23 +261,25 @@ export async function generateDiagnostic(payload: any) {
           console.error('Error processing diagnostic result:', parseError);
         }
       } else {
-        console.error('Error from OpenRouter:', result.error);
+        console.error(`Error from OpenRouter (attempt ${retryCount + 1}):`, result.error);
       }
       
       retryCount++;
       
-      // Wait before retrying
+      // Wait before retrying with exponential backoff
       if (retryCount <= maxRetries) {
-        console.log(`Waiting before retry ${retryCount}...`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const backoffTime = Math.pow(2, retryCount) * 500; // 1s, 2s, 4s
+        console.log(`Waiting ${backoffTime}ms before retry ${retryCount}...`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
     
-    // All attempts failed, return fallback diagnostic
+    // All attempts failed, return enhanced fallback diagnostic
     console.error('All attempts to generate diagnostic failed, returning fallback');
     const fallbackDiagnostic = createDiagnosticFallback(
       testId,
-      `Diagnóstico de prueba para ${skillsArray.join(', ')}`
+      `Diagnóstico para ${skillsArray.join(', ')}`,
+      `Este diagnóstico evalúa las habilidades: ${skillsArray.join(', ')} para la prueba ${testId}.`
     );
     
     return createSuccessResponse(fallbackDiagnostic);
@@ -288,8 +305,8 @@ export async function analyzePerformance(payload: any) {
     }
 
     const systemPrompt = `Eres un asistente educativo especializado en analizar el rendimiento de los estudiantes en pruebas de comprensión lectora para la PAES.
-    Tu tarea es identificar las fortalezas y áreas de mejora del estudiante basándote en sus respuestas a una serie de preguntas.
-    Debes proporcionar recomendaciones específicas y pasos a seguir para mejorar su rendimiento.`;
+    Tu única tarea es generar un objeto JSON válido con la estructura exacta solicitada.
+    No debes incluir explicaciones, comentarios ni texto adicional en tu respuesta.`;
 
     const userPrompt = `Analiza el rendimiento del estudiante basándote en las siguientes respuestas:
     ${JSON.stringify(answers)}
@@ -300,15 +317,17 @@ export async function analyzePerformance(payload: any) {
     3. Recomendaciones específicas para mejorar su rendimiento
     4. Pasos a seguir para implementar esas recomendaciones
     
-    Responde SOLO en formato JSON con las siguientes propiedades:
+    Responde SOLO con este formato JSON exacto:
     { 
       "strengths": ["fortaleza 1", "fortaleza 2", "fortaleza 3"], 
       "areasForImprovement": ["área de mejora 1", "área de mejora 2", "área de mejora 3"], 
       "recommendations": ["recomendación 1", "recomendación 2", "recomendación 3"], 
       "nextSteps": ["paso 1", "paso 2", "paso 3"] 
-    }`;
+    }
+    
+    No incluyas backticks, comentarios, ni texto explicativo adicional.`;
 
-    console.log('Analyzing performance based on answers:', answers.length, 'answers');
+    console.log('Analyzing performance with improved JSON prompt format');
     const result = await callOpenRouter(systemPrompt, userPrompt);
 
     if (result.error) {
@@ -324,7 +343,7 @@ export async function analyzePerformance(payload: any) {
 }
 
 /**
- * Handler for the 'provide_feedback' action
+ * Handler for the 'provide_feedback' action with improved JSON format
  */
 export async function provideFeedback(payload: any) {
   try {
@@ -336,14 +355,15 @@ export async function provideFeedback(payload: any) {
 
     const systemPrompt = `You are LectoGuía, an educational AI assistant specializing in helping students prepare for the Chilean PAES exam, particularly in reading comprehension.
     Your goal is to provide clear, accurate, and helpful responses to student queries related to PAES preparation.
-    You should be supportive, patient, and encouraging while maintaining high educational standards.
-    Your guidance should align with the official PAES assessment criteria.
-    When you don't know something, admit it rather than making up information.`;
+    Your responses should be well-formatted, concise, and directly address the student's questions.`;
 
     const userPrompt = `Student message: ${userMessage}
-    Context: ${context || 'PAES preparation, reading comprehension'}`;
+    Context: ${context || 'PAES preparation, reading comprehension'}
+    
+    Provide a helpful, encouraging response that addresses their question specifically.
+    Keep your answer concise and focused on their needs.`;
 
-    console.log('Providing feedback based on user message:', userMessage.substring(0, 100) + '...');
+    console.log('Providing feedback with improved prompt format');
     const result = await callOpenRouter(systemPrompt, userPrompt);
 
     if (result.error) {
@@ -361,7 +381,7 @@ export async function provideFeedback(payload: any) {
 }
 
 /**
- * Handler for the 'process_image' action
+ * Handler for the 'process_image' action with improved prompt
  */
 export async function processImage(payload: any) {
   try {
@@ -372,16 +392,12 @@ export async function processImage(payload: any) {
     }
 
     const systemPrompt = `Eres un asistente educativo especializado en comprensión lectora y análisis de textos para la preparación de la PAES.
-    Tu tarea es analizar imágenes, especialmente aquellas que contienen texto, extraer su contenido y proporcionar un análisis claro y conciso.
-    Cuando se te presente una imagen, debes:
-    1. Extraer todo el texto visible de manera precisa
-    2. Analizar y resumir el contenido principal
-    3. Proporcionar información relevante para la preparación de la PAES
-    Responde de manera clara, instructiva y orientada al estudiante.`;
+    Tu tarea es analizar imágenes, extraer texto visible y proporcionar una respuesta clara y estructurada.
+    Prioriza la extracción precisa del texto y organiza tu respuesta de manera concisa y útil para el estudiante.`;
 
-    const userPrompt = prompt || "Analiza esta imagen y extrae todo el texto que puedas encontrar";
+    const userPrompt = prompt || "Analiza esta imagen y extrae todo el texto que puedas encontrar. Organiza el contenido de manera estructurada y fácil de comprender.";
 
-    console.log('Processing image with prompt:', prompt);
+    console.log('Processing image with improved vision model prompt');
     const result = await callVisionModel(systemPrompt, userPrompt, image);
 
     if (result.error) {
