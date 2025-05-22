@@ -5,27 +5,44 @@ import { ExerciseAttempt } from '@/types/lectoguia-types';
 import { toast } from '@/components/ui/use-toast';
 import { saveExerciseAttemptToDb } from '@/services/lectoguia-service';
 
+type UpdateSkillLevelFn = (skill: string, isCorrect: boolean) => Promise<boolean>;
+
+interface SaveExerciseResult {
+  success: boolean;
+  attempt: ExerciseAttempt | null;
+  error?: string;
+}
+
 export function useExerciseHistory(
   initialHistory: ExerciseAttempt[],
   userId: string | null,
-  updateSkillLevel: (skill: string, isCorrect: boolean) => Promise<void>
+  updateSkillLevel: UpdateSkillLevelFn
 ) {
   const [exerciseHistory, setExerciseHistory] = useState<ExerciseAttempt[]>(initialHistory);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const saveExerciseAttempt = async (
     exercise: Exercise, 
     selectedOption: number, 
     isCorrect: boolean,
     skill: string = 'INTERPRET_RELATE'
-  ) => {
+  ): Promise<SaveExerciseResult> => {
+    if (!exercise) {
+      setError("No exercise provided");
+      return { success: false, attempt: null, error: "No exercise provided" };
+    }
+    
     if (!userId) {
-      // Si no ha iniciado sesión, solo registrar y no guardar
-      console.log('Usuario no ha iniciado sesión, intento de ejercicio no guardado');
-      return;
+      console.log('User not logged in, exercise attempt not saved');
+      return { success: false, attempt: null, error: "User not logged in" };
     }
     
     try {
-      // Guardar en Supabase y obtener el nuevo intento
+      setSaving(true);
+      setError(null);
+      
+      // Save to Supabase and get new attempt
       const newAttempt = await saveExerciseAttemptToDb(
         userId,
         exercise,
@@ -34,27 +51,39 @@ export function useExerciseHistory(
         skill
       );
       
-      // Actualizar el estado local
+      if (!newAttempt) {
+        throw new Error("Failed to save exercise attempt");
+      }
+      
+      // Update local state
       setExerciseHistory(prev => [newAttempt, ...prev]);
       
-      // Actualizar nivel de habilidad basado en resultados
-      await updateSkillLevel(skill, isCorrect);
+      // Update skill level based on results
+      await updateSkillLevel(skill, isCorrect).catch(err => {
+        console.error("Failed to update skill level:", err);
+      });
       
-      return newAttempt;
+      return { success: true, attempt: newAttempt };
     } catch (error) {
-      console.error('Error al guardar intento de ejercicio:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error saving exercise attempt';
+      console.error('Error saving exercise attempt:', error);
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "No se pudo guardar los resultados del ejercicio",
+        description: "Failed to save exercise results. Please try again.",
         variant: "destructive"
       });
-      return null;
+      return { success: false, attempt: null, error: errorMessage };
+    } finally {
+      setSaving(false);
     }
   };
 
   return {
     exerciseHistory,
     saveExerciseAttempt,
-    setExerciseHistory
+    setExerciseHistory,
+    saving,
+    error
   };
 }

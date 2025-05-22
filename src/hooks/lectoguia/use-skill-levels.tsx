@@ -9,20 +9,31 @@ export function useSkillLevels(
   userId: string | null
 ) {
   const [skillLevels, setSkillLevels] = useState<Record<string, number>>(initialSkillLevels);
+  const [updating, setUpdating] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const updateSkillLevel = async (skillCode: string, isCorrect: boolean) => {
-    if (!userId) return;
+  const updateSkillLevel = async (skillCode: string, isCorrect: boolean): Promise<boolean> => {
+    if (!userId) {
+      setError("No user ID provided. User must be logged in to update skill levels.");
+      return false;
+    }
     
     const skillId = getSkillId(skillCode);
-    if (!skillId) return;
+    if (!skillId) {
+      setError(`Invalid skill code: ${skillCode}`);
+      return false;
+    }
     
     try {
-      // Obtener nivel actual de habilidad
+      setUpdating(true);
+      setError(null);
+      
+      // Obtain current level of skill
       const currentLevel = skillLevels[skillCode] || 0;
       
-      // Algoritmo simple para ajustar el nivel de habilidad:
-      // Respuestas correctas aumentan el nivel en 0.05 hasta 1.0
-      // Respuestas incorrectas disminuyen el nivel en 0.03, pero no bajan de 0
+      // Simple algorithm to adjust skill level:
+      // Correct answers increase the level by 0.05 up to 1.0
+      // Incorrect answers decrease the level by 0.03, but not below 0
       let newLevel = currentLevel;
       
       if (isCorrect) {
@@ -31,23 +42,36 @@ export function useSkillLevels(
         newLevel = Math.max(0, currentLevel - 0.03);
       }
       
-      // Actualizar en la base de datos
+      // Update in database
       await updateSkillLevelInDb(userId, skillId, newLevel);
       
-      // Actualizar el estado local
+      // Update local state
       setSkillLevels(prev => ({
         ...prev,
         [skillCode]: newLevel
       }));
       
+      return true;
     } catch (error) {
-      console.error('Error al actualizar nivel de habilidad:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error updating skill level';
+      console.error('Error updating skill level:', error);
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: "Failed to update skill level. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setUpdating(false);
     }
   };
 
   return {
     skillLevels,
     updateSkillLevel,
-    setSkillLevels
+    setSkillLevels,
+    updating,
+    error
   };
 }

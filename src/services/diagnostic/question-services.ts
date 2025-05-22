@@ -1,85 +1,43 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { DiagnosticQuestion } from "@/types/diagnostic";
-import { mapTestIdToEnum } from "@/utils/supabase-mappers";
-import { TPAESHabilidad } from "@/types/system-types";
+import { supabase } from '@/integrations/supabase/client';
+import { Question, Option } from '@/types/diagnostic';
 
-/**
- * Función para obtener preguntas de diagnóstico por ID de prueba.
- * Intenta obtener las preguntas desde Supabase, si no hay datos, genera preguntas de muestra.
- */
-export const fetchDiagnosticQuestions = async (
-  diagnosticId: string,
-  testId: number
-): Promise<DiagnosticQuestion[]> => {
+export async function fetchQuestionById(questionId: string): Promise<Question | null> {
   try {
-    // Intentar obtener datos reales desde la base de datos usando RPC
-    const { data, error } = await supabase.rpc<any>(
-      'get_diagnostic_questions', 
-      { 
-        p_diagnostic_id: diagnosticId 
-      }
-    );
+    const { data, error } = await supabase
+      .from('diagnostic_questions')
+      .select('*')
+      .eq('id', questionId)
+      .single();
 
-    if (error) {
-      console.error('Error al obtener preguntas de diagnóstico:', error);
-      throw error;
-    }
-
-    // Si no hay datos o la función RPC no existe, usar datos de muestra
-    if (!data || (Array.isArray(data) && data.length === 0)) {
-      console.log('No se encontraron preguntas, generando datos de muestra');
-      return generateMockQuestions(diagnosticId, testId);
-    }
-
-    // Mapear los datos al formato esperado
-    if (Array.isArray(data)) {
-      return data.map((q: any) => ({
-        id: q.id,
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.correct_answer,
-        skill: q.skill as TPAESHabilidad,
-        prueba: mapTestIdToEnum(testId),
-        explanation: q.explanation || undefined
-      }));
-    }
-
-    // Si llegamos aquí, el formato de datos no es el esperado
-    console.warn('Formato de datos inesperado, usando datos de muestra');
-    return generateMockQuestions(diagnosticId, testId);
-  } catch (error) {
-    console.error('Error en fetchDiagnosticQuestions:', error);
-    // Fallback a datos de muestra en caso de error
-    return generateMockQuestions(diagnosticId, testId);
-  }
-};
-
-// Función auxiliar para generar preguntas de muestra
-function generateMockQuestions(diagnosticId: string, testId: number): DiagnosticQuestion[] {
-  const testType = mapTestIdToEnum(testId);
-  const skills: TPAESHabilidad[] = [
-    "TRACK_LOCATE", "INTERPRET_RELATE", "EVALUATE_REFLECT"
-  ];
-
-  // Crear 10 preguntas de muestra por diagnóstico
-  return Array.from({ length: 10 }).map((_, index) => {
-    const questionNumber = index + 1;
-    const mockSkill = skills[index % skills.length];
+    if (error) throw error;
+    if (!data) return null;
     
-    return {
-      id: `q-${diagnosticId}-${questionNumber}`,
-      question: `Pregunta ${questionNumber} del test de ${testType}`,
-      options: [
-        `Opción A para pregunta ${questionNumber}`,
-        `Opción B para pregunta ${questionNumber}`,
-        `Opción C para pregunta ${questionNumber}`,
-        `Opción D para pregunta ${questionNumber}`
-      ],
-      correctAnswer: `Opción ${String.fromCharCode(65 + (index % 4))} para pregunta ${questionNumber}`,
-      skill: mockSkill,
-      prueba: testType,
-      explanation: `Explicación de la pregunta ${questionNumber}`
-    };
-  });
+    return data as Question;
+  } catch (error) {
+    console.error('Error fetching question by ID:', error);
+    return null;
+  }
+}
+
+export async function fetchQuestionsByIds(
+  questionIds: string[]
+): Promise<Question[]> {
+  try {
+    if (!questionIds || questionIds.length === 0) {
+      return [];
+    }
+    
+    const { data, error } = await supabase
+      .from('diagnostic_questions')
+      .select('*')
+      .in('id', questionIds);
+
+    if (error) throw error;
+    
+    return (data || []).map((question) => question as Question);
+  } catch (error) {
+    console.error('Error fetching questions by IDs:', error);
+    return [];
+  }
 }

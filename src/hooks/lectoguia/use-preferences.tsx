@@ -8,33 +8,54 @@ export function usePreferences(
   userId: string | null
 ) {
   const [preferences, setPreferences] = useState<Record<string, string>>(initialPreferences);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const setPreference = async (key: string, value: string) => {
-    if (!userId) return;
+  const setPreference = async (key: string, value: string): Promise<boolean> => {
+    if (!userId) {
+      setError("No user ID provided. User must be logged in to save preferences.");
+      return false;
+    }
+    
+    if (!key || key.trim() === '') {
+      setError("Invalid preference key");
+      return false;
+    }
     
     try {
-      // Actualizar en la base de datos
+      setSaving(true);
+      setError(null);
+      
+      // Save to database
       await saveUserPreference(userId, key, value);
       
-      // Actualizar el estado local
+      // Update local state
       setPreferences(prev => ({
         ...prev,
         [key]: value
       }));
       
+      return true;
     } catch (error) {
-      console.error('Error al guardar preferencia:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error saving preference';
+      console.error('Error saving preference:', error);
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "No se pudo guardar la preferencia",
+        description: "Failed to save preference. Please try again.",
         variant: "destructive"
       });
+      return false;
+    } finally {
+      setSaving(false);
     }
   };
 
   return {
     preferences,
     setPreference,
-    setPreferences
+    setPreferences,
+    saving,
+    error
   };
 }

@@ -5,6 +5,10 @@ import { Exercise } from '@/types/ai-types';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function fetchUserExerciseHistory(userId: string): Promise<ExerciseAttempt[]> {
+  if (!userId) {
+    throw new Error("User ID is required to fetch exercise history");
+  }
+
   const { data, error } = await supabase
     .from('lectoguia_exercise_attempts')
     .select('*')
@@ -25,6 +29,10 @@ export async function fetchUserExerciseHistory(userId: string): Promise<Exercise
 }
 
 export async function fetchUserPreferences(userId: string): Promise<Record<string, string>> {
+  if (!userId) {
+    throw new Error("User ID is required to fetch preferences");
+  }
+
   const { data, error } = await supabase
     .from('lectoguia_user_preferences')
     .select('key, value')
@@ -43,6 +51,10 @@ export async function fetchUserPreferences(userId: string): Promise<Record<strin
 }
 
 export async function fetchSkillLevels(userId: string): Promise<Record<string, number>> {
+  if (!userId) {
+    throw new Error("User ID is required to fetch skill levels");
+  }
+
   const { data, error } = await supabase
     .from('user_skill_levels')
     .select('skill_id, level')
@@ -74,10 +86,16 @@ export async function saveExerciseAttemptToDb(
   isCorrect: boolean,
   skillType: string
 ): Promise<ExerciseAttempt> {
+  if (!userId) throw new Error("User ID is required to save exercise attempt");
+  if (!exercise) throw new Error("Exercise data is required");
+  if (selectedOption === undefined || selectedOption === null) throw new Error("Selected option is required");
+  if (isCorrect === undefined) throw new Error("isCorrect value is required");
+  if (!skillType) throw new Error("Skill type is required");
+
   const attemptId = uuidv4();
   const exerciseId = exercise.id || uuidv4();
   
-  // Preparar los datos para guardar
+  // Prepare data for saving
   const attemptData = {
     id: attemptId,
     user_id: userId,
@@ -88,7 +106,7 @@ export async function saveExerciseAttemptToDb(
     completed_at: new Date().toISOString()
   };
   
-  // Guardar en Supabase
+  // Save to Supabase
   const { error } = await supabase
     .from('lectoguia_exercise_attempts')
     .insert(attemptData);
@@ -113,6 +131,15 @@ export async function updateSkillLevelInDb(
   skillId: number,
   newLevel: number
 ): Promise<void> {
+  if (!userId) throw new Error("User ID is required to update skill level");
+  if (!skillId) throw new Error("Skill ID is required");
+  if (newLevel === undefined || newLevel === null) throw new Error("New skill level is required");
+  
+  // Validate level range
+  if (newLevel < 0 || newLevel > 1) {
+    throw new Error("Skill level must be between 0 and 1");
+  }
+
   const { error } = await supabase
     .from('user_skill_levels')
     .upsert({
@@ -129,6 +156,10 @@ export async function saveUserPreference(
   key: string,
   value: string
 ): Promise<void> {
+  if (!userId) throw new Error("User ID is required to save preference");
+  if (!key) throw new Error("Preference key is required");
+  if (value === undefined) throw new Error("Preference value is required");
+  
   const preferenceData = {
     user_id: userId,
     key,
