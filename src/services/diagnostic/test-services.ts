@@ -33,14 +33,14 @@ export const fetchDiagnosticTests = async (userId: string) => {
     // Fetch questions for each diagnostic test
     const testsWithQuestions: DiagnosticTest[] = await Promise.all(
       testData.map(async (test) => {
-        const mockQuestions = await fetchDiagnosticQuestions(test.id, test.test_id);
+        const questions = await fetchDiagnosticQuestions(test.id, test.test_id);
         
         return {
           id: test.id,
           title: test.title,
           description: test.description || '',
           testId: test.test_id,
-          questions: mockQuestions,
+          questions: questions,
           isCompleted: completedTestIds.has(test.id)
         };
       })
