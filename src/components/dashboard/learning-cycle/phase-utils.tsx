@@ -1,7 +1,7 @@
 
 import { TLearningCyclePhase } from "@/types/system-types";
 import { BookOpen, BrainCircuit, CheckCheck, FileSpreadsheet, BarChart2, 
-  ClipboardCheck, Hammer, Timer } from "lucide-react";
+  ClipboardCheck, Hammer, Timer, BookIcon, LightbulbIcon, PenToolIcon, GlobeIcon } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 /**
@@ -16,7 +16,12 @@ export const getPhaseIcon = (phase: TLearningCyclePhase): LucideIcon => {
     PERIODIC_TESTS: CheckCheck,
     FEEDBACK_ANALYSIS: BarChart2,
     REINFORCEMENT: Hammer,
-    FINAL_SIMULATIONS: Timer
+    FINAL_SIMULATIONS: Timer,
+    // Older phase types
+    diagnostic: ClipboardCheck,
+    exploration: LightbulbIcon,
+    practice: PenToolIcon,
+    application: GlobeIcon
   };
   
   return icons[phase] || BookOpen;
@@ -34,7 +39,12 @@ export const getPhaseTimeEstimate = (phase: TLearningCyclePhase): number => {
     PERIODIC_TESTS: 7,
     FEEDBACK_ANALYSIS: 2,
     REINFORCEMENT: 14,
-    FINAL_SIMULATIONS: 7
+    FINAL_SIMULATIONS: 7,
+    // Older phase types
+    diagnostic: 1,
+    exploration: 3,
+    practice: 5,
+    application: 5
   };
   
   return estimates[phase] || 7;
@@ -47,19 +57,28 @@ export const isPhaseAvailable = (
   phase: TLearningCyclePhase, 
   currentPhase: TLearningCyclePhase
 ): boolean => {
-  const phases = [
-    "DIAGNOSIS",
-    "PERSONALIZED_PLAN",
-    "SKILL_TRAINING",
-    "CONTENT_STUDY",
-    "PERIODIC_TESTS",
-    "FEEDBACK_ANALYSIS",
-    "REINFORCEMENT",
-    "FINAL_SIMULATIONS"
-  ] as const;
+  // Combine old and new phases for robust comparison
+  const allPhasesInOrder = [
+    "diagnostic", "exploration", "practice", "application", // Old phases
+    "DIAGNOSIS", "PERSONALIZED_PLAN", "SKILL_TRAINING", "CONTENT_STUDY", 
+    "PERIODIC_TESTS", "FEEDBACK_ANALYSIS", "REINFORCEMENT", "FINAL_SIMULATIONS"
+  ];
   
-  const currentIndex = phases.indexOf(currentPhase);
-  const phaseIndex = phases.indexOf(phase);
+  // Map old phases to their new equivalents
+  const phaseMapping: Record<string, string> = {
+    "diagnostic": "DIAGNOSIS",
+    "exploration": "SKILL_TRAINING",
+    "practice": "CONTENT_STUDY",
+    "application": "FINAL_SIMULATIONS"
+  };
+  
+  // Get normalized versions of the phases for comparison
+  const normalizedPhase = phaseMapping[phase] || phase;
+  const normalizedCurrentPhase = phaseMapping[currentPhase] || currentPhase;
+  
+  // Get the indices for comparison
+  const phaseIndex = allPhasesInOrder.indexOf(normalizedPhase);
+  const currentIndex = allPhasesInOrder.indexOf(normalizedCurrentPhase);
   
   return phaseIndex <= currentIndex;
 };

@@ -53,19 +53,25 @@ export interface TLearningNode {
   id: string;
   title: string;
   description: string;
-  content: string;
-  phase: TLearningCyclePhase;
+  content?: string | {
+    theory: string;
+    examples: any[];
+    exerciseCount: number;
+  };
+  phase?: TLearningCyclePhase;
   skill: TPAESHabilidad;
   prueba: TPAESPrueba;
-  bloomLevel: string;
-  estimatedTime: number;
+  bloomLevel?: string;
+  estimatedTime?: number;
+  estimatedTimeMinutes?: number;
   difficulty: string;
-  prerequisites: string[];
-  learningObjectives: string[];
-  tags: string[];
-  resources: string[];
-  createdAt: string;
-  updatedAt: string;
+  prerequisites?: string[];
+  dependsOn?: string[];
+  learningObjectives?: string[];
+  tags?: string[];
+  resources?: string[];
+  createdAt?: string;
+  updatedAt?: string;
   position?: number;
 }
 

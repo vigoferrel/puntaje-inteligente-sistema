@@ -47,6 +47,6 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
       theory: '',
       examples: [],
       exerciseCount: 15
-    }
+    } as any
   };
 };

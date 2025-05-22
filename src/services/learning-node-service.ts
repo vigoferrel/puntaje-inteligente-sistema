@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TPAESHabilidad } from "@/types/system-types";
 import { TLearningNode } from "@/types/system-types";
@@ -79,7 +80,7 @@ export const fetchNodesBySkills = async (skills: TPAESHabilidad[]): Promise<TLea
         theory: '',
         examples: [],
         exerciseCount: 15
-      }
+      } as any
     }));
   } catch (error) {
     console.error("Error fetching nodes by skills:", error);
@@ -105,6 +106,6 @@ const mapDbNodeToLearningNode = (data: any): TLearningNode => {
       theory: '',
       examples: [],
       exerciseCount: 15
-    }
+    } as any
   };
 };
