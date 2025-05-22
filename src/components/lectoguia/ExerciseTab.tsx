@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ExerciseView } from "@/components/lectoguia/ExerciseView";
 import { Exercise } from "@/types/ai-types";
 import { BookOpen, PenTool, Calculator, Atom, History } from "lucide-react";
+import { ExerciseView } from "./exercise";
 
 interface ExerciseTabProps {
   exercise: Exercise | null;
@@ -108,4 +107,3 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
     </Card>
   );
 };
-
