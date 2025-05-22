@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { TLearningNode, TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { NodeProgress } from '@/types/node-progress';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatSkillLevel } from '@/utils/lectoguia-utils';
-import { getSkillsByPrueba } from '@/utils/lectoguia-utils';
+import { formatSkillLevel, getSkillsByPrueba } from '@/utils/lectoguia-utils';
 
 export interface SkillNodeConnectionProps {
   skillLevels: Record<TPAESHabilidad, number>;
@@ -28,15 +28,24 @@ export const SkillNodeConnection: React.FC<SkillNodeConnectionProps> = ({
     ? nodes.filter(node => node.prueba === selectedTest)
     : nodes;
   
-  // Agrupar nodos por habilidad
-  const nodesBySkill: Record<TPAESHabilidad, TLearningNode[]> = {};
+  // Inicializar un objeto vacío para agrupar nodos por habilidad
+  const initialNodesBySkill = {} as Record<TPAESHabilidad, TLearningNode[]>;
   
-  filteredNodes.forEach(node => {
-    if (!nodesBySkill[node.skill]) {
-      nodesBySkill[node.skill] = [];
-    }
-    nodesBySkill[node.skill].push(node);
+  // Obtener todas las habilidades del enum TPAESHabilidad
+  Object.values(TPAESHabilidad).forEach(skill => {
+    initialNodesBySkill[skill as TPAESHabilidad] = [];
   });
+  
+  // Agrupar nodos por habilidad
+  const nodesBySkill = filteredNodes.reduce((acc, node) => {
+    if (node.skill) {
+      if (!acc[node.skill]) {
+        acc[node.skill] = [];
+      }
+      acc[node.skill].push(node);
+    }
+    return acc;
+  }, initialNodesBySkill);
   
   // Obtener habilidades relevantes para la prueba seleccionada
   const relevantSkills = selectedTest 

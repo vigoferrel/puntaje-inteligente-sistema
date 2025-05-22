@@ -1,6 +1,6 @@
 
 import { TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName } from '@/types/system-types';
-import { SUBJECT_TO_PRUEBA_MAP } from '@/hooks/lectoguia/use-subjects';
+import { SUBJECT_TO_PRUEBA_MAP } from '@/contexts/LectoGuiaContext';
 
 // Helper para obtener un nombre amigable para cada habilidad
 export function getSkillName(skillCode: string): string {
@@ -87,4 +87,3 @@ export function getSkillsForPrueba(prueba: TPAESPrueba): TPAESHabilidad[] {
   const skillsByPrueba = getSkillsByPrueba();
   return skillsByPrueba[prueba] || [];
 }
-

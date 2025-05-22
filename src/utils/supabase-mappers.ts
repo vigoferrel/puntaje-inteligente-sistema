@@ -2,6 +2,10 @@
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 
 /**
+ * Mapeadores para convertir entre IDs numéricos de la base de datos y enums de TypeScript
+ */
+
+/**
  * Convierte un skill ID numérico de la base de datos en un enum de TPAESHabilidad
  */
 export const mapSkillIdToEnum = (skillId: number): TPAESHabilidad => {

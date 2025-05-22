@@ -3,8 +3,8 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TPAESHabilidad, TPAESPrueba, getPruebaDisplayName } from "@/types/system-types";
-import { formatSkillLevel, getSkillName } from "@/utils/lectoguia-utils";
+import { TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName } from "@/types/system-types";
+import { formatSkillLevel } from "@/utils/lectoguia-utils";
 
 interface ProgressViewProps {
   skillLevels: Record<TPAESHabilidad, number>;
@@ -43,12 +43,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
           
           return (
             <div key={prueba} className="space-y-4">
-              <h3 className="text-xl font-semibold">{getPruebaDisplayName(prueba)}</h3>
+              <h3 className="text-xl font-semibold">{prueba}</h3>
               <div className="space-y-3">
                 {skills.map(skill => (
                   <div key={`${prueba}-${skill}`} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span>{getSkillName(skill)}</span>
+                      <span>{getHabilidadDisplayName(skill)}</span>
                       <span className="font-medium">{formatSkillLevel(skillLevels[skill] || 0)}</span>
                     </div>
                     <Progress 
@@ -76,4 +76,4 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
       </Card>
     </div>
   );
-};
+}

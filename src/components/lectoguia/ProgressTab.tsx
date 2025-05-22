@@ -1,57 +1,26 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ProgressView } from "./ProgressView";
 import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
-import { useLearningNodes } from "@/hooks/use-learning-nodes";
-import { useAuth } from "@/contexts/AuthContext";
-import { TPAESHabilidad, TPAESPrueba, pruebaToTestId, testIdToPrueba } from "@/types/system-types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLectoGuia } from "@/contexts/LectoGuiaContext";
+import { getPruebaDisplayName } from "@/types/system-types";
 
 interface ProgressTabProps {
-  skillLevels: Record<TPAESHabilidad, number>;
-  onStartSimulation: () => void;
   onNodeSelect?: (nodeId: string) => void;
 }
 
-export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: ProgressTabProps) {
-  const { user } = useAuth();
-  const [selectedTestId, setSelectedTestId] = useState<number>(1); // Default: Competencia lectora
-  const [selectedPrueba, setSelectedPrueba] = useState<TPAESPrueba>('COMPETENCIA_LECTORA');
-  
-  const { 
-    nodes, 
-    fetchLearningNodes,
+export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
+  const {
+    skillLevels,
+    handleStartSimulation,
+    nodes,
     nodeProgress,
-    fetchUserNodeProgress
-  } = useLearningNodes();
-  
-  // Cargar datos de nodos y progreso al iniciar
-  useEffect(() => {
-    const loadData = async () => {
-      if (user?.id) {
-        try {
-          await fetchLearningNodes(selectedTestId);
-          await fetchUserNodeProgress(user.id);
-        } catch (error) {
-          console.error("Error cargando datos de nodos:", error);
-          toast({
-            title: "Error",
-            description: "No se pudieron cargar los datos de progreso",
-            variant: "destructive"
-          });
-        }
-      }
-    };
-    
-    loadData();
-  }, [user?.id, selectedTestId, fetchLearningNodes, fetchUserNodeProgress]);
-
-  // Actualizar la prueba seleccionada cuando cambia el ID de prueba
-  useEffect(() => {
-    setSelectedPrueba(testIdToPrueba(selectedTestId));
-  }, [selectedTestId]);
+    selectedTestId,
+    setSelectedTestId,
+    selectedPrueba
+  } = useLectoGuia();
 
   // Manejar cambio de prueba
   const handleTestChange = (value: string) => {
@@ -83,7 +52,7 @@ export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: Pr
         <ProgressView 
           skillLevels={skillLevels}
           selectedPrueba={selectedPrueba} 
-          onStartSimulation={onStartSimulation} 
+          onStartSimulation={handleStartSimulation} 
         />
         
         {/* Visualización avanzada de habilidades y nodos con jerarquía de Bloom */}

@@ -1,78 +1,37 @@
 
 import React from 'react';
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { 
-  BookIcon, 
-  BrainCircuitIcon, 
-  FlaskConicalIcon, 
-  GlobeIcon, 
-  GraduationCapIcon 
-} from "lucide-react";
+  Select,
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue
+} from "@/components/ui/select";
+import { SUBJECT_DISPLAY_NAMES } from '@/contexts/LectoGuiaContext';
 
 interface SubjectSelectorProps {
   activeSubject: string;
   onSelectSubject: (subject: string) => void;
 }
 
-export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
-  activeSubject,
-  onSelectSubject
+export const SubjectSelector: React.FC<SubjectSelectorProps> = ({ 
+  activeSubject, 
+  onSelectSubject 
 }) => {
-  const subjects = [
-    {
-      id: "general",
-      name: "General",
-      icon: <GraduationCapIcon className="h-5 w-5" />
-    },
-    {
-      id: "lectura",
-      name: "Lectura",
-      icon: <BookIcon className="h-5 w-5" />
-    },
-    {
-      id: "matematicas-basica",
-      name: "Matemática 1",
-      description: "7° a 2° medio",
-      icon: <BrainCircuitIcon className="h-5 w-5" />
-    },
-    {
-      id: "matematicas-avanzada",
-      name: "Matemática 2",
-      description: "3° y 4° medio",
-      icon: <BrainCircuitIcon className="h-5 w-5" />
-    },
-    {
-      id: "ciencias",
-      name: "Ciencias",
-      icon: <FlaskConicalIcon className="h-5 w-5" />
-    },
-    {
-      id: "historia",
-      name: "Historia",
-      icon: <GlobeIcon className="h-5 w-5" />
-    }
-  ];
-
   return (
-    <div className="flex flex-wrap gap-2">
-      {subjects.map((subject) => (
-        <button
-          key={subject.id}
-          onClick={() => onSelectSubject(subject.id)}
-          className={cn(
-            "flex flex-col items-center justify-center p-3 rounded-lg border transition-colors min-w-[90px]",
-            activeSubject === subject.id
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-muted bg-background hover:bg-accent/30"
-          )}
-        >
-          <span className="mb-1">{subject.icon}</span>
-          <span className="text-sm font-medium">{subject.name}</span>
-          {subject.description && (
-            <span className="text-xs text-muted-foreground">{subject.description}</span>
-          )}
-        </button>
-      ))}
-    </div>
+    <Select value={activeSubject} onValueChange={onSelectSubject}>
+      <SelectTrigger className="max-w-[200px] bg-background">
+        <SelectValue placeholder="Selecciona una materia" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="general">General</SelectItem>
+        <SelectItem value="lectura">Comprensión Lectora</SelectItem>
+        <SelectItem value="matematicas-basica">Matemática 1 (7° a 2° medio)</SelectItem>
+        <SelectItem value="matematicas-avanzada">Matemática 2 (3° y 4° medio)</SelectItem>
+        <SelectItem value="ciencias">Ciencias</SelectItem>
+        <SelectItem value="historia">Historia</SelectItem>
+      </SelectContent>
+    </Select>
   );
 };
