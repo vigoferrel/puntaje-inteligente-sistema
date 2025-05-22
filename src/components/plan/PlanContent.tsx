@@ -202,7 +202,7 @@ export const PlanContent = ({
                           <BookOpen className="h-4 w-4 text-blue-600 mr-2" />
                           <span className="text-sm">Nodos en progreso</span>
                         </div>
-                        <Badge variant="outline" className="bg-blue-50">
+                        <Badge variant="outline" className="bg-zinc-50">
                           {currentPlanProgress?.inProgressNodes || 0}
                         </Badge>
                       </div>
