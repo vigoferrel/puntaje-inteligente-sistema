@@ -5,9 +5,20 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Pola
 import { TPAESHabilidad, getHabilidadDisplayName } from "@/types/system-types";
 import { motion } from "framer-motion";
 import { AlertCircle } from "lucide-react";
+import { DiagnosticResult } from "@/types/diagnostic";
 
 interface SkillRadarChartProps {
   skillScores: Record<TPAESHabilidad, number>;
+  title?: string;
+  description?: string;
+  className?: string;
+  showLegend?: boolean;
+  emptyMessage?: string;
+}
+
+// Add a new prop type that accepts DiagnosticResult
+export interface DiagnosticResultRadarProps {
+  results: DiagnosticResult;
   title?: string;
   description?: string;
   className?: string;
@@ -79,5 +90,27 @@ export const SkillRadarChart = ({
         </CardContent>
       </Card>
     </motion.div>
+  );
+};
+
+// Add a wrapper component that accepts DiagnosticResult and converts it to the format needed by SkillRadarChart
+export const DiagnosticResultRadar = ({
+  results,
+  title,
+  description,
+  className,
+  showLegend,
+  emptyMessage
+}: DiagnosticResultRadarProps) => {
+  // Extract skill scores from DiagnosticResult
+  return (
+    <SkillRadarChart
+      skillScores={results.results}
+      title={title}
+      description={description}
+      className={className}
+      showLegend={showLegend}
+      emptyMessage={emptyMessage}
+    />
   );
 };

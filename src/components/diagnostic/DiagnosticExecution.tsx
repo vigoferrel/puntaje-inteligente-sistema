@@ -31,7 +31,6 @@ export const DiagnosticExecution = ({
   const currentQuestion = test.questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === test.questions.length - 1;
   const selectedAnswer = answers[currentQuestion.id] || "";
-  const hasAnswer = Boolean(selectedAnswer);
   
   return (
     <div className="space-y-6">
@@ -50,7 +49,7 @@ export const DiagnosticExecution = ({
       <QuestionNavigation
         currentQuestionIndex={currentQuestionIndex}
         totalQuestions={test.questions.length}
-        hasAnswer={hasAnswer}
+        canContinue={Boolean(selectedAnswer)}
         isLastQuestion={isLastQuestion}
         onPreviousQuestion={onPreviousQuestion}
         onNextQuestion={onNextQuestion}

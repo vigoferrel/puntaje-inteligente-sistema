@@ -4,7 +4,7 @@ import { DiagnosticResult } from "@/types/diagnostic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DiagnosticResultsSummary } from "./DiagnosticResultsSummary";
-import { SkillRadarChart } from "./SkillRadarChart";
+import { DiagnosticResultRadar } from "./SkillRadarChart";
 import { DetailedResultView } from "./DetailedResultView";
 import { BarChart3, ArrowRight } from "lucide-react";
 
@@ -53,7 +53,7 @@ export const DiagnosticResults = ({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <SkillRadarChart results={results} />
+            <DiagnosticResultRadar results={results} />
           </CardContent>
         </Card>
       </div>

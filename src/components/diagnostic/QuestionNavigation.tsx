@@ -10,7 +10,7 @@ interface QuestionNavigationProps {
   canContinue: boolean;
   onPreviousQuestion: () => void;
   onNextQuestion: () => void;
-  onFinishTest: () => void; // Add the prop
+  onFinishTest: () => void;
   isLastQuestion: boolean;
 }
 
@@ -20,7 +20,7 @@ export const QuestionNavigation = ({
   canContinue,
   onPreviousQuestion,
   onNextQuestion,
-  onFinishTest, // Add to destructuring
+  onFinishTest,
   isLastQuestion
 }: QuestionNavigationProps) => {
   const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
