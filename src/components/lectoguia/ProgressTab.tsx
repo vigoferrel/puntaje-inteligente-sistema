@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLectoGuia } from "@/contexts/LectoGuiaContext";
 import { getPruebaDisplayName } from "@/types/system-types";
-import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
+import { TPAESPrueba } from "@/types/system-types";
 import { TLearningNode } from "@/types/system-types";
 import { NodeProgress } from "@/types/node-progress";
 

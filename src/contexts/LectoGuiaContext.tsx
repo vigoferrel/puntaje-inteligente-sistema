@@ -150,7 +150,8 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             id: node.id,
             title: node.title,
             description: node.description || '',
-            skill: node.skill?.code || 'INTERPRET_RELATE',
+            // Convertir explícitamente a TPAESHabilidad
+            skill: (node.skill?.code || 'INTERPRET_RELATE') as TPAESHabilidad,
             prueba: testIdToPrueba(node.test_id) || 'COMPETENCIA_LECTORA',
             difficulty: node.difficulty || 'basic',
             position: node.position,
@@ -159,7 +160,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             content: {
               theory: '',
               examples: [],
-              exerciseCount: 0  // Añadiendo el campo que faltaba
+              exerciseCount: 0
             }
           }));
           
@@ -199,10 +200,8 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             
             progress[item.node_id] = {
               nodeId: item.node_id,
-              userId: item.user_id,
               status: validStatus, // Usando el valor tipado
               progress: item.progress || 0,
-              completedAt: item.completed_at,
               timeSpentMinutes: item.time_spent_minutes || 0
             };
           });

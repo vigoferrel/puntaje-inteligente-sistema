@@ -31,9 +31,10 @@ export const SkillNodeConnection: React.FC<SkillNodeConnectionProps> = ({
   // Inicializar un objeto vacío para agrupar nodos por habilidad
   const initialNodesBySkill = {} as Record<TPAESHabilidad, TLearningNode[]>;
   
-  // Obtener todas las habilidades del enum TPAESHabilidad
-  // Usamos Object.keys y type assertion ya que TPAESHabilidad es un tipo, no un valor
+  // Obtener todas las habilidades para las que tenemos niveles de habilidad
   const habilidades = Object.keys(skillLevels) as TPAESHabilidad[];
+  
+  // Inicializar el objeto con arrays vacíos para cada habilidad
   habilidades.forEach(skill => {
     initialNodesBySkill[skill] = [];
   });
@@ -41,10 +42,12 @@ export const SkillNodeConnection: React.FC<SkillNodeConnectionProps> = ({
   // Agrupar nodos por habilidad
   const nodesBySkill = filteredNodes.reduce((acc, node) => {
     if (node.skill) {
-      if (!acc[node.skill as TPAESHabilidad]) {
-        acc[node.skill as TPAESHabilidad] = [];
+      // Asegurar que la habilidad es tratada como TPAESHabilidad
+      const skillKey = node.skill as TPAESHabilidad;
+      if (!acc[skillKey]) {
+        acc[skillKey] = [];
       }
-      acc[node.skill as TPAESHabilidad].push(node);
+      acc[skillKey].push(node);
     }
     return acc;
   }, initialNodesBySkill);
@@ -52,7 +55,7 @@ export const SkillNodeConnection: React.FC<SkillNodeConnectionProps> = ({
   // Obtener habilidades relevantes para la prueba seleccionada
   const relevantSkills = selectedTest 
     ? getSkillsByPrueba()[selectedTest] 
-    : Object.keys(skillLevels) as TPAESHabilidad[];
+    : habilidades;
   
   return (
     <div className={`space-y-8 ${className || ''}`}>
