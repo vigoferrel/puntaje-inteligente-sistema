@@ -3,8 +3,9 @@
 // para mantener la compatibilidad con el código existente
 
 export * from './core';
-// No reexportamos processImageWithOpenRouter para evitar ambigüedad
-export { default as processImageFromImageProcessing } from './image-processing';
+// Exportamos específicamente la función processImageWithOpenRouter desde image-processing
+// con un nombre diferente para evitar ambigüedad con la función del mismo nombre en core.ts
+export { processImageWithOpenRouter as processImageFromImageProcessing } from './image-processing';
 export * from './exercise-generation';
 export * from './diagnostics';
 export * from './performance-analysis';
