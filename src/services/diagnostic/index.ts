@@ -13,6 +13,10 @@ export * from './mappers';
 export * from './default-diagnostics';
 export * from './test-services';
 // Exportamos el servicio para generar diagnósticos por defecto
-export { generateDefaultDiagnostic, ensureDefaultDiagnosticsExist } from './default-services';
+export { 
+  generateDefaultDiagnostic, 
+  ensureDefaultDiagnosticsExist, 
+  createLocalFallbackDiagnostics 
+} from './default-services';
 // Exportamos el módulo refactorizado de generación de diagnósticos
 export * from '../diagnostic-generator';

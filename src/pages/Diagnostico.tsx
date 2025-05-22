@@ -9,7 +9,7 @@ import { PausedTestBanner } from "@/components/diagnostic/PausedTestBanner";
 import { PauseConfirmationDialog } from "@/components/diagnostic/PauseConfirmationDialog";
 import { DiagnosticController } from "@/components/diagnostic/DiagnosticController";
 import { DiagnosticErrorView } from "@/components/diagnostic/DiagnosticErrorView"; 
-import { Button } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { DetailedResultView } from "@/components/diagnostic/DetailedResultView";
 import { RefreshCw } from "lucide-react";
 
