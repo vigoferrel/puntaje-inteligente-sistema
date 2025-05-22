@@ -130,6 +130,13 @@ export const useDataInitialization = () => {
           description: "Los nodos de aprendizaje ya existen con esos identificadores.",
           variant: "destructive"
         });
+      } else if (err.message === 'FOREIGN_KEY_VIOLATION') {
+        setError("Error de referencia en los datos. Verifica que las tablas de habilidades y pruebas estén inicializadas.");
+        toast({
+          title: "Error de referencia",
+          description: "Las tablas paes_skills y paes_tests deben estar inicializadas antes de cargar los nodos.",
+          variant: "destructive"
+        });
       } else {
         setError(`Error: ${err.message || "Ocurrió un error desconocido"}`);
         toast({

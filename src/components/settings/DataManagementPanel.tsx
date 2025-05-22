@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDataInitialization } from '@/hooks/use-data-initialization';
-import { Database, Loader, RefreshCw, LogIn } from 'lucide-react';
+import { Database, Loader, RefreshCw, LogIn, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,6 +48,19 @@ export function DataManagementPanel() {
             </AlertDescription>
           </Alert>
         )}
+        
+        {status.paesSkills === 'empty' || status.paesTests === 'empty' ? (
+          <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-900">
+            <AlertTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" /> 
+              Inicialización requerida
+            </AlertTitle>
+            <AlertDescription>
+              <p>Las tablas de habilidades y pruebas deben ser inicializadas. Al hacer clic en "Inicializar Nodos de Aprendizaje" 
+              se inicializarán todas las tablas necesarias.</p>
+            </AlertDescription>
+          </Alert>
+        ) : null}
         
         {message && !error && (
           <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
