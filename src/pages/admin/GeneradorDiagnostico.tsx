@@ -54,7 +54,7 @@ const GeneradorDiagnostico = () => {
               onSearch={handleSearch}
               onFilterByTest={handleFilterByTest}
               onReset={handleResetFilters}
-              tests={tests.map(t => ({ id: t.id, name: t.title }))}
+              tests={tests.map(t => ({ id: t.id, name: t.name }))}
             />
             
             <DiagnosticoTable 
