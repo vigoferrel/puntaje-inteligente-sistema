@@ -267,6 +267,26 @@ export const useLearningPlans = () => {
   };
 
   /**
+   * Carga el progreso de un plan específico
+   */
+  const loadPlanProgress = useCallback(async (userId: string, planId: string): Promise<PlanProgress | false> => {
+    if (!userId || !planId) return false;
+    
+    try {
+      // Verificar si ya tenemos el progreso en caché
+      const cachedProgress = getPlanProgress(planId);
+      if (cachedProgress) {
+        console.log('Usando progreso en caché mientras se actualiza');
+      }
+      
+      return await updatePlanProgress(userId, planId);
+    } catch (error) {
+      console.error("Error loading plan progress:", error);
+      return false;
+    }
+  }, [updatePlanProgress]);
+
+  /**
    * Gets a plan by ID
    */
   const getPlanById = (planId: string): LearningPlan | undefined => {
@@ -290,6 +310,7 @@ export const useLearningPlans = () => {
     retryFetchPlans,
     createLearningPlan,
     updatePlanProgress,
+    loadPlanProgress,
     setCurrentPlan,
     getPlanById,
     getPlanProgress,
