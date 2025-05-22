@@ -52,7 +52,6 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         return response;
       } 
       
-      // Handle text message
       // Check for subject change
       const detectedSubject = detectSubjectFromMessage(message);
       if (detectedSubject && detectedSubject !== activeSubject) {
@@ -60,18 +59,31 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       }
       
       // Request response from API
-      const response = await callOpenRouter<{ response: string }>("provide_feedback", {
+      console.log('Sending message to OpenRouter:', message);
+      const responseData = await callOpenRouter<any>("provide_feedback", {
         userMessage: message,
         context: `PAES preparation, subject: ${activeSubject}, full platform assistance`,
         previousMessages: getRecentMessages(6)
       });
       
+      console.log('Response received from OpenRouter:', responseData);
+      
       // Extract and format response
-      const botResponse = extractResponseContent(response);
+      let botResponse: string;
+      
+      if (!responseData) {
+        botResponse = "Lo siento, no pude procesar tu solicitud. Por favor intenta de nuevo.";
+      } else {
+        botResponse = extractResponseContent(responseData);
+      }
+      
+      console.log('Processed bot response:', botResponse);
       addAssistantMessage(botResponse);
       return botResponse;
+      
     } catch (error) {
       // Handle errors
+      console.error('Error processing message:', error);
       const { errorContent } = handleMessageError(error);
       addAssistantMessage(errorContent);
       return null;

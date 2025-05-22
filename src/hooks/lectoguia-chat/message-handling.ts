@@ -64,20 +64,44 @@ export function extractResponseContent(response: any): string {
     return "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con cualquier materia de la PAES si lo deseas.";
   }
   
-  // Handling different response formats
+  // Handle plain text responses directly
   if (typeof response === 'string') {
     return response;
-  } else if (response && typeof response === 'object') {
+  } 
+  
+  // Handle object responses
+  if (typeof response === 'object') {
+    // Response has direct response property
     if ('response' in response) {
       return response.response;
-    } else if (Object.keys(response).length > 0) {
-      // Try to extract useful info from first value
+    }
+    
+    // For compatibility with the OpenRouter response format
+    if ('choices' in response && Array.isArray(response.choices) && response.choices.length > 0) {
+      const choice = response.choices[0];
+      if ('message' in choice && 'content' in choice.message) {
+        return choice.message.content;
+      }
+    }
+    
+    // Try to extract useful info from any object value
+    if (Object.keys(response).length > 0) {
+      // Find the first string property to use as response
+      for (const key of Object.keys(response)) {
+        const value = response[key];
+        if (typeof value === 'string' && value.trim().length > 0) {
+          return value;
+        }
+      }
+      
+      // Fallback to stringify the first value if no strings found
       const firstValue = Object.values(response)[0];
       return typeof firstValue === 'string' ? firstValue : 
         "Para mejorar tu rendimiento en la PAES, es importante enfocarte en todas las materias relevantes para tu área de interés.";
     }
   }
   
+  // Default fallback for unknown response formats
   return "Lo siento, tuve un problema generando una respuesta. Puedo ayudarte con cualquier materia de la PAES si lo deseas.";
 }
 

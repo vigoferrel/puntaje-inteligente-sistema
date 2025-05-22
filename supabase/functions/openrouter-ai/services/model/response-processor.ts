@@ -53,26 +53,35 @@ export const processResponse = {
     const responseText = await response.text();
     MonitoringService.debug('Texto de respuesta crudo:', responseText.substring(0, 200) + '...');
     
-    let data;
+    // Intentar analizar como JSON primero
     try {
-      data = JSON.parse(responseText);
+      const data = JSON.parse(responseText);
+      
+      MonitoringService.debug('Respuesta de OpenRouter recibida como JSON:', 
+        data.choices?.[0]?.message?.content?.substring(0, 200) + '...');
+      
+      const content = data.choices?.[0]?.message?.content || null;
+      
+      // Intentar extraer JSON del contenido
+      const parsedContent = extractJsonFromContent(content);
+      
+      return { result: parsedContent || content || data || null };
     } catch (e) {
-      MonitoringService.error('Error al analizar respuesta JSON:', e);
+      // Si no es JSON, tratar como texto plano y envolverlo en un objeto
+      MonitoringService.debug('Respuesta no es JSON, tratando como texto plano:', responseText.substring(0, 200) + '...');
+      
+      // Si la respuesta tiene más de 2 caracteres, considerarla válida
+      if (responseText.trim().length > 2) {
+        return { result: { response: responseText } };
+      }
+      
+      // Respuesta vacía o inválida
       return { 
-        error: `Error al analizar respuesta JSON: ${e.message}`,
+        error: 'Respuesta vacía o inválida del modelo',
         fallbackResponse: {
-          response: "Recibí una respuesta del modelo que no pude procesar correctamente."
+          response: "No se recibió una respuesta válida del modelo. Por favor intenta de nuevo."
         }
       };
     }
-    
-    MonitoringService.debug('Respuesta de OpenRouter recibida, primeros 200 caracteres del contenido:', 
-      data.choices?.[0]?.message?.content?.substring(0, 200) + '...');
-    
-    const content = data.choices?.[0]?.message?.content || null;
-    
-    const parsedContent = extractJsonFromContent(content);
-    
-    return { result: parsedContent || content || null };
   }
 };

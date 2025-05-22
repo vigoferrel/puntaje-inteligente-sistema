@@ -66,11 +66,18 @@ export async function provideFeedback(payload: any): Promise<any> {
       return createErrorResponse(result.error, 500, result.fallbackResponse);
     }
 
-    // Process the AI response to ensure it has the expected format
-    const formattedResponse = processAIResponse(result.result);
-    return createSuccessResponse(formattedResponse);
+    // Process the AI response to ensure proper format
+    const processedResponse = processAIResponse(result.result);
+    
+    // Log the processed response for debugging
+    console.log('Processed response for client:', typeof processedResponse, 
+                Object.keys(processedResponse).length > 0 ? Object.keys(processedResponse) : 'Sin propiedades');
+    
+    return createSuccessResponse(processedResponse);
   } catch (error) {
     console.error('Error in provideFeedback handler:', error);
-    return createErrorResponse(`Error al proporcionar feedback: ${error.message}`, 500);
+    return createErrorResponse(`Error al proporcionar feedback: ${error.message}`, 500, {
+      response: "Lo siento, ocurrió un error al procesar tu mensaje. Por favor intenta de nuevo más tarde."
+    });
   }
 }

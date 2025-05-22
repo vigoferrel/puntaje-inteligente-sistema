@@ -293,15 +293,37 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setActiveTab('exercise');
       } else {
         // Procesar mensaje normal
-        const response = await callOpenRouter<{ response: string }>("provide_feedback", {
+        console.log('Sending message to backend:', message);
+        const response = await callOpenRouter<any>("provide_feedback", {
           userMessage: message,
           context: `PAES preparation, subject: ${activeSubject}`,
           previousMessages: messages.slice(-6)
         });
         
-        if (response) {
-          addAssistantMessage(response.response || "Lo siento, no pude procesar tu solicitud.");
+        console.log('Response received from backend:', response);
+        
+        // Manejar diferentes formatos de respuesta
+        let botResponse: string;
+        
+        if (!response) {
+          botResponse = "Lo siento, no pude procesar tu solicitud. Por favor intenta de nuevo.";
+        } else if (typeof response === 'string') {
+          botResponse = response;
+        } else if (typeof response === 'object') {
+          // Si la respuesta ya tiene un campo 'response'
+          if ('response' in response) {
+            botResponse = response.response || "Lo siento, no pude procesar tu solicitud.";
+          } else {
+            // Intentar extraer el texto de cualquier campo
+            const values = Object.values(response);
+            const firstStringValue = values.find(v => typeof v === 'string');
+            botResponse = firstStringValue as string || "Lo siento, no pude procesar tu solicitud.";
+          }
+        } else {
+          botResponse = "Lo siento, no pude procesar tu solicitud correctamente.";
         }
+        
+        addAssistantMessage(botResponse);
       }
     } catch (error) {
       console.error("Error procesando mensaje:", error);
