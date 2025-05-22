@@ -11,6 +11,7 @@ export const fetchDiagnosticQuestions = async (
   testId: number
 ): Promise<DiagnosticQuestion[]> => {
   try {
+    // Use explicit typing to avoid excessive type inference
     const { data, error } = await supabase
       .from('exercises')
       .select('*')
@@ -47,6 +48,7 @@ export const fetchQuestionBatch = async (
     
     query = query.limit(batchSize);
 
+    // Use explicit typing to avoid deep inference
     const { data, error } = await query;
 
     if (error) throw error;
