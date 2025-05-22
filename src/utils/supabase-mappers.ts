@@ -1,5 +1,5 @@
 
-import { TPAESHabilidad } from "@/types/system-types";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 
 /**
  * Convierte un skill ID numérico de la base de datos en un enum de TPAESHabilidad
@@ -51,4 +51,34 @@ export const mapEnumToSkillId = (skill: TPAESHabilidad): number => {
   };
   
   return mapping[skill] || 2; // Default fallback to INTERPRET_RELATE's ID
+};
+
+/**
+ * Convierte un test ID numérico de la base de datos en un enum de TPAESPrueba
+ */
+export const mapTestIdToEnum = (testId: number): TPAESPrueba => {
+  const mapping: Record<number, TPAESPrueba> = {
+    1: "COMPETENCIA_LECTORA",  // Competencia Lectora
+    2: "MATEMATICA_1",         // Matemática 1
+    3: "MATEMATICA_2",         // Matemática 2
+    4: "CIENCIAS",             // Ciencias
+    5: "HISTORIA"              // Historia
+  };
+  
+  return mapping[testId] || "COMPETENCIA_LECTORA"; // Default fallback
+};
+
+/**
+ * Convierte un enum de TPAESPrueba en un test ID numérico para la base de datos
+ */
+export const mapEnumToTestId = (test: TPAESPrueba): number => {
+  const mapping: Record<TPAESPrueba, number> = {
+    "COMPETENCIA_LECTORA": 1,
+    "MATEMATICA_1": 2,
+    "MATEMATICA_2": 3,
+    "CIENCIAS": 4,
+    "HISTORIA": 5
+  };
+  
+  return mapping[test] || 1; // Default fallback to COMPETENCIA_LECTORA's ID
 };
