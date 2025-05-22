@@ -10,6 +10,7 @@ export interface Exercise {
   skill?: string;
   difficulty?: string;
   prueba?: string;
+  nodeId?: string; // Added to support node-specific exercises
 }
 
 export interface AIAnalysis {

@@ -62,7 +62,7 @@ export function LearningNodesByBloomLevel({
     const progress = nodeProgress[nodeId]?.progress || 0;
     
     if (status === 'completed') {
-      return <Badge variant="success">Completado</Badge>;
+      return <Badge className="bg-green-500 hover:bg-green-600">Completado</Badge>;
     } else if (status === 'in_progress') {
       return <Badge>{Math.round(progress * 100)}% Completado</Badge>;
     } else {
