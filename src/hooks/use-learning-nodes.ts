@@ -8,7 +8,7 @@ import {
   fetchUserNodeProgress as fetchProgress,
   updateNodeProgress as updateProgress,
   getLearningCyclePhase as getCyclePhase
-} from "@/services/node-service";
+} from "@/services/node";
 
 export { type NodeProgress } from "@/types/node-progress";
 
