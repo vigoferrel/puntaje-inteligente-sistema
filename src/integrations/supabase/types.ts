@@ -9,6 +9,158 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_content_cache: {
+        Row: {
+          content: Json
+          content_key: string
+          content_type: string
+          created_at: string | null
+          expires_at: string | null
+          hit_count: number
+          id: string
+        }
+        Insert: {
+          content: Json
+          content_key: string
+          content_type: string
+          created_at?: string | null
+          expires_at?: string | null
+          hit_count?: number
+          id?: string
+        }
+        Update: {
+          content?: Json
+          content_key?: string
+          content_type?: string
+          created_at?: string | null
+          expires_at?: string | null
+          hit_count?: number
+          id?: string
+        }
+        Relationships: []
+      }
+      ai_generation_metrics: {
+        Row: {
+          accuracy_score: number | null
+          created_at: string | null
+          creativity_score: number | null
+          feedback: string | null
+          generation_id: string | null
+          id: string
+          relevance_score: number | null
+          user_rating: number | null
+        }
+        Insert: {
+          accuracy_score?: number | null
+          created_at?: string | null
+          creativity_score?: number | null
+          feedback?: string | null
+          generation_id?: string | null
+          id?: string
+          relevance_score?: number | null
+          user_rating?: number | null
+        }
+        Update: {
+          accuracy_score?: number | null
+          created_at?: string | null
+          creativity_score?: number | null
+          feedback?: string | null
+          generation_id?: string | null
+          id?: string
+          relevance_score?: number | null
+          user_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_generation_metrics_generation_id_fkey"
+            columns: ["generation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_model_usage"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_model_usage: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          model_name: string
+          response_time_ms: number | null
+          success: boolean
+          token_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          model_name: string
+          response_time_ms?: number | null
+          success?: boolean
+          token_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          model_name?: string
+          response_time_ms?: number | null
+          success?: boolean
+          token_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_prompts: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          effectiveness_score: number | null
+          id: string
+          is_active: boolean
+          model_name: string
+          name: string
+          parameters: Json | null
+          prompt_text: string
+          prompt_type: string
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          effectiveness_score?: number | null
+          id?: string
+          is_active?: boolean
+          model_name: string
+          name: string
+          parameters?: Json | null
+          prompt_text: string
+          prompt_type: string
+          updated_at?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          effectiveness_score?: number | null
+          id?: string
+          is_active?: boolean
+          model_name?: string
+          name?: string
+          parameters?: Json | null
+          prompt_text?: string
+          prompt_type?: string
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       careers: {
         Row: {
           area: string

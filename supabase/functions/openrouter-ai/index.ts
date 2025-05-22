@@ -11,8 +11,10 @@ import {
 } from "./handlers/action-handlers.ts";
 import { MonitoringService, LogLevel } from "./services/monitoring-service.ts";
 import { CacheService } from "./services/cache-service.ts";
+import { METRICS_CONFIG } from "./config.ts";
+import { cleanExpiredCacheContent } from "./services/usage-tracking-service.ts";
 
-console.log("OpenRouter AI Edge Function Started");
+console.log("OpenRouter AI Edge Function Started with Enhanced Gemini 2.5 Support");
 
 // Variable para el estado de salud del servicio
 let serviceHealthy = true;
@@ -20,11 +22,11 @@ let startTime = Date.now();
 
 // Programar limpieza de caché cada 30 minutos
 const CACHE_CLEANUP_INTERVAL = 30 * 60 * 1000; // 30 minutos en ms
-setInterval(() => {
+setInterval(async () => {
   try {
-    const removedCount = CacheService.cleanExpired();
-    if (removedCount > 0) {
-      MonitoringService.info(`Limpieza de caché completada: ${removedCount} elementos eliminados`);
+    const result = await CacheService.cleanAllExpired();
+    if (result.memory > 0 || result.db > 0) {
+      MonitoringService.info(`Limpieza de caché completada: ${result.memory} elementos eliminados de memoria, ${result.db} de BD`);
     }
   } catch (error) {
     MonitoringService.error('Error en limpieza programada de caché:', error);
@@ -49,7 +51,8 @@ serve(async (req) => {
         status: serviceHealthy ? 'healthy' : 'degraded',
         uptime: `${uptime} segundos`,
         metrics,
-        version: '2.0.0'
+        version: '3.0.0', // Versión actualizada para Gemini 2.5
+        model: 'google/gemini-2.5-flash-preview'
       }), {
         status: 200,
         headers: {
@@ -59,7 +62,8 @@ serve(async (req) => {
       });
     }
     
-    const { action, payload } = await req.json();
+    const requestBody = await req.json();
+    const { action, payload, requestId } = requestBody;
 
     if (!action) {
       MonitoringService.warn('Request sin acción especificada');
@@ -72,7 +76,10 @@ serve(async (req) => {
       });
     }
 
-    MonitoringService.info(`Processing action: ${action}`, { payloadSize: JSON.stringify(payload).length });
+    MonitoringService.info(`Processing action: ${action}`, { 
+      payloadSize: JSON.stringify(payload).length,
+      requestId: requestId || 'N/A'
+    });
     
     let response;
     const actionStartTime = Date.now();
