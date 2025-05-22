@@ -14,7 +14,8 @@ export function useLectoGuiaExercise() {
     generateExerciseForNode,
     handleOptionSelect,
     resetExercise,
-    setCurrentExercise
+    setCurrentExercise,
+    isLoading
   } = useExerciseState();
   
   return {
@@ -25,6 +26,7 @@ export function useLectoGuiaExercise() {
     generateExerciseForNode,
     handleOptionSelect: handleOptionSelect,
     resetExercise,
-    setCurrentExercise
+    setCurrentExercise,
+    isLoading
   };
 }

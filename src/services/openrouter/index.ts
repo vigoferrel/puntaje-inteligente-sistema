@@ -3,7 +3,8 @@
 // para mantener la compatibilidad con el código existente
 
 export * from './core';
-export * from './image-processing';
+// No reexportamos processImageWithOpenRouter para evitar ambigüedad
+export { default as processImageFromImageProcessing } from './image-processing';
 export * from './exercise-generation';
 export * from './diagnostics';
 export * from './performance-analysis';

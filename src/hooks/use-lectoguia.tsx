@@ -31,7 +31,8 @@ export function useLectoGuia() {
     selectedOption, 
     showFeedback,
     handleOptionSelect,
-    handleNewExercise
+    handleNewExercise,
+    isLoading
   } = useExerciseFlow(activeSubject, setActiveTab);
   
   const {
@@ -56,6 +57,7 @@ export function useLectoGuia() {
     handleNewExercise,
     handleStartSimulation,
     skillLevels: session.skillLevels as Record<LectoGuiaSkill, number>,
-    handleNodeSelect
+    handleNodeSelect,
+    isLoading
   };
 }
