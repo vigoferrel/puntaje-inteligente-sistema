@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Exercise } from '@/types/ai-types';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
@@ -28,21 +29,21 @@ export function useExerciseFlow(
     isLoading
   } = useLectoGuiaExercise();
   
-  // Mapeo de materias a habilidades
+  // Mapeo más específico de materias a habilidades
   const skillMap: Record<string, TPAESHabilidad> = {
     'lectura': 'TRACK_LOCATE',
-    'matematicas-basica': 'SOLVE_PROBLEMS',
-    'matematicas-avanzada': 'SOLVE_PROBLEMS',
+    'matematicas-basica': 'SOLVE_PROBLEMS',    // Matemáticas 1 (7° a 2° medio)
+    'matematicas-avanzada': 'SOLVE_PROBLEMS',  // Matemáticas 2 (3° y 4° medio)
     'ciencias': 'IDENTIFY_THEORIES',
     'historia': 'TEMPORAL_THINKING',
     'general': 'INTERPRET_RELATE'
   };
   
-  // Mapeo de materias a pruebas PAES
+  // Mapeo específico de materias a pruebas PAES
   const pruebaMap: Record<string, TPAESPrueba> = {
     'lectura': 'COMPETENCIA_LECTORA',
-    'matematicas-basica': 'MATEMATICA_1',      // 7° a 2° medio
-    'matematicas-avanzada': 'MATEMATICA_2',    // 3° y 4° medio
+    'matematicas-basica': 'MATEMATICA_1',      // Claramente 7° a 2° medio
+    'matematicas-avanzada': 'MATEMATICA_2',    // Claramente 3° y 4° medio
     'ciencias': 'CIENCIAS',
     'historia': 'HISTORIA',
     'general': 'COMPETENCIA_LECTORA'
@@ -128,17 +129,18 @@ export function useExerciseFlow(
         
         const isCorrect = index === (correctAnswerIndex >= 0 ? correctAnswerIndex : 0);
         
-        // Get the appropriate prueba for the current subject
+        // Obtener la prueba adecuada para la materia actual
+        // Asegurarnos de que se utilice el tipo de prueba correcto 
         const prueba = currentExercise.prueba || pruebaMap[activeSubject] || 'COMPETENCIA_LECTORA';
         
-        console.log(`Saving exercise with prueba: ${prueba}, subject: ${activeSubject}`);
+        console.log(`Guardando ejercicio con prueba: ${prueba}, materia: ${activeSubject}`);
         
         saveExerciseAttempt(
           currentExercise,
           index,
           isCorrect,
           currentExercise.skill || 'INTERPRET_RELATE',
-          prueba // Pass the prueba parameter
+          prueba // Pasamos el parámetro prueba
         );
       }
     }, 300);

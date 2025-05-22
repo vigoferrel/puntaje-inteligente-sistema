@@ -18,6 +18,18 @@ export const TestSelector: React.FC<TestSelectorProps> = ({
     return null;
   }
   
+  // Nombres personalizados para las pruebas de matemáticas
+  const getCustomDisplayName = (test: TPAESPrueba): string => {
+    switch (test) {
+      case "MATEMATICA_1":
+        return "Matemática 1 (7° a 2° medio)";
+      case "MATEMATICA_2":
+        return "Matemática 2 (3° y 4° medio)";
+      default:
+        return getPruebaDisplayName(test);
+    }
+  };
+  
   return (
     <div className="flex gap-2 flex-wrap">
       <Badge 
@@ -34,7 +46,7 @@ export const TestSelector: React.FC<TestSelectorProps> = ({
           className="cursor-pointer"
           onClick={() => onTestSelect(test)}
         >
-          {getPruebaDisplayName(test)}
+          {getCustomDisplayName(test)}
         </Badge>
       ))}
     </div>

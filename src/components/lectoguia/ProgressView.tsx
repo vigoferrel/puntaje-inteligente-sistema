@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TPAESHabilidad } from "@/types/system-types";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { formatSkillLevel, getSkillName } from "@/utils/lectoguia-utils";
 
 interface ProgressViewProps {
@@ -15,12 +15,28 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
   skillLevels,
   onStartSimulation
 }) => {
-  // Agrupar habilidades por área usando las habilidades correctas del sistema
-  const skillGroups = {
-    "Comprensión Lectora": ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT'],
-    "Matemáticas": ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE'],
-    "Ciencias": ['IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT'],
-    "Historia": ['TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION']
+  // Agrupar habilidades por área usando las pruebas PAES correctas
+  const skillGroups: Record<string, { prueba: TPAESPrueba, skills: TPAESHabilidad[] }> = {
+    "Comprensión Lectora": {
+      prueba: 'COMPETENCIA_LECTORA',
+      skills: ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT']
+    },
+    "Matemática 1 (7° a 2° medio)": {
+      prueba: 'MATEMATICA_1',
+      skills: ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE']
+    },
+    "Matemática 2 (3° y 4° medio)": {
+      prueba: 'MATEMATICA_2',
+      skills: ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE']
+    },
+    "Ciencias": {
+      prueba: 'CIENCIAS',
+      skills: ['IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT']
+    },
+    "Historia": {
+      prueba: 'HISTORIA',
+      skills: ['TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION']
+    }
   };
   
   return (
@@ -28,12 +44,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
       <div className="text-2xl font-bold">Tu progreso</div>
       
       <div className="space-y-6">
-        {Object.entries(skillGroups).map(([groupName, skills]) => (
+        {Object.entries(skillGroups).map(([groupName, { prueba, skills }]) => (
           <div key={groupName} className="space-y-4">
             <h3 className="text-xl font-semibold">{groupName}</h3>
             <div className="space-y-3">
               {skills.map(skill => (
-                <div key={skill} className="space-y-1">
+                <div key={`${prueba}-${skill}`} className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span>{getSkillName(skill)}</span>
                     <span className="font-medium">{formatSkillLevel(skillLevels[skill as TPAESHabilidad] || 0)}</span>

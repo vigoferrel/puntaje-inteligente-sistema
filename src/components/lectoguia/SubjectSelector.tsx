@@ -1,61 +1,78 @@
 
 import React from 'react';
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
 import { 
-  BookOpen, 
-  Calculator, 
-  Beaker, 
-  GraduationCap, 
-  Lightbulb,
-  BarChart3
+  BookIcon, 
+  BrainCircuitIcon, 
+  FlaskConicalIcon, 
+  GlobeIcon, 
+  GraduationCapIcon 
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SubjectSelectorProps {
   activeSubject: string;
-  onSubjectChange: (subject: string) => void;
+  onSelectSubject: (subject: string) => void;
 }
 
-export const SubjectSelector: React.FC<SubjectSelectorProps> = ({ 
-  activeSubject, 
-  onSubjectChange 
+export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
+  activeSubject,
+  onSelectSubject
 }) => {
   const subjects = [
-    { id: "general", name: "General", icon: <GraduationCap className="h-4 w-4" /> },
-    { id: "lectura", name: "Comprensión Lectora", icon: <BookOpen className="h-4 w-4" /> },
-    { id: "matematicas-basica", name: "Matemáticas 7° a 2° medio", icon: <Calculator className="h-4 w-4" /> },
-    { id: "matematicas-avanzada", name: "Matemáticas 3° y 4° medio", icon: <BarChart3 className="h-4 w-4" /> },
-    { id: "ciencias", name: "Ciencias", icon: <Beaker className="h-4 w-4" /> },
-    { id: "historia", name: "Historia", icon: <Lightbulb className="h-4 w-4" /> },
+    {
+      id: "general",
+      name: "General",
+      icon: <GraduationCapIcon className="h-5 w-5" />
+    },
+    {
+      id: "lectura",
+      name: "Lectura",
+      icon: <BookIcon className="h-5 w-5" />
+    },
+    {
+      id: "matematicas-basica",
+      name: "Matemática 1",
+      description: "7° a 2° medio",
+      icon: <BrainCircuitIcon className="h-5 w-5" />
+    },
+    {
+      id: "matematicas-avanzada",
+      name: "Matemática 2",
+      description: "3° y 4° medio",
+      icon: <BrainCircuitIcon className="h-5 w-5" />
+    },
+    {
+      id: "ciencias",
+      name: "Ciencias",
+      icon: <FlaskConicalIcon className="h-5 w-5" />
+    },
+    {
+      id: "historia",
+      name: "Historia",
+      icon: <GlobeIcon className="h-5 w-5" />
+    }
   ];
 
   return (
-    <TooltipProvider>
-      <div className="flex items-center justify-center pb-1 w-full">
-        <ToggleGroup 
-          type="single" 
-          value={activeSubject} 
-          onValueChange={(value) => value && onSubjectChange(value)}
-          className="flex flex-wrap justify-center gap-1"
+    <div className="flex flex-wrap gap-2">
+      {subjects.map((subject) => (
+        <button
+          key={subject.id}
+          onClick={() => onSelectSubject(subject.id)}
+          className={cn(
+            "flex flex-col items-center justify-center p-3 rounded-lg border transition-colors min-w-[90px]",
+            activeSubject === subject.id
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-muted bg-background hover:bg-accent/30"
+          )}
         >
-          {subjects.map((subject) => (
-            <Tooltip key={subject.id}>
-              <TooltipTrigger asChild>
-                <ToggleGroupItem 
-                  value={subject.id} 
-                  aria-label={subject.name}
-                  className={`data-[state=on]:bg-primary data-[state=on]:text-primary-foreground`}
-                >
-                  {subject.icon}
-                </ToggleGroupItem>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{subject.name}</p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </ToggleGroup>
-      </div>
-    </TooltipProvider>
+          <span className="mb-1">{subject.icon}</span>
+          <span className="text-sm font-medium">{subject.name}</span>
+          {subject.description && (
+            <span className="text-xs text-muted-foreground">{subject.description}</span>
+          )}
+        </button>
+      ))}
+    </div>
   );
 };

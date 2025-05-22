@@ -23,7 +23,7 @@ const bloomLevelColors: Record<BloomLevel, string> = {
   create: "bg-purple-500"
 };
 
-// Group skills by test type
+// Group skills by test type - Separando claramente las matemáticas en dos pruebas
 const skillsByTest: Record<TPAESPrueba, TPAESHabilidad[]> = {
   "COMPETENCIA_LECTORA": ["TRACK_LOCATE", "INTERPRET_RELATE", "EVALUATE_REFLECT"],
   "MATEMATICA_1": ["SOLVE_PROBLEMS", "REPRESENT", "MODEL", "ARGUE_COMMUNICATE"],
@@ -40,7 +40,7 @@ export const SkillHierarchyChart: React.FC<SkillHierarchyChartProps> = ({
   // If a test is selected, only show skills for that test
   const testsToShow: TPAESPrueba[] = selectedTest 
     ? [selectedTest] 
-    : ["COMPETENCIA_LECTORA", "MATEMATICA_1", "CIENCIAS", "HISTORIA"];
+    : ["COMPETENCIA_LECTORA", "MATEMATICA_1", "MATEMATICA_2", "CIENCIAS", "HISTORIA"];
   
   return (
     <Card className={className}>
@@ -78,7 +78,7 @@ export const SkillHierarchyChart: React.FC<SkillHierarchyChartProps> = ({
                         const bloomColor = bloomLevelColors[mapSkillToBloomLevel(skill)];
                         
                         return (
-                          <div key={skill} className="space-y-1">
+                          <div key={`${test}-${skill}`} className="space-y-1">
                             <div className="flex justify-between items-center">
                               <span className="text-sm">{getHabilidadDisplayName(skill)}</span>
                               <Badge variant="outline" className={cn("text-xs", 

@@ -55,8 +55,8 @@ export function ProgressTab({ skillLevels, onStartSimulation, onNodeSelect }: Pr
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="1">Competencia Lectora</SelectItem>
-              <SelectItem value="2">Matemática 1</SelectItem>
-              <SelectItem value="3">Matemática 2</SelectItem>
+              <SelectItem value="2">Matemática 1 (7° a 2° medio)</SelectItem>
+              <SelectItem value="3">Matemática 2 (3° y 4° medio)</SelectItem>
               <SelectItem value="4">Ciencias</SelectItem>
               <SelectItem value="5">Historia</SelectItem>
             </SelectContent>
