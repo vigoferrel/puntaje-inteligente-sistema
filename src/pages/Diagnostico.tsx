@@ -8,6 +8,8 @@ import { TestRunner } from "@/components/diagnostic/TestRunner";
 import { PausedTestBanner } from "@/components/diagnostic/PausedTestBanner";
 import { PauseConfirmationDialog } from "@/components/diagnostic/PauseConfirmationDialog";
 import { DiagnosticController } from "@/components/diagnostic/DiagnosticController";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const Diagnostico = () => {
   console.log("Renderizando página de Diagnóstico");
@@ -17,7 +19,8 @@ const Diagnostico = () => {
       <DiagnosticController>
         {({ 
           tests, 
-          loading, 
+          loading,
+          initializing,
           currentTest,
           selectedTestId,
           testStarted,
@@ -43,17 +46,24 @@ const Diagnostico = () => {
         }) => {
           console.log("Estado actual:", { 
             loading, 
+            initializing,
             testStarted, 
             resultSubmitted,
             testsCount: tests.length
           });
+          
+          // Determine what message to show during loading
+          let loadingMessage = "Cargando diagnósticos...";
+          if (initializing) {
+            loadingMessage = "Inicializando diagnósticos. Esto puede tomar un momento...";
+          }
           
           return (
             <div className="container py-8">
               <h1 className="text-3xl font-bold mb-6">Diagnóstico</h1>
               
               {loading ? (
-                <DiagnosticSkeleton />
+                <DiagnosticSkeleton message={loadingMessage} />
               ) : !testStarted ? (
                 <>
                   {pausedProgress && tests.length > 0 && tests.some(test => test.id === pausedProgress.testId) && (
@@ -75,9 +85,16 @@ const Diagnostico = () => {
                   ) : (
                     <div className="text-center p-8 border rounded-lg bg-background">
                       <h3 className="text-xl font-medium mb-2">No hay diagnósticos disponibles</h3>
-                      <p className="text-muted-foreground">
-                        No se encontraron pruebas diagnósticas. Por favor, inténtalo de nuevo más tarde.
+                      <p className="text-muted-foreground mb-4">
+                        No se encontraron pruebas diagnósticas. Esto puede deberse a que aún no se han configurado los diagnósticos o a un problema al cargarlos.
                       </p>
+                      <Button 
+                        onClick={() => window.location.reload()}
+                        className="flex items-center gap-2"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Reintentar
+                      </Button>
                     </div>
                   )}
                 </>

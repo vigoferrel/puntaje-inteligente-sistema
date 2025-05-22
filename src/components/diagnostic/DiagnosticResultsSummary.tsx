@@ -24,11 +24,11 @@ export const DiagnosticResultsSummary = ({ results }: DiagnosticResultsSummaryPr
     .slice(0, 3)
     .map(([skill]) => skill as TPAESHabilidad);
 
-  // Create chart data
+  // Create chart data - don't need to multiply by 100 as results are already percentages
   const chartData = Object.entries(results)
     .map(([skill, level]) => ({
       skill,
-      level: Math.round(level * 100),
+      level,
     }))
     .sort((a, b) => b.level - a.level)
     .slice(0, 6); // Show only top 6 skills in chart for better visibility
@@ -47,7 +47,7 @@ export const DiagnosticResultsSummary = ({ results }: DiagnosticResultsSummaryPr
               <SkillProgress 
                 key={skill} 
                 skill={skill} 
-                level={results[skill] || 0} 
+                level={results[skill] / 100} // Convert percentage back to 0-1 scale for SkillProgress
               />
             ))}
           </CardContent>
@@ -64,7 +64,7 @@ export const DiagnosticResultsSummary = ({ results }: DiagnosticResultsSummaryPr
               <SkillProgress 
                 key={skill} 
                 skill={skill} 
-                level={results[skill] || 0} 
+                level={results[skill] / 100} // Convert percentage back to 0-1 scale for SkillProgress
               />
             ))}
           </CardContent>

@@ -10,3 +10,5 @@ export * from './question/index';
 export * from './results/index';
 export * from './types';
 export * from './mappers';
+export * from './default-diagnostics';
+export * from './test-services';

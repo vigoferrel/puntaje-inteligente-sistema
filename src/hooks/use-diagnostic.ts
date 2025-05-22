@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { 
   DiagnosticTest, 
   DiagnosticQuestion, 
@@ -8,8 +8,10 @@ import {
 import {
   fetchDiagnosticTests,
   fetchDiagnosticResults,
-  submitDiagnosticResult
+  submitDiagnosticResult,
+  generateDefaultDiagnostic
 } from "@/services/diagnostic";
+import { toast } from "@/components/ui/use-toast";
 
 // Re-export types for convenience
 export type { DiagnosticTest, DiagnosticQuestion, DiagnosticResult } from "@/types/diagnostic";
@@ -29,6 +31,43 @@ export const useDiagnostic = () => {
       const testsWithQuestions = await fetchDiagnosticTests(userId);
       setTests(testsWithQuestions);
       return testsWithQuestions;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Ensures that at least one default diagnostic test exists
+   */
+  const ensureDefaultDiagnosticsExist = async () => {
+    try {
+      setLoading(true);
+      
+      // Si no hay tests, intentar crear uno por defecto
+      const created = await generateDefaultDiagnostic();
+      
+      if (created) {
+        toast({
+          title: "Diagnóstico creado",
+          description: "Se ha generado un diagnóstico de prueba",
+        });
+        
+        // Refrescar la lista
+        if (tests.length === 0) {
+          const updatedTests = await fetchTests("auto-generated");
+          return updatedTests;
+        }
+      }
+      
+      return tests;
+    } catch (error) {
+      console.error('Error al generar diagnóstico por defecto:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar un diagnóstico de prueba",
+        variant: "destructive"
+      });
+      return tests;
     } finally {
       setLoading(false);
     }
@@ -105,6 +144,7 @@ export const useDiagnostic = () => {
     currentTest,
     results,
     fetchDiagnosticTests: fetchTests,
+    ensureDefaultDiagnosticsExist,
     startDiagnosticTest,
     submitDiagnosticResult: submitResult,
     fetchDiagnosticResults: fetchResults

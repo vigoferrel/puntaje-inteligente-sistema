@@ -1,14 +1,46 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDiagnosticTestSelection } from "./diagnostic/use-diagnostic-test-selection";
 import { useDiagnosticTestExecution } from "./diagnostic/use-diagnostic-test-execution";
 import { useDiagnosticProgress } from "./diagnostic/use-diagnostic-progress";
 import { useDiagnosticResults } from "./diagnostic/use-diagnostic-results";
+import { useDiagnostic } from "@/hooks/use-diagnostic";
+import { toast } from "@/components/ui/use-toast";
 
 export const useDiagnosticController = () => {
   // State used across multiple hooks
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [testStarted, setTestStarted] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+  
+  // Get diagnostic service
+  const diagnosticService = useDiagnostic();
+  
+  // Initialize data
+  useEffect(() => {
+    const initDiagnostics = async () => {
+      try {
+        // This will ensure at least one test exists
+        setInitializing(true);
+        
+        // Generate a test if none exist
+        if (diagnosticService.tests.length === 0) {
+          await diagnosticService.ensureDefaultDiagnosticsExist();
+        }
+      } catch (error) {
+        console.error("Error initializing diagnostics:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los diagnósticos iniciales",
+          variant: "destructive"
+        });
+      } finally {
+        setInitializing(false);
+      }
+    };
+    
+    initDiagnostics();
+  }, [diagnosticService]);
   
   // Compose the sub-hooks
   const selectionState = useDiagnosticTestSelection({
@@ -41,45 +73,34 @@ export const useDiagnosticController = () => {
   });
   
   return {
-    // State from selection hook
+    // State from hooks
+    initializing,
     tests: selectionState.tests,
-    loading: selectionState.loading,
+    loading: selectionState.loading || initializing,
     selectedTestId,
     pausedProgress: selectionState.pausedProgress,
-    
-    // State from execution hook
     testStarted,
     currentTest: executionState.currentTest,
     currentQuestionIndex: executionState.currentQuestionIndex,
     answers: executionState.answers,
     timeStarted: executionState.timeStarted,
     showHint: executionState.showHint,
-
-    // State from progress hook  
     showPauseConfirmation: progressState.showPauseConfirmation,
-    
-    // State from results hook
     resultSubmitted: resultState.resultSubmitted,
     testResults: resultState.testResults,
     
-    // Handlers from selection hook
+    // Handlers
     handleTestSelect: selectionState.handleTestSelect,
     handleStartTest: selectionState.handleStartTest,
     handleResumeTest: selectionState.handleResumeTest,
     handleDiscardProgress: selectionState.handleDiscardProgress,
-    
-    // Handlers from execution hook
     handleAnswerSelect: executionState.handleAnswerSelect,
     handleRequestHint: executionState.handleRequestHint,
     handlePreviousQuestion: executionState.handlePreviousQuestion,
     handleNextQuestion: executionState.handleNextQuestion,
-    
-    // Handlers from progress hook
     handlePauseTest: progressState.handlePauseTest,
     confirmPauseTest: progressState.confirmPauseTest,
-    
-    // Handlers from results hook
-    handleFinishTest: resultState.handleFinishTest, // Ensure this is exposed
+    handleFinishTest: resultState.handleFinishTest,
     handleRestartDiagnostic: resultState.handleRestartDiagnostic
   };
 };
