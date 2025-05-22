@@ -5,7 +5,7 @@ import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 
 export async function fetchQuestionById(questionId: string): Promise<DiagnosticQuestion | null> {
   try {
-    // Usamos la tabla correcta de diagnostic_tests y aceptamos que la respuesta sea transformada
+    // Usamos la tabla correcta de diagnostic_tests y exercises
     const { data, error } = await supabase
       .from('diagnostic_tests')
       .select('*, questions:exercises(id, question, options, correct_answer, skill, prueba, explanation)')
@@ -13,14 +13,26 @@ export async function fetchQuestionById(questionId: string): Promise<DiagnosticQ
       .maybeSingle();
 
     if (error) throw error;
-    if (!data || !data.questions || !data.questions[0]) return null;
+    
+    // Verificamos que tenemos datos y que la estructura es correcta
+    if (!data || !data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+      return null;
+    }
+    
+    // Extraemos el primer elemento del array de preguntas
+    const question = data.questions[0];
+    
+    // Verificamos que la pregunta tiene la estructura esperada
+    if (!question || typeof question !== 'object') {
+      return null;
+    }
     
     // Mapear los datos al formato DiagnosticQuestion
-    const question = data.questions[0];
     return {
       id: question.id,
       question: question.question,
-      options: Array.isArray(question.options) ? question.options : JSON.parse(question.options || '[]'),
+      options: Array.isArray(question.options) ? question.options : 
+              (typeof question.options === 'string' ? JSON.parse(question.options || '[]') : []),
       correctAnswer: question.correct_answer,
       skill: question.skill as TPAESHabilidad,
       prueba: question.prueba as TPAESPrueba,
@@ -48,13 +60,14 @@ export async function fetchQuestionsByIds(
 
     if (error) throw error;
     
-    if (!data) return [];
+    if (!data || !Array.isArray(data)) return [];
     
     // Transformar los datos al formato DiagnosticQuestion
     return data.map(item => ({
       id: item.id,
       question: item.question,
-      options: Array.isArray(item.options) ? item.options : JSON.parse(item.options || '[]'),
+      options: Array.isArray(item.options) ? item.options : 
+              (typeof item.options === 'string' ? JSON.parse(item.options || '[]') : []),
       correctAnswer: item.correct_answer,
       skill: item.skill as TPAESHabilidad,
       prueba: item.prueba as TPAESPrueba,
@@ -85,7 +98,7 @@ export async function fetchDiagnosticQuestions(
       throw error;
     }
     
-    if (!data || data.length === 0) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
       // Fallback: fetch questions just by test ID if none found for specific diagnostic
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('exercises')
@@ -98,13 +111,14 @@ export async function fetchDiagnosticQuestions(
         return [];
       }
       
-      if (!fallbackData) return [];
+      if (!fallbackData || !Array.isArray(fallbackData)) return [];
       
       // Transformar los datos al formato DiagnosticQuestion
       return fallbackData.map(item => ({
         id: item.id,
         question: item.question,
-        options: Array.isArray(item.options) ? item.options : JSON.parse(item.options || '[]'),
+        options: Array.isArray(item.options) ? item.options : 
+                (typeof item.options === 'string' ? JSON.parse(item.options || '[]') : []),
         correctAnswer: item.correct_answer,
         skill: item.skill as TPAESHabilidad,
         prueba: item.prueba as TPAESPrueba,
@@ -116,7 +130,8 @@ export async function fetchDiagnosticQuestions(
     return data.map(item => ({
       id: item.id,
       question: item.question,
-      options: Array.isArray(item.options) ? item.options : JSON.parse(item.options || '[]'),
+      options: Array.isArray(item.options) ? item.options : 
+              (typeof item.options === 'string' ? JSON.parse(item.options || '[]') : []),
       correctAnswer: item.correct_answer,
       skill: item.skill as TPAESHabilidad,
       prueba: item.prueba as TPAESPrueba,

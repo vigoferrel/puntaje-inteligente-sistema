@@ -34,15 +34,31 @@ export function useOpenRouter() {
       // Si el resultado es null, aseguramos que retornemos null (no un objeto vacío)
       if (!result) return null;
       
-      // Si el resultado no tiene la propiedad 'response', la añadimos con un valor por defecto
-      if (!result.response) {
+      // Necesitamos asegurar que el resultado tenga la forma correcta para ImageAnalysisResult
+      if (typeof result === 'object') {
+        // Si el objeto no tiene la propiedad 'response', la añadimos con un valor por defecto
+        if (!('response' in result)) {
+          return {
+            response: "No se pudo procesar correctamente la imagen.",
+            ...(result as object)
+          } as ImageAnalysisResult;
+        }
+        
+        // Si ya tiene la propiedad response, lo devolvemos directamente
+        return result as ImageAnalysisResult;
+      }
+      
+      // Si el resultado es un string o de otro tipo, lo convertimos a un objeto ImageAnalysisResult
+      if (typeof result === 'string') {
         return {
-          ...result,
-          response: "No se pudo procesar correctamente la imagen."
+          response: result
         } as ImageAnalysisResult;
       }
       
-      return result;
+      // Si no pudimos procesar el resultado correctamente, devolvemos un objeto por defecto
+      return {
+        response: "No se pudo procesar correctamente la imagen."
+      };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error procesando la imagen';
       toast({
