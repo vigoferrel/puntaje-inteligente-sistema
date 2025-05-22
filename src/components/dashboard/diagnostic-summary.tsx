@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ClipboardCheck, Clock, BarChart2 } from "lucide-react";
+import { ClipboardCheck, Clock, BarChart2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { DiagnosticResult } from "@/types/diagnostic";
@@ -49,8 +49,8 @@ export const DiagnosticSummary = ({
   };
 
   return (
-    <Card className={className}>
-      <CardHeader>
+    <Card className={`overflow-hidden ${className}`}>
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
         <CardTitle className="flex items-center gap-2">
           <ClipboardCheck className="h-5 w-5 text-primary" />
           Diagnóstico
@@ -59,7 +59,7 @@ export const DiagnosticSummary = ({
           Evaluación de tus habilidades y conocimientos
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         {loading ? (
           <div className="space-y-4">
             <div className="h-4 bg-gray-200 animate-pulse rounded" />
@@ -110,10 +110,10 @@ export const DiagnosticSummary = ({
           </div>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="border-t bg-muted/40 p-4">
         <Button 
           asChild 
-          className="w-full"
+          className="w-full group"
           variant={latestResult ? "outline" : "default"}
         >
           <Link to="/diagnostico">
@@ -123,6 +123,7 @@ export const DiagnosticSummary = ({
                 ? `Realizar diagnóstico${pendingDiagnostics > 1 ? 's' : ''} (${pendingDiagnostics})` 
                 : "Explorar diagnósticos"
             }
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </Button>
       </CardFooter>

@@ -2,13 +2,14 @@
 import React from "react";
 import { AppLayout } from "@/components/app-layout";
 import { DiagnosticSkeleton } from "@/components/diagnostic/DiagnosticSkeleton";
-import { TestSelection } from "@/components/diagnostic/TestSelection";
+import { DiagnosticSelector } from "@/components/diagnostic/DiagnosticSelector";
 import { TestResultView } from "@/components/diagnostic/TestResultView";
 import { TestRunner } from "@/components/diagnostic/TestRunner";
 import { PausedTestBanner } from "@/components/diagnostic/PausedTestBanner";
 import { PauseConfirmationDialog } from "@/components/diagnostic/PauseConfirmationDialog";
 import { DiagnosticController } from "@/components/diagnostic/DiagnosticController";
 import { Button } from "@/components/ui/button";
+import { DetailedResultView } from "@/components/diagnostic/DetailedResultView";
 import { RefreshCw } from "lucide-react";
 
 const Diagnostico = () => {
@@ -80,11 +81,12 @@ const Diagnostico = () => {
                   )}
                   
                   {tests.length > 0 ? (
-                    <TestSelection 
+                    <DiagnosticSelector 
                       tests={tests}
                       selectedTestId={selectedTestId}
                       onTestSelect={handleTestSelect}
                       onStartTest={handleStartTest}
+                      loading={loading}
                     />
                   ) : (
                     <div className="text-center p-8 border rounded-lg bg-background">
@@ -103,9 +105,9 @@ const Diagnostico = () => {
                   )}
                 </>
               ) : resultSubmitted ? (
-                <TestResultView 
+                <DetailedResultView 
                   onRestartDiagnostic={handleRestartDiagnostic} 
-                  results={testResults ? testResults.results : undefined}
+                  results={testResults ? testResults : undefined}
                 />
               ) : (
                 <TestRunner 
