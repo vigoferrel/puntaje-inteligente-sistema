@@ -28,36 +28,28 @@ export function useOpenRouter() {
   const processImage = async (imageData: string, prompt?: string, context?: string): Promise<ImageAnalysisResult | null> => {
     try {
       setLoading(true);
-      // La función processImageWithOpenRouter debe devolver un objeto que incluya 'response'
+      
+      // Process the image and get the result
       const result = await processImageWithOpenRouter(imageData, prompt, context);
       
-      // Si el resultado es null, aseguramos que retornemos null (no un objeto vacío)
+      // If null result, return null
       if (!result) return null;
       
-      // Necesitamos asegurar que el resultado tenga la forma correcta para ImageAnalysisResult
-      if (typeof result === 'object') {
-        // Si el objeto no tiene la propiedad 'response', la añadimos con un valor por defecto
-        if (!('response' in result)) {
-          return {
-            response: "No se pudo procesar correctamente la imagen.",
-            ...(result as object)
-          } as ImageAnalysisResult;
-        }
-        
-        // Si ya tiene la propiedad response, lo devolvemos directamente
+      // If the result is already properly formatted
+      if (typeof result === 'object' && result !== null && 'response' in result) {
         return result as ImageAnalysisResult;
       }
       
-      // Si el resultado es un string o de otro tipo, lo convertimos a un objeto ImageAnalysisResult
+      // If result is a string, wrap it in an object
       if (typeof result === 'string') {
-        return {
-          response: result
-        } as ImageAnalysisResult;
+        return { response: result };
       }
       
-      // Si no pudimos procesar el resultado correctamente, devolvemos un objeto por defecto
-      return {
-        response: "No se pudo procesar correctamente la imagen."
+      // Default fallback - ensure response property exists
+      return { 
+        response: typeof result === 'object' && result !== null 
+          ? JSON.stringify(result) 
+          : "No se pudo procesar correctamente la imagen."
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error procesando la imagen';

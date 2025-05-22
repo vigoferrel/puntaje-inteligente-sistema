@@ -2,48 +2,36 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DiagnosticQuestion } from '@/types/diagnostic';
 import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
+import { mapSkillIdToEnum, mapTestIdToEnum } from '@/utils/supabase-mappers';
 
+/**
+ * Fetches a question by its ID
+ */
 export async function fetchQuestionById(questionId: string): Promise<DiagnosticQuestion | null> {
   try {
-    // Usamos la tabla correcta de diagnostic_tests y exercises
+    // Query directly from exercises table
     const { data, error } = await supabase
-      .from('diagnostic_tests')
-      .select('*, questions:exercises(id, question, options, correct_answer, skill, prueba, explanation)')
+      .from('exercises')
+      .select('*')
       .eq('id', questionId)
       .maybeSingle();
 
     if (error) throw error;
     
-    // Verificamos que tenemos datos y que la estructura es correcta
-    if (!data || !data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
-      return null;
-    }
+    // Check if we got data back
+    if (!data) return null;
     
-    // Extraemos el primer elemento del array de preguntas
-    const question = data.questions[0];
-    
-    // Verificamos que la pregunta tiene la estructura esperada
-    if (!question || typeof question !== 'object') {
-      return null;
-    }
-    
-    // Mapear los datos al formato DiagnosticQuestion
-    return {
-      id: question.id,
-      question: question.question,
-      options: Array.isArray(question.options) ? question.options : 
-              (typeof question.options === 'string' ? JSON.parse(question.options || '[]') : []),
-      correctAnswer: question.correct_answer,
-      skill: question.skill as TPAESHabilidad,
-      prueba: question.prueba as TPAESPrueba,
-      explanation: question.explanation
-    };
+    // Transform the raw DB data into our DiagnosticQuestion type
+    return mapExerciseToQuestion(data);
   } catch (error) {
     console.error('Error fetching question by ID:', error);
     return null;
   }
 }
 
+/**
+ * Fetches questions by an array of IDs
+ */
 export async function fetchQuestionsByIds(
   questionIds: string[]
 ): Promise<DiagnosticQuestion[]> {
@@ -52,43 +40,36 @@ export async function fetchQuestionsByIds(
       return [];
     }
     
-    // Usamos la tabla correcta exercises para obtener las preguntas
+    // Query from exercises table
     const { data, error } = await supabase
       .from('exercises')
-      .select('id, question, options, correct_answer, skill, prueba, explanation')
+      .select('*')
       .in('id', questionIds);
 
     if (error) throw error;
     
     if (!data || !Array.isArray(data)) return [];
     
-    // Transformar los datos al formato DiagnosticQuestion
-    return data.map(item => ({
-      id: item.id,
-      question: item.question,
-      options: Array.isArray(item.options) ? item.options : 
-              (typeof item.options === 'string' ? JSON.parse(item.options || '[]') : []),
-      correctAnswer: item.correct_answer,
-      skill: item.skill as TPAESHabilidad,
-      prueba: item.prueba as TPAESPrueba,
-      explanation: item.explanation
-    }));
+    // Transform each row into a DiagnosticQuestion
+    return data.map(mapExerciseToQuestion);
   } catch (error) {
     console.error('Error fetching questions by IDs:', error);
     return [];
   }
 }
 
-// Implementar la función que realmente se usa en otras partes del código
+/**
+ * Fetches diagnostic questions for a specific diagnostic and test
+ */
 export async function fetchDiagnosticQuestions(
   diagnosticId: string,
   testId: number
 ): Promise<DiagnosticQuestion[]> {
   try {
-    // Primero intentamos obtener preguntas para el diagnóstico específico
+    // First try to get exercises for the specific diagnostic
     const { data, error } = await supabase
       .from('exercises')
-      .select('id, question, options, correct_answer, skill, prueba, explanation')
+      .select('*')
       .eq('diagnostic_id', diagnosticId)
       .eq('prueba', testId)
       .order('id');
@@ -98,11 +79,11 @@ export async function fetchDiagnosticQuestions(
       throw error;
     }
     
+    // If no specific diagnostic questions found, fall back to general test exercises
     if (!data || !Array.isArray(data) || data.length === 0) {
-      // Fallback: fetch questions just by test ID if none found for specific diagnostic
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('exercises')
-        .select('id, question, options, correct_answer, skill, prueba, explanation')
+        .select('*')
         .eq('prueba', testId)
         .order('id');
         
@@ -113,32 +94,52 @@ export async function fetchDiagnosticQuestions(
       
       if (!fallbackData || !Array.isArray(fallbackData)) return [];
       
-      // Transformar los datos al formato DiagnosticQuestion
-      return fallbackData.map(item => ({
-        id: item.id,
-        question: item.question,
-        options: Array.isArray(item.options) ? item.options : 
-                (typeof item.options === 'string' ? JSON.parse(item.options || '[]') : []),
-        correctAnswer: item.correct_answer,
-        skill: item.skill as TPAESHabilidad,
-        prueba: item.prueba as TPAESPrueba,
-        explanation: item.explanation
-      }));
+      // Map the data to our DiagnosticQuestion type
+      return fallbackData.map(mapExerciseToQuestion);
     }
     
-    // Transformar los datos al formato DiagnosticQuestion
-    return data.map(item => ({
-      id: item.id,
-      question: item.question,
-      options: Array.isArray(item.options) ? item.options : 
-              (typeof item.options === 'string' ? JSON.parse(item.options || '[]') : []),
-      correctAnswer: item.correct_answer,
-      skill: item.skill as TPAESHabilidad,
-      prueba: item.prueba as TPAESPrueba,
-      explanation: item.explanation
-    }));
+    // Map the data to our DiagnosticQuestion type
+    return data.map(mapExerciseToQuestion);
   } catch (error) {
     console.error('Error in fetchDiagnosticQuestions:', error);
     return [];
   }
+}
+
+/**
+ * Helper function to transform a raw exercise row from the database into our DiagnosticQuestion type
+ */
+function mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
+  // Safely parse options if they're stored as a JSON string
+  let options: string[] = [];
+  
+  try {
+    if (Array.isArray(exercise.options)) {
+      options = exercise.options;
+    } else if (typeof exercise.options === 'string') {
+      options = JSON.parse(exercise.options || '[]');
+    } else if (exercise.options && typeof exercise.options === 'object') {
+      // If options is already an object (from JSONB column)
+      options = Array.isArray(exercise.options) ? exercise.options : [];
+    }
+  } catch (e) {
+    console.error('Error parsing options:', e);
+    options = [];
+  }
+
+  // Map database fields to our type, with fallbacks for missing data
+  return {
+    id: exercise.id || '',
+    question: exercise.question || '',
+    options: options,
+    correctAnswer: exercise.correct_answer || '',
+    // If skill/prueba are stored as IDs, map them to the enum types
+    skill: typeof exercise.skill === 'number' 
+      ? mapSkillIdToEnum(exercise.skill)
+      : (exercise.skill as TPAESHabilidad || 'SOLVE_PROBLEMS'),
+    prueba: typeof exercise.prueba === 'number'
+      ? mapTestIdToEnum(exercise.prueba)
+      : (exercise.prueba as TPAESPrueba || 'MATEMATICA_1'),
+    explanation: exercise.explanation || undefined
+  };
 }
