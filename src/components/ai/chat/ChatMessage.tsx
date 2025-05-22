@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ChatMessageType } from "./types";
 import { useChatSettings } from "@/components/lectoguia/chat-settings/ChatSettingsContext";
+import { ChatImagePreview } from "./ChatImagePreview";
 
 export const ChatMessage = ({
   role,
@@ -81,19 +82,11 @@ export const ChatMessage = ({
         >
           {/* Image if present */}
           {imageUrl && (
-            <div className="mb-2">
-              <div className="relative inline-block">
-                <img
-                  src={imageUrl}
-                  alt="Imagen adjunta"
-                  className={cn(
-                    "rounded-md border border-border object-contain cursor-pointer transition-all",
-                    isImageExpanded ? "max-h-80 w-auto" : "h-20 w-auto"
-                  )}
-                  onClick={() => setIsImageExpanded(!isImageExpanded)}
-                />
-              </div>
-            </div>
+            <ChatImagePreview
+              imageUrl={imageUrl}
+              isExpanded={isImageExpanded}
+              onToggleExpand={() => setIsImageExpanded(!isImageExpanded)}
+            />
           )}
 
           {/* Text content */}
