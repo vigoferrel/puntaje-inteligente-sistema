@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,9 +13,14 @@ import {
   Star,
   Lock,
   PlayCircle,
-  Target
+  Target,
+  BookOpen,
+  Calculator,
+  BarChart3,
+  Atom,
+  History
 } from 'lucide-react';
-import { TLearningNode, TPAESPrueba, getHabilidadDisplayName } from '@/types/system-types';
+import { TLearningNode, TPAESPrueba, getHabilidadDisplayName, getPruebaDisplayName } from '@/types/system-types';
 import { NodeProgress } from '@/types/node-progress';
 import { motion } from 'framer-motion';
 
@@ -26,6 +31,52 @@ interface InteractiveLearningPathProps {
   onNodeSelect: (nodeId: string) => void;
 }
 
+const TEST_ICONS = {
+  'COMPETENCIA_LECTORA': BookOpen,
+  'MATEMATICA_1': Calculator,
+  'MATEMATICA_2': BarChart3,
+  'CIENCIAS': Atom,
+  'HISTORIA': History
+};
+
+const TEST_COLORS = {
+  'COMPETENCIA_LECTORA': {
+    primary: 'blue',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    text: 'text-blue-700',
+    button: 'bg-blue-500 hover:bg-blue-600'
+  },
+  'MATEMATICA_1': {
+    primary: 'green',
+    bg: 'bg-green-50',
+    border: 'border-green-200',
+    text: 'text-green-700',
+    button: 'bg-green-500 hover:bg-green-600'
+  },
+  'MATEMATICA_2': {
+    primary: 'purple',
+    bg: 'bg-purple-50',
+    border: 'border-purple-200',
+    text: 'text-purple-700',
+    button: 'bg-purple-500 hover:bg-purple-600'
+  },
+  'CIENCIAS': {
+    primary: 'orange',
+    bg: 'bg-orange-50',
+    border: 'border-orange-200',
+    text: 'text-orange-700',
+    button: 'bg-orange-500 hover:bg-orange-600'
+  },
+  'HISTORIA': {
+    primary: 'red',
+    bg: 'bg-red-50',
+    border: 'border-red-200',
+    text: 'text-red-700',
+    button: 'bg-red-500 hover:bg-red-600'
+  }
+};
+
 export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = ({
   nodes,
   nodeProgress,
@@ -34,22 +85,37 @@ export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = (
 }) => {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
-  // Organizar nodos por posición y dependencias
-  const sortedNodes = [...nodes].sort((a, b) => a.position - b.position);
+  // Filtrar nodos SOLO por la prueba seleccionada usando la propiedad 'prueba'
+  const filteredNodes = useMemo(() => {
+    return nodes.filter(node => node.prueba === selectedPrueba);
+  }, [nodes, selectedPrueba]);
+
+  // Organizar nodos por posición dentro de la prueba seleccionada
+  const sortedNodes = useMemo(() => {
+    return [...filteredNodes].sort((a, b) => a.position - b.position);
+  }, [filteredNodes]);
+
+  // Obtener configuración de colores para la prueba actual
+  const testConfig = TEST_COLORS[selectedPrueba];
+  const TestIcon = TEST_ICONS[selectedPrueba];
 
   // Determinar el estado de cada nodo
   const getNodeStatus = (node: TLearningNode) => {
     const progress = nodeProgress[node.id];
-    if (!progress) return 'locked';
+    if (!progress) return 'not_started';
     
-    // Verificar dependencias
+    // Verificar dependencias solo dentro de la misma prueba
     const dependencies = node.dependsOn || [];
-    const allDependenciesMet = dependencies.every(depId => {
+    const relevantDependencies = dependencies.filter(depId => 
+      sortedNodes.some(n => n.id === depId)
+    );
+    
+    const allDependenciesMet = relevantDependencies.every(depId => {
       const depProgress = nodeProgress[depId];
       return depProgress && depProgress.status === 'completed';
     });
 
-    if (!allDependenciesMet && dependencies.length > 0) return 'locked';
+    if (!allDependenciesMet && relevantDependencies.length > 0) return 'locked';
     return progress.status || 'not_started';
   };
 
@@ -71,11 +137,11 @@ export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = (
       case 'completed':
         return 'bg-green-50 border-green-200 hover:bg-green-100';
       case 'in_progress':
-        return 'bg-blue-50 border-blue-200 hover:bg-blue-100';
+        return `${testConfig.bg} ${testConfig.border} hover:bg-${testConfig.primary}-100`;
       case 'locked':
         return 'bg-gray-50 border-gray-200 opacity-60';
       default:
-        return 'bg-white border-gray-200 hover:bg-gray-50';
+        return `bg-white border-gray-200 hover:${testConfig.bg}`;
     }
   };
 
@@ -92,18 +158,56 @@ export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = (
     }
   };
 
+  // Calcular estadísticas de la prueba
+  const completedCount = sortedNodes.filter(node => 
+    nodeProgress[node.id]?.status === 'completed'
+  ).length;
+  
+  const totalTime = sortedNodes.reduce((total, node) => 
+    total + (node.estimatedTimeMinutes || node.estimatedTime || 30), 0
+  );
+
+  if (sortedNodes.length === 0) {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <div className={`p-4 rounded-full ${testConfig.bg} inline-block`}>
+          <TestIcon className={`h-12 w-12 ${testConfig.text}`} />
+        </div>
+        <h3 className="text-xl font-semibold">No hay nodos disponibles</h3>
+        <p className="text-muted-foreground">
+          No se encontraron nodos de aprendizaje para {getPruebaDisplayName(selectedPrueba)}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h3 className="text-2xl font-bold">Ruta de Aprendizaje Interactiva</h3>
-        <p className="text-muted-foreground">
-          Sigue tu progreso paso a paso hacia el dominio de {selectedPrueba}
-        </p>
+      {/* Header específico de la prueba */}
+      <div className={`p-6 rounded-lg ${testConfig.bg} ${testConfig.border} border`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-full bg-white/50`}>
+              <TestIcon className={`h-8 w-8 ${testConfig.text}`} />
+            </div>
+            <div>
+              <h2 className={`text-2xl font-bold ${testConfig.text}`}>
+                Ruta de {getPruebaDisplayName(selectedPrueba)}
+              </h2>
+              <p className={`${testConfig.text} opacity-80`}>
+                {sortedNodes.length} nodos • {Math.round(totalTime / 60)}h estimadas
+              </p>
+            </div>
+          </div>
+          <Badge variant="secondary" className={`${testConfig.bg} ${testConfig.text}`}>
+            {completedCount}/{sortedNodes.length} completados
+          </Badge>
+        </div>
       </div>
 
       <div className="relative">
-        {/* Línea de conexión */}
-        <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/20 via-primary/40 to-primary/20" />
+        {/* Línea de conexión con color de la prueba */}
+        <div className={`absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-${testConfig.primary}-200 via-${testConfig.primary}-400 to-${testConfig.primary}-200`} />
         
         <div className="space-y-4">
           {sortedNodes.map((node, index) => {
@@ -120,12 +224,12 @@ export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = (
                 transition={{ delay: index * 0.1 }}
                 className="relative"
               >
-                {/* Punto de conexión */}
-                <div className="absolute left-6 top-6 w-4 h-4 rounded-full bg-white border-2 border-primary z-10" />
+                {/* Punto de conexión con color de la prueba */}
+                <div className={`absolute left-6 top-6 w-4 h-4 rounded-full bg-white border-2 border-${testConfig.primary}-500 z-10`} />
                 
                 <Card 
                   className={`ml-16 transition-all duration-200 cursor-pointer ${getStatusColor(status)} ${
-                    isSelected ? 'ring-2 ring-primary shadow-lg' : ''
+                    isSelected ? `ring-2 ring-${testConfig.primary}-500 shadow-lg` : ''
                   }`}
                   onClick={() => {
                     if (canInteract) {
@@ -168,7 +272,7 @@ export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = (
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
-                              <span>{node.estimatedTimeMinutes || 30} min</span>
+                              <span>{node.estimatedTimeMinutes || node.estimatedTime || 30} min</span>
                             </div>
                             {progress?.timeSpentMinutes && (
                               <div className="flex items-center gap-1">
@@ -188,7 +292,7 @@ export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = (
                               e.stopPropagation();
                               onNodeSelect(node.id);
                             }}
-                            className="bg-primary hover:bg-primary/90"
+                            className={`${testConfig.button} text-white`}
                           >
                             {status === 'in_progress' ? 'Continuar' : 'Iniciar'}
                           </Button>
@@ -211,7 +315,7 @@ export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = (
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {node.dependsOn.map(depId => {
-                            const depNode = nodes.find(n => n.id === depId);
+                            const depNode = sortedNodes.find(n => n.id === depId);
                             const depProgress = nodeProgress[depId];
                             const isCompleted = depProgress?.status === 'completed';
                             
@@ -237,7 +341,7 @@ export const InteractiveLearningPath: React.FC<InteractiveLearningPathProps> = (
                 {/* Flecha de conexión */}
                 {index < sortedNodes.length - 1 && (
                   <div className="flex justify-center my-2">
-                    <ArrowRight className="h-6 w-6 text-primary/60" />
+                    <ArrowRight className={`h-6 w-6 text-${testConfig.primary}-400`} />
                   </div>
                 )}
               </motion.div>

@@ -17,6 +17,8 @@ import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { SkillHierarchyChart } from "./skill-visualization/SkillHierarchyChart";
 import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
 import { LearningMapVisualization } from "./learning-map/LearningMapVisualization";
+import { TestTypeSelector } from "./test-selector/TestTypeSelector";
+import { TestSpecificStats } from "./test-stats/TestSpecificStats";
 import { useLectoGuia } from "@/contexts/LectoGuiaContext";
 import { formatSkillLevel } from "@/utils/lectoguia-utils";
 
@@ -32,15 +34,36 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
   const { 
     nodes, 
     nodeProgress, 
-    selectedTestId, 
-    setSelectedTestId, 
     selectedPrueba,
-    handleNodeSelect 
+    handleNodeSelect,
+    // Acceder a la función para cambiar la prueba desde el contexto
+    setSelectedTestId,
+    selectedTestId
   } = useLectoGuia();
   
   const [activeView, setActiveView] = useState('overview');
 
-  // Calcular estadísticas generales
+  // Función para manejar el cambio de tipo de prueba
+  const handleTestChange = (newPrueba: TPAESPrueba) => {
+    // Mapeo de prueba a testId
+    const pruebaToTestId: Record<TPAESPrueba, number> = {
+      'COMPETENCIA_LECTORA': 1,
+      'MATEMATICA_1': 2,
+      'MATEMATICA_2': 3,
+      'CIENCIAS': 4,
+      'HISTORIA': 5
+    };
+    
+    const newTestId = pruebaToTestId[newPrueba];
+    setSelectedTestId(newTestId);
+    
+    console.log(`🔄 ProgressView: Cambiando a ${newPrueba} (testId: ${newTestId})`);
+  };
+
+  // Obtener nodos filtrados por la prueba actual
+  const filteredNodes = nodes.filter(node => node.prueba === selectedPrueba);
+  
+  // Calcular estadísticas específicas de la prueba seleccionada
   const totalSkills = Object.keys(skillLevels).length;
   const averageLevel = Object.values(skillLevels).reduce((sum, level) => sum + level, 0) / totalSkills;
   const strongSkills = Object.values(skillLevels).filter(level => level >= 0.7).length;
@@ -55,6 +78,20 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Selector de tipo de prueba */}
+      <TestTypeSelector 
+        selectedTest={selectedPrueba}
+        onTestSelect={handleTestChange}
+      />
+
+      {/* Estadísticas específicas del tipo de prueba */}
+      <TestSpecificStats
+        selectedPrueba={selectedPrueba}
+        nodes={filteredNodes}
+        nodeProgress={nodeProgress}
+        skillLevels={skillLevels}
+      />
+
       {/* Header con métricas generales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
@@ -195,7 +232,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
             
             <SkillNodeConnection
               skillLevels={skillLevels}
-              nodes={nodes}
+              nodes={filteredNodes}
               nodeProgress={nodeProgress}
               onNodeSelect={handleNodeSelect}
               selectedTest={selectedPrueba}
@@ -205,10 +242,10 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
 
         <TabsContent value="map" className="mt-6">
           <LearningMapVisualization
-            nodes={nodes}
+            nodes={filteredNodes}
             nodeProgress={nodeProgress}
             skillLevels={skillLevels}
-            selectedPrueba={selectedPrueba || 'COMPETENCIA_LECTORA'}
+            selectedPrueba={selectedPrueba}
             onNodeSelect={handleNodeSelect}
           />
         </TabsContent>

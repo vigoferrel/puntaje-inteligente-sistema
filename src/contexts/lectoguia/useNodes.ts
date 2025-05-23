@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TLearningNode, TPAESPrueba } from '@/types/system-types';
 import { useNodeProgress } from '@/hooks/lectoguia/use-node-progress';
@@ -8,6 +8,7 @@ import { toast } from '@/components/ui/use-toast';
 export function useNodes(userId?: string) {
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
   const [selectedTestId, setSelectedTestId] = useState<number | null>(null);
+  const [selectedPrueba, setSelectedPrueba] = useState<TPAESPrueba>('COMPETENCIA_LECTORA');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,12 +19,39 @@ export function useNodes(userId?: string) {
     loading: progressLoading 
   } = useNodeProgress(userId);
 
+  // Mapeo bidireccional entre prueba y testId
+  const pruebaToTestIdMap: Record<TPAESPrueba, number> = {
+    'COMPETENCIA_LECTORA': 1,
+    'MATEMATICA_1': 2,
+    'MATEMATICA_2': 3,
+    'CIENCIAS': 4,
+    'HISTORIA': 5
+  };
+
+  const testIdToPruebaMap: Record<number, TPAESPrueba> = {
+    1: 'COMPETENCIA_LECTORA',
+    2: 'MATEMATICA_1',
+    3: 'MATEMATICA_2',
+    4: 'CIENCIAS',
+    5: 'HISTORIA'
+  };
+
+  // Función para cambiar la prueba seleccionada
+  const handlePruebaChange = useCallback((prueba: TPAESPrueba) => {
+    console.log(`🔄 Cambiando prueba seleccionada: ${selectedPrueba} → ${prueba}`);
+    
+    setSelectedPrueba(prueba);
+    setSelectedTestId(pruebaToTestIdMap[prueba]);
+  }, [selectedPrueba, pruebaToTestIdMap]);
+
   // Función para cargar nodos desde la base de datos
-  const loadNodes = async () => {
+  const loadNodes = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
+      console.log('📊 Cargando nodos de aprendizaje...');
+      
       const { data, error } = await supabase
         .from('learning_nodes')
         .select(`
@@ -42,6 +70,7 @@ export function useNodes(userId?: string) {
           paes_skills(name, code),
           paes_tests(name, code)
         `)
+        .order('test_id', { ascending: true })
         .order('position', { ascending: true });
 
       if (error) throw error;
@@ -64,9 +93,19 @@ export function useNodes(userId?: string) {
         updatedAt: node.updated_at
       })) || [];
 
+      console.log(`✅ Nodos cargados: ${transformedNodes.length} total`);
+      
+      // Log de distribución por prueba
+      const nodesByPrueba = transformedNodes.reduce((acc, node) => {
+        acc[node.prueba] = (acc[node.prueba] || 0) + 1;
+        return acc;
+      }, {} as Record<TPAESPrueba, number>);
+      
+      console.log('📈 Distribución de nodos por prueba:', nodesByPrueba);
+
       setNodes(transformedNodes);
     } catch (error) {
-      console.error('Error loading nodes:', error);
+      console.error('❌ Error loading nodes:', error);
       setError(error instanceof Error ? error.message : 'Error desconocido');
       toast({
         title: "Error",
@@ -76,37 +115,48 @@ export function useNodes(userId?: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Función para obtener nodos filtrados por la prueba actual
+  const getFilteredNodes = useCallback(() => {
+    const filtered = nodes.filter(node => node.prueba === selectedPrueba);
+    console.log(`🔍 Nodos filtrados para ${selectedPrueba}: ${filtered.length}`);
+    return filtered;
+  }, [nodes, selectedPrueba]);
 
   // Cargar nodos al montar el componente
   useEffect(() => {
     loadNodes();
-  }, []);
+  }, [loadNodes]);
 
-  // Obtener la prueba seleccionada basada en el test ID
-  const selectedPrueba: TPAESPrueba | undefined = (() => {
-    if (!selectedTestId) return undefined;
-    
-    const testMap: Record<number, TPAESPrueba> = {
-      1: 'COMPETENCIA_LECTORA',
-      2: 'MATEMATICA_1', 
-      3: 'MATEMATICA_2',
-      4: 'CIENCIAS',
-      5: 'HISTORIA'
-    };
-    
-    return testMap[selectedTestId];
-  })();
+  // Sincronizar selectedTestId cuando cambie selectedPrueba
+  useEffect(() => {
+    const testId = pruebaToTestIdMap[selectedPrueba];
+    if (selectedTestId !== testId) {
+      setSelectedTestId(testId);
+    }
+  }, [selectedPrueba, selectedTestId, pruebaToTestIdMap]);
 
   return {
+    // Estado base
     nodes,
     nodeProgress,
-    selectedTestId,
-    setSelectedTestId,
-    selectedPrueba,
     loading: loading || progressLoading,
     error,
+    
+    // Estado de selección
+    selectedTestId,
+    selectedPrueba,
+    setSelectedTestId,
+    
+    // Funciones
+    handlePruebaChange,
     updateNodeProgress,
-    refreshNodes: loadNodes
+    refreshNodes: loadNodes,
+    getFilteredNodes,
+    
+    // Mapeos para compatibilidad
+    pruebaToTestIdMap,
+    testIdToPruebaMap
   };
 }
