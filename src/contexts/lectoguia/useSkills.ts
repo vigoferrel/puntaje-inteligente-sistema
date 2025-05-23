@@ -1,12 +1,15 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { TPAESHabilidad } from '@/types/system-types';
 import { UseSkillsState, initialSkillLevels } from './types';
 
-export function useSkills(userId: string | null): UseSkillsState {
+export function useSkills(userId: string | null): UseSkillsState & { 
+  activeSkill: TPAESHabilidad | null;
+  setActiveSkill: (skill: TPAESHabilidad | null) => void;
+} {
   const [skillLevels, setSkillLevels] = useState<Record<TPAESHabilidad, number>>(initialSkillLevels);
+  const [activeSkill, setActiveSkill] = useState<TPAESHabilidad | null>(null);
   
   // Cargar niveles de habilidades del usuario
   useEffect(() => {
@@ -116,6 +119,8 @@ export function useSkills(userId: string | null): UseSkillsState {
     skillLevels,
     updateSkillLevel,
     getSkillIdFromCode,
-    handleStartSimulation
+    handleStartSimulation,
+    activeSkill,
+    setActiveSkill
   };
 }

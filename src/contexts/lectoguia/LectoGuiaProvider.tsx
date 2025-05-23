@@ -1,6 +1,6 @@
 
 import React, { useEffect, useCallback } from 'react';
-import { LectoGuiaContext, LectoGuiaContextType } from './types';
+import { LectoGuiaContext, LectoGuiaContextType } from './useLectoGuia';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnifiedSubjectManagement } from '@/hooks/lectoguia/use-unified-subject-management';
 import { useNodesEnhanced } from './useNodesEnhanced';
@@ -181,7 +181,8 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     console.log(`📚 Generando ejercicio con ${availableNodes.length} nodos disponibles de ${selectedPrueba}`);
     
     // Usar el generador base pero con contexto de la materia actual
-    return baseHandleNewExercise();
+    const result = await baseHandleNewExercise();
+    return result !== undefined ? true : false;
   }, [selectedPrueba, validateState, getFilteredNodes, subjectDisplayNames, activeSubject, addAssistantMessage, baseHandleNewExercise]);
 
   // Estado de conexión simplificado

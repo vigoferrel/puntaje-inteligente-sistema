@@ -4,7 +4,7 @@ import { UseChatState, ChatMessage } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { WELCOME_MESSAGE } from '@/hooks/lectoguia-chat/types';
 
-export function useChat(): UseChatState {
+export function useChat(): UseChatState & { addAssistantMessage: (content: string) => ChatMessage } {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: uuidv4(),
@@ -57,6 +57,7 @@ export function useChat(): UseChatState {
     messages,
     isTyping,
     activeSubject,
-    setActiveSubject
+    setActiveSubject,
+    addAssistantMessage
   };
 }
