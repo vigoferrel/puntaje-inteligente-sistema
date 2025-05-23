@@ -10,24 +10,47 @@ interface MessageListProps {
   isTyping?: boolean;
 }
 
-// Sonido de notificación
-const NOTIFICATION_SOUND_URL = "https://cdn.jsdelivr.net/gh/mozilla/kitsune@main/kitsune/sumo/static/sumo/sounds/message.ogg";
-
 export function MessageList({ messages, isTyping = false }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useChatSettings();
   const notificationSound = useRef<HTMLAudioElement | null>(null);
   const previousMessagesCount = useRef<number>(messages.length);
 
-  // Inicializar el sonido de notificación
+  // Inicializar el sonido de notificación con un sonido válido
   useEffect(() => {
     if (typeof window !== "undefined" && settings.notificationSound) {
-      notificationSound.current = new Audio(NOTIFICATION_SOUND_URL);
+      // Usar un data URL simple para un beep corto
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Crear un sonido simple programáticamente
+      const createBeepSound = () => {
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 800;
+          oscillator.type = 'sine';
+          
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (error) {
+          console.warn("No se pudo reproducir sonido de notificación:", error);
+        }
+      };
+      
+      notificationSound.current = {
+        play: () => Promise.resolve(createBeepSound())
+      } as any;
     }
     
     return () => {
       if (notificationSound.current) {
-        notificationSound.current.pause();
         notificationSound.current = null;
       }
     };

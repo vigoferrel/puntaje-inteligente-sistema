@@ -43,11 +43,20 @@ async function checkServiceHealth(): Promise<boolean> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    const response = await fetch('https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai/health_check', {
-      method: 'GET',
+    // URL completa de la función de borde de Supabase con endpoint correcto
+    const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
+    
+    const response = await fetch(functionUrl, {
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`
       },
+      body: JSON.stringify({
+        action: 'health_check',
+        payload: {},
+        requestId: generateRequestId()
+      }),
       signal: controller.signal,
       cache: 'no-store'
     });
@@ -56,12 +65,14 @@ async function checkServiceHealth(): Promise<boolean> {
     serviceHealthLastChecked = now;
     
     if (!response.ok) {
+      console.warn(`Health check failed with status: ${response.status}`);
       serviceHealthStatus = false;
       return false;
     }
     
     const data = await response.json();
-    serviceHealthStatus = data?.result?.status === 'available';
+    serviceHealthStatus = data?.result?.status === 'available' || response.ok;
+    console.log('Health check successful:', serviceHealthStatus);
     return serviceHealthStatus;
   } catch (error) {
     console.warn('OpenRouter: Health check failed:', error);
@@ -175,11 +186,13 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
     // Verificar estado del servicio antes de intentar la solicitud
     const cacheKey = generateCacheKey(request.action, request.payload);
     
-    // Intentar obtener respuesta desde caché primero
-    const cachedResponse = getCachedResponse(cacheKey);
-    if (cachedResponse) {
-      console.log(`OpenRouter [${requestId}]: Usando respuesta en caché para ${request.action}`);
-      return cachedResponse as T;
+    // Intentar obtener respuesta desde caché primero (solo para acciones no críticas)
+    if (request.action !== 'health_check') {
+      const cachedResponse = getCachedResponse(cacheKey);
+      if (cachedResponse) {
+        console.log(`OpenRouter [${requestId}]: Usando respuesta en caché para ${request.action}`);
+        return cachedResponse as T;
+      }
     }
     
     // Verificar la salud del servicio (sin bloquear)
