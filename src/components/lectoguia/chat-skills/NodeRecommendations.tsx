@@ -1,128 +1,106 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Brain, BookOpen, ArrowRight } from 'lucide-react';
 import { TPAESHabilidad } from '@/types/system-types';
-import { cn } from '@/lib/utils';
+import { getSkillName, getSkillColor } from '@/utils/lectoguia-utils';
+import { BookOpen, ArrowRight, Sparkles, Target } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface NodeRecommendationsProps {
-  activeSkill?: TPAESHabilidad | null;
+  activeSkill: TPAESHabilidad;
   recommendedNodes: any[];
   onNodeSelect: (nodeId: string) => void;
-  className?: string;
 }
-
-const getSkillColor = (skill: string): string => {
-  const skillColors: Record<string, string> = {
-    'TRACK_LOCATE': 'bg-blue-100 text-blue-800 border-blue-300',
-    'INTERPRET_RELATE': 'bg-indigo-100 text-indigo-800 border-indigo-300',
-    'EVALUATE_REFLECT': 'bg-purple-100 text-purple-800 border-purple-300',
-    'SOLVE_PROBLEMS': 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    'REPRESENT': 'bg-green-100 text-green-800 border-green-300',
-    'MODEL': 'bg-teal-100 text-teal-800 border-teal-300',
-    'ARGUE_COMMUNICATE': 'bg-cyan-100 text-cyan-800 border-cyan-300',
-    'IDENTIFY_THEORIES': 'bg-amber-100 text-amber-800 border-amber-300',
-    'PROCESS_ANALYZE': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    'APPLY_PRINCIPLES': 'bg-orange-100 text-orange-800 border-orange-300',
-    'SCIENTIFIC_ARGUMENT': 'bg-red-100 text-red-800 border-red-300',
-    'TEMPORAL_THINKING': 'bg-pink-100 text-pink-800 border-pink-300',
-    'SOURCE_ANALYSIS': 'bg-rose-100 text-rose-800 border-rose-300',
-    'MULTICAUSAL_ANALYSIS': 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-300',
-    'CRITICAL_THINKING': 'bg-violet-100 text-violet-800 border-violet-300',
-    'REFLECTION': 'bg-slate-100 text-slate-800 border-slate-300',
-  };
-  
-  return skillColors[skill] || 'bg-gray-100 text-gray-800 border-gray-300';
-};
-
-const getDifficultyColor = (difficulty: string): string => {
-  const difficultyColors: Record<string, string> = {
-    'basic': 'bg-green-100 text-green-800',
-    'intermediate': 'bg-yellow-100 text-yellow-800',
-    'advanced': 'bg-red-100 text-red-800',
-  };
-  
-  return difficultyColors[difficulty.toLowerCase()] || 'bg-blue-100 text-blue-800';
-};
 
 export const NodeRecommendations: React.FC<NodeRecommendationsProps> = ({
   activeSkill,
-  recommendedNodes,
-  onNodeSelect,
-  className
+  recommendedNodes = [],
+  onNodeSelect
 }) => {
-  // Filtrar nodos por habilidad activa si existe
-  const filteredNodes = activeSkill 
-    ? recommendedNodes.filter(node => node.skill?.code === activeSkill)
-    : recommendedNodes;
+  if (!activeSkill || recommendedNodes.length === 0) {
+    return null;
+  }
   
-  // Si no hay habilidad activa o nodos que mostrar, no renderizar
-  if (!activeSkill && filteredNodes.length === 0) return null;
-  if (filteredNodes.length === 0 && recommendedNodes.length === 0) return null;
+  // Obtener el nombre y color de la habilidad activa
+  const skillName = getSkillName(activeSkill);
+  const skillColor = getSkillColor(activeSkill);
   
-  // Mostrar los nodos filtrados o todos si hay habilidad pero no hay nodos filtrados
-  const nodesToShow = filteredNodes.length > 0 ? filteredNodes : recommendedNodes.slice(0, 3);
+  // Animación de entrada
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        delayChildren: 0.3,
+        staggerChildren: 0.1
+      }
+    }
+  };
   
+  const itemVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: { opacity: 1, scale: 1 }
+  };
+
   return (
-    <div className={cn("my-3 space-y-3", className)}>
-      {activeSkill && (
-        <div className="flex items-center gap-2 mb-2">
-          <Brain className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">Trabajando en habilidad:</span>
-          <Badge variant="outline" className={cn("font-mono", getSkillColor(activeSkill))}>
-            {activeSkill}
-          </Badge>
-        </div>
-      )}
-      
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium flex items-center gap-1.5">
-          <BookOpen className="h-4 w-4" />
-          {activeSkill 
-            ? "Nodos de aprendizaje recomendados para esta habilidad:"
-            : "Nodos de aprendizaje recomendados:"}
-        </h3>
-        
-        <div className="grid grid-cols-1 gap-2">
-          {nodesToShow.map((node) => (
-            <Card key={node.id} className="overflow-hidden border border-border bg-card/50">
-              <CardContent className="p-3">
-                <div className="flex justify-between items-start gap-2">
-                  <div className="space-y-1.5">
-                    <h4 className="font-medium text-sm leading-tight">{node.title}</h4>
-                    <div className="flex flex-wrap gap-1.5 text-xs">
-                      {node.skill?.code && (
-                        <Badge variant="outline" className={cn("font-mono text-[10px]", getSkillColor(node.skill.code))}>
-                          {node.skill.code}
-                        </Badge>
-                      )}
-                      {node.difficulty && (
-                        <Badge className={getDifficultyColor(node.difficulty)}>
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="mb-4"
+    >
+      <Card className="border-border bg-gradient-to-r from-card/80 to-background/90 backdrop-blur-sm">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">
+              Nodos recomendados para mejorar en: <span style={{ color: skillColor }}>{skillName}</span>
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {recommendedNodes.slice(0, 3).map((node, index) => (
+              <motion.div key={node.id || index} variants={itemVariants}>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left h-auto py-2 group relative border-border hover:border-primary/50 transition-all"
+                  onClick={() => onNodeSelect(node.id)}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="h-4 w-4 text-primary group-hover:text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate pr-6">{node.title}</div>
+                      <div className="text-xs text-muted-foreground truncate">{node.description}</div>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <Badge variant="outline" className="text-[10px] font-normal py-0">
                           {node.difficulty}
                         </Badge>
-                      )}
+                        <Badge variant="secondary" className="text-[10px] font-normal py-0">
+                          {node.estimatedTimeMinutes} min
+                        </Badge>
+                      </div>
                     </div>
-                    {node.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2">{node.description}</p>
-                    )}
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="secondary"
-                    className="h-8 shrink-0"
-                    onClick={() => onNodeSelect(node.id)}
-                  >
-                    Practicar
-                    <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </div>
+                  <ArrowRight className="h-4 w-4 absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Button>
+              </motion.div>
+            ))}
+          </div>
+          
+          {recommendedNodes.length > 3 && (
+            <div className="mt-2 text-center">
+              <Button variant="ghost" size="sm" className="text-xs">
+                Ver todos los nodos recomendados <Target className="ml-1 h-3 w-3" />
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };

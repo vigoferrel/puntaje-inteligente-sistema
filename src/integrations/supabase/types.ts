@@ -383,6 +383,45 @@ export type Database = {
           },
         ]
       }
+      learning_curve: {
+        Row: {
+          created_at: string | null
+          days: number
+          description: string | null
+          expected_progress: number
+          id: string
+          level: number
+          name: string
+          node_number: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          days?: number
+          description?: string | null
+          expected_progress?: number
+          id?: string
+          level?: number
+          name: string
+          node_number: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          days?: number
+          description?: string | null
+          expected_progress?: number
+          id?: string
+          level?: number
+          name?: string
+          node_number?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       learning_nodes: {
         Row: {
           code: string

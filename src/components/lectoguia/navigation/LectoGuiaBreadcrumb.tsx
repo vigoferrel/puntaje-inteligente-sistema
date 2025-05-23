@@ -1,11 +1,13 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ChevronRight, Home } from 'lucide-react';
+import { cn } from '@/utils/lectoguia-utils';
 
 interface BreadcrumbItem {
   label: string;
   active: boolean;
-  onClick?: () => void;
+  onClick: () => void;
 }
 
 interface LectoGuiaBreadcrumbProps {
@@ -13,32 +15,64 @@ interface LectoGuiaBreadcrumbProps {
   className?: string;
 }
 
-export const LectoGuiaBreadcrumb: React.FC<LectoGuiaBreadcrumbProps> = ({ 
-  items, 
-  className = "" 
+export const LectoGuiaBreadcrumb: React.FC<LectoGuiaBreadcrumbProps> = ({
+  items,
+  className
 }) => {
+  // Variantes de animación
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 }
+  };
+  
   return (
-    <nav className={`flex items-center space-x-1 text-sm text-muted-foreground ${className}`}>
-      <Home className="h-4 w-4" />
+    <motion.nav 
+      className={cn("flex items-center text-sm", className)}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={itemVariants} className="flex items-center">
+        <button 
+          onClick={() => null}
+          className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted/80"
+        >
+          <Home className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground mx-1" />
+      </motion.div>
+      
       {items.map((item, index) => (
-        <div key={`breadcrumb-${index}`} className="flex items-center">
-          <ChevronRight className="h-4 w-4 mx-1" />
-          {item.onClick ? (
-            <button
-              onClick={item.onClick}
-              className={`hover:text-foreground transition-colors ${
-                item.active ? 'text-foreground font-medium' : ''
-              }`}
-            >
-              {item.label}
-            </button>
-          ) : (
-            <span className={item.active ? 'text-foreground font-medium' : ''}>
-              {item.label}
-            </span>
+        <motion.div 
+          key={item.label} 
+          className="flex items-center"
+          variants={itemVariants}
+        >
+          <button
+            onClick={item.onClick}
+            className={cn(
+              "text-xs font-medium hover:text-primary transition-colors",
+              item.active ? "text-primary font-semibold" : "text-muted-foreground"
+            )}
+          >
+            {item.label}
+          </button>
+          
+          {index < items.length - 1 && (
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground mx-1" />
           )}
-        </div>
+        </motion.div>
       ))}
-    </nav>
+    </motion.nav>
   );
 };

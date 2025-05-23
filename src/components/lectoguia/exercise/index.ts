@@ -1,7 +1,9 @@
 
-export * from './ExerciseView';
-export * from './ExerciseEmptyState';
-export * from './ExerciseQuestion';
-export * from './ExerciseFeedback';
-export * from './ExerciseVisualContent';
-export * from './NodeIndicator';
+export { ExerciseView } from './ExerciseView';
+export { ExerciseEmptyState } from './ExerciseEmptyState';
+export { ExerciseQuestion } from './ExerciseQuestion';
+export { ExerciseFeedback } from './ExerciseFeedback';
+export { NodeIndicator } from './NodeIndicator';
+export { ExerciseVisualContent } from './ExerciseVisualContent';
+export { ExerciseProgressBar } from './ExerciseProgressBar';
+export { ExerciseCompletionCard } from './ExerciseCompletionCard';

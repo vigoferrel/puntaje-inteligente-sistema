@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Exercise } from "@/types/ai-types";
 import { BookOpen, PenTool, Calculator, Atom, History, Loader2, BarChart3 } from "lucide-react";
-import { ExerciseView } from "./exercise";
+import { ExerciseView, ExerciseProgressBar, ExerciseCompletionCard } from "./exercise";
 import { ContextualActionButtons } from "./action-buttons/ContextualActionButtons";
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
 import { useLectoGuia } from '@/contexts/LectoGuiaContext';
+import { motion } from 'framer-motion';
 
 interface ExerciseTabProps {
   exercise: Exercise | null;
@@ -26,6 +27,48 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
   isLoading = false
 }) => {
   const { setActiveTab, handleNewExercise } = useLectoGuia();
+  const [exerciseProgress, setExerciseProgress] = useState(0);
+  const [showCompletionCard, setShowCompletionCard] = useState(false);
+  
+  // Efectos para simular la barra de progreso
+  useEffect(() => {
+    if (!exercise || isLoading) {
+      setExerciseProgress(0);
+      return;
+    }
+    
+    // Incrementar progreso gradualmente hasta que se seleccione una opción
+    const interval = setInterval(() => {
+      if (!selectedOption && !showFeedback) {
+        setExerciseProgress(prev => Math.min(prev + 0.5, 50));
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [exercise, selectedOption, showFeedback, isLoading]);
+  
+  // Cuando se selecciona una opción, aumentar el progreso
+  useEffect(() => {
+    if (selectedOption !== null && !showFeedback) {
+      setExerciseProgress(75);
+    }
+  }, [selectedOption, showFeedback]);
+  
+  // Cuando se muestra feedback, completar el progreso
+  useEffect(() => {
+    if (showFeedback) {
+      setExerciseProgress(100);
+      
+      // Mostrar tarjeta de completado después de un breve delay
+      const timer = setTimeout(() => {
+        setShowCompletionCard(true);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setShowCompletionCard(false);
+    }
+  }, [showFeedback]);
   
   // Usar handleNewExercise del contexto
   const handleExerciseRequest = async (): Promise<boolean> => {
@@ -134,6 +177,12 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
     }
   };
   
+  // Manejar continuación después de completar el ejercicio
+  const handleExerciseContinue = () => {
+    setShowCompletionCard(false);
+    onContinue();
+  };
+  
   // Construir los elementos de migas de pan
   const breadcrumbItems = [
     { 
@@ -171,7 +220,7 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
 
   return (
     <Card className="border-border bg-card/50 backdrop-blur-sm">
-      {exercise?.nodeId && (
+      {exercise?.nodeId && !showCompletionCard && (
         <CardHeader className="pb-0">
           <div className="flex items-center space-x-2 text-primary">
             {getSkillIcon()}
@@ -188,12 +237,32 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
       </div>
       
       <CardContent className={`p-6 ${exercise?.nodeId ? 'pt-4' : 'pt-6'}`}>
+        {/* Barra de progreso */}
+        {exercise && !isLoading && !showCompletionCard && (
+          <ExerciseProgressBar 
+            progress={exerciseProgress} 
+            difficulty={exercise.difficulty || 'INTERMEDIO'} 
+          />
+        )}
+        
         <div className="h-[calc(100vh-350px)] min-h-[450px] overflow-auto custom-scrollbar">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full">
+            <motion.div 
+              className="flex flex-col items-center justify-center h-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
               <p className="text-muted-foreground">Generando ejercicio...</p>
-            </div>
+            </motion.div>
+          ) : showCompletionCard ? (
+            <ExerciseCompletionCard 
+              score={selectedOption === exercise?.options.findIndex(o => o === exercise.correctAnswer) ? 100 : 0}
+              skillName={exercise?.skill?.toString() || 'Comprensión'}
+              skillImprovement={5}
+              onContinue={handleExerciseContinue}
+            />
           ) : (
             <ExerciseView
               exercise={exercise}
@@ -206,7 +275,7 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
         </div>
         
         {/* Botones de acción contextual */}
-        {exercise && !isLoading && (
+        {exercise && !isLoading && !showCompletionCard && (
           <div className="border-t border-border mt-4 pt-4">
             <ContextualActionButtons 
               context="exercise"
