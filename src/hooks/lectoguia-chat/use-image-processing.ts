@@ -8,7 +8,7 @@ import { ImageProcessingResult } from './types';
  */
 export function useImageProcessing() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { processImage } = useOpenRouter();
+  const { processImage: openRouterProcessImage } = useOpenRouter();
   
   /**
    * Procesa una imagen y retorna el resultado
@@ -28,7 +28,7 @@ export function useImageProcessing() {
       // Prompt por defecto si no se proporciona uno específico
       const defaultPrompt = 'Analiza esta imagen y proporciona información detallada sobre su contenido.';
       
-      const result = await processImage(
+      const result = await openRouterProcessImage(
         imageData, 
         prompt || defaultPrompt,
         'Contexto: Imagen enviada por estudiante durante preparación PAES'
@@ -51,5 +51,8 @@ export function useImageProcessing() {
     }
   };
   
-  return { isProcessing, handleImageProcessing };
+  // Alias para mantener compatibilidad con el código existente
+  const processImage = handleImageProcessing;
+  
+  return { isProcessing, handleImageProcessing, processImage };
 }

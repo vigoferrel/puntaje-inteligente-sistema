@@ -1,171 +1,149 @@
 
-import { useState } from 'react';
-import { Exercise } from '@/types/ai-types';
+import { useState, useCallback } from 'react';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
-import { useLectoGuiaExercise } from '@/hooks/use-lectoguia-exercise';
-import { useLectoGuiaSession } from '@/hooks/use-lectoguia-session';
-import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
-import { SUBJECT_TO_PRUEBA_MAP } from '@/hooks/lectoguia/use-subjects';
+import { Exercise } from '@/types/ai-types';
 import { toast } from '@/components/ui/use-toast';
+import { TPAESHabilidad } from '@/types/system-types';
 
 /**
- * Hook para gestionar el flujo de ejercicios en LectoGuia
- * Con mejor manejo de errores y feedback visual
+ * Hook para manejar el flujo de ejercicios en LectoGuia
  */
 export function useExerciseFlow(
   activeSubject: string,
   setActiveTab: (tab: string) => void
 ) {
-  const { addAssistantMessage } = useLectoGuiaChat();
-  const { saveExerciseAttempt } = useLectoGuiaSession();
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const {
-    currentExercise,
-    selectedOption,
-    showFeedback,
-    generateExercise,
-    resetExercise,
-    handleOptionSelect: selectOption,
-    isLoading
-  } = useLectoGuiaExercise();
+  const { addAssistantMessage, processUserMessage } = useLectoGuiaChat();
   
-  // Mapeo específico de materias a habilidades PAES principales
+  // Mapeo de materias a habilidades principales
   const skillMap: Record<string, TPAESHabilidad> = {
-    'lectura': 'TRACK_LOCATE',
-    'matematicas-basica': 'SOLVE_PROBLEMS',    // Matemáticas 1 (7° a 2° medio)
-    'matematicas-avanzada': 'MODEL',           // Matemáticas 2 (3° y 4° medio)
-    'ciencias': 'IDENTIFY_THEORIES',
-    'historia': 'TEMPORAL_THINKING',
-    'general': 'INTERPRET_RELATE'
+    'general': 'INTERPRET_RELATE',
+    'lectura': 'INTERPRET_RELATE',
+    'matematicas-basica': 'SOLVE_PROBLEMS',
+    'matematicas-avanzada': 'MODEL',
+    'ciencias': 'APPLY_PRINCIPLES',
+    'historia': 'SOURCE_ANALYSIS'
   };
   
-  // Obtener el tipo de prueba PAES correspondiente a la materia actual
-  const getCurrentPrueba = (): TPAESPrueba => {
-    return SUBJECT_TO_PRUEBA_MAP[activeSubject] || 'COMPETENCIA_LECTORA';
-  };
+  // Manejar la selección de opciones
+  const handleOptionSelect = useCallback((index: number) => {
+    if (selectedOption !== null) return; // Evitar cambios una vez seleccionada
+    
+    setSelectedOption(index);
+    setShowFeedback(true);
+    
+    // TO DO: Actualizar el progreso del usuario
+  }, [selectedOption]);
   
-  // Generar un ejercicio según la materia actual con mejor manejo de errores
-  const handleExerciseRequest = async () => {
+  // Generar un nuevo ejercicio
+  const handleNewExercise = useCallback(async () => {
+    setIsLoading(true);
+    
     try {
-      setIsGenerating(true);
+      // Primero, limpiar el estado actual
+      setCurrentExercise(null);
+      setSelectedOption(null);
+      setShowFeedback(false);
       
-      // Mostrar toast de carga
-      toast({
-        title: "Generando ejercicio",
-        description: "Estamos preparando un ejercicio para ti...",
+      const currentSkill = skillMap[activeSubject] || 'INTERPRET_RELATE';
+      
+      // Solicitar un ejercicio nuevo al backend
+      const response = await fetch('/api/lectoguia/exercise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: activeSubject,
+          skill: currentSkill,
+          difficulty: 'INTERMEDIATE'
+        })
       });
       
-      const skill = skillMap[activeSubject];
-      const prueba = getCurrentPrueba();
-      
-      console.log(`Generando ejercicio para materia: ${activeSubject}, skill: ${skill}, prueba: ${prueba}`);
-      
-      const exercise = await generateExercise(skill, prueba);
-      
-      if (exercise) {
-        setTimeout(() => setActiveTab("exercise"), 500);
-        
-        // Mensaje de éxito
-        toast({
-          title: "Ejercicio generado",
-          description: "Se ha creado un nuevo ejercicio para ti.",
-        });
-        
-        // Agregar mensaje del asistente sobre el ejercicio generado
-        addAssistantMessage(
-          `He preparado un ejercicio de ${getCurrentSubjectDisplayName()} para ti. ` +
-          `Es un ejercicio de dificultad ${exercise.difficulty || "intermedia"} que evalúa la habilidad de ` +
-          `${exercise.skill || "interpretación"}. Puedes resolverlo en la pestaña de Ejercicios.`
-        );
-        return true;
-      } else {
-        // Mensaje de error específico para cuando no se pudo generar el ejercicio
-        toast({
-          title: "Error",
-          description: "No se pudo generar el ejercicio. Inténtalo de nuevo.",
-          variant: "destructive"
-        });
-        
-        addAssistantMessage("Lo siento, no pude generar un ejercicio en este momento. Por favor, inténtalo más tarde.");
-        return false;
+      if (!response.ok) {
+        throw new Error(`Error al generar ejercicio: ${response.statusText}`);
       }
-    } catch (error) {
-      console.error("Error en handleExerciseRequest:", error);
       
+      const exercise = await response.json();
+      
+      setCurrentExercise(exercise);
+      // Cambiar a la pestaña de ejercicio
+      setActiveTab('exercise');
+    } catch (error) {
+      console.error("Error generando ejercicio:", error);
       toast({
         title: "Error",
-        description: "Ocurrió un error al generar el ejercicio. Por favor intenta de nuevo.",
+        description: "No se pudo generar un ejercicio. Por favor, intenta de nuevo.",
         variant: "destructive"
       });
       
-      addAssistantMessage("Lo siento, ha ocurrido un error al intentar generar el ejercicio. Por favor, inténtalo de nuevo más tarde.");
+      // Volvemos a la pestaña de chat
+      setActiveTab('chat');
+      addAssistantMessage("Lo siento, no pude generar un ejercicio en este momento. ¿Te gustaría intentar con otro tema?");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeSubject, setActiveTab, addAssistantMessage]);
+  
+  // Solicitar un ejercicio específico usando la interfaz de chat
+  const handleExerciseRequest = useCallback(async (): Promise<boolean> => {
+    setIsLoading(true);
+    
+    try {
+      // Hacer una solicitud de ejercicio usando la interfaz de chat
+      const result = await processUserMessage(
+        `Genera un ejercicio sobre ${activeSubject} con formato de opción múltiple`
+      );
+      
+      if (result) {
+        // Parsear el ejercicio desde la respuesta (simulado por ahora)
+        // En un caso real, deberíamos tener una respuesta estructurada desde la API
+        const mockExercise: Exercise = {
+          id: `exercise-${Date.now()}`,
+          nodeId: '',
+          nodeName: '',
+          prueba: 'COMPETENCIA_LECTORA', 
+          skill: skillMap[activeSubject] || 'INTERPRET_RELATE',
+          difficulty: 'INTERMEDIATE',
+          question: result,
+          options: ['Opción 1', 'Opción 2', 'Opción 3', 'Opción 4'],
+          correctAnswer: 'Opción 1',
+          explanation: 'Selecciona una opción para ver la explicación'
+        };
+        
+        setCurrentExercise(mockExercise);
+        setSelectedOption(null);
+        setShowFeedback(false);
+        setActiveTab('exercise');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Error solicitando ejercicio:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar un ejercicio. Por favor, intenta de nuevo.",
+        variant: "destructive"
+      });
       return false;
     } finally {
-      setIsGenerating(false);
+      setIsLoading(false);
     }
-  };
-  
-  // Obtener el nombre de la materia actual para mostrar
-  const getCurrentSubjectDisplayName = (): string => {
-    const subjectNames: Record<string, string> = {
-      'general': 'comprensión lectora',
-      'lectura': 'comprensión lectora',
-      'matematicas-basica': 'matemáticas para 7° a 2° medio',
-      'matematicas-avanzada': 'matemáticas para 3° y 4° medio',
-      'ciencias': 'ciencias',
-      'historia': 'historia'
-    };
-    
-    return subjectNames[activeSubject] || activeSubject;
-  };
-  
-  // Manejar la selección de una opción en el ejercicio
-  const handleOptionSelect = (index: number) => {
-    selectOption(index);
-    
-    setTimeout(() => {
-      // Guardar el intento de ejercicio si el usuario está logueado y el ejercicio es válido
-      if (currentExercise && currentExercise.id && currentExercise.options) {
-        const correctAnswerIndex = currentExercise.options.findIndex(
-          option => option === currentExercise.correctAnswer
-        );
-        
-        const isCorrect = index === (correctAnswerIndex >= 0 ? correctAnswerIndex : 0);
-        
-        // Utilizar la prueba del ejercicio si está presente, o determinarla según la materia activa
-        const prueba = currentExercise.prueba || getCurrentPrueba();
-        
-        console.log(`Guardando ejercicio con prueba: ${prueba}, materia: ${activeSubject}`);
-        
-        saveExerciseAttempt(
-          currentExercise,
-          index,
-          isCorrect,
-          currentExercise.skill || skillMap[activeSubject],
-          prueba
-        );
-      }
-    }, 300);
-  };
-  
-  // Manejar la solicitud de un nuevo ejercicio
-  const handleNewExercise = () => {
-    setActiveTab("chat");
-    resetExercise();
-    
-    addAssistantMessage("Excelente trabajo. ¿Te gustaría continuar con otro ejercicio o prefieres que trabajemos en otra materia?");
-  };
+  }, [activeSubject, processUserMessage, setActiveTab, skillMap]);
   
   return {
     currentExercise,
     selectedOption,
     showFeedback,
-    handleExerciseRequest,
     handleOptionSelect,
     handleNewExercise,
-    getCurrentPrueba,
-    skillMap,
-    isLoading: isLoading || isGenerating
+    handleExerciseRequest,
+    isLoading,
+    setIsLoading,
+    setCurrentExercise,
+    skillMap
   };
 }

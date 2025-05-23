@@ -20,7 +20,7 @@ export const SUBJECT_TO_PRUEBA_MAP: Record<string, TPAESPrueba> = {
  */
 export function useSubjects() {
   const [activeSubject, setActiveSubject] = useState('general');
-  const { addAssistantMessage } = useLectoGuiaChat();
+  const { addAssistantMessage, setActiveSubject: setActiveChatSubject } = useLectoGuiaChat();
   
   const subjectNames: Record<string, string> = {
     general: 'modo general',
@@ -35,6 +35,7 @@ export function useSubjects() {
   const handleSubjectChange = (subject: string) => {
     if (activeSubject !== subject) {
       setActiveSubject(subject);
+      setActiveChatSubject(subject);
       
       // Notificar al usuario sobre el cambio de materia
       addAssistantMessage(`Ahora estamos en ${subjectNames[subject]}. ¿En qué puedo ayudarte con esta materia?`);

@@ -1,4 +1,4 @@
-// Actualizar solo la parte necesaria del archivo para añadir setActiveSubject a las exports
+
 import { useState, useCallback } from 'react';
 import { useChatMessages } from './use-chat-messages';
 import { useImageProcessing } from './use-image-processing';
@@ -9,12 +9,15 @@ import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MessageCircleWarning } from 'lucide-react';
 
+// Define connection status type to match what's expected from use-openrouter
+type LectoGuiaConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
+
 interface ChatState {
   messages: any[];
   isTyping: boolean;
   activeSubject: string;
   serviceStatus: 'available' | 'degraded' | 'unavailable';
-  connectionStatus: ConnectionStatus;
+  connectionStatus: LectoGuiaConnectionStatus;
 }
 
 interface ChatActions {
@@ -22,13 +25,16 @@ interface ChatActions {
   resetConnectionStatus: () => void;
   showConnectionStatus: () => React.ReactNode | null;
   setActiveSubject: (subject: string) => void;
+  addAssistantMessage: (content: string) => any;
+  changeSubject: (subject: string) => void;
+  detectSubjectFromMessage: (message: string) => string | null;
 }
 
 export function useLectoGuiaChat(): ChatState & ChatActions {
   const [isTyping, setIsTyping] = useState(false);
   const [activeSubject, setActiveSubject] = useState('general'); // Valor por defecto
   const [serviceStatus, setServiceStatus] = useState<'available' | 'degraded' | 'unavailable'>('available');
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
+  const [connectionStatus, setConnectionStatus] = useState<LectoGuiaConnectionStatus>('idle');
   
   const { messages, addUserMessage, addAssistantMessage, getRecentMessages } = useChatMessages();
   const { processImage } = useImageProcessing();
