@@ -7,7 +7,7 @@ import { toast } from '@/components/ui/use-toast';
 
 export function useNodes(userId?: string) {
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
-  const [selectedTestId, setSelectedTestId] = useState<number | null>(null);
+  const [selectedTestId, setSelectedTestId] = useState<number | null>(1);
   const [selectedPrueba, setSelectedPrueba] = useState<TPAESPrueba>('COMPETENCIA_LECTORA');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,11 +38,26 @@ export function useNodes(userId?: string) {
 
   // Función para cambiar la prueba seleccionada
   const handlePruebaChange = useCallback((prueba: TPAESPrueba) => {
-    console.log(`🔄 Cambiando prueba seleccionada: ${selectedPrueba} → ${prueba}`);
+    console.log(`🔄 useNodes: Cambiando prueba seleccionada: ${selectedPrueba} → ${prueba}`);
     
     setSelectedPrueba(prueba);
-    setSelectedTestId(pruebaToTestIdMap[prueba]);
+    const newTestId = pruebaToTestIdMap[prueba];
+    setSelectedTestId(newTestId);
+    
+    console.log(`📋 useNodes: Nueva prueba ${prueba} con testId ${newTestId}`);
   }, [selectedPrueba, pruebaToTestIdMap]);
+
+  // Función para cambiar por testId (para compatibilidad)
+  const handleTestIdChange = useCallback((testId: number) => {
+    console.log(`🔄 useNodes: Cambiando testId: ${selectedTestId} → ${testId}`);
+    
+    setSelectedTestId(testId);
+    const newPrueba = testIdToPruebaMap[testId];
+    if (newPrueba) {
+      setSelectedPrueba(newPrueba);
+      console.log(`📋 useNodes: Nuevo testId ${testId} con prueba ${newPrueba}`);
+    }
+  }, [selectedTestId, testIdToPruebaMap]);
 
   // Función para cargar nodos desde la base de datos
   const loadNodes = useCallback(async () => {
@@ -129,14 +144,6 @@ export function useNodes(userId?: string) {
     loadNodes();
   }, [loadNodes]);
 
-  // Sincronizar selectedTestId cuando cambie selectedPrueba
-  useEffect(() => {
-    const testId = pruebaToTestIdMap[selectedPrueba];
-    if (selectedTestId !== testId) {
-      setSelectedTestId(testId);
-    }
-  }, [selectedPrueba, selectedTestId, pruebaToTestIdMap]);
-
   return {
     // Estado base
     nodes,
@@ -147,7 +154,7 @@ export function useNodes(userId?: string) {
     // Estado de selección
     selectedTestId,
     selectedPrueba,
-    setSelectedTestId,
+    setSelectedTestId: handleTestIdChange,
     
     // Funciones
     handlePruebaChange,

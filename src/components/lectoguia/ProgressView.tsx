@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,16 +35,16 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
     nodeProgress, 
     selectedPrueba,
     handleNodeSelect,
-    // Acceder a la función para cambiar la prueba desde el contexto
-    setSelectedTestId,
-    selectedTestId
+    setSelectedTestId
   } = useLectoGuia();
   
   const [activeView, setActiveView] = useState('overview');
 
   // Función para manejar el cambio de tipo de prueba
   const handleTestChange = (newPrueba: TPAESPrueba) => {
-    // Mapeo de prueba a testId
+    console.log(`🔄 ProgressView: Cambiando a ${newPrueba}`);
+    
+    // Mapeo de prueba a testId para compatibilidad
     const pruebaToTestId: Record<TPAESPrueba, number> = {
       'COMPETENCIA_LECTORA': 1,
       'MATEMATICA_1': 2,
@@ -56,12 +55,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
     
     const newTestId = pruebaToTestId[newPrueba];
     setSelectedTestId(newTestId);
-    
-    console.log(`🔄 ProgressView: Cambiando a ${newPrueba} (testId: ${newTestId})`);
   };
 
   // Obtener nodos filtrados por la prueba actual
   const filteredNodes = nodes.filter(node => node.prueba === selectedPrueba);
+  
+  console.log(`📊 ProgressView: Mostrando ${filteredNodes.length} nodos para ${selectedPrueba}`);
   
   // Calcular estadísticas específicas de la prueba seleccionada
   const totalSkills = Object.keys(skillLevels).length;

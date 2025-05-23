@@ -4,7 +4,7 @@ import { TPAESPrueba } from '@/types/system-types';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 
 /**
- * Hook mejorado para manejar la selección de tipos de prueba PAES
+ * Hook centralizado para manejar la selección de tipos de prueba PAES
  * con sincronización global del estado
  */
 export function useTestSelection() {
@@ -28,6 +28,18 @@ export function useTestSelection() {
     'ciencias': 'CIENCIAS',
     'historia': 'HISTORIA'
   };
+  
+  // Función para obtener testId desde prueba
+  const getTestIdFromPrueba = useCallback((prueba: TPAESPrueba): number => {
+    const pruebaToTestIdMap = {
+      'COMPETENCIA_LECTORA': 1,
+      'MATEMATICA_1': 2,
+      'MATEMATICA_2': 3,
+      'CIENCIAS': 4,
+      'HISTORIA': 5
+    };
+    return pruebaToTestIdMap[prueba];
+  }, []);
   
   // Manejar cambio de tipo de prueba con propagación global
   const handleTestChange = useCallback((test: TPAESPrueba) => {
@@ -112,6 +124,7 @@ export function useTestSelection() {
     handleTestChange,
     syncWithActiveSubject,
     getCurrentTestInfo,
-    currentSubject: testToSubjectMap[selectedTest]
+    currentSubject: testToSubjectMap[selectedTest],
+    getTestIdFromPrueba
   };
 }

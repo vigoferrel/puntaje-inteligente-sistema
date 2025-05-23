@@ -11,8 +11,8 @@ import { useNodes } from './useNodes';
 import { useSkills } from './useSkills';
 import { useExercises } from './useExercises';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
-import { useSubjects } from './useSubjects';
-import { TPAESHabilidad } from '@/types/system-types';
+import { useTestSelection } from '@/hooks/lectoguia/use-test-selection';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 
 // Proveedor del contexto
 export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -22,6 +22,15 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Hooks para cada conjunto de funcionalidad
   const { activeTab, setActiveTab } = useTabs();
   
+  // Hook centralizado para manejo de selección de prueba
+  const {
+    selectedTest,
+    handleTestChange,
+    getCurrentTestInfo,
+    currentSubject,
+    getTestIdFromPrueba
+  } = useTestSelection();
+
   const {
     messages,
     isTyping: chatIsTyping,
@@ -44,11 +53,6 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateSkillLevel
   } = useLectoGuiaChat();
   
-  // Usar el hook useSubjects para manejar el cambio de materias
-  const handleSubjectChange = (subject: string) => {
-    setActiveSubject(subject);
-  };
-
   const { 
     skillLevels, 
     updateSkillLevel: updateSkillLevelUI, 
@@ -60,8 +64,9 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     nodes,
     nodeProgress,
     selectedTestId,
-    setSelectedTestId,
-    selectedPrueba
+    selectedPrueba,
+    handlePruebaChange,
+    getFilteredNodes
   } = useNodes(user?.id);
   
   const {
@@ -74,6 +79,17 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCurrentExercise,
     setIsLoading
   } = useExercises(user?.id, updateSkillLevelUI, getSkillIdFromCode);
+
+  // Función centralizada para cambio de tipo de prueba
+  const handleTestSelect = (test: TPAESPrueba) => {
+    console.log(`🎯 LectoGuiaProvider: Cambiando a prueba ${test}`);
+    
+    // Usar el hook centralizado
+    handleTestChange(test);
+    
+    // Sincronizar con useNodes
+    handlePruebaChange(test);
+  };
   
   // Manejar la selección de nodos de aprendizaje
   const handleNodeSelect = async (nodeId: string) => {
@@ -271,14 +287,14 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     isTyping: chatIsTyping,
     activeSubject,
     handleSendMessage,
-    handleSubjectChange,
+    handleSubjectChange: (subject: string) => setActiveSubject(subject),
     
     // Ejercicios
     currentExercise,
     selectedOption,
     showFeedback,
     handleOptionSelect,
-    handleNewExercise: handleExerciseRequest, // Usar la función mejorada
+    handleNewExercise: handleExerciseRequest,
     
     // Habilidades
     activeSkill,
@@ -293,9 +309,21 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     nodes,
     nodeProgress,
     handleNodeSelect,
-    selectedTestId,
-    setSelectedTestId,
-    selectedPrueba,
+    selectedTestId: getTestIdFromPrueba(selectedTest),
+    setSelectedTestId: (testId: number) => {
+      const pruebaMap = {
+        1: 'COMPETENCIA_LECTORA' as TPAESPrueba,
+        2: 'MATEMATICA_1' as TPAESPrueba,
+        3: 'MATEMATICA_2' as TPAESPrueba,
+        4: 'CIENCIAS' as TPAESPrueba,
+        5: 'HISTORIA' as TPAESPrueba
+      };
+      const prueba = pruebaMap[testId];
+      if (prueba) {
+        handleTestSelect(prueba);
+      }
+    },
+    selectedPrueba: selectedTest,
     recommendedNodes,
     
     // Estado de conexión
@@ -306,12 +334,12 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }), [
     activeTab, isLoading, messages, chatIsTyping, activeSubject, 
     currentExercise, selectedOption, showFeedback, skillLevels, 
-    nodes, nodeProgress, selectedTestId, selectedPrueba, recommendedNodes,
-    handleSendMessage, handleSubjectChange, handleOptionSelect, 
+    nodes, nodeProgress, selectedTest, recommendedNodes,
+    handleSendMessage, handleOptionSelect, 
     handleExerciseRequest, handleStartSimulation, handleNodeSelect,
     handleSkillSelect, activeSkill, setActiveSkill,
-    setActiveTab, setSelectedTestId, serviceStatus, connectionStatus,
-    resetConnectionStatus, showConnectionStatus
+    setActiveTab, serviceStatus, connectionStatus,
+    resetConnectionStatus, showConnectionStatus, getTestIdFromPrueba
   ]);
   
   return (
