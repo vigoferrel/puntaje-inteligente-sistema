@@ -118,7 +118,7 @@ Instrucciones:
 6. Si la consulta no es educativa, redirige gentilmente al tema de estudios`;
 
       // Asegurar que el mensaje tenga contenido
-      const messageContent = content || "Hola, necesito ayuda con mis estudios";
+      const userMessageContent = content || "Hola, necesito ayuda con mis estudios";
 
       console.log('LectoGuía: Enviando solicitud a OpenRouter');
       
@@ -126,9 +126,9 @@ Instrucciones:
       const response = await openRouterService({
         action: 'provide_feedback',
         payload: {
-          message: messageContent,          // Parámetro principal esperado por el backend
-          userMessage: messageContent,      // Parámetro alternativo para compatibilidad
-          content: messageContent,          // Otra variante para compatibilidad
+          message: userMessageContent,          // Parámetro principal esperado por el backend
+          userMessage: userMessageContent,      // Parámetro alternativo para compatibilidad
+          content: userMessageContent,          // Otra variante para compatibilidad
           systemPrompt: systemPrompt,       // Instrucciones del sistema
           subject: activeSubject,           // Materia activa
           context: `subject:${activeSubject}`, // Contexto formateado
@@ -149,14 +149,14 @@ Instrucciones:
       console.log('LectoGuía: Respuesta recibida exitosamente');
       
       // Extraer el contenido de la respuesta con type-safe access
-      const messageContent = (response as any)?.response || (response as any)?.result || response;
+      const aiResponseContent = (response as any)?.response || (response as any)?.result || response;
       
       // Añadir la respuesta del asistente al estado
-      addAssistantMessage(messageContent);
+      addAssistantMessage(aiResponseContent);
       setConnectionStatus('connected');
       setServiceStatus('available');
       
-      return messageContent;
+      return aiResponseContent;
     } catch (error: any) {
       console.error("LectoGuía: Error procesando mensaje:", error);
       
