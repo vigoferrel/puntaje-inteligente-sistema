@@ -1,3 +1,4 @@
+
 import { toast } from "@/components/ui/use-toast";
 
 interface OpenRouterRequest {
@@ -15,7 +16,7 @@ const generateRequestId = () => {
 interface CacheItem {
   timestamp: number;
   response: any;
-  hits: number; // Contador de uso para mantener items populares
+  hits: number;
 }
 
 const responseCache: Record<string, CacheItem> = {};
@@ -24,78 +25,81 @@ const MAX_CACHE_ITEMS = 200;
 
 // Variables para el seguimiento del estado del servicio
 let serviceHealthLastChecked = 0;
-let serviceHealthStatus = true; // Asumimos que está saludable inicialmente
+let serviceHealthStatus = true;
 const HEALTH_CHECK_INTERVAL = 60000; // 1 minuto
 
 // Función para obtener la clave de autorización de forma segura
 function getAuthorizationKey(): string {
-  // Intentar obtener la clave desde diferentes fuentes
-  const viteKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
-  const envKey = process?.env?.VITE_SUPABASE_ANON_KEY;
-  
-  // Clave anon de Supabase hardcodeada como fallback (es pública y segura)
+  // Clave anon de Supabase (es pública y segura)
   const fallbackKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldHRpZmJvaWxpdHllbHBydmpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NTgyMjIsImV4cCI6MjA2MzQzNDIyMn0.11lCgmBNnZeAmxG1pEc6JAdZMAS5J5hUhw5TF6-JvrQ';
   
-  return viteKey || envKey || fallbackKey;
+  // Intentar obtener desde variables de entorno
+  if (typeof window !== 'undefined') {
+    return import.meta.env?.VITE_SUPABASE_ANON_KEY || fallbackKey;
+  }
+  
+  return fallbackKey;
 }
 
 /**
- * Verifica la salud del servicio con mejor manejo de errores y reintentos
+ * Verifica la salud del servicio con mejor manejo de errores
  */
 async function checkServiceHealth(): Promise<boolean> {
   const now = Date.now();
   
-  // Si verificamos recientemente, devolver el último estado conocido
   if (now - serviceHealthLastChecked < HEALTH_CHECK_INTERVAL) {
     return serviceHealthStatus;
   }
   
-  const maxRetries = 2;
+  const maxRetries = 3;
   let retryCount = 0;
   
   while (retryCount < maxRetries) {
     try {
-      console.log(`OpenRouter: Verificando salud del servicio (intento ${retryCount + 1}/${maxRetries})`);
+      console.log(`OpenRouter: Health check intento ${retryCount + 1}/${maxRetries}`);
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // Aumentado a 8 segundos
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
       const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
       const authKey = getAuthorizationKey();
       
-      console.log(`OpenRouter: Usando clave de autorización: ${authKey.substring(0, 20)}...`);
+      console.log(`OpenRouter: Enviando health check a ${functionUrl}`);
+      console.log(`OpenRouter: Usando auth key: ${authKey.substring(0, 20)}...`);
       
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authKey}`
+          'Authorization': `Bearer ${authKey}`,
+          'apikey': authKey
         },
         body: JSON.stringify({
           action: 'health_check',
           payload: {},
           requestId: generateRequestId()
         }),
-        signal: controller.signal,
-        cache: 'no-store'
+        signal: controller.signal
       });
       
       clearTimeout(timeoutId);
       serviceHealthLastChecked = now;
       
+      console.log(`OpenRouter: Health check response status: ${response.status}`);
+      
       if (!response.ok) {
-        console.warn(`OpenRouter: Health check falló con estado: ${response.status}`);
         const errorText = await response.text().catch(() => 'No se pudo leer el error');
-        console.warn(`OpenRouter: Error detail: ${errorText}`);
+        console.warn(`OpenRouter: Health check falló: ${response.status} - ${errorText}`);
         
-        // Si es un error 401, esperar un poco más antes del siguiente intento
         if (response.status === 401) {
-          retryCount++;
-          if (retryCount < maxRetries) {
-            console.log(`OpenRouter: Error 401, reintentando en 2 segundos...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            continue;
-          }
+          console.error('OpenRouter: Error de autorización - verificar clave API');
+        }
+        
+        retryCount++;
+        if (retryCount < maxRetries) {
+          console.log(`OpenRouter: Reintentando en 2 segundos...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
         }
         
         serviceHealthStatus = false;
@@ -103,17 +107,19 @@ async function checkServiceHealth(): Promise<boolean> {
       }
       
       const data = await response.json();
+      console.log('OpenRouter: Health check response:', data);
+      
       serviceHealthStatus = data?.result?.status === 'available' || response.ok;
-      console.log(`OpenRouter: Health check exitoso:`, serviceHealthStatus);
+      console.log(`OpenRouter: Service health status: ${serviceHealthStatus}`);
       return serviceHealthStatus;
       
     } catch (error) {
-      console.warn(`OpenRouter: Health check falló (intento ${retryCount + 1}):`, error);
+      console.error(`OpenRouter: Health check error (intento ${retryCount + 1}):`, error);
       retryCount++;
       
       if (retryCount < maxRetries) {
-        console.log(`OpenRouter: Reintentando health check en 1 segundo...`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log(`OpenRouter: Reintentando health check en ${retryCount * 1000}ms...`);
+        await new Promise(resolve => setTimeout(resolve, retryCount * 1000));
         continue;
       }
       
@@ -130,12 +136,10 @@ async function checkServiceHealth(): Promise<boolean> {
  * Genera una clave de caché basada en la acción y payload
  */
 function generateCacheKey(action: string, payload: any): string {
-  // Para acciones que no deberían cachearse, incluir timestamp para que sea única
   if (['health_check', 'provide_exercise_feedback'].includes(action)) {
     return `${action}:${Date.now()}`;
   }
   
-  // Simplificar y normalizar el payload para generar claves de caché consistentes
   const normalizedPayload = JSON.stringify(payload)
     .replace(/\s+/g, '')
     .substring(0, 200)
@@ -145,13 +149,12 @@ function generateCacheKey(action: string, payload: any): string {
 }
 
 /**
- * Mantiene el caché limpio eliminando entradas antiguas o menos usadas
+ * Mantiene el caché limpio
  */
 function cleanupCache() {
   const now = Date.now();
   const entries = Object.entries(responseCache);
   
-  // Si el caché no está lleno, solo eliminar entradas expiradas
   if (entries.length < MAX_CACHE_ITEMS) {
     for (const [key, item] of entries) {
       if (now - item.timestamp > CACHE_TTL) {
@@ -161,19 +164,14 @@ function cleanupCache() {
     return;
   }
   
-  // Si el caché está lleno, eliminar basado en antigüedad y frecuencia de uso
   const sortedEntries = entries.sort((a, b) => {
-    const ageScoreA = (now - a[1].timestamp) / CACHE_TTL; // 0-1+ (más alto = más viejo)
+    const ageScoreA = (now - a[1].timestamp) / CACHE_TTL;
     const ageScoreB = (now - b[1].timestamp) / CACHE_TTL;
-    
-    const popularityScoreA = 1 / (a[1].hits + 1); // 0-1 (más bajo = más popular)
+    const popularityScoreA = 1 / (a[1].hits + 1);
     const popularityScoreB = 1 / (b[1].hits + 1);
-    
-    // Combinación de edad y popularidad para determinar qué eliminar primero
     return (ageScoreA * 0.7 + popularityScoreA * 0.3) - (ageScoreB * 0.7 + popularityScoreB * 0.3);
   });
   
-  // Eliminar el 20% de las entradas menos útiles
   const itemsToRemove = Math.max(Math.floor(sortedEntries.length * 0.2), 10);
   for (let i = 0; i < itemsToRemove; i++) {
     delete responseCache[sortedEntries[i][0]];
@@ -181,7 +179,7 @@ function cleanupCache() {
 }
 
 /**
- * Obtiene una respuesta desde el caché si está disponible y es válida
+ * Obtiene una respuesta desde el caché
  */
 function getCachedResponse(cacheKey: string): any | null {
   const cachedItem = responseCache[cacheKey];
@@ -193,7 +191,6 @@ function getCachedResponse(cacheKey: string): any | null {
     return null;
   }
   
-  // Incrementar contador de hits para mantenimiento del caché
   cachedItem.hits++;
   return cachedItem.response;
 }
@@ -202,7 +199,6 @@ function getCachedResponse(cacheKey: string): any | null {
  * Guarda una respuesta en el caché
  */
 function cacheResponse(cacheKey: string, response: any) {
-  // No cachear respuestas de error
   if (!response || (typeof response === 'object' && response.error)) return;
   
   responseCache[cacheKey] = {
@@ -211,14 +207,13 @@ function cacheResponse(cacheKey: string, response: any) {
     hits: 1
   };
   
-  // Mantener el caché limpio
   if (Object.keys(responseCache).length > MAX_CACHE_ITEMS * 0.9) {
     cleanupCache();
   }
 }
 
 /**
- * Servicio principal mejorado con mejor manejo de conexión
+ * Servicio principal mejorado
  */
 export async function openRouterService<T>(request: OpenRouterRequest): Promise<T | null> {
   const requestId = request.requestId || generateRequestId();
@@ -228,47 +223,45 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
     
     const cacheKey = generateCacheKey(request.action, request.payload);
     
-    // Intentar obtener respuesta desde caché primero (solo para acciones no críticas)
+    // Verificar caché para acciones no críticas
     if (request.action !== 'health_check') {
       const cachedResponse = getCachedResponse(cacheKey);
       if (cachedResponse) {
-        console.log(`OpenRouter [${requestId}]: Usando respuesta en caché para ${request.action}`);
+        console.log(`OpenRouter [${requestId}]: Usando respuesta en caché`);
         return cachedResponse as T;
       }
     }
     
-    // Verificar la salud del servicio con reintentos mejorados
+    // Verificar salud del servicio
     const isHealthy = await checkServiceHealth();
     if (!isHealthy && request.action !== 'health_check') {
-      console.warn(`OpenRouter [${requestId}]: Servicio no disponible después de verificaciones`);
+      console.warn(`OpenRouter [${requestId}]: Servicio no disponible`);
       
-      // Para algunas acciones críticas, devolver respuestas fallback inmediatas
       if (['provide_feedback', 'provide_exercise_feedback'].includes(request.action)) {
         return {
           response: "Estoy funcionando en modo offline con capacidades limitadas. Por favor intenta más tarde para acceder a todas mis funcionalidades."
         } as unknown as T;
       }
+      
+      return null;
     }
     
-    const requestWithId = {
-      ...request,
-      requestId
-    };
-    
+    const requestWithId = { ...request, requestId };
     const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
     const authKey = getAuthorizationKey();
     
-    console.log(`OpenRouter [${requestId}]: Enviando a ${functionUrl}`);
+    console.log(`OpenRouter [${requestId}]: Enviando solicitud a ${functionUrl}`);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 35000); // Timeout aumentado
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     
     try {
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authKey}`
+          'Authorization': `Bearer ${authKey}`,
+          'apikey': authKey
         },
         body: JSON.stringify(requestWithId),
         signal: controller.signal
@@ -276,16 +269,16 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       
       clearTimeout(timeoutId);
       
+      console.log(`OpenRouter [${requestId}]: Response status: ${response.status}`);
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`OpenRouter [${requestId}]: Error HTTP ${response.status}:`, errorText);
         
-        // Actualizar estado del servicio si hay errores críticos
         if (response.status >= 500) {
           serviceHealthStatus = false;
         }
         
-        // No mostrar toast para health checks para evitar spam de notificaciones
         if (request.action !== 'health_check') {
           if (response.status === 401) {
             console.error(`OpenRouter [${requestId}]: Error de autorización`);
@@ -295,17 +288,12 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
           } else if (response.status === 404) {
             console.error(`OpenRouter [${requestId}]: Endpoint no encontrado`);
             return { 
-              response: "El servicio de AI está experimentando dificultades técnicas. Estamos trabajando para resolverlo." 
+              response: "El servicio de AI está experimentando dificultades técnicas." 
             } as unknown as T;
           } else if (response.status === 429) {
             console.warn(`OpenRouter [${requestId}]: Rate limit alcanzado`);
             return {
-              response: "El servicio está experimentando alta demanda en este momento. Por favor intenta de nuevo en unos minutos."
-            } as unknown as T;
-          } else if (response.status === 504 || response.status === 503) {
-            console.error(`OpenRouter [${requestId}]: Servicio no disponible`);
-            return {
-              response: "El servicio de IA está temporalmente no disponible. Funcionaré con capacidades limitadas."
+              response: "El servicio está experimentando alta demanda. Por favor intenta de nuevo en unos minutos."
             } as unknown as T;
           }
         }
@@ -313,7 +301,6 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
         throw new Error(`Error en solicitud OpenRouter: ${response.status}`);
       }
       
-      // Restablecer el estado del servicio a saludable si la solicitud fue exitosa
       serviceHealthStatus = true;
       
       let data;
@@ -329,9 +316,9 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
         throw new Error(`Error de la API: ${data.error}`);
       }
       
-      console.log(`OpenRouter [${requestId}]: Respuesta exitosa para ${request.action}`);
+      console.log(`OpenRouter [${requestId}]: Respuesta exitosa`);
       
-      // Cachear respuesta exitosa si es apropiada para caché
+      // Cachear respuesta exitosa
       if (request.action !== 'health_check') {
         cacheResponse(cacheKey, data.result);
       }
@@ -343,7 +330,7 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       if (fetchError.name === 'AbortError') {
         console.warn(`OpenRouter [${requestId}]: Timeout de solicitud`);
         return {
-          response: "La respuesta está tardando más de lo esperado. Estoy funcionando en modo limitado en este momento."
+          response: "La respuesta está tardando más de lo esperado. Funcionando en modo limitado."
         } as unknown as T;
       }
       
@@ -351,7 +338,12 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-    console.error(`OpenRouter [${requestId}]: Error del servicio:`, errorMessage, error);
+    console.error(`OpenRouter [${requestId}]: Error del servicio:`, errorMessage);
+    
+    // Para health checks, simplemente devolver null sin mostrar errores
+    if (request.action === 'health_check') {
+      return null;
+    }
     
     return null;
   }

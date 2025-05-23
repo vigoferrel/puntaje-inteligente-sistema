@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { WifiOff, RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
+import { WifiOff, RefreshCw, CheckCircle, AlertTriangle, Wifi } from 'lucide-react';
 import { openRouterService } from '@/services/openrouter/core';
 
 interface ConnectionMonitorProps {
@@ -15,6 +15,7 @@ export const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
   const [isRetrying, setIsRetrying] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const checkConnection = async () => {
     try {
@@ -32,6 +33,7 @@ export const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
       if (response) {
         console.log('ConnectionMonitor: Conexión exitosa');
         setConnectionStatus('connected');
+        setRetryCount(0);
         onConnectionStatusChange?.('connected');
       } else {
         throw new Error('No se recibió respuesta del servicio');
@@ -48,17 +50,28 @@ export const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
     if (isRetrying) return;
     
     setIsRetrying(true);
-    await checkConnection();
-    setTimeout(() => setIsRetrying(false), 2000);
+    setRetryCount(prev => prev + 1);
+    
+    try {
+      await checkConnection();
+    } finally {
+      setTimeout(() => setIsRetrying(false), 2000);
+    }
   };
 
   useEffect(() => {
-    checkConnection();
+    // Verificación inicial después de un breve delay
+    const initialCheck = setTimeout(() => {
+      checkConnection();
+    }, 1000);
     
     // Verificar conexión cada 2 minutos
     const interval = setInterval(checkConnection, 120000);
     
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialCheck);
+      clearInterval(interval);
+    };
   }, []);
 
   const getStatusIcon = () => {
@@ -79,20 +92,42 @@ export const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
       case 'connecting':
         return 'Conectando...';
       case 'disconnected':
-        return `Desconectado del servicio${lastError ? `: ${lastError}` : ''}`;
+        return `Desconectado del servicio. ${retryCount > 0 ? `Intentos: ${retryCount}` : ''}`;
     }
   };
 
+  const getStatusColor = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'border-green-200 bg-green-50 text-green-800';
+      case 'connecting':
+        return 'border-yellow-200 bg-yellow-50 text-yellow-800';
+      case 'disconnected':
+        return 'border-red-200 bg-red-50 text-red-800';
+    }
+  };
+
+  // Solo mostrar cuando no está conectado
   if (connectionStatus === 'connected') {
-    return null; // No mostrar nada cuando está conectado
+    return (
+      <div className="flex items-center gap-2 text-sm text-green-600 mb-2">
+        <Wifi className="h-4 w-4" />
+        <span>Conectado</span>
+      </div>
+    );
   }
 
   return (
-    <Alert variant={connectionStatus === 'disconnected' ? 'destructive' : 'default'} className="mb-4">
+    <Alert className={`mb-4 ${getStatusColor()}`}>
       <div className="flex items-center gap-2">
         {getStatusIcon()}
         <AlertDescription className="flex-1">
           {getStatusMessage()}
+          {lastError && connectionStatus === 'disconnected' && (
+            <div className="text-xs mt-1 opacity-75">
+              {lastError}
+            </div>
+          )}
         </AlertDescription>
         {connectionStatus === 'disconnected' && (
           <Button 
@@ -100,7 +135,7 @@ export const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
             size="sm" 
             onClick={handleRetry}
             disabled={isRetrying}
-            className="ml-2"
+            className="ml-2 border-current"
           >
             {isRetrying ? (
               <RefreshCw className="h-3 w-3 animate-spin" />
