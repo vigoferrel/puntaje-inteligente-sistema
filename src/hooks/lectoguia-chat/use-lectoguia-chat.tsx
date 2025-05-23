@@ -8,6 +8,7 @@ import { subjectNames, detectSubjectFromMessage } from './subject-detection';
 import { handleMessageError, extractResponseContent } from './message-handling';
 import { ChatState, ChatActions, ERROR_RATE_LIMIT_MESSAGE } from './types';
 import { provideChatFeedback } from '@/services/openrouter/feedback';
+import { ToastAction } from '@/components/ui/toast';
 
 export function useLectoGuiaChat(): ChatState & ChatActions {
   // Chat state management
@@ -142,15 +143,11 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         const errorResponse = "Lo siento, estoy teniendo problemas para conectarme. Por favor, intenta de nuevo en unos momentos.";
         addAssistantMessage(errorResponse);
         
-        // Usar un objeto action en lugar de JSX directo para el botón
         toast({
           title: "Error de conexión",
           description: "Hubo un problema al conectar con el servicio. Inténtalo de nuevo.",
           variant: "destructive",
-          action: {
-            label: "Reintentar",
-            onClick: retryLastOperation
-          }
+          action: <ToastAction altText="Reintentar" onClick={retryLastOperation}>Reintentar</ToastAction>
         });
         
         return errorResponse;
