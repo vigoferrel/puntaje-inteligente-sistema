@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { WelcomeHeader } from "@/components/dashboard/welcome-header";
@@ -15,7 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAIFeatures } from "@/hooks/use-ai-features";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDiagnosticHistory } from "@/hooks/diagnostic/results/use-diagnostic-history";
-import { useLearningWorkflow } from "@/hooks/use-learning-workflow";
+import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useDiagnosticRecommendations } from "@/hooks/use-diagnostic-recommendations";
 import { motion } from "framer-motion";
 import { DiagnosticResult } from "@/types/diagnostic";
@@ -36,7 +35,7 @@ const Index = () => {
   } = useDashboardStats();
 
   const { profile } = useAuth();
-  const { currentPhase } = useLearningWorkflow();
+  const { currentPhase } = useLearningNodes();
   const { nextRecommendedNodeId } = useDiagnosticRecommendations();
   
   const [diagnosticLoading, setDiagnosticLoading] = useState(true);
