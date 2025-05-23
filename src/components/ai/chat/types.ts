@@ -5,4 +5,5 @@ export interface ChatMessageType {
   content: string;
   timestamp?: string;
   imageUrl?: string;
+  imageData?: string;
 }

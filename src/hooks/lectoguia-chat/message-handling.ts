@@ -11,7 +11,7 @@ export const createUserMessage = (content: string, imageData?: string): ChatMess
     id: uuidv4(),
     role: "user",
     content,
-    imageData,
+    imageUrl: imageData, // Using imageUrl instead of imageData to match ChatMessageType
     timestamp: new Date().toISOString()
   };
 };
