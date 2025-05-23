@@ -1,6 +1,7 @@
 
 import React, { useEffect, useCallback } from 'react';
-import { LectoGuiaContext, LectoGuiaContextType } from './useLectoGuia';
+import { LectoGuiaContext } from './useLectoGuia';
+import { LectoGuiaContextType } from './types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnifiedSubjectManagement } from '@/hooks/lectoguia/use-unified-subject-management';
 import { useNodesEnhanced } from './useNodesEnhanced';
