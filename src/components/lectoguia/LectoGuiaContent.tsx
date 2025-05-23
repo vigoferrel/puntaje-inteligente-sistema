@@ -21,7 +21,9 @@ export const LectoGuiaContent: React.FC = () => {
     handleOptionSelect,
     handleNewExercise,
     isLoading,
-    handleNodeSelect
+    handleNodeSelect,
+    activeSkill,
+    recommendedNodes
   } = useLectoGuia();
 
   return (
@@ -48,6 +50,9 @@ export const LectoGuiaContent: React.FC = () => {
             isTyping={isTyping}
             activeSubject={activeSubject}
             onSubjectChange={handleSubjectChange}
+            activeSkill={activeSkill}
+            recommendedNodes={recommendedNodes}
+            onNodeSelect={handleNodeSelect}
           />
         </TabsContent>
 

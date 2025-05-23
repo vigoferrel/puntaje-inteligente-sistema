@@ -7,9 +7,12 @@ import { ChatSettingsButton } from "@/components/lectoguia/chat-settings/ChatSet
 import { ContextualActionButtons } from "@/components/lectoguia/action-buttons/ContextualActionButtons";
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
 import { ConnectionMonitor } from './ConnectionMonitor';
+import { NodeRecommendations } from './chat-skills/NodeRecommendations';
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { useLectoGuia } from '@/contexts/LectoGuiaContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TPAESHabilidad } from '@/types/system-types';
+import { Exercise } from '@/types/ai-types';
 
 interface ChatTabProps {
   messages: any[];
@@ -17,6 +20,9 @@ interface ChatTabProps {
   isTyping: boolean;
   activeSubject: string;
   onSubjectChange: (subject: string) => void;
+  activeSkill?: TPAESHabilidad | null;
+  recommendedNodes?: any[];
+  onNodeSelect?: (nodeId: string) => void;
 }
 
 export const ChatTab: React.FC<ChatTabProps> = ({ 
@@ -24,11 +30,15 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   onSendMessage, 
   isTyping,
   activeSubject,
-  onSubjectChange
+  onSubjectChange,
+  activeSkill,
+  recommendedNodes = [],
+  onNodeSelect
 }) => {
   const { setActiveTab, handleNewExercise } = useLectoGuia();
   const [imageLoading, setImageLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connected');
+  const [showNodeRecommendations, setShowNodeRecommendations] = useState(true);
   
   // Usar handleNewExercise del contexto que ya está implementado
   const handleExerciseRequest = async (): Promise<boolean> => {
@@ -69,6 +79,15 @@ export const ChatTab: React.FC<ChatTabProps> = ({
     });
   }
   
+  // Si hay una habilidad activa, añadirla a las migas de pan
+  if (activeSkill) {
+    breadcrumbItems.push({
+      label: `Habilidad: ${activeSkill}`,
+      active: true,
+      onClick: () => {}
+    });
+  }
+  
   // Manejar el envío de mensajes con carga de imágenes
   const handleSendWithImage = (message: string, imageData?: string) => {
     if (imageData) {
@@ -77,6 +96,29 @@ export const ChatTab: React.FC<ChatTabProps> = ({
     }
     onSendMessage(message, imageData);
   };
+  
+  // Manejador para la selección de nodo
+  const handleNodeSelected = (nodeId: string) => {
+    if (onNodeSelect) {
+      onNodeSelect(nodeId);
+      // Ocultar las recomendaciones temporalmente después de seleccionar un nodo
+      setShowNodeRecommendations(false);
+      setTimeout(() => setShowNodeRecommendations(true), 5000);
+    }
+  };
+
+  // Procesar ejercicios en los mensajes
+  const hasExerciseInMessages = messages.some(msg => {
+    if (msg.role !== 'assistant') return false;
+    try {
+      const content = typeof msg.content === 'string' ? msg.content : '';
+      return content.includes('"question"') && 
+             content.includes('"options"') && 
+             content.includes('"correctAnswer"');
+    } catch (e) {
+      return false;
+    }
+  });
 
   // Sincronizar el estado de conexión inicial
   useEffect(() => {
@@ -130,6 +172,17 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+        
+        {/* Mostrar recomendaciones de nodos si hay una habilidad activa */}
+        {activeSkill && showNodeRecommendations && recommendedNodes.length > 0 && (
+          <div className="px-3 pt-2">
+            <NodeRecommendations 
+              activeSkill={activeSkill}
+              recommendedNodes={recommendedNodes}
+              onNodeSelect={handleNodeSelected}
+            />
           </div>
         )}
         

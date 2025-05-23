@@ -12,6 +12,7 @@ import { useSkills } from './useSkills';
 import { useExercises } from './useExercises';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 import { useSubjects } from './useSubjects';
+import { TPAESHabilidad } from '@/types/system-types';
 
 // Proveedor del contexto
 export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -33,7 +34,14 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setActiveSubject,
     addAssistantMessage,
     changeSubject,
-    detectSubjectFromMessage
+    detectSubjectFromMessage,
+    activeSkill,
+    setActiveSkill,
+    recommendedNodes,
+    generateExerciseForNode,
+    generateExerciseForSkill,
+    updateNodeProgress,
+    updateSkillLevel
   } = useLectoGuiaChat();
   
   // Usar el hook useSubjects para manejar el cambio de materias
@@ -43,7 +51,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const { 
     skillLevels, 
-    updateSkillLevel, 
+    updateSkillLevel: updateSkillLevelUI, 
     getSkillIdFromCode, 
     handleStartSimulation 
   } = useSkills(user?.id);
@@ -65,76 +73,99 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     isLoading,
     setCurrentExercise,
     setIsLoading
-  } = useExercises(user?.id, updateSkillLevel, getSkillIdFromCode);
+  } = useExercises(user?.id, updateSkillLevelUI, getSkillIdFromCode);
   
-  // Generar un ejercicio para un nodo específico
-  const generateExerciseForNode = async (nodeId: string) => {
+  // Manejar la selección de nodos de aprendizaje
+  const handleNodeSelect = async (nodeId: string) => {
     try {
       setIsLoading(true);
       
-      // Encontrar el nodo
-      const node = nodes.find(n => n.id === nodeId);
-      if (!node) {
-        toast({
-          title: 'Error',
-          description: 'No se encontró el nodo solicitado',
-          variant: 'destructive'
-        });
-        return null;
-      }
+      // Usar la función generateExerciseForNode para obtener un ejercicio
+      const exercise = await generateExerciseForNode(nodeId);
       
-      // Crear solicitud para generar ejercicio según el nodo
-      const response = await processUserMessage(
-        `Genera un ejercicio para el nodo "${node.title}" con habilidad ${node.skill} de dificultad ${node.difficulty || "INTERMEDIATE"}`,
-        undefined
-      );
-      
-      if (response) {
-        // Crear un objeto de ejercicio a partir de la respuesta
-        const exercise: Exercise = {
-          id: node.id,
-          nodeId: node.id,
-          nodeName: node.title,
-          prueba: node.prueba,
-          skill: node.skill,
-          difficulty: node.difficulty || "INTERMEDIATE",
-          question: response,
-          options: [
-            "Opción 1",
-            "Opción 2",
-            "Opción 3",
-            "Opción 4"
-          ],
-          correctAnswer: "Opción 1",
-          explanation: "Por favor selecciona una opción para recibir retroalimentación."
-        };
-        
+      if (exercise) {
+        // Actualizar el ejercicio actual
         setCurrentExercise(exercise);
+        
+        // Actualizar progreso del nodo
+        if (user?.id) {
+          await updateNodeProgress(nodeId, 0.3);
+        }
+        
+        // Cambiar a la pestaña de ejercicios
         setActiveTab('exercise');
-        return exercise;
+        
+        toast({
+          title: "Ejercicio generado",
+          description: "Se ha generado un ejercicio para este nodo de aprendizaje."
+        });
+        
+        return true;
       } else {
         toast({
-          title: 'Error',
-          description: 'No se pudo generar el ejercicio para este nodo',
-          variant: 'destructive'
+          title: "Error",
+          description: "No se pudo generar un ejercicio para este nodo.",
+          variant: "destructive"
         });
+        return false;
       }
-      
-      return null;
     } catch (error) {
-      console.error("Error al generar ejercicio para nodo:", error);
-      return null;
+      console.error("Error al seleccionar nodo:", error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al intentar generar el ejercicio.",
+        variant: "destructive"
+      });
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Manejador para selección de nodo
-  const handleNodeSelect = (nodeId: string) => {
-    generateExerciseForNode(nodeId);
+  // Manejar la selección de habilidades
+  const handleSkillSelect = async (skill: TPAESHabilidad) => {
+    try {
+      setIsLoading(true);
+      setActiveSkill(skill);
+      
+      // Usar la función generateExerciseForSkill para obtener un ejercicio
+      const exercise = await generateExerciseForSkill(skill);
+      
+      if (exercise) {
+        // Actualizar el ejercicio actual
+        setCurrentExercise(exercise);
+        
+        // Cambiar a la pestaña de ejercicios
+        setActiveTab('exercise');
+        
+        toast({
+          title: "Ejercicio generado",
+          description: `Se ha generado un ejercicio para practicar la habilidad ${skill}.`
+        });
+        
+        return true;
+      } else {
+        toast({
+          title: "Error",
+          description: "No se pudo generar un ejercicio para esta habilidad.",
+          variant: "destructive"
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("Error al seleccionar habilidad:", error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al intentar generar el ejercicio.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  // Función mejorada para solicitar ejercicios
+  // Mejorado: Función para solicitar ejercicios que utiliza la habilidad activa
   const handleExerciseRequest = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
@@ -142,44 +173,34 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Limpiar estado actual
       setCurrentExercise(null);
       
-      // Usar el chat para generar ejercicio
-      const exercisePrompt = `Genera un ejercicio de opción múltiple para ${activeSubject}. 
-      Debe incluir:
-      - Una pregunta clara y específica
-      - 4 opciones de respuesta bien estructuradas
-      - Una respuesta correcta
-      - Una explicación detallada del por qué es correcta
-      
-      Por favor estructura el ejercicio de manera clara.`;
-      
-      const response = await processUserMessage(exercisePrompt);
-      
-      if (response) {
-        // Crear ejercicio estructurado
-        const exercise: Exercise = {
-          id: `exercise-${Date.now()}`,
-          nodeId: '',
-          nodeName: '',
-          prueba: 'COMPETENCIA_LECTORA',
-          skill: 'INTERPRET_RELATE',
-          difficulty: 'INTERMEDIATE',
-          question: response,
-          options: [
-            'Opción A - Primera alternativa',
-            'Opción B - Segunda alternativa', 
-            'Opción C - Tercera alternativa',
-            'Opción D - Cuarta alternativa'
-          ],
-          correctAnswer: 'Opción A - Primera alternativa',
-          explanation: 'La respuesta correcta es A. Selecciona una opción para ver la explicación detallada.'
-        };
-        
-        setCurrentExercise(exercise);
-        setActiveTab('exercise');
-        return true;
+      // Si hay una habilidad activa, generar ejercicio específico
+      if (activeSkill) {
+        return await handleSkillSelect(activeSkill);
       }
       
-      return false;
+      // Determinar una habilidad apropiada según la materia activa
+      let skill: TPAESHabilidad;
+      
+      switch (activeSubject) {
+        case 'lectura':
+          skill = 'INTERPRET_RELATE';
+          break;
+        case 'matematicas-basica':
+        case 'matematicas-avanzada':
+          skill = 'SOLVE_PROBLEMS';
+          break;
+        case 'ciencias':
+          skill = 'PROCESS_ANALYZE';
+          break;
+        case 'historia':
+          skill = 'SOURCE_ANALYSIS';
+          break;
+        default:
+          skill = 'INTERPRET_RELATE';
+      }
+      
+      // Generar ejercicio para esta habilidad
+      return await handleSkillSelect(skill);
     } catch (error) {
       console.error("Error en solicitud de ejercicio:", error);
       return false;
@@ -188,18 +209,41 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
   
-  // Manejo de envío de mensajes
+  // Manejo de envío de mensajes actualizado
   const handleSendMessage = async (message: string, imageData?: string) => {
     if (!message.trim() && !imageData) return;
     
     try {
+      // Detectar menciones de nodos específicos
+      const nodeIdMatch = message.match(/nodo:([a-f0-9-]+)/i);
+      if (nodeIdMatch && nodeIdMatch[1]) {
+        // Primero procesar el mensaje para que se registre en el historial
+        await processUserMessage(message, imageData);
+        // Luego seleccionar el nodo
+        await handleNodeSelect(nodeIdMatch[1]);
+        return;
+      }
+      
+      // Detectar menciones de habilidades específicas
+      const skillMatch = message.match(/habilidad:(TRACK_LOCATE|INTERPRET_RELATE|EVALUATE_REFLECT|SOLVE_PROBLEMS|REPRESENT|MODEL|ARGUE_COMMUNICATE|IDENTIFY_THEORIES|PROCESS_ANALYZE|APPLY_PRINCIPLES|SCIENTIFIC_ARGUMENT|TEMPORAL_THINKING|SOURCE_ANALYSIS|MULTICAUSAL_ANALYSIS|CRITICAL_THINKING|REFLECTION)/i);
+      if (skillMatch && skillMatch[1]) {
+        // Primero procesar el mensaje para que se registre en el historial
+        await processUserMessage(message, imageData);
+        // Luego seleccionar la habilidad
+        await handleSkillSelect(skillMatch[1] as TPAESHabilidad);
+        return;
+      }
+      
       // Detectar si el mensaje contiene una solicitud de ejercicio
       const isExerciseRequest = message.toLowerCase().includes("ejercicio") || 
                               message.toLowerCase().includes("practica") || 
-                              message.toLowerCase().includes("ejemplo");
+                              message.toLowerCase().includes("ejemplo") ||
+                              message.toLowerCase().includes("problema");
       
-      if (isExerciseRequest) {
+      if (isExerciseRequest && !imageData) {
+        // Primero procesar el mensaje para que se registre en el historial
         await processUserMessage(message, imageData);
+        // Luego generar el ejercicio
         await handleExerciseRequest();
       } else {
         // Procesar mensaje normal
@@ -236,6 +280,11 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     handleOptionSelect,
     handleNewExercise: handleExerciseRequest, // Usar la función mejorada
     
+    // Habilidades
+    activeSkill,
+    setActiveSkill,
+    handleSkillSelect,
+    
     // Progreso
     skillLevels,
     handleStartSimulation,
@@ -247,6 +296,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     selectedTestId,
     setSelectedTestId,
     selectedPrueba,
+    recommendedNodes,
     
     // Estado de conexión
     serviceStatus,
@@ -256,9 +306,10 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }), [
     activeTab, isLoading, messages, chatIsTyping, activeSubject, 
     currentExercise, selectedOption, showFeedback, skillLevels, 
-    nodes, nodeProgress, selectedTestId, selectedPrueba,
+    nodes, nodeProgress, selectedTestId, selectedPrueba, recommendedNodes,
     handleSendMessage, handleSubjectChange, handleOptionSelect, 
     handleExerciseRequest, handleStartSimulation, handleNodeSelect,
+    handleSkillSelect, activeSkill, setActiveSkill,
     setActiveTab, setSelectedTestId, serviceStatus, connectionStatus,
     resetConnectionStatus, showConnectionStatus
   ]);
