@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Exercise } from "@/types/ai-types";
@@ -26,12 +25,17 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
   onContinue,
   isLoading = false
 }) => {
-  const { setActiveTab } = useLectoGuia();
+  const { setActiveTab, handleNewExercise } = useLectoGuia();
   
-  const handleExerciseRequest = async () => {
-    // Simulación temporal hasta la implementación completa
-    onContinue();
-    return true;
+  // Usar handleNewExercise del contexto
+  const handleExerciseRequest = async (): Promise<boolean> => {
+    try {
+      await handleNewExercise();
+      return true;
+    } catch (error) {
+      console.error("Error en solicitud de ejercicio:", error);
+      return false;
+    }
   };
   
   const { handleAction } = useContextualActions(setActiveTab, handleExerciseRequest);
@@ -159,21 +163,7 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
         label: pruebaNames[exercise.prueba],
         active: false,
         onClick: () => {
-          // Mapear el tipo de prueba a la materia correspondiente
-          const pruebaMappings: Record<string, string> = {
-            'COMPETENCIA_LECTORA': 'lectura',
-            'MATEMATICA_1': 'matematicas-basica',
-            'MATEMATICA_2': 'matematicas-avanzada',
-            'CIENCIAS': 'ciencias',
-            'HISTORIA': 'historia'
-          };
-          
-          const subjectKey = pruebaMappings[exercise.prueba];
-          // Solo navegar al chat si podemos determinar la materia
-          if (subjectKey) {
-            setActiveTab('chat');
-            // La actualización de la materia se hará a través de LectoGuiaContext
-          }
+          setActiveTab('chat');
         }
       });
     }

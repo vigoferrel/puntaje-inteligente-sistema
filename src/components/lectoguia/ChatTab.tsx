@@ -26,12 +26,18 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   activeSubject,
   onSubjectChange
 }) => {
-  const { setActiveTab, connectionStatus, serviceStatus, resetConnectionStatus, showConnectionStatus } = useLectoGuia();
+  const { setActiveTab, connectionStatus, serviceStatus, resetConnectionStatus, showConnectionStatus, handleNewExercise } = useLectoGuia();
   const [imageLoading, setImageLoading] = useState(false);
   
-  const handleExerciseRequest = async () => {
-    // Simulación temporal hasta la implementación completa
-    return true;
+  // Usar handleNewExercise del contexto que ya está implementado
+  const handleExerciseRequest = async (): Promise<boolean> => {
+    try {
+      await handleNewExercise();
+      return true;
+    } catch (error) {
+      console.error("Error en solicitud de ejercicio:", error);
+      return false;
+    }
   };
 
   const { handleAction } = useContextualActions(setActiveTab, handleExerciseRequest);

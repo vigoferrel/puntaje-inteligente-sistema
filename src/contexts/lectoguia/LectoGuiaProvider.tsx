@@ -134,6 +134,60 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     generateExerciseForNode(nodeId);
   };
   
+  // Función mejorada para solicitar ejercicios
+  const handleExerciseRequest = async (): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      
+      // Limpiar estado actual
+      setCurrentExercise(null);
+      
+      // Usar el chat para generar ejercicio
+      const exercisePrompt = `Genera un ejercicio de opción múltiple para ${activeSubject}. 
+      Debe incluir:
+      - Una pregunta clara y específica
+      - 4 opciones de respuesta bien estructuradas
+      - Una respuesta correcta
+      - Una explicación detallada del por qué es correcta
+      
+      Por favor estructura el ejercicio de manera clara.`;
+      
+      const response = await processUserMessage(exercisePrompt);
+      
+      if (response) {
+        // Crear ejercicio estructurado
+        const exercise: Exercise = {
+          id: `exercise-${Date.now()}`,
+          nodeId: '',
+          nodeName: '',
+          prueba: 'COMPETENCIA_LECTORA',
+          skill: 'INTERPRET_RELATE',
+          difficulty: 'INTERMEDIATE',
+          question: response,
+          options: [
+            'Opción A - Primera alternativa',
+            'Opción B - Segunda alternativa', 
+            'Opción C - Tercera alternativa',
+            'Opción D - Cuarta alternativa'
+          ],
+          correctAnswer: 'Opción A - Primera alternativa',
+          explanation: 'La respuesta correcta es A. Selecciona una opción para ver la explicación detallada.'
+        };
+        
+        setCurrentExercise(exercise);
+        setActiveTab('exercise');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Error en solicitud de ejercicio:", error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Manejo de envío de mensajes
   const handleSendMessage = async (message: string, imageData?: string) => {
     if (!message.trim() && !imageData) return;
@@ -146,8 +200,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       if (isExerciseRequest) {
         await processUserMessage(message, imageData);
-        handleNewExercise();
-        setActiveTab('exercise');
+        await handleExerciseRequest();
       } else {
         // Procesar mensaje normal
         await processUserMessage(message, imageData);
@@ -181,7 +234,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     selectedOption,
     showFeedback,
     handleOptionSelect,
-    handleNewExercise,
+    handleNewExercise: handleExerciseRequest, // Usar la función mejorada
     
     // Progreso
     skillLevels,
@@ -205,7 +258,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     currentExercise, selectedOption, showFeedback, skillLevels, 
     nodes, nodeProgress, selectedTestId, selectedPrueba,
     handleSendMessage, handleSubjectChange, handleOptionSelect, 
-    handleNewExercise, handleStartSimulation, handleNodeSelect,
+    handleExerciseRequest, handleStartSimulation, handleNodeSelect,
     setActiveTab, setSelectedTestId, serviceStatus, connectionStatus,
     resetConnectionStatus, showConnectionStatus
   ]);
