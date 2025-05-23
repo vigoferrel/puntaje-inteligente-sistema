@@ -54,7 +54,7 @@ export const SkillNodeConnection: React.FC<SkillNodeConnectionProps> = ({
   
   // Obtener habilidades relevantes para la prueba seleccionada
   const relevantSkills = selectedTest 
-    ? getSkillsByPrueba()[selectedTest] 
+    ? getSkillsByPrueba(selectedTest) 
     : habilidades;
   
   return (

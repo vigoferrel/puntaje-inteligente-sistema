@@ -35,7 +35,10 @@ export const SkillHierarchyChart: React.FC<SkillHierarchyChartProps> = ({
     : ["COMPETENCIA_LECTORA", "MATEMATICA_1", "MATEMATICA_2", "CIENCIAS", "HISTORIA"];
   
   // Obtener la agrupación de habilidades por prueba
-  const skillsByTest = getSkillsByPrueba();
+  const skillsByTest = testsToShow.reduce((acc, test) => {
+    acc[test] = getSkillsByPrueba(test);
+    return acc;
+  }, {} as Record<TPAESPrueba, TPAESHabilidad[]>);
   
   return (
     <Card className={className}>
