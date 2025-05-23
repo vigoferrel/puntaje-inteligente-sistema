@@ -1,9 +1,11 @@
+
 /**
  * Funciones de utilidad para la LectoGuía
  */
 
 import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 
 /**
  * Función para combinar clases con tailwind-merge y clsx
@@ -102,4 +104,61 @@ export function getSkillName(skillCode: string): string {
   };
   
   return skillNames[skillCode] || skillCode;
+}
+
+/**
+ * Formatea el nivel de habilidad para mostrar
+ * @param level Nivel de habilidad
+ * @returns Nivel formateado
+ */
+export function formatSkillLevel(level: number): string {
+  if (level < 0.25) return 'Inicial';
+  if (level < 0.5) return 'Básico';
+  if (level < 0.75) return 'Intermedio';
+  return 'Avanzado';
+}
+
+/**
+ * Obtiene el ID de una habilidad
+ * @param skillCode Código de habilidad
+ * @returns ID de la habilidad
+ */
+export function getSkillId(skillCode: string): number {
+  const skillIds: Record<string, number> = {
+    'TRACK_LOCATE': 1,
+    'INTERPRET_RELATE': 2,
+    'EVALUATE_REFLECT': 3,
+    'SOLVE_PROBLEMS': 4,
+    'REPRESENT': 5,
+    'MODEL': 6,
+    'ARGUE_COMMUNICATE': 7,
+    'IDENTIFY_THEORIES': 8,
+    'PROCESS_ANALYZE': 9,
+    'APPLY_PRINCIPLES': 10,
+    'SCIENTIFIC_ARGUMENT': 11,
+    'TEMPORAL_THINKING': 12,
+    'SOURCE_ANALYSIS': 13,
+    'MULTICAUSAL_ANALYSIS': 14,
+    'CRITICAL_THINKING': 15,
+    'REFLECTION': 16
+  };
+  
+  return skillIds[skillCode] || 1;
+}
+
+/**
+ * Obtiene las habilidades por prueba PAES
+ * @param prueba Tipo de prueba PAES
+ * @returns Array de habilidades
+ */
+export function getSkillsByPrueba(prueba: TPAESPrueba): TPAESHabilidad[] {
+  const skillsByPrueba: Record<TPAESPrueba, TPAESHabilidad[]> = {
+    'COMPETENCIA_LECTORA': ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT'],
+    'MATEMATICA_1': ['SOLVE_PROBLEMS', 'REPRESENT'],
+    'MATEMATICA_2': ['MODEL', 'ARGUE_COMMUNICATE'],
+    'CIENCIAS': ['IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT'],
+    'HISTORIA': ['TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING']
+  };
+  
+  return skillsByPrueba[prueba] || ['INTERPRET_RELATE'];
 }

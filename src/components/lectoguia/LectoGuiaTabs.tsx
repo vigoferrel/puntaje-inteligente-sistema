@@ -6,7 +6,6 @@ import { ExerciseTab } from "@/components/lectoguia/ExerciseTab";
 import { ProgressTab } from "@/components/lectoguia/ProgressTab";
 import { ChatMessage } from "@/components/ai/ChatInterface";
 import { Exercise } from "@/types/ai-types";
-import { TPAESHabilidad } from "@/types/system-types";
 import { motion } from "framer-motion";
 
 interface LectoGuiaTabsProps {
@@ -26,7 +25,7 @@ interface LectoGuiaTabsProps {
   onContinue: () => void;
   isLoading?: boolean;
   // Node selection
-  onNodeSelect?: (nodeId: string) => void;
+  onNodeSelect?: (nodeId: string) => Promise<boolean>;
 }
 
 // Variantes de animación para las transiciones entre pestañas
@@ -108,7 +107,7 @@ export const LectoGuiaTabs: React.FC<LectoGuiaTabsProps> = ({
             variants={tabVariants}
           >
             <ProgressTab 
-              onNodeSelect={onNodeSelect}
+              onNodeSelect={onNodeSelect || (async () => false)}
             />
           </motion.div>
         </TabsContent>

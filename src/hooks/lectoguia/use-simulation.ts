@@ -81,16 +81,6 @@ export function useSimulation() {
         // Iniciar temporizador
         setIsRunning(true);
         
-        // Registrar simulación en BD si el usuario está autenticado
-        if (user?.id) {
-          await saveSimulationStart(
-            user.id, 
-            newSimulationId, 
-            selectedSimulation.prueba, 
-            selectedSimulation.questionCount
-          );
-        }
-        
         toast({
           title: "Simulación iniciada",
           description: `${selectedSimulation.timeMinutes} minutos para completar ${selectedSimulation.questionCount} preguntas.`
@@ -139,17 +129,7 @@ export function useSimulation() {
       ...prev,
       [questionIndex]: optionIndex
     }));
-    
-    // Opcionalmente guardar respuesta en BD
-    if (user?.id && simulationId) {
-      saveSimulationAnswer(
-        user.id,
-        simulationId,
-        questions[questionIndex].id || '',
-        optionIndex
-      );
-    }
-  }, [user?.id, questions, simulationId]);
+  }, []);
 
   // Navegar entre preguntas
   const handleNavigation = useCallback((direction: 'prev' | 'next' | number) => {
@@ -234,7 +214,6 @@ export function useSimulation() {
       const percentageCorrect = (correctCount / questions.length) * 100;
       
       // Calcular puntaje estimado (fórmula simplificada)
-      // En un sistema real, esto podría ser más complejo basado en dificultad, etc.
       const estimatedScore = Math.round(600 + (percentageCorrect * 2.5));
       
       // Crear objeto de resultados
@@ -253,15 +232,6 @@ export function useSimulation() {
       };
       
       setSimulationResults(results);
-      
-      // Guardar resultados en BD si el usuario está autenticado
-      if (user?.id) {
-        await saveSimulationResults(
-          user.id,
-          simulationId,
-          results
-        );
-      }
       
       toast({
         title: "Simulación completada",
@@ -343,71 +313,6 @@ async function fetchSimulationQuestions(
   } catch (error) {
     console.error("Error generando preguntas de simulación:", error);
     return [];
-  }
-}
-
-// Función para guardar inicio de simulación
-async function saveSimulationStart(
-  userId: string,
-  simulationId: string,
-  prueba: TPAESPrueba,
-  questionCount: number
-) {
-  try {
-    await supabase.from('user_simulations').insert({
-      id: simulationId,
-      user_id: userId,
-      prueba_type: prueba,
-      question_count: questionCount,
-      status: 'started',
-      started_at: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error("Error guardando inicio de simulación:", error);
-  }
-}
-
-// Función para guardar respuesta de simulación
-async function saveSimulationAnswer(
-  userId: string,
-  simulationId: string,
-  questionId: string,
-  answerIndex: number
-) {
-  try {
-    await supabase.from('simulation_answers').insert({
-      user_id: userId,
-      simulation_id: simulationId,
-      question_id: questionId,
-      answer_index: answerIndex,
-      answered_at: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error("Error guardando respuesta de simulación:", error);
-  }
-}
-
-// Función para guardar resultados de simulación
-async function saveSimulationResults(
-  userId: string,
-  simulationId: string,
-  results: SimulationResult
-) {
-  try {
-    await supabase.from('user_simulations').update({
-      status: 'completed',
-      completed_at: new Date().toISOString(),
-      total_questions: results.totalQuestions,
-      correct_answers: results.correctAnswers,
-      wrong_answers: results.wrongAnswers,
-      unanswered_count: results.unansweredCount,
-      percentage_correct: results.percentageCorrect,
-      time_spent_minutes: results.timeSpentMinutes,
-      estimated_score: results.estimatedScore,
-      skill_results: results.skillResults
-    }).eq('id', simulationId);
-  } catch (error) {
-    console.error("Error guardando resultados de simulación:", error);
   }
 }
 

@@ -1,3 +1,4 @@
+
 import { createBrowserRouter } from 'react-router-dom';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
@@ -75,6 +76,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '/admin/diagnostico',
-    element: <ProtectedRoute adminOnly><GeneradorDiagnostico /></ProtectedRoute>
+    element: <ProtectedRoute><GeneradorDiagnostico /></ProtectedRoute>
   },
 ]);

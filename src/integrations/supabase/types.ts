@@ -725,6 +725,41 @@ export type Database = {
         }
         Relationships: []
       }
+      simulation_answers: {
+        Row: {
+          answer_index: number
+          answered_at: string
+          id: string
+          question_id: string
+          simulation_id: string
+          user_id: string
+        }
+        Insert: {
+          answer_index: number
+          answered_at?: string
+          id?: string
+          question_id: string
+          simulation_id: string
+          user_id: string
+        }
+        Update: {
+          answer_index?: number
+          answered_at?: string
+          id?: string
+          question_id?: string
+          simulation_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_answers_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "user_simulations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_career_interests: {
         Row: {
           career_id: number
@@ -898,6 +933,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_simulations: {
+        Row: {
+          completed_at: string | null
+          correct_answers: number | null
+          estimated_score: number | null
+          id: string
+          percentage_correct: number | null
+          prueba_type: string
+          question_count: number
+          skill_results: Json | null
+          started_at: string
+          status: string
+          time_spent_minutes: number | null
+          unanswered_count: number | null
+          user_id: string
+          wrong_answers: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          correct_answers?: number | null
+          estimated_score?: number | null
+          id?: string
+          percentage_correct?: number | null
+          prueba_type: string
+          question_count: number
+          skill_results?: Json | null
+          started_at?: string
+          status: string
+          time_spent_minutes?: number | null
+          unanswered_count?: number | null
+          user_id: string
+          wrong_answers?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          correct_answers?: number | null
+          estimated_score?: number | null
+          id?: string
+          percentage_correct?: number | null
+          prueba_type?: string
+          question_count?: number
+          skill_results?: Json | null
+          started_at?: string
+          status?: string
+          time_spent_minutes?: number | null
+          unanswered_count?: number | null
+          user_id?: string
+          wrong_answers?: number | null
+        }
+        Relationships: []
       }
       user_skill_levels: {
         Row: {
