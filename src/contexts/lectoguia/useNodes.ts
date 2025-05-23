@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -107,10 +106,9 @@ export function useNodes(userId: string | null): UseNodesState {
     fetchUserNodeProgress();
   }, [userId]);
 
-  // No implementamos handleNodeSelect aquí porque depende de generateExerciseForNode
-  // que está en otro hook. Se implementará en el provider.
+  // Placeholder for handleNodeSelect - will be replaced in provider
   const handleNodeSelect = (nodeId: string) => {
-    // Esta función será reemplazada en el provider
+    // This function will be replaced in the provider
     console.log(`Node selected: ${nodeId}`);
   };
   

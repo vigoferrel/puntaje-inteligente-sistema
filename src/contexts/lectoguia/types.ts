@@ -2,6 +2,7 @@
 import { Exercise } from '@/types/ai-types';
 import { ConnectionStatus } from '@/hooks/use-openrouter';
 import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
+import { ChatMessage } from '@/components/ai/ChatInterface';
 
 // Mapa de materias a pruebas PAES
 export const SUBJECT_TO_PRUEBA_MAP: Record<string, TPAESPrueba> = {
@@ -122,6 +123,7 @@ export interface UseNodesState {
   selectedTestId: string | null;
   setSelectedTestId: (testId: string | null) => void;
   selectedPrueba: TPAESPrueba;
+  handleNodeSelect: (nodeId: string) => any; // Added this line to fix the error
 }
 
 export interface UseExerciseState {
@@ -133,4 +135,13 @@ export interface UseExerciseState {
   isLoading: boolean;
   setCurrentExercise: React.Dispatch<React.SetStateAction<Exercise | null>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+// Add the UseChatState interface to fix the first error
+export interface UseChatState {
+  messages: ChatMessage[];
+  isTyping: boolean;
+  handleSendMessage: (message: string, imageData?: string) => void;
+  addUserMessage: (content: string, imageData?: string) => ChatMessage;
+  addAssistantMessage: (content: string) => ChatMessage;
 }
