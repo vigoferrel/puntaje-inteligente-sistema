@@ -23,10 +23,12 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   const [isTyping, setIsTyping] = useState(false);
   const [activeSubject, setActiveSubject] = useState('general');
   const [consecutiveErrors, setConsecutiveErrors] = useState(0);
+  const [serviceStatus, setServiceStatus] = useState<'available'|'degraded'|'unavailable'>('available');
   
   // Efecto para mostrar un mensaje de error persistente si hay demasiados errores consecutivos
   useEffect(() => {
     if (consecutiveErrors >= 3) {
+      setServiceStatus('degraded');
       toast({
         title: "Problemas de conexión persistentes",
         description: "Estamos experimentando dificultades técnicas. Por favor, intenta de nuevo más tarde.",
@@ -101,6 +103,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         // Añadir la respuesta al chat
         addAssistantMessage(responseData);
         setConsecutiveErrors(0); // Resetear contador de errores si hay éxito
+        setServiceStatus('available'); // Marcar servicio como disponible nuevamente
         return responseData;
       } catch (serviceError) {
         console.error("Error al comunicarse con el servicio:", serviceError);

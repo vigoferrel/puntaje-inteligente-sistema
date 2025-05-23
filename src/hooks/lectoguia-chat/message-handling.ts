@@ -5,6 +5,20 @@ import { toast } from '@/components/ui/use-toast';
 import { ImageAnalysisResult } from '@/types/ai-types';
 import { ERROR_RATE_LIMIT_MESSAGE } from './types';
 
+// Estructura para mantener métricas sobre errores para análisis
+interface ErrorMetrics {
+  lastErrorTime: number;
+  errorCount: number;
+  errorTypes: Record<string, number>;
+}
+
+// Objeto global para seguimiento de errores (podría movarse a un contexto para persistencia entre sesiones)
+const errorMetrics: ErrorMetrics = {
+  lastErrorTime: 0,
+  errorCount: 0,
+  errorTypes: {}
+};
+
 /**
  * Create a new user message object
  */
@@ -31,26 +45,48 @@ export function createAssistantMessage(content: string): ChatMessage {
 }
 
 /**
- * Handle errors in message processing
+ * Handle errors in message processing with tracking and analytics
  */
 export function handleMessageError(error: unknown): { errorContent: string, isRateLimit: boolean } {
   console.error("Error procesando mensaje:", error);
   
+  const now = Date.now();
   const errMsg = error instanceof Error ? error.message : "Hubo un problema al procesar tu mensaje";
-  const isRateLimitError = errMsg.toLowerCase().includes('rate limit') || 
-                         errMsg.toLowerCase().includes('rate-limit') || 
-                         errMsg.toLowerCase().includes('límite de tasa');
+  const errorType = errMsg.includes('rate limit') ? 'rate_limit' : 
+                   errMsg.includes('timeout') ? 'timeout' :
+                   errMsg.includes('network') ? 'network' : 'unknown';
+  
+  // Actualizar métricas de error
+  errorMetrics.lastErrorTime = now;
+  errorMetrics.errorCount++;
+  errorMetrics.errorTypes[errorType] = (errorMetrics.errorTypes[errorType] || 0) + 1;
+  
+  const isRateLimitError = errorType === 'rate_limit';
+  
+  // Determinar si hay una concentración de errores (más de 3 en 5 minutos)
+  const isErrorBurst = errorMetrics.errorCount > 3 && 
+                      (now - errorMetrics.lastErrorTime) < 5 * 60 * 1000;
   
   const errorContent = isRateLimitError 
     ? ERROR_RATE_LIMIT_MESSAGE
-    : "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo o pedir ayuda con una materia específica?";
+    : isErrorBurst 
+      ? "Estamos experimentando dificultades técnicas en este momento. Te recomendamos intentar más tarde."
+      : "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías intentarlo de nuevo o pedir ayuda con una materia específica?";
   
+  // Mostrar notificación apropiada según tipo de error
   toast({
-    title: "Error",
+    title: isRateLimitError 
+      ? "Límite de solicitudes excedido"
+      : isErrorBurst
+        ? "Servicio degradado"
+        : "Error de procesamiento",
     description: isRateLimitError 
       ? "El servicio está experimentando alta demanda. Por favor, intenta de nuevo más tarde."
-      : errMsg,
-    variant: "destructive"
+      : isErrorBurst
+        ? "Múltiples errores detectados. Estamos trabajando para resolver el problema."
+        : errMsg,
+    variant: "destructive",
+    duration: isErrorBurst ? 10000 : 5000
   });
   
   return { errorContent, isRateLimit: isRateLimitError };
@@ -62,7 +98,6 @@ export function handleMessageError(error: unknown): { errorContent: string, isRa
  */
 export function extractResponseContent(response: any): string {
   console.log("Extrayendo contenido de respuesta:", typeof response);
-  console.log("Contenido de respuesta:", response);
   
   // Caso 1: Respuesta vacía o nula
   if (!response) {

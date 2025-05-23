@@ -12,11 +12,61 @@ const generateRequestId = () => {
   return 'req_' + Math.random().toString(36).substring(2, 11);
 };
 
+// Variables para el seguimiento del estado del servicio
+let serviceHealthLastChecked = 0;
+let serviceHealthStatus = true; // Asumimos que está saludable inicialmente
+const HEALTH_CHECK_INTERVAL = 60000; // 1 minuto
+
+/**
+ * Verifica la salud del servicio sin bloquear si fue verificado recientemente
+ */
+async function checkServiceHealth(): Promise<boolean> {
+  const now = Date.now();
+  
+  // Si verificamos recientemente, devolver el último estado conocido
+  if (now - serviceHealthLastChecked < HEALTH_CHECK_INTERVAL) {
+    return serviceHealthStatus;
+  }
+  
+  try {
+    // Hacer una solicitud liviana para verificar si el servicio está disponible
+    const response = await fetch('https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai/health_check', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-store'
+    });
+    
+    serviceHealthLastChecked = now;
+    
+    if (!response.ok) {
+      serviceHealthStatus = false;
+      return false;
+    }
+    
+    const data = await response.json();
+    serviceHealthStatus = data?.result?.status === 'available';
+    return serviceHealthStatus;
+  } catch (error) {
+    serviceHealthLastChecked = now;
+    serviceHealthStatus = false;
+    return false;
+  }
+}
+
 /**
  * Servicio principal para comunicarse con la función de borde de OpenRouter
+ * Con manejo mejorado de errores, caché y detección de estado
  */
 export async function openRouterService<T>(request: OpenRouterRequest): Promise<T | null> {
   try {
+    // Verificar estado del servicio antes de intentar la solicitud
+    const isHealthy = await checkServiceHealth();
+    if (!isHealthy) {
+      console.warn('OpenRouter service health check failed, continuing with request anyway');
+    }
+    
     // Añadir un ID de solicitud para seguimiento si no existe
     const requestWithId = {
       ...request,
@@ -24,7 +74,6 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
     };
     
     // URL completa de la función de borde de Supabase
-    // Corrección: Asegurarnos de usar la URL correcta con el ID del proyecto
     const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
     
     console.log('OpenRouter: Enviando solicitud a', functionUrl, requestWithId);
@@ -49,6 +98,11 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       if (!response.ok) {
         const errorText = await response.text();
         console.error('OpenRouter: Error en la respuesta:', response.status, errorText);
+        
+        // Actualizar estado del servicio si hay errores críticos
+        if (response.status >= 500) {
+          serviceHealthStatus = false;
+        }
         
         // Manejo específico según el código de estado
         if (response.status === 404) {
@@ -80,6 +134,9 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
         
         throw new Error(`Error en solicitud OpenRouter: ${response.status}`);
       }
+      
+      // Restablecer el estado del servicio a saludable si la solicitud fue exitosa
+      serviceHealthStatus = true;
       
       // Intenta procesar la respuesta como JSON
       let data;

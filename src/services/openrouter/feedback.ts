@@ -2,6 +2,17 @@
 import { AIFeedback } from "@/types/ai-types";
 import { openRouterService } from "./core";
 
+// Caché simple para respuestas frecuentes
+const feedbackCache: Record<string, { timestamp: number, response: any }> = {};
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+
+// Función para generar una clave de caché basada en los parámetros
+const generateCacheKey = (message: string, context?: string): string => {
+  const normalizedMessage = message.trim().toLowerCase().substring(0, 100);
+  const normalizedContext = (context || '').toLowerCase().substring(0, 50);
+  return `${normalizedContext}:${normalizedMessage}`;
+};
+
 /**
  * Proporciona retroalimentación sobre un ejercicio utilizando OpenRouter
  */
@@ -74,7 +85,7 @@ export const provideExerciseFeedback = async (
 
 /**
  * Procesa mensajes del usuario para proporcionar retroalimentación general
- * Versión mejorada con mejor manejo de errores y respuestas
+ * Versión mejorada con mejor manejo de errores, respuestas y caché
  */
 export const provideChatFeedback = async (
   userMessage: string,
@@ -83,6 +94,18 @@ export const provideChatFeedback = async (
 ): Promise<string | null> => {
   try {
     console.log('Solicitando respuesta para mensaje:', userMessage);
+    
+    // Verificar si hay una respuesta en caché para consultas frecuentes simples
+    // Solo aplicar caché en mensajes cortos y sin contexto previo complejo
+    if (userMessage.length < 50 && (!previousMessages || previousMessages.length < 2)) {
+      const cacheKey = generateCacheKey(userMessage, context);
+      const cachedItem = feedbackCache[cacheKey];
+      
+      if (cachedItem && (Date.now() - cachedItem.timestamp) < CACHE_TTL) {
+        console.log('Usando respuesta en caché para:', userMessage);
+        return cachedItem.response;
+      }
+    }
     
     // Implementar sistema de reintentos
     let attempts = 0;
@@ -129,30 +152,46 @@ export const provideChatFeedback = async (
     
     console.log('Respuesta recibida del servicio:', typeof result, result);
     
+    // Procesar la respuesta y guardar en caché si es apropiado
+    let finalResponse: string;
+    
     // Manejar diferentes formatos de respuesta
     if (typeof result === 'string') {
-      return result;
-    }
-    
-    if (typeof result === 'object') {
+      finalResponse = result;
+    } else if (typeof result === 'object') {
       // Si tiene la propiedad response, usarla directamente
       if ('response' in result) {
-        return result.response;
+        finalResponse = result.response;
+      } else if (result.success && typeof result.result === 'string') {
+        finalResponse = result.result;
+      } else {
+        // Último recurso: convertir el objeto a string
+        finalResponse = JSON.stringify(result);
       }
-      
-      // Si tiene cualquier propiedad de tipo string, usar la primera que encontremos
-      for (const key of Object.keys(result)) {
-        if (typeof result[key] === 'string') {
-          return result[key];
-        }
-      }
-      
-      // Último recurso: convertir el objeto completo a string
-      return JSON.stringify(result);
+    } else {
+      finalResponse = "Recibí una respuesta pero no pude interpretarla correctamente. ¿Puedes reformular tu pregunta?";
     }
     
-    // Caso extremo: el resultado es de un tipo no esperado
-    return "Recibí una respuesta pero no pude interpretarla correctamente. ¿Puedes reformular tu pregunta?";
+    // Guardar en caché si el mensaje es apropiado (simple y frecuente)
+    if (userMessage.length < 50 && (!previousMessages || previousMessages.length < 2)) {
+      const cacheKey = generateCacheKey(userMessage, context);
+      feedbackCache[cacheKey] = {
+        timestamp: Date.now(),
+        response: finalResponse
+      };
+      
+      // Limpiar caché si se hace muy grande
+      if (Object.keys(feedbackCache).length > 100) {
+        const oldestKeys = Object.keys(feedbackCache)
+          .sort((a, b) => feedbackCache[a].timestamp - feedbackCache[b].timestamp)
+          .slice(0, 20);
+          
+        oldestKeys.forEach(key => delete feedbackCache[key]);
+      }
+    }
+    
+    return finalResponse;
+    
   } catch (error) {
     console.error('Error al procesar mensaje:', error);
     // Proporcionar un mensaje de error amigable al usuario
