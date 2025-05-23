@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
@@ -325,6 +324,13 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     },
     selectedPrueba: selectedTest,
     recommendedNodes,
+    
+    // Estado de validación
+    validationStatus: {
+      isValid: true,
+      issuesCount: 0,
+      lastValidation: new Date()
+    },
     
     // Estado de conexión
     serviceStatus,

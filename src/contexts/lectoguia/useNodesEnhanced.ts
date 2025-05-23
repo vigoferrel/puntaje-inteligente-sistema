@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TLearningNode, TPAESPrueba } from '@/types/system-types';
@@ -173,7 +172,7 @@ export function useNodesEnhanced(userId?: string) {
       
       console.log('📈 Distribución de nodos por prueba:', nodesByPrueba);
 
-      if (validation.issuesFound > 0) {
+      if (validation.summary.issuesCount > 0) {
         console.log(`⚠️ Validación completada: ${validation.summary.validNodes}/${validation.summary.totalNodes} nodos válidos`);
       }
 

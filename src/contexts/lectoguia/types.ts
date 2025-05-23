@@ -1,146 +1,77 @@
 
+import { TLearningNode, TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { Exercise } from '@/types/ai-types';
-import { ConnectionStatus } from '@/hooks/use-openrouter';
-import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
-import { ChatMessage } from '@/components/ai/ChatInterface';
+import { TNodeProgress } from '@/types/node-progress';
+import { Message } from '@/hooks/lectoguia-chat/types';
 
-// Mapa de materias a pruebas PAES
-export const SUBJECT_TO_PRUEBA_MAP: Record<string, TPAESPrueba> = {
-  'lectura': 'COMPETENCIA_LECTORA',
-  'matematicas-basica': 'MATEMATICA_1',
-  'matematicas-avanzada': 'MATEMATICA_2',
-  'ciencias': 'CIENCIAS',
-  'historia': 'HISTORIA',
-  'general': 'COMPETENCIA_LECTORA'
-};
-
-// Nombres legibles para las materias
-export const SUBJECT_DISPLAY_NAMES: Record<string, string> = {
-  'lectura': 'Comprensión Lectora',
-  'matematicas-basica': 'Matemáticas (7° a 2° medio)',
-  'matematicas-avanzada': 'Matemáticas (3° y 4° medio)',
-  'ciencias': 'Ciencias',
-  'historia': 'Historia',
-  'general': 'General'
-};
-
-// Mapa de pruebas PAES a test_id (para base de datos)
-export const PRUEBA_TO_TEST_ID: Record<TPAESPrueba, number> = {
-  'COMPETENCIA_LECTORA': 1,
-  'MATEMATICA_1': 2,
-  'MATEMATICA_2': 3,
-  'CIENCIAS': 4,
-  'HISTORIA': 5
-};
-
-// Niveles iniciales de habilidad
-export const initialSkillLevels: Record<TPAESHabilidad, number> = {
-  'TRACK_LOCATE': 0,
-  'INTERPRET_RELATE': 0,
-  'EVALUATE_REFLECT': 0,
-  'SOLVE_PROBLEMS': 0,
-  'REPRESENT': 0,
-  'MODEL': 0,
-  'ARGUE_COMMUNICATE': 0,
-  'IDENTIFY_THEORIES': 0,
-  'PROCESS_ANALYZE': 0,
-  'APPLY_PRINCIPLES': 0,
-  'SCIENTIFIC_ARGUMENT': 0,
-  'TEMPORAL_THINKING': 0,
-  'SOURCE_ANALYSIS': 0,
-  'MULTICAUSAL_ANALYSIS': 0,
-  'CRITICAL_THINKING': 0,
-  'REFLECTION': 0
-};
-
-// Tipos utilizados en los hooks y componentes
 export interface LectoGuiaContextType {
   // Estado general
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: 'chat' | 'exercise' | 'progress';
+  setActiveTab: (tab: 'chat' | 'exercise' | 'progress') => void;
   isLoading: boolean;
   
   // Chat
-  messages: any[];
+  messages: Message[];
   isTyping: boolean;
   activeSubject: string;
-  handleSendMessage: (message: string, imageData?: string) => void;
+  handleSendMessage: (message: string, imageData?: string) => Promise<void>;
   handleSubjectChange: (subject: string) => void;
   
   // Ejercicios
   currentExercise: Exercise | null;
   selectedOption: number | null;
   showFeedback: boolean;
-  handleOptionSelect: (index: number) => void;
+  handleOptionSelect: (optionIndex: number) => void;
   handleNewExercise: () => Promise<boolean>;
   
   // Habilidades
-  activeSkill?: TPAESHabilidad | null;
-  setActiveSkill?: (skill: TPAESHabilidad | null) => void;
-  handleSkillSelect?: (skill: TPAESHabilidad) => Promise<boolean>;
+  activeSkill: TPAESHabilidad | null;
+  setActiveSkill: (skill: TPAESHabilidad | null) => void;
+  handleSkillSelect: (skill: TPAESHabilidad) => Promise<boolean>;
   
   // Progreso
-  skillLevels: Record<string | TPAESHabilidad, number>;
+  skillLevels: Record<TPAESHabilidad, number>;
   handleStartSimulation: () => void;
   
-  // Nodos - Corregido para usar number en lugar de string
-  nodes: any[];
-  nodeProgress: Record<string, any>;
+  // Nodos
+  nodes: TLearningNode[];
+  nodeProgress: Record<string, TNodeProgress>;
   handleNodeSelect: (nodeId: string) => Promise<boolean>;
-  selectedTestId: number | null;
-  setSelectedTestId: (testId: number | null) => void;
+  selectedTestId: number;
+  setSelectedTestId: (testId: number) => void;
   selectedPrueba: TPAESPrueba;
-  recommendedNodes?: any[];
+  recommendedNodes: TLearningNode[];
+  
+  // Estado de validación
+  validationStatus: {
+    isValid: boolean;
+    issuesCount: number;
+    lastValidation?: Date;
+  };
   
   // Estado de conexión
-  serviceStatus: 'available' | 'degraded' | 'unavailable';
-  connectionStatus: ConnectionStatus;
+  serviceStatus: {
+    isOnline: boolean;
+    lastCheck: Date;
+  };
+  connectionStatus: 'connected' | 'connecting' | 'disconnected' | 'error';
   resetConnectionStatus: () => void;
-  showConnectionStatus: () => React.ReactNode | null;
+  showConnectionStatus: boolean;
 }
 
-// Tipos para los hooks internos
-export interface UseTabsState {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
+// Mapeos para conversión entre formatos
+export const SUBJECT_TO_PRUEBA_MAP: Record<string, TPAESPrueba> = {
+  'lectura': 'COMPETENCIA_LECTORA',
+  'matematicas-basica': 'MATEMATICA_1',
+  'matematicas-avanzada': 'MATEMATICA_2',
+  'ciencias': 'CIENCIAS',
+  'historia': 'HISTORIA'
+};
 
-export interface UseSubjectsState {
-  activeSubject: string;
-  handleSubjectChange: (subject: string) => void;
-}
-
-export interface UseSkillsState {
-  skillLevels: Record<TPAESHabilidad, number>;
-  updateSkillLevel: (skillId: number, isCorrect: boolean) => Promise<void>;
-  getSkillIdFromCode: (skillCode: TPAESHabilidad) => number | null;
-  handleStartSimulation: () => void;
-}
-
-export interface UseNodesState {
-  nodes: any[];
-  nodeProgress: Record<string, any>;
-  selectedTestId: number | null;
-  setSelectedTestId: (testId: number | null) => void;
-  selectedPrueba: TPAESPrueba;
-  handleNodeSelect: (nodeId: string) => any;
-}
-
-export interface UseExerciseState {
-  currentExercise: Exercise | null;
-  selectedOption: number | null;
-  showFeedback: boolean;
-  handleOptionSelect: (index: number) => void;
-  handleNewExercise: () => Promise<boolean>;
-  isLoading: boolean;
-  setCurrentExercise: React.Dispatch<React.SetStateAction<Exercise | null>>;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export interface UseChatState {
-  messages: ChatMessage[];
-  isTyping: boolean;
-  handleSendMessage: (message: string, imageData?: string) => void;
-  addUserMessage: (content: string, imageData?: string) => ChatMessage;
-  addAssistantMessage: (content: string) => ChatMessage;
-}
+export const SUBJECT_DISPLAY_NAMES: Record<string, string> = {
+  'lectura': 'Comprensión Lectora',
+  'matematicas-basica': 'Matemática 1',
+  'matematicas-avanzada': 'Matemática 2',
+  'ciencias': 'Ciencias',
+  'historia': 'Historia'
+};
