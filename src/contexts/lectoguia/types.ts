@@ -83,12 +83,12 @@ export interface LectoGuiaContextType {
   skillLevels: Record<string | TPAESHabilidad, number>;
   handleStartSimulation: () => void;
   
-  // Nodos
+  // Nodos - Corregido para usar number en lugar de string
   nodes: any[];
   nodeProgress: Record<string, any>;
   handleNodeSelect: (nodeId: string) => Promise<boolean>;
-  selectedTestId: string | null;
-  setSelectedTestId: (testId: string | null) => void;
+  selectedTestId: number | null;
+  setSelectedTestId: (testId: number | null) => void;
   selectedPrueba: TPAESPrueba;
   recommendedNodes?: any[];
   
@@ -120,10 +120,10 @@ export interface UseSkillsState {
 export interface UseNodesState {
   nodes: any[];
   nodeProgress: Record<string, any>;
-  selectedTestId: string | null;
-  setSelectedTestId: (testId: string | null) => void;
+  selectedTestId: number | null;
+  setSelectedTestId: (testId: number | null) => void;
   selectedPrueba: TPAESPrueba;
-  handleNodeSelect: (nodeId: string) => any; // Added this line to fix the error
+  handleNodeSelect: (nodeId: string) => any;
 }
 
 export interface UseExerciseState {
@@ -137,7 +137,6 @@ export interface UseExerciseState {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-// Add the UseChatState interface to fix the first error
 export interface UseChatState {
   messages: ChatMessage[];
   isTyping: boolean;

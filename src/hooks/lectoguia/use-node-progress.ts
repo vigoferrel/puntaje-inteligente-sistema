@@ -32,7 +32,7 @@ export function useNodeProgress(userId?: string) {
           status: progress.status as 'not_started' | 'in_progress' | 'completed',
           progress: progress.progress || 0,
           timeSpentMinutes: progress.time_spent_minutes || 0,
-          learningPhase: progress.learning_phase || undefined
+          // Removemos learning_phase ya que no existe en la base de datos
         };
       });
 
@@ -74,7 +74,7 @@ export function useNodeProgress(userId?: string) {
           node_id: nodeId,
           progress: Math.min(1, Math.max(0, progress)),
           status: finalStatus,
-          updated_at: new Date().toISOString()
+          last_activity_at: new Date().toISOString()
         });
 
       if (error) throw error;
@@ -87,7 +87,6 @@ export function useNodeProgress(userId?: string) {
           status: finalStatus!,
           progress: Math.min(1, Math.max(0, progress)),
           timeSpentMinutes: prev[nodeId]?.timeSpentMinutes || 0,
-          learningPhase: prev[nodeId]?.learningPhase
         }
       }));
 

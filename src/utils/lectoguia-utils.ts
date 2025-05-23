@@ -42,7 +42,7 @@ export function getSubjectName(subjectCode: string): string {
 }
 
 /**
- * Obtiene los niveles de habilidad iniciales
+ * Obtiene los niveles de habilidad iniciales - Solo para las 6 habilidades principales
  * @returns Niveles de habilidad iniciales
  */
 export function getInitialSkillLevels(): Record<TPAESHabilidad, number> {
@@ -52,7 +52,17 @@ export function getInitialSkillLevels(): Record<TPAESHabilidad, number> {
     'EVALUATE_REFLECT': 0,
     'SOLVE_PROBLEMS': 0,
     'REPRESENT': 0,
-    'MODEL': 0
+    'MODEL': 0,
+    'ARGUE_COMMUNICATE': 0,
+    'IDENTIFY_THEORIES': 0,
+    'PROCESS_ANALYZE': 0,
+    'APPLY_PRINCIPLES': 0,
+    'SCIENTIFIC_ARGUMENT': 0,
+    'TEMPORAL_THINKING': 0,
+    'SOURCE_ANALYSIS': 0,
+    'MULTICAUSAL_ANALYSIS': 0,
+    'CRITICAL_THINKING': 0,
+    'REFLECTION': 0
   };
 }
 
@@ -69,7 +79,7 @@ export function formatTimeRemaining(timeInSeconds: number): string {
 }
 
 /**
- * Obtiene el nombre para mostrar de una habilidad PAES
+ * Obtiene el nombre para mostrar de una habilidad PAES - Solo las 6 principales en uso
  * @param skillCode Código de habilidad PAES
  * @returns Nombre para mostrar
  */
@@ -80,7 +90,17 @@ export function getSkillName(skillCode: string): string {
     'EVALUATE_REFLECT': 'Evaluar y reflexionar',
     'SOLVE_PROBLEMS': 'Resolución de problemas',
     'REPRESENT': 'Representación',
-    'MODEL': 'Modelamiento'
+    'MODEL': 'Modelamiento',
+    'ARGUE_COMMUNICATE': 'Argumentación y comunicación',
+    'IDENTIFY_THEORIES': 'Identificación de teorías',
+    'PROCESS_ANALYZE': 'Procesar y analizar',
+    'APPLY_PRINCIPLES': 'Aplicar principios',
+    'SCIENTIFIC_ARGUMENT': 'Argumentación científica',
+    'TEMPORAL_THINKING': 'Pensamiento temporal',
+    'SOURCE_ANALYSIS': 'Análisis de fuentes',
+    'MULTICAUSAL_ANALYSIS': 'Análisis multicausal',
+    'CRITICAL_THINKING': 'Pensamiento crítico',
+    'REFLECTION': 'Reflexión'
   };
   
   return skillNames[skillCode] || skillCode;
@@ -99,7 +119,7 @@ export function formatSkillLevel(level: number): string {
 }
 
 /**
- * Obtiene el ID de una habilidad
+ * Obtiene el ID de una habilidad - Solo las 6 principales
  * @param skillCode Código de habilidad
  * @returns ID de la habilidad
  */
@@ -110,14 +130,24 @@ export function getSkillId(skillCode: string): number {
     'EVALUATE_REFLECT': 3,
     'SOLVE_PROBLEMS': 4,
     'REPRESENT': 5,
-    'MODEL': 6
+    'MODEL': 6,
+    'ARGUE_COMMUNICATE': 7,
+    'IDENTIFY_THEORIES': 8,
+    'PROCESS_ANALYZE': 9,
+    'APPLY_PRINCIPLES': 10,
+    'SCIENTIFIC_ARGUMENT': 11,
+    'TEMPORAL_THINKING': 12,
+    'SOURCE_ANALYSIS': 13,
+    'MULTICAUSAL_ANALYSIS': 14,
+    'CRITICAL_THINKING': 15,
+    'REFLECTION': 16
   };
   
   return skillIds[skillCode] || 1;
 }
 
 /**
- * Obtiene las habilidades por prueba PAES
+ * Obtiene las habilidades por prueba PAES - Solo las 6 principales en uso
  * @param prueba Tipo de prueba PAES
  * @returns Array de habilidades
  */
@@ -134,7 +164,7 @@ export function getSkillsByPrueba(prueba: TPAESPrueba): TPAESHabilidad[] {
 }
 
 /**
- * Mapea código de habilidad al nombre de prueba PAES
+ * Mapea código de habilidad al nombre de prueba PAES - Solo las 6 principales en uso
  * @param skill Código de habilidad
  * @returns Pruebas donde se evalúa esta habilidad
  */
@@ -145,14 +175,24 @@ export function getSkillTestMapping(skill: TPAESHabilidad): TPAESPrueba[] {
     'EVALUATE_REFLECT': ['COMPETENCIA_LECTORA', 'CIENCIAS', 'HISTORIA'],
     'SOLVE_PROBLEMS': ['MATEMATICA_1', 'MATEMATICA_2'],
     'REPRESENT': ['MATEMATICA_1'],
-    'MODEL': ['MATEMATICA_2', 'CIENCIAS']
+    'MODEL': ['MATEMATICA_2', 'CIENCIAS'],
+    'ARGUE_COMMUNICATE': [],
+    'IDENTIFY_THEORIES': [],
+    'PROCESS_ANALYZE': [],
+    'APPLY_PRINCIPLES': [],
+    'SCIENTIFIC_ARGUMENT': [],
+    'TEMPORAL_THINKING': [],
+    'SOURCE_ANALYSIS': [],
+    'MULTICAUSAL_ANALYSIS': [],
+    'CRITICAL_THINKING': [],
+    'REFLECTION': []
   };
   
   return skillToTests[skill] || [];
 }
 
 /**
- * Obtiene el color asociado a una habilidad
+ * Obtiene el color asociado a una habilidad - Solo las 6 principales
  * @param skill Código de habilidad
  * @returns Color en formato hexadecimal
  */
@@ -163,7 +203,17 @@ export function getSkillColor(skill: TPAESHabilidad): string {
     'EVALUATE_REFLECT': '#EF4444',
     'SOLVE_PROBLEMS': '#4F46E5',
     'REPRESENT': '#10B981',
-    'MODEL': '#F59E0B'
+    'MODEL': '#F59E0B',
+    'ARGUE_COMMUNICATE': '#6B7280',
+    'IDENTIFY_THEORIES': '#6B7280',
+    'PROCESS_ANALYZE': '#6B7280',
+    'APPLY_PRINCIPLES': '#6B7280',
+    'SCIENTIFIC_ARGUMENT': '#6B7280',
+    'TEMPORAL_THINKING': '#6B7280',
+    'SOURCE_ANALYSIS': '#6B7280',
+    'MULTICAUSAL_ANALYSIS': '#6B7280',
+    'CRITICAL_THINKING': '#6B7280',
+    'REFLECTION': '#6B7280'
   };
   
   return skillColors[skill] || '#6B7280';
