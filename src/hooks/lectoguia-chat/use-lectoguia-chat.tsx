@@ -5,15 +5,14 @@ import { toast } from '@/components/ui/use-toast';
 import { useChatMessages } from './use-chat-messages';
 import { useImageProcessing } from './use-image-processing';
 import { subjectNames, detectSubjectFromMessage } from './subject-detection';
-import { handleMessageError, extractResponseContent, formatImageAnalysisResult } from './message-handling';
+import { createUserMessage, createAssistantMessage, handleMessageError } from './message-handling';
 import { ChatState, ChatActions, ERROR_RATE_LIMIT_MESSAGE, WELCOME_MESSAGE } from './types';
-import { provideChatFeedback } from '@/services/openrouter/feedback';
+import { CircuitBreaker } from '@/utils/circuit-breaker';
 import { ToastAction } from '@/components/ui/toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, WifiOff, RefreshCw } from 'lucide-react';
-import { ChatMessage } from '@/components/ai/ChatInterface';
+import { AlertCircle, WifiOff } from 'lucide-react';
 
-// Respuestas offline para cuando el servicio no está disponible
+// Implementar respuestas offline
 const OFFLINE_RESPONSES: Record<string, string[]> = {
   general: [
     "Actualmente estoy funcionando en modo offline. Puedo responder preguntas básicas sobre la PAES.",
@@ -37,105 +36,137 @@ const OFFLINE_RESPONSES: Record<string, string[]> = {
   ]
 };
 
+// Circuit breaker para OpenRouter API
+const openRouterCircuitBreaker = new CircuitBreaker({
+  failureThreshold: 3,
+  resetTimeout: 60000,
+  onOpen: () => {
+    console.log('OpenRouter circuit opened - service may be down');
+    toast({
+      title: "Servicio degradado",
+      description: "Funcionando en modo limitado. Intentaremos restablecer la conexión automáticamente.",
+      variant: "destructive",
+      duration: 5000
+    });
+  },
+  onClose: () => {
+    console.log('OpenRouter circuit closed - service restored');
+    toast({
+      title: "Servicio restablecido",
+      description: "Todas las funcionalidades están disponibles nuevamente.",
+      duration: 3000
+    });
+  }
+});
+
+// Caché local para respuestas frecuentes
+const messageCache: Record<string, { response: string, timestamp: number }> = {};
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutos
+
 export function useLectoGuiaChat(): ChatState & ChatActions {
-  // Chat state management
-  const { messages, addUserMessage, addAssistantMessage, getRecentMessages } = useChatMessages();
+  // Estado principal del chat
+  const { messages, addUserMessage: addUserMsg, addAssistantMessage: addAssistantMsg, getRecentMessages } = useChatMessages();
   
-  // Image processing
+  // Procesamiento de imágenes
   const { isProcessing, handleImageProcessing } = useImageProcessing();
   
-  // API communication with improved error handling
-  const { callOpenRouter, lastError, retryLastOperation, connectionStatus, resetConnectionStatus } = useOpenRouter();
+  // Comunicación con API con mejor manejo de errores
+  const { callOpenRouter, lastError, retryLastOperation, connectionStatus } = useOpenRouter();
   
-  // Local state
+  // Estado local
   const [isTyping, setIsTyping] = useState(false);
   const [activeSubject, setActiveSubject] = useState('general');
-  const [consecutiveErrors, setConsecutiveErrors] = useState(0);
   const [serviceStatus, setServiceStatus] = useState<'available'|'degraded'|'unavailable'>('available');
-  const [messageQueue, setMessageQueue] = useState<{message: string, timestamp: number}[]>([]);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
   
-  // Efecto para procesar la cola de mensajes pendientes cuando el servicio se restablece
+  // Wrapper sobre addUserMessage para mantener consistencia de estado
+  const addUserMessage = (content: string, imageData?: string) => {
+    const msg = createUserMessage(content, imageData);
+    addUserMsg(msg);
+    return msg;
+  };
+  
+  // Wrapper sobre addAssistantMessage para mantener consistencia de estado
+  const addAssistantMessage = (content: string) => {
+    const msg = createAssistantMessage(content);
+    addAssistantMsg(msg);
+    return msg;
+  };
+  
+  // Monitor de conexión y reconexión automática
   useEffect(() => {
-    const processQueue = async () => {
-      if (connectionStatus === 'connected' && messageQueue.length > 0) {
-        toast({
-          title: "Conexión restablecida",
-          description: "Procesando mensajes pendientes...",
-        });
+    if (connectionStatus === 'disconnected' && reconnectAttempts < 5) {
+      const timer = setTimeout(() => {
+        console.log(`Intento de reconexión ${reconnectAttempts + 1}/5`);
+        retryLastOperation();
+        setReconnectAttempts(prev => prev + 1);
+      }, 5000 * Math.pow(2, reconnectAttempts)); // Backoff exponencial
+      
+      return () => clearTimeout(timer);
+    } else if (connectionStatus === 'connected') {
+      setReconnectAttempts(0);
+      if (serviceStatus === 'degraded') {
+        setServiceStatus('available');
+      }
+    }
+  }, [connectionStatus, reconnectAttempts, retryLastOperation, serviceStatus]);
+  
+  // Verificación periódica del estado del servicio
+  useEffect(() => {
+    const checkServiceHealth = async () => {
+      try {
+        // Intento ligero para verificar si el servicio está activo
+        const healthCheck = await callOpenRouter({ 
+          action: "health_check", 
+          payload: {} 
+        }, true);
         
-        // Procesar solo el mensaje más reciente para evitar spam
-        const latestMessage = messageQueue.reduce((latest, current) => 
-          current.timestamp > latest.timestamp ? current : latest
-        );
-        
-        try {
-          await processUserMessage(latestMessage.message);
-          // Limpiar la cola después de procesar exitosamente
-          setMessageQueue([]);
-        } catch (error) {
-          console.error("Error procesando mensaje en cola:", error);
+        if (healthCheck && healthCheck.status === 'available') {
+          if (serviceStatus !== 'available') {
+            setServiceStatus('available');
+            openRouterCircuitBreaker.reset();
+          }
+        } else {
+          setServiceStatus('degraded');
         }
+      } catch (error) {
+        console.error("Error verificando salud del servicio:", error);
       }
     };
     
-    if (connectionStatus === 'connected') {
-      processQueue();
-    }
-  }, [connectionStatus, messageQueue]);
-  
-  // Efecto para mostrar mensaje y estado cuando hay problemas persistentes
-  useEffect(() => {
-    if (consecutiveErrors >= 3) {
-      setServiceStatus('degraded');
-      
-      // Mensaje de alerta en el chat
-      const offlineMessage: ChatMessage = {
-        role: "assistant",
-        content: "⚠️ LectoGuía está funcionando en modo offline con funcionalidad limitada debido a problemas de conexión. Las respuestas serán básicas hasta que se restablezca la conexión.",
-        id: 'system-offline-alert',
-        timestamp: new Date().toISOString()
-      };
-      
-      // Solo agregar el mensaje si no existe ya uno similar
-      const hasOfflineAlert = messages.some(m => 
-        m.role === "assistant" && 
-        m.content.includes("modo offline")
-      );
-      
-      if (!hasOfflineAlert) {
-        addAssistantMessage(offlineMessage.content);
-      }
-      
-      // Notificación
-      toast({
-        title: "Modo offline activado",
-        description: "Estamos experimentando dificultades técnicas. Funcionaré con capacidades limitadas.",
-        variant: "destructive",
-        duration: 10000,
-        action: <ToastAction altText="Reintentar conexión" onClick={resetConnectionStatus}>
-          Reintentar
-        </ToastAction>
-      });
-      
-      // Resetear contador después de mostrar el mensaje
-      setConsecutiveErrors(0);
-    }
-  }, [consecutiveErrors, messages]);
+    // Verificar al inicio y luego cada 5 minutos
+    checkServiceHealth();
+    const interval = setInterval(checkServiceHealth, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [callOpenRouter, serviceStatus]);
   
   /**
-   * Change the active subject for the chat
+   * Cambia la materia activa para el chat
    */
   const changeSubject = (subject: string) => {
     if (activeSubject !== subject) {
       setActiveSubject(subject);
       
-      // Notify user of subject change
+      // Notificar al usuario del cambio de materia
       addAssistantMessage(`Ahora estamos en ${subjectNames[subject]}. ¿En qué puedo ayudarte con esta materia?`);
     }
   };
   
   /**
-   * Get offline response based on subject and query
+   * Detecta la materia desde un mensaje y la actualiza si es necesario
+   */
+  const detectSubjectFromMsg = (message: string) => {
+    const detectedSubject = detectSubjectFromMessage(message);
+    if (detectedSubject && detectedSubject !== activeSubject) {
+      changeSubject(detectedSubject);
+      return detectedSubject;
+    }
+    return null;
+  };
+  
+  /**
+   * Obtiene una respuesta offline basada en la materia y consulta
    */
   const getOfflineResponse = (message: string, subject: string): string => {
     // Seleccionar respuestas para el tema actual o general si no hay específicas
@@ -149,169 +180,238 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   };
   
   /**
-   * Process user message and generate a response with improved error handling
-   * and offline support
+   * Busca en caché una respuesta previa similar
+   */
+  const getCachedResponse = (message: string, subject: string): string | null => {
+    const normalizedMsg = message.toLowerCase().trim();
+    const cacheKey = `${subject}:${normalizedMsg}`;
+    
+    const cachedItem = messageCache[cacheKey];
+    if (cachedItem && (Date.now() - cachedItem.timestamp) < CACHE_TTL) {
+      console.log('Usando respuesta en caché');
+      return cachedItem.response;
+    }
+    
+    // Buscar respuestas similares para consultas muy cortas
+    if (normalizedMsg.length < 10) {
+      for (const [key, item] of Object.entries(messageCache)) {
+        if (key.startsWith(`${subject}:`) && 
+            key.includes(normalizedMsg) && 
+            (Date.now() - item.timestamp) < CACHE_TTL) {
+          console.log('Usando respuesta en caché similar');
+          return item.response + "\n\n(Respuesta basada en una consulta similar)";
+        }
+      }
+    }
+    
+    return null;
+  };
+  
+  /**
+   * Guardar respuesta en caché para futuras consultas
+   */
+  const cacheResponse = (message: string, subject: string, response: string) => {
+    const normalizedMsg = message.toLowerCase().trim();
+    const cacheKey = `${subject}:${normalizedMsg}`;
+    
+    messageCache[cacheKey] = {
+      response,
+      timestamp: Date.now()
+    };
+    
+    // Limpiar caché si crece demasiado
+    if (Object.keys(messageCache).length > 100) {
+      const oldEntries = Object.entries(messageCache)
+        .sort(([, a], [, b]) => a.timestamp - b.timestamp)
+        .slice(0, 20);
+      
+      oldEntries.forEach(([key]) => delete messageCache[key]);
+    }
+  };
+  
+  /**
+   * Procesa mensaje de usuario y genera una respuesta con mejor manejo de errores
+   * y soporte offline
    */
   const processUserMessage = async (message: string, imageData?: string) => {
     if (!message.trim() && !imageData) return null;
     
-    // Add user message to chat
+    // Agregar mensaje del usuario al chat
     addUserMessage(message, imageData);
     setIsTyping(true);
     
     try {
-      // Handle image processing if there's an image
+      // Manejar procesamiento de imagen si hay una imagen
       if (imageData) {
         try {
           const response = await handleImageProcessing(imageData, message);
-          const formattedResponse = formatImageAnalysisResult(response);
+          const formattedResponse = response.response || "No pude analizar la imagen correctamente.";
           addAssistantMessage(formattedResponse);
-          setConsecutiveErrors(0); // Resetear contador de errores si hay éxito
+          openRouterCircuitBreaker.success(); // Registro exitoso para circuit breaker
           return formattedResponse;
         } catch (imageError) {
           console.error("Error procesando imagen:", imageError);
           const fallbackResponse = "Lo siento, no pude procesar la imagen correctamente. ¿Podrías intentar con una imagen más clara o describir lo que ves?";
           addAssistantMessage(fallbackResponse);
+          openRouterCircuitBreaker.failure(); // Registro de fallo para circuit breaker
           return fallbackResponse;
         }
       }
       
-      // Check for subject change
-      const detectedSubject = detectSubjectFromMessage(message);
-      if (detectedSubject && detectedSubject !== activeSubject) {
-        changeSubject(detectedSubject);
-      }
+      // Verificar cambio de materia
+      detectSubjectFromMsg(message);
       
-      // Si el servicio está degradado, usar respuestas offline
-      if (serviceStatus === 'degraded' || connectionStatus === 'disconnected') {
-        console.log('Servicio degradado o desconectado, usando respuesta offline');
+      // Comprobar si el circuit breaker está abierto o el servicio degradado
+      if (openRouterCircuitBreaker.isOpen() || serviceStatus !== 'available') {
+        console.log('Servicio no disponible, usando respuesta offline');
+        
+        // Primero intentar caché
+        const cachedResponse = getCachedResponse(message, activeSubject);
+        if (cachedResponse) {
+          addAssistantMessage(cachedResponse);
+          setIsTyping(false);
+          return cachedResponse;
+        }
+        
+        // Si no hay caché, usar respuesta offline
         const offlineResponse = getOfflineResponse(message, activeSubject);
         addAssistantMessage(offlineResponse);
-        
-        // Agregar mensaje a la cola para procesamiento futuro si el servicio se restablece
-        setMessageQueue(prev => [...prev, { message, timestamp: Date.now() }]);
-        
+        setIsTyping(false);
         return offlineResponse;
       }
       
-      // Request response from feedback service con mejor manejo de errores
-      console.log('Enviando mensaje al servicio de feedback con contexto:', activeSubject);
+      // Intentar obtener respuesta en caché primero para mejorar rendimiento
+      const cachedResponse = getCachedResponse(message, activeSubject);
+      if (cachedResponse) {
+        addAssistantMessage(cachedResponse);
+        setIsTyping(false);
+        return cachedResponse;
+      }
+      
+      // Solicitar respuesta al API
+      console.log('Enviando mensaje al servicio:', message);
+      
       try {
-        const responseData = await provideChatFeedback(
-          message,
-          `PAES preparation, subject: ${activeSubject}, full platform assistance`,
-          getRecentMessages(6)
-        );
+        const responseData = await callOpenRouter({
+          action: "provide_feedback",
+          payload: {
+            userMessage: message,
+            context: `PAES preparation, subject: ${activeSubject}`,
+            previousMessages: getRecentMessages(4)
+          }
+        });
         
-        // Caso especial: si no hay respuesta pero no es un error crítico
+        // Si no hay respuesta, usar respuesta de respaldo
         if (!responseData) {
-          console.log('No se recibió respuesta del servicio, utilizando respuesta de respaldo');
           const fallbackContent = "Lo siento, en este momento no puedo acceder a toda mi información. ¿Puedo ayudarte con algo más básico sobre el tema?";
           addAssistantMessage(fallbackContent);
-          
-          // Incrementar contador de errores
-          setConsecutiveErrors(prev => prev + 1);
-          
+          setIsTyping(false);
+          openRouterCircuitBreaker.failure(); // Registro de fallo para circuit breaker
           return fallbackContent;
         }
         
-        console.log('Respuesta procesada:', responseData);
+        // Procesar la respuesta
+        let finalResponse: string;
         
-        // Añadir la respuesta al chat
-        addAssistantMessage(responseData);
-        setConsecutiveErrors(0); // Resetear contador de errores si hay éxito
-        setServiceStatus('available'); // Marcar servicio como disponible nuevamente
-        return responseData;
+        if (typeof responseData === 'string') {
+          finalResponse = responseData;
+        } else if (responseData && typeof responseData === 'object') {
+          if ('response' in responseData) {
+            finalResponse = responseData.response;
+          } else {
+            // Buscar cualquier campo que contenga un string como respuesta
+            const stringValues = Object.values(responseData).filter(v => typeof v === 'string');
+            finalResponse = stringValues.length > 0 
+              ? stringValues[0] as string
+              : "Recibí tu mensaje, pero no pude generar una respuesta adecuada.";
+          }
+        } else {
+          finalResponse = "Recibí tu mensaje, pero tuve dificultades procesando la respuesta.";
+        }
+        
+        // Agregar la respuesta al chat
+        addAssistantMessage(finalResponse);
+        setIsTyping(false);
+        
+        // Guardar en caché para futuras consultas similares
+        cacheResponse(message, activeSubject, finalResponse);
+        
+        // Registrar éxito en circuit breaker
+        openRouterCircuitBreaker.success();
+        
+        return finalResponse;
       } catch (serviceError) {
         console.error("Error al comunicarse con el servicio:", serviceError);
         
-        // Incrementar contador de errores
-        setConsecutiveErrors(prev => prev + 1);
+        // Registrar fallo en circuit breaker
+        openRouterCircuitBreaker.failure();
         
-        // Intentar reintentar automáticamente si es el primer o segundo error
-        if (consecutiveErrors < 2) {
-          toast({
-            title: "Reintentando conexión",
-            description: "Estamos intentando restablecer la comunicación...",
-          });
-          
-          // Añadir un pequeño retraso antes de reintentar
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          try {
-            const retryResponse = await provideChatFeedback(
-              message,
-              `PAES preparation, subject: ${activeSubject}, retry attempt`,
-              getRecentMessages(2) // Usar menos contexto en el reintento
-            );
-            
-            if (retryResponse) {
-              addAssistantMessage(retryResponse);
-              setConsecutiveErrors(0); // Resetear contador si el reintento tiene éxito
-              return retryResponse;
-            }
-          } catch (retryError) {
-            console.error("Error en reintento:", retryError);
-          }
-        }
+        // Usar respuesta offline como fallback
+        const fallbackResponse = getOfflineResponse(message, activeSubject);
+        addAssistantMessage(fallbackResponse);
+        setIsTyping(false);
         
-        // Si todo falla, enviar un mensaje de error comprensible para el usuario
-        const errorResponse = "Lo siento, estoy teniendo problemas para conectarme. Por favor, intenta de nuevo en unos momentos o prueba con una pregunta más simple.";
-        addAssistantMessage(errorResponse);
-        
-        toast({
-          title: "Error de conexión",
-          description: "Hubo un problema al conectar con el servicio. Inténtalo de nuevo.",
-          variant: "destructive",
-          action: <ToastAction altText="Reintentar" onClick={retryLastOperation}>
-            Reintentar
-          </ToastAction>
-        });
-        
-        return errorResponse;
+        return fallbackResponse;
       }
     } catch (error) {
-      // Handle errors with improved error reporting
-      console.error('Error procesando mensaje:', error);
-      const { errorContent } = handleMessageError(error);
-      
-      addAssistantMessage(errorContent);
-      
-      // Incrementar contador de errores
-      setConsecutiveErrors(prev => prev + 1);
-      
-      return errorContent;
+      // Error general en el procesamiento
+      console.error("Error general procesando mensaje:", error);
+      const errorResponse = "Lo siento, ocurrió un error al procesar tu mensaje. Por favor intenta de nuevo.";
+      addAssistantMessage(errorResponse);
+      setIsTyping(false);
+      return errorResponse;
     } finally {
       setIsTyping(false);
     }
   };
   
-  // Mostrar estado de la conexión para depuración
+  /**
+   * Componente para mostrar estado de conexión
+   */
   const showConnectionStatus = () => {
-    return (
-      <Alert variant={connectionStatus === 'connected' ? "default" : "destructive"}>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Estado del servicio</AlertTitle>
-        <AlertDescription>
-          {connectionStatus === 'connected' ? 'Conectado' : 'Desconectado'} - {serviceStatus}
-        </AlertDescription>
-      </Alert>
-    );
+    if (serviceStatus === 'degraded' || connectionStatus === 'disconnected') {
+      return (
+        <Alert variant="destructive" className="mb-4 bg-destructive/20">
+          <WifiOff className="h-4 w-4" />
+          <AlertTitle>Modo limitado</AlertTitle>
+          <AlertDescription>
+            Funcionando con capacidades reducidas debido a problemas de conexión.
+            <ToastAction altText="Reintentar" onClick={() => retryLastOperation()}>
+              Reintentar
+            </ToastAction>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return null;
   };
   
-  return {
-    // State
-    messages,
-    isTyping: isTyping || isProcessing,
-    activeSubject,
-    connectionStatus,
-    serviceStatus,
+  /**
+   * Resetea el estado de la conexión e intenta reconectar
+   */
+  const resetConnectionStatus = () => {
+    openRouterCircuitBreaker.reset();
+    retryLastOperation();
+    setServiceStatus('available');
+    setReconnectAttempts(0);
     
-    // Actions
+    toast({
+      title: "Reintentando conexión",
+      description: "Intentando restaurar la funcionalidad completa...",
+      duration: 3000
+    });
+  };
+
+  return {
+    messages,
+    isTyping,
+    activeSubject,
+    serviceStatus,
+    connectionStatus,
     processUserMessage,
     addAssistantMessage,
     changeSubject,
-    detectSubjectFromMessage,
+    detectSubjectFromMessage: detectSubjectFromMsg,
     showConnectionStatus,
     resetConnectionStatus
   };

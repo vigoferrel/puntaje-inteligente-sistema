@@ -21,6 +21,11 @@ export interface ChatActions {
 export interface ImageProcessingResult {
   response: string;
   extractedText?: string;
+  analysis?: {
+    content?: string;
+    objects?: string[];
+    confidence?: number;
+  };
 }
 
 export const WELCOME_MESSAGE = `👋 ¡Hola! Soy LectoGuía, tu asistente de aprendizaje personalizado.
