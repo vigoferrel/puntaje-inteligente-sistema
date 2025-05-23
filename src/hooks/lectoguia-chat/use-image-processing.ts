@@ -1,60 +1,55 @@
 
 import { useState } from 'react';
 import { useOpenRouter } from '@/hooks/use-openrouter';
-import { toast } from '@/components/ui/use-toast';
-import { ImageAnalysisResult } from '@/types/ai-types';
-import { formatImageAnalysisResult } from './message-handling';
+import { ImageProcessingResult } from './types';
 
 /**
- * Hook for handling image processing functionality
+ * Hook para manejo de procesamiento de imágenes
  */
 export function useImageProcessing() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { processImage } = useOpenRouter();
   
   /**
-   * Process an uploaded image
+   * Procesa una imagen y retorna el resultado
    */
-  const handleImageProcessing = async (imageData: string, message: string): Promise<string> => {
+  const handleImageProcessing = async (
+    imageData: string,
+    prompt?: string
+  ): Promise<ImageProcessingResult> => {
     try {
       setIsProcessing(true);
-      toast({
-        title: "Procesando imagen",
-        description: "Estamos analizando el contenido de la imagen..."
-      });
       
-      // Use default prompt if no message is provided
-      const prompt = message.trim() || "Analiza esta imagen y extrae todo el texto visible";
+      // Verificar que los datos de la imagen son válidos
+      if (!imageData || imageData.length < 100) {
+        throw new Error('Datos de imagen inválidos o incompletos');
+      }
       
-      // Process the image
-      const result = await processImage(imageData, prompt);
+      // Prompt por defecto si no se proporciona uno específico
+      const defaultPrompt = 'Analiza esta imagen y proporciona información detallada sobre su contenido.';
       
-      // Show success notification
-      toast({
-        title: "Imagen analizada",
-        description: "La imagen ha sido analizada correctamente"
-      });
+      const result = await processImage(
+        imageData, 
+        prompt || defaultPrompt,
+        'Contexto: Imagen enviada por estudiante durante preparación PAES'
+      );
       
-      // Format the result
-      return formatImageAnalysisResult(result);
+      if (!result) {
+        return {
+          response: "No se pudo procesar la imagen. Por favor intenta con una imagen más clara."
+        };
+      }
+      
+      return result;
     } catch (error) {
-      console.error("Error processing image:", error);
-      
-      // Show error notification
-      toast({
-        title: "Error",
-        description: "No se pudo analizar la imagen. Por favor, inténtalo de nuevo.",
-        variant: "destructive"
-      });
-      
-      return "Lo siento, tuve problemas analizando la imagen. Intenta con otra imagen o describe tu consulta.";
+      console.error('Error en el procesamiento de imagen:', error);
+      return {
+        response: "Ocurrió un error al procesar tu imagen. Por favor intenta de nuevo con una imagen de mejor calidad."
+      };
     } finally {
       setIsProcessing(false);
     }
   };
   
-  return {
-    isProcessing,
-    handleImageProcessing
-  };
+  return { isProcessing, handleImageProcessing };
 }
