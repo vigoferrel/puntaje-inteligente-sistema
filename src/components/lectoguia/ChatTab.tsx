@@ -6,10 +6,10 @@ import { SubjectSelector } from "@/components/lectoguia/SubjectSelector";
 import { ChatSettingsButton } from "@/components/lectoguia/chat-settings/ChatSettingsButton";
 import { ContextualActionButtons } from "@/components/lectoguia/action-buttons/ContextualActionButtons";
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
+import { ConnectionMonitor } from './ConnectionMonitor';
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { useLectoGuia } from '@/contexts/LectoGuiaContext';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ConnectionStatusIndicator } from '@/components/lectoguia/ConnectionStatusIndicator';
 
 interface ChatTabProps {
   messages: any[];
@@ -26,8 +26,9 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   activeSubject,
   onSubjectChange
 }) => {
-  const { setActiveTab, connectionStatus, serviceStatus, resetConnectionStatus, showConnectionStatus, handleNewExercise } = useLectoGuia();
+  const { setActiveTab, handleNewExercise } = useLectoGuia();
   const [imageLoading, setImageLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
   
   // Usar handleNewExercise del contexto que ya está implementado
   const handleExerciseRequest = async (): Promise<boolean> => {
@@ -72,7 +73,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   const handleSendWithImage = (message: string, imageData?: string) => {
     if (imageData) {
       setImageLoading(true);
-      setTimeout(() => setImageLoading(false), 3000); // Simulación de carga de imagen
+      setTimeout(() => setImageLoading(false), 3000);
     }
     onSendMessage(message, imageData);
   };
@@ -86,11 +87,11 @@ export const ChatTab: React.FC<ChatTabProps> = ({
               activeSubject={activeSubject} 
               onSelectSubject={onSubjectChange}
             />
-            <ConnectionStatusIndicator 
-              status={connectionStatus} 
-              serviceStatus={serviceStatus} 
-              onRetry={resetConnectionStatus}
-            />
+            <div className="text-xs text-muted-foreground">
+              {connectionStatus === 'connected' && '🟢 Conectado'}
+              {connectionStatus === 'connecting' && '🟡 Conectando...'}
+              {connectionStatus === 'disconnected' && '🔴 Desconectado'}
+            </div>
           </div>
           <ChatSettingsButton />
         </div>
@@ -100,9 +101,9 @@ export const ChatTab: React.FC<ChatTabProps> = ({
           <LectoGuiaBreadcrumb items={breadcrumbItems} />
         </div>
         
-        {/* Alerta de estado de conexión si es necesario */}
-        <div className="px-3">
-          {showConnectionStatus && showConnectionStatus()}
+        {/* Monitor de conexión */}
+        <div className="px-3 pt-3">
+          <ConnectionMonitor onConnectionStatusChange={setConnectionStatus} />
         </div>
         
         {/* Indicador de carga de imagen */}

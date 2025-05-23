@@ -27,8 +27,20 @@ let serviceHealthLastChecked = 0;
 let serviceHealthStatus = true; // Asumimos que está saludable inicialmente
 const HEALTH_CHECK_INTERVAL = 60000; // 1 minuto
 
+// Función para obtener la clave de autorización de forma segura
+function getAuthorizationKey(): string {
+  // Intentar obtener la clave desde diferentes fuentes
+  const viteKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
+  const envKey = process?.env?.VITE_SUPABASE_ANON_KEY;
+  
+  // Clave anon de Supabase hardcodeada como fallback (es pública y segura)
+  const fallbackKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldHRpZmJvaWxpdHllbHBydmpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NTgyMjIsImV4cCI6MjA2MzQzNDIyMn0.11lCgmBNnZeAmxG1pEc6JAdZMAS5J5hUhw5TF6-JvrQ';
+  
+  return viteKey || envKey || fallbackKey;
+}
+
 /**
- * Verifica la salud del servicio sin bloquear si fue verificado recientemente
+ * Verifica la salud del servicio con mejor manejo de errores y reintentos
  */
 async function checkServiceHealth(): Promise<boolean> {
   const now = Date.now();
@@ -38,48 +50,80 @@ async function checkServiceHealth(): Promise<boolean> {
     return serviceHealthStatus;
   }
   
-  try {
-    // Hacer una solicitud liviana para verificar si el servicio está disponible
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    
-    // URL completa de la función de borde de Supabase con endpoint correcto
-    const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
-    
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`
-      },
-      body: JSON.stringify({
-        action: 'health_check',
-        payload: {},
-        requestId: generateRequestId()
-      }),
-      signal: controller.signal,
-      cache: 'no-store'
-    });
-    
-    clearTimeout(timeoutId);
-    serviceHealthLastChecked = now;
-    
-    if (!response.ok) {
-      console.warn(`Health check failed with status: ${response.status}`);
+  const maxRetries = 2;
+  let retryCount = 0;
+  
+  while (retryCount < maxRetries) {
+    try {
+      console.log(`OpenRouter: Verificando salud del servicio (intento ${retryCount + 1}/${maxRetries})`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // Aumentado a 8 segundos
+      
+      const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
+      const authKey = getAuthorizationKey();
+      
+      console.log(`OpenRouter: Usando clave de autorización: ${authKey.substring(0, 20)}...`);
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authKey}`
+        },
+        body: JSON.stringify({
+          action: 'health_check',
+          payload: {},
+          requestId: generateRequestId()
+        }),
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+      
+      clearTimeout(timeoutId);
+      serviceHealthLastChecked = now;
+      
+      if (!response.ok) {
+        console.warn(`OpenRouter: Health check falló con estado: ${response.status}`);
+        const errorText = await response.text().catch(() => 'No se pudo leer el error');
+        console.warn(`OpenRouter: Error detail: ${errorText}`);
+        
+        // Si es un error 401, esperar un poco más antes del siguiente intento
+        if (response.status === 401) {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            console.log(`OpenRouter: Error 401, reintentando en 2 segundos...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+        }
+        
+        serviceHealthStatus = false;
+        return false;
+      }
+      
+      const data = await response.json();
+      serviceHealthStatus = data?.result?.status === 'available' || response.ok;
+      console.log(`OpenRouter: Health check exitoso:`, serviceHealthStatus);
+      return serviceHealthStatus;
+      
+    } catch (error) {
+      console.warn(`OpenRouter: Health check falló (intento ${retryCount + 1}):`, error);
+      retryCount++;
+      
+      if (retryCount < maxRetries) {
+        console.log(`OpenRouter: Reintentando health check en 1 segundo...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+      }
+      
+      serviceHealthLastChecked = now;
       serviceHealthStatus = false;
       return false;
     }
-    
-    const data = await response.json();
-    serviceHealthStatus = data?.result?.status === 'available' || response.ok;
-    console.log('Health check successful:', serviceHealthStatus);
-    return serviceHealthStatus;
-  } catch (error) {
-    console.warn('OpenRouter: Health check failed:', error);
-    serviceHealthLastChecked = now;
-    serviceHealthStatus = false;
-    return false;
   }
+  
+  return false;
 }
 
 /**
@@ -174,8 +218,7 @@ function cacheResponse(cacheKey: string, response: any) {
 }
 
 /**
- * Servicio principal para comunicarse con la función de borde de OpenRouter
- * Con manejo mejorado de errores, caché y detección de estado
+ * Servicio principal mejorado con mejor manejo de conexión
  */
 export async function openRouterService<T>(request: OpenRouterRequest): Promise<T | null> {
   const requestId = request.requestId || generateRequestId();
@@ -183,7 +226,6 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
   try {
     console.log(`OpenRouter [${requestId}]: Iniciando solicitud - action: ${request.action}`);
     
-    // Verificar estado del servicio antes de intentar la solicitud
     const cacheKey = generateCacheKey(request.action, request.payload);
     
     // Intentar obtener respuesta desde caché primero (solo para acciones no críticas)
@@ -195,12 +237,12 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       }
     }
     
-    // Verificar la salud del servicio (sin bloquear)
+    // Verificar la salud del servicio con reintentos mejorados
     const isHealthy = await checkServiceHealth();
     if (!isHealthy && request.action !== 'health_check') {
-      console.warn(`OpenRouter [${requestId}]: Servicio no disponible, continuando con capacidades limitadas`);
+      console.warn(`OpenRouter [${requestId}]: Servicio no disponible después de verificaciones`);
       
-      // Para algunas acciones críticas, podemos devolver respuestas fallback inmediatas
+      // Para algunas acciones críticas, devolver respuestas fallback inmediatas
       if (['provide_feedback', 'provide_exercise_feedback'].includes(request.action)) {
         return {
           response: "Estoy funcionando en modo offline con capacidades limitadas. Por favor intenta más tarde para acceder a todas mis funcionalidades."
@@ -208,27 +250,25 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       }
     }
     
-    // Añadir un ID de solicitud para seguimiento si no existe
     const requestWithId = {
       ...request,
       requestId
     };
     
-    // URL completa de la función de borde de Supabase
     const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
+    const authKey = getAuthorizationKey();
     
     console.log(`OpenRouter [${requestId}]: Enviando a ${functionUrl}`);
     
-    // Implementar un timeout para evitar solicitudes pendientes indefinidamente
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+    const timeoutId = setTimeout(() => controller.abort(), 35000); // Timeout aumentado
     
     try {
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`
+          'Authorization': `Bearer ${authKey}`
         },
         body: JSON.stringify(requestWithId),
         signal: controller.signal
@@ -247,8 +287,12 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
         
         // No mostrar toast para health checks para evitar spam de notificaciones
         if (request.action !== 'health_check') {
-          // Manejos específicos según el código de estado con respuestas más amigables
-          if (response.status === 404) {
+          if (response.status === 401) {
+            console.error(`OpenRouter [${requestId}]: Error de autorización`);
+            return { 
+              response: "Hay un problema de autorización con el servicio. Por favor verifica la configuración." 
+            } as unknown as T;
+          } else if (response.status === 404) {
             console.error(`OpenRouter [${requestId}]: Endpoint no encontrado`);
             return { 
               response: "El servicio de AI está experimentando dificultades técnicas. Estamos trabajando para resolverlo." 
@@ -263,11 +307,6 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
             return {
               response: "El servicio de IA está temporalmente no disponible. Funcionaré con capacidades limitadas."
             } as unknown as T;
-          } else {
-            console.error(`OpenRouter [${requestId}]: Error general del servidor`);
-            return {
-              response: "Estoy teniendo problemas para acceder a mi base de conocimiento completa. Intentaré responder con lo que tengo disponible."
-            } as unknown as T;
           }
         }
         
@@ -277,7 +316,6 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       // Restablecer el estado del servicio a saludable si la solicitud fue exitosa
       serviceHealthStatus = true;
       
-      // Intenta procesar la respuesta como JSON
       let data;
       try {
         data = await response.json();
@@ -286,7 +324,6 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
         throw new Error(`Error al procesar respuesta JSON: ${jsonError.message}`);
       }
       
-      // Verificar estructura de respuesta esperada
       if (data.error) {
         console.error(`OpenRouter [${requestId}]: Error en respuesta:`, data.error);
         throw new Error(`Error de la API: ${data.error}`);
@@ -294,33 +331,28 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       
       console.log(`OpenRouter [${requestId}]: Respuesta exitosa para ${request.action}`);
       
-      // Cachear respuesta exitosa si es apropiada para caché (no health checks)
+      // Cachear respuesta exitosa si es apropiada para caché
       if (request.action !== 'health_check') {
         cacheResponse(cacheKey, data.result);
       }
       
-      // Devolver el resultado o un objeto vacío si es null/undefined
       return data.result || null;
     } catch (fetchError) {
       clearTimeout(timeoutId);
       
-      // Detectar si fue un error de timeout
       if (fetchError.name === 'AbortError') {
         console.warn(`OpenRouter [${requestId}]: Timeout de solicitud`);
-        // Retornar respuesta fallback para timeout sin mostrar toast
         return {
           response: "La respuesta está tardando más de lo esperado. Estoy funcionando en modo limitado en este momento."
         } as unknown as T;
       }
       
-      // Cualquier otro error de red, retornar null para manejo superior
       throw fetchError;
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     console.error(`OpenRouter [${requestId}]: Error del servicio:`, errorMessage, error);
     
-    // No mostrar notificación aquí - dejarlo para el nivel superior (useOpenRouter)
     return null;
   }
 }
