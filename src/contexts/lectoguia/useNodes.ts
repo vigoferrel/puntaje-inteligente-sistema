@@ -1,123 +1,112 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
 import { TLearningNode, TPAESPrueba } from '@/types/system-types';
-import { NodeProgress } from '@/types/node-progress';
-import { UseNodesState } from './types';
-import { testIdToPrueba } from '@/types/paes-types';
+import { useNodeProgress } from '@/hooks/lectoguia/use-node-progress';
+import { toast } from '@/components/ui/use-toast';
 
-export function useNodes(userId: string | null): UseNodesState {
+export function useNodes(userId?: string) {
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
-  const [nodeProgress, setNodeProgress] = useState<Record<string, NodeProgress>>({});
-  const [selectedTestId, setSelectedTestId] = useState<string | null>("1"); // Default: Competencia lectora
-  const [selectedPrueba, setSelectedPrueba] = useState<TPAESPrueba>('COMPETENCIA_LECTORA');
+  const [selectedTestId, setSelectedTestId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Actualizar prueba seleccionada cuando cambia el ID de prueba
-  useEffect(() => {
-    if (selectedTestId) {
-      const testId = parseInt(selectedTestId, 10);
-      setSelectedPrueba(testIdToPrueba(testId));
+  // Hook para manejar el progreso de nodos
+  const { 
+    nodeProgress, 
+    updateNodeProgress, 
+    loading: progressLoading 
+  } = useNodeProgress(userId);
+
+  // Función para cargar nodos desde la base de datos
+  const loadNodes = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('learning_nodes')
+        .select(`
+          id,
+          title,
+          description,
+          code,
+          position,
+          difficulty,
+          estimated_time_minutes,
+          skill_id,
+          test_id,
+          depends_on,
+          created_at,
+          updated_at,
+          paes_skills(name, code),
+          paes_tests(name, code)
+        `)
+        .order('position', { ascending: true });
+
+      if (error) throw error;
+
+      // Transformar datos al formato esperado
+      const transformedNodes: TLearningNode[] = data?.map(node => ({
+        id: node.id,
+        title: node.title,
+        description: node.description,
+        code: node.code,
+        position: node.position,
+        difficulty: node.difficulty as 'basic' | 'intermediate' | 'advanced',
+        estimatedTimeMinutes: node.estimated_time_minutes,
+        skill: node.paes_skills?.code as any,
+        prueba: node.paes_tests?.code as TPAESPrueba,
+        skillId: node.skill_id,
+        testId: node.test_id,
+        dependsOn: node.depends_on,
+        createdAt: node.created_at,
+        updatedAt: node.updated_at
+      })) || [];
+
+      setNodes(transformedNodes);
+    } catch (error) {
+      console.error('Error loading nodes:', error);
+      setError(error instanceof Error ? error.message : 'Error desconocido');
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los nodos de aprendizaje",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [selectedTestId]);
-  
-  // Cargar nodos para la prueba seleccionada
-  useEffect(() => {
-    const fetchLearningNodes = async () => {
-      if (!selectedTestId) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('learning_nodes')
-          .select('*, skill:paes_skills(*)')
-          .eq('test_id', parseInt(selectedTestId, 10))
-          .order('position', { ascending: true });
-          
-        if (error) throw error;
-        
-        if (data) {
-          // Mapear los nodos desde la base de datos a la interfaz TLearningNode
-          const formattedNodes: TLearningNode[] = data.map(node => ({
-            id: node.id,
-            title: node.title,
-            description: node.description || '',
-            // Convertir explícitamente a TPAESHabilidad
-            skill: (node.skill?.code || 'INTERPRET_RELATE') as any,
-            prueba: testIdToPrueba(node.test_id) || 'COMPETENCIA_LECTORA',
-            difficulty: node.difficulty || 'basic',
-            position: node.position,
-            dependsOn: node.depends_on || [],
-            estimatedTimeMinutes: node.estimated_time_minutes || 30,
-            content: {
-              theory: '',
-              examples: [],
-              exerciseCount: 0
-            }
-          }));
-          
-          setNodes(formattedNodes);
-        }
-      } catch (error) {
-        console.error('Error fetching learning nodes:', error);
-        toast({
-          title: 'Error',
-          description: 'No se pudieron cargar los nodos de aprendizaje',
-          variant: 'destructive'
-        });
-      }
-    };
-    
-    fetchLearningNodes();
-  }, [selectedTestId]);
-  
-  // Cargar progreso del usuario
-  useEffect(() => {
-    const fetchUserNodeProgress = async () => {
-      if (!userId) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('user_node_progress')
-          .select('*')
-          .eq('user_id', userId);
-          
-        if (error) throw error;
-        
-        if (data) {
-          const progress: Record<string, NodeProgress> = {};
-          data.forEach(item => {
-            // Convertir el valor de string a uno de los tipos permitidos
-            const validStatus = (item.status as "not_started" | "in_progress" | "completed") || "not_started";
-            
-            progress[item.node_id] = {
-              nodeId: item.node_id,
-              status: validStatus,
-              progress: item.progress || 0,
-              timeSpentMinutes: item.time_spent_minutes || 0
-            };
-          });
-          
-          setNodeProgress(progress);
-        }
-      } catch (error) {
-        console.error('Error fetching user node progress:', error);
-      }
-    };
-    
-    fetchUserNodeProgress();
-  }, [userId]);
-
-  // Placeholder for handleNodeSelect - will be replaced in provider
-  const handleNodeSelect = (nodeId: string) => {
-    // This function will be replaced in the provider
-    console.log(`Node selected: ${nodeId}`);
   };
-  
+
+  // Cargar nodos al montar el componente
+  useEffect(() => {
+    loadNodes();
+  }, []);
+
+  // Obtener la prueba seleccionada basada en el test ID
+  const selectedPrueba: TPAESPrueba | undefined = (() => {
+    if (!selectedTestId) return undefined;
+    
+    const testMap: Record<number, TPAESPrueba> = {
+      1: 'COMPETENCIA_LECTORA',
+      2: 'MATEMATICA_1', 
+      3: 'MATEMATICA_2',
+      4: 'CIENCIAS',
+      5: 'HISTORIA'
+    };
+    
+    return testMap[selectedTestId];
+  })();
+
   return {
     nodes,
     nodeProgress,
-    handleNodeSelect,
     selectedTestId,
     setSelectedTestId,
-    selectedPrueba
+    selectedPrueba,
+    loading: loading || progressLoading,
+    error,
+    updateNodeProgress,
+    refreshNodes: loadNodes
   };
 }

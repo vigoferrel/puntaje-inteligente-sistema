@@ -620,27 +620,36 @@ export type Database = {
           code: string
           created_at: string | null
           description: string | null
+          display_order: number | null
           id: number
           name: string
+          skill_type: Database["public"]["Enums"]["paes_skill_type"] | null
           test_id: number | null
+          total_nodes: number | null
           updated_at: string | null
         }
         Insert: {
           code: string
           created_at?: string | null
           description?: string | null
+          display_order?: number | null
           id?: number
           name: string
+          skill_type?: Database["public"]["Enums"]["paes_skill_type"] | null
           test_id?: number | null
+          total_nodes?: number | null
           updated_at?: string | null
         }
         Update: {
           code?: string
           created_at?: string | null
           description?: string | null
+          display_order?: number | null
           id?: number
           name?: string
+          skill_type?: Database["public"]["Enums"]["paes_skill_type"] | null
           test_id?: number | null
+          total_nodes?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -756,6 +765,83 @@ export type Database = {
             columns: ["simulation_id"]
             isOneToOne: false
             referencedRelation: "user_simulations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_taxonomy: {
+        Row: {
+          bloom_level: Database["public"]["Enums"]["bloom_taxonomy_level"]
+          color: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: number
+          skill_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          bloom_level: Database["public"]["Enums"]["bloom_taxonomy_level"]
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: number
+          skill_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          bloom_level?: Database["public"]["Enums"]["bloom_taxonomy_level"]
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: number
+          skill_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_taxonomy_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "paes_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_skills_mapping: {
+        Row: {
+          id: number
+          skill_id: number
+          test_id: number
+          weight: number
+        }
+        Insert: {
+          id?: number
+          skill_id: number
+          test_id: number
+          weight?: number
+        }
+        Update: {
+          id?: number
+          skill_id?: number
+          test_id?: number
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_skills_mapping_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "paes_skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_skills_mapping_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "paes_tests"
             referencedColumns: ["id"]
           },
         ]
@@ -1045,7 +1131,21 @@ export type Database = {
       }
     }
     Enums: {
+      bloom_taxonomy_level:
+        | "remember"
+        | "understand"
+        | "apply"
+        | "analyze"
+        | "evaluate"
+        | "create"
       difficulty_level: "basic" | "intermediate" | "advanced"
+      paes_skill_type:
+        | "SOLVE_PROBLEMS"
+        | "REPRESENT"
+        | "MODEL"
+        | "INTERPRET_RELATE"
+        | "EVALUATE_REFLECT"
+        | "TRACK_LOCATE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1161,7 +1261,23 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      bloom_taxonomy_level: [
+        "remember",
+        "understand",
+        "apply",
+        "analyze",
+        "evaluate",
+        "create",
+      ],
       difficulty_level: ["basic", "intermediate", "advanced"],
+      paes_skill_type: [
+        "SOLVE_PROBLEMS",
+        "REPRESENT",
+        "MODEL",
+        "INTERPRET_RELATE",
+        "EVALUATE_REFLECT",
+        "TRACK_LOCATE",
+      ],
     },
   },
 } as const

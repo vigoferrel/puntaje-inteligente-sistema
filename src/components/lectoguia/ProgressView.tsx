@@ -1,79 +1,218 @@
 
-import React from 'react';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName } from "@/types/system-types";
+import { 
+  Brain, 
+  BookOpen, 
+  TrendingUp, 
+  Play,
+  Map,
+  BarChart3
+} from "lucide-react";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
+import { SkillHierarchyChart } from "./skill-visualization/SkillHierarchyChart";
+import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
+import { LearningMapVisualization } from "./learning-map/LearningMapVisualization";
+import { useLectoGuia } from "@/contexts/LectoGuiaContext";
 import { formatSkillLevel } from "@/utils/lectoguia-utils";
 
 interface ProgressViewProps {
   skillLevels: Record<TPAESHabilidad, number>;
-  selectedPrueba?: TPAESPrueba;
   onStartSimulation: () => void;
 }
 
-export const ProgressView: React.FC<ProgressViewProps> = ({ 
+export const ProgressView: React.FC<ProgressViewProps> = ({
   skillLevels,
-  selectedPrueba,
   onStartSimulation
 }) => {
-  // Agrupar habilidades por área usando las pruebas PAES correctas
-  const skillGroups: Record<TPAESPrueba, TPAESHabilidad[]> = {
-    "COMPETENCIA_LECTORA": ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT'],
-    "MATEMATICA_1": ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE'],
-    "MATEMATICA_2": ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE'],
-    "CIENCIAS": ['IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT'],
-    "HISTORIA": ['TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION']
-  };
+  const { 
+    nodes, 
+    nodeProgress, 
+    selectedTestId, 
+    setSelectedTestId, 
+    selectedPrueba,
+    handleNodeSelect 
+  } = useLectoGuia();
   
-  // Pruebas a mostrar: solo la seleccionada o todas
-  const testsToShow = selectedPrueba 
-    ? [selectedPrueba]
-    : ['COMPETENCIA_LECTORA', 'MATEMATICA_1', 'MATEMATICA_2', 'CIENCIAS', 'HISTORIA'] as TPAESPrueba[];
+  const [activeView, setActiveView] = useState('overview');
+
+  // Calcular estadísticas generales
+  const totalSkills = Object.keys(skillLevels).length;
+  const averageLevel = Object.values(skillLevels).reduce((sum, level) => sum + level, 0) / totalSkills;
+  const strongSkills = Object.values(skillLevels).filter(level => level >= 0.7).length;
+  const weakSkills = Object.values(skillLevels).filter(level => level < 0.4).length;
+
+  // Obtener las mejores y peores habilidades
+  const sortedSkills = Object.entries(skillLevels)
+    .sort(([, a], [, b]) => b - a);
   
+  const topSkills = sortedSkills.slice(0, 3);
+  const weakestSkills = sortedSkills.slice(-3).reverse();
+
   return (
     <div className="space-y-6">
-      <div className="text-2xl font-bold">Tu progreso</div>
-      
-      <div className="space-y-6">
-        {testsToShow.map((prueba) => {
-          const skills = skillGroups[prueba];
-          
-          if (!skills || skills.length === 0) return null;
-          
-          return (
-            <div key={prueba} className="space-y-4">
-              <h3 className="text-xl font-semibold">{prueba}</h3>
-              <div className="space-y-3">
-                {skills.map(skill => (
-                  <div key={`${prueba}-${skill}`} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>{getHabilidadDisplayName(skill)}</span>
-                      <span className="font-medium">{formatSkillLevel(skillLevels[skill] || 0)}</span>
+      {/* Header con métricas generales */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-700">Progreso General</p>
+              <p className="text-2xl font-bold text-blue-800">
+                {Math.round(averageLevel * 100)}%
+              </p>
+            </div>
+            <TrendingUp className="h-8 w-8 text-blue-600" />
+          </div>
+          <Progress value={averageLevel * 100} className="mt-2 h-2" />
+        </Card>
+
+        <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-green-700">Habilidades Fuertes</p>
+              <p className="text-2xl font-bold text-green-800">{strongSkills}</p>
+            </div>
+            <Brain className="h-8 w-8 text-green-600" />
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-yellow-700">Por Mejorar</p>
+              <p className="text-2xl font-bold text-yellow-800">{weakSkills}</p>
+            </div>
+            <BookOpen className="h-8 w-8 text-yellow-600" />
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-purple-700">Total Habilidades</p>
+              <p className="text-2xl font-bold text-purple-800">{totalSkills}</p>
+            </div>
+            <BarChart3 className="h-8 w-8 text-purple-600" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Navegación de vistas */}
+      <Tabs value={activeView} onValueChange={setActiveView}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Resumen
+          </TabsTrigger>
+          <TabsTrigger value="skills" className="flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            Habilidades
+          </TabsTrigger>
+          <TabsTrigger value="map" className="flex items-center gap-2">
+            <Map className="h-4 w-4" />
+            Mapa de Aprendizaje
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Mejores habilidades */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-green-600" />
+                  Mejores Habilidades
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {topSkills.map(([skill, level]) => (
+                  <div key={skill} className="flex justify-between items-center">
+                    <span className="text-sm font-medium">{skill}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        {formatSkillLevel(level)}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {Math.round(level * 100)}%
+                      </span>
                     </div>
-                    <Progress 
-                      value={(skillLevels[skill] || 0) * 100} 
-                      className="h-2"
-                    />
                   </div>
                 ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      <Card className="p-4 mt-6 border-dashed">
-        <div className="text-center space-y-4">
-          <h3 className="text-lg font-medium">¿Listo para poner a prueba tus habilidades?</h3>
-          <p className="text-muted-foreground">
-            Realiza una simulación completa para evaluar tu nivel actual.
-          </p>
-          <Button onClick={onStartSimulation} className="w-full">
-            Iniciar simulación
-          </Button>
-        </div>
-      </Card>
+              </CardContent>
+            </Card>
+
+            {/* Habilidades por mejorar */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-orange-600" />
+                  Por Mejorar
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {weakestSkills.map(([skill, level]) => (
+                  <div key={skill} className="flex justify-between items-center">
+                    <span className="text-sm font-medium">{skill}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-orange-50 text-orange-700">
+                        {formatSkillLevel(level)}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {Math.round(level * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Botón de simulación */}
+          <Card className="mt-6">
+            <CardContent className="p-6 text-center">
+              <h3 className="text-lg font-semibold mb-2">¿Listo para una simulación?</h3>
+              <p className="text-muted-foreground mb-4">
+                Pon a prueba tus conocimientos con una simulación interactiva
+              </p>
+              <Button onClick={onStartSimulation} className="flex items-center gap-2">
+                <Play className="h-4 w-4" />
+                Iniciar Simulación
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="skills" className="mt-6">
+          <div className="space-y-6">
+            <SkillHierarchyChart 
+              skillLevels={skillLevels}
+              selectedTest={selectedPrueba}
+            />
+            
+            <SkillNodeConnection
+              skillLevels={skillLevels}
+              nodes={nodes}
+              nodeProgress={nodeProgress}
+              onNodeSelect={handleNodeSelect}
+              selectedTest={selectedPrueba}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="map" className="mt-6">
+          <LearningMapVisualization
+            nodes={nodes}
+            nodeProgress={nodeProgress}
+            skillLevels={skillLevels}
+            selectedPrueba={selectedPrueba || 'COMPETENCIA_LECTORA'}
+            onNodeSelect={handleNodeSelect}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};

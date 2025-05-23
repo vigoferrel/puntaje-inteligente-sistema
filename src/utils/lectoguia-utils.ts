@@ -45,24 +45,14 @@ export function getSubjectName(subjectCode: string): string {
  * Obtiene los niveles de habilidad iniciales
  * @returns Niveles de habilidad iniciales
  */
-export function getInitialSkillLevels() {
+export function getInitialSkillLevels(): Record<TPAESHabilidad, number> {
   return {
     'TRACK_LOCATE': 0,
     'INTERPRET_RELATE': 0,
     'EVALUATE_REFLECT': 0,
     'SOLVE_PROBLEMS': 0,
     'REPRESENT': 0,
-    'MODEL': 0,
-    'ARGUE_COMMUNICATE': 0,
-    'IDENTIFY_THEORIES': 0,
-    'PROCESS_ANALYZE': 0,
-    'APPLY_PRINCIPLES': 0,
-    'SCIENTIFIC_ARGUMENT': 0,
-    'TEMPORAL_THINKING': 0,
-    'SOURCE_ANALYSIS': 0,
-    'MULTICAUSAL_ANALYSIS': 0,
-    'CRITICAL_THINKING': 0,
-    'REFLECTION': 0
+    'MODEL': 0
   };
 }
 
@@ -90,17 +80,7 @@ export function getSkillName(skillCode: string): string {
     'EVALUATE_REFLECT': 'Evaluar y reflexionar',
     'SOLVE_PROBLEMS': 'Resolución de problemas',
     'REPRESENT': 'Representación',
-    'MODEL': 'Modelamiento',
-    'ARGUE_COMMUNICATE': 'Argumentación y comunicación',
-    'IDENTIFY_THEORIES': 'Identificación de teorías',
-    'PROCESS_ANALYZE': 'Procesar y analizar',
-    'APPLY_PRINCIPLES': 'Aplicar principios',
-    'SCIENTIFIC_ARGUMENT': 'Argumentación científica',
-    'TEMPORAL_THINKING': 'Pensamiento temporal',
-    'SOURCE_ANALYSIS': 'Análisis de fuentes',
-    'MULTICAUSAL_ANALYSIS': 'Análisis multicausal',
-    'CRITICAL_THINKING': 'Pensamiento crítico',
-    'REFLECTION': 'Reflexión'
+    'MODEL': 'Modelamiento'
   };
   
   return skillNames[skillCode] || skillCode;
@@ -130,17 +110,7 @@ export function getSkillId(skillCode: string): number {
     'EVALUATE_REFLECT': 3,
     'SOLVE_PROBLEMS': 4,
     'REPRESENT': 5,
-    'MODEL': 6,
-    'ARGUE_COMMUNICATE': 7,
-    'IDENTIFY_THEORIES': 8,
-    'PROCESS_ANALYZE': 9,
-    'APPLY_PRINCIPLES': 10,
-    'SCIENTIFIC_ARGUMENT': 11,
-    'TEMPORAL_THINKING': 12,
-    'SOURCE_ANALYSIS': 13,
-    'MULTICAUSAL_ANALYSIS': 14,
-    'CRITICAL_THINKING': 15,
-    'REFLECTION': 16
+    'MODEL': 6
   };
   
   return skillIds[skillCode] || 1;
@@ -155,10 +125,46 @@ export function getSkillsByPrueba(prueba: TPAESPrueba): TPAESHabilidad[] {
   const skillsByPrueba: Record<TPAESPrueba, TPAESHabilidad[]> = {
     'COMPETENCIA_LECTORA': ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT'],
     'MATEMATICA_1': ['SOLVE_PROBLEMS', 'REPRESENT'],
-    'MATEMATICA_2': ['MODEL', 'ARGUE_COMMUNICATE'],
-    'CIENCIAS': ['IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT'],
-    'HISTORIA': ['TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING']
+    'MATEMATICA_2': ['MODEL', 'SOLVE_PROBLEMS'],
+    'CIENCIAS': ['INTERPRET_RELATE', 'EVALUATE_REFLECT', 'MODEL'],
+    'HISTORIA': ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT']
   };
   
   return skillsByPrueba[prueba] || ['INTERPRET_RELATE'];
+}
+
+/**
+ * Mapea código de habilidad al nombre de prueba PAES
+ * @param skill Código de habilidad
+ * @returns Pruebas donde se evalúa esta habilidad
+ */
+export function getSkillTestMapping(skill: TPAESHabilidad): TPAESPrueba[] {
+  const skillToTests: Record<TPAESHabilidad, TPAESPrueba[]> = {
+    'TRACK_LOCATE': ['COMPETENCIA_LECTORA', 'HISTORIA'],
+    'INTERPRET_RELATE': ['COMPETENCIA_LECTORA', 'CIENCIAS', 'HISTORIA'],
+    'EVALUATE_REFLECT': ['COMPETENCIA_LECTORA', 'CIENCIAS', 'HISTORIA'],
+    'SOLVE_PROBLEMS': ['MATEMATICA_1', 'MATEMATICA_2'],
+    'REPRESENT': ['MATEMATICA_1'],
+    'MODEL': ['MATEMATICA_2', 'CIENCIAS']
+  };
+  
+  return skillToTests[skill] || [];
+}
+
+/**
+ * Obtiene el color asociado a una habilidad
+ * @param skill Código de habilidad
+ * @returns Color en formato hexadecimal
+ */
+export function getSkillColor(skill: TPAESHabilidad): string {
+  const skillColors: Record<TPAESHabilidad, string> = {
+    'TRACK_LOCATE': '#8B5CF6',
+    'INTERPRET_RELATE': '#3B82F6', 
+    'EVALUATE_REFLECT': '#EF4444',
+    'SOLVE_PROBLEMS': '#4F46E5',
+    'REPRESENT': '#10B981',
+    'MODEL': '#F59E0B'
+  };
+  
+  return skillColors[skill] || '#6B7280';
 }
