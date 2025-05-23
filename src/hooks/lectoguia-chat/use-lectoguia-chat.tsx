@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useOpenRouter } from '@/hooks/use-openrouter';
 import { toast } from '@/components/ui/use-toast';
@@ -80,18 +79,18 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   
   // Wrapper sobre addUserMessage para mantener consistencia de estado
-  const addUserMessage = (content: string, imageData?: string) => {
+  const addUserMessage = useCallback((content: string, imageData?: string) => {
     const msg = createUserMessage(content, imageData);
     addUserMsg(msg);
     return msg;
-  };
+  }, [addUserMsg]);
   
   // Wrapper sobre addAssistantMessage para mantener consistencia de estado
-  const addAssistantMessage = (content: string) => {
+  const addAssistantMessage = useCallback((content: string) => {
     const msg = createAssistantMessage(content);
     addAssistantMsg(msg);
     return msg;
-  };
+  }, [addAssistantMsg]);
   
   // Monitor de conexión y reconexión automática
   useEffect(() => {
@@ -145,26 +144,26 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   /**
    * Cambia la materia activa para el chat
    */
-  const changeSubject = (subject: string) => {
+  const changeSubject = useCallback((subject: string) => {
     if (activeSubject !== subject) {
       setActiveSubject(subject);
       
       // Notificar al usuario del cambio de materia
       addAssistantMessage(`Ahora estamos en ${subjectNames[subject]}. ¿En qué puedo ayudarte con esta materia?`);
     }
-  };
+  }, [activeSubject, addAssistantMessage]);
   
   /**
    * Detecta la materia desde un mensaje y la actualiza si es necesario
    */
-  const detectSubjectFromMsg = (message: string) => {
+  const detectSubjectFromMsg = useCallback((message: string) => {
     const detectedSubject = detectSubjectFromMessage(message);
     if (detectedSubject && detectedSubject !== activeSubject) {
       changeSubject(detectedSubject);
       return detectedSubject;
     }
     return null;
-  };
+  }, [activeSubject, changeSubject]);
   
   /**
    * Obtiene una respuesta offline basada en la materia y consulta

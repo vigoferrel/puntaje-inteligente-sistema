@@ -1,8 +1,6 @@
 
 import { useState } from 'react';
 import { ChatMessage } from '@/components/ai/ChatInterface';
-import { createAssistantMessage, createUserMessage } from './message-handling';
-import { WELCOME_MESSAGE } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -14,7 +12,7 @@ export function useChatMessages() {
     {
       id: uuidv4(),
       role: "assistant",
-      content: WELCOME_MESSAGE,
+      content: "¡Hola! Soy LectoGuía, tu asistente de aprendizaje personalizado.",
       timestamp: new Date().toISOString()
     }
   ]);
@@ -22,21 +20,17 @@ export function useChatMessages() {
   /**
    * Add a message from the user
    */
-  const addUserMessage = (content: string, imageData?: string) => {
-    if (!content.trim() && !imageData) return;
-    
-    const userMessage = createUserMessage(content, imageData);
-    setMessages(prev => [...prev, userMessage]);
-    return userMessage;
+  const addUserMessage = (message: ChatMessage) => {
+    setMessages(prev => [...prev, message]);
+    return message;
   };
   
   /**
    * Add a message from the assistant
    */
-  const addAssistantMessage = (content: string) => {
-    const botMessage = createAssistantMessage(content);
-    setMessages(prev => [...prev, botMessage]);
-    return botMessage;
+  const addAssistantMessage = (message: ChatMessage) => {
+    setMessages(prev => [...prev, message]);
+    return message;
   };
   
   /**
