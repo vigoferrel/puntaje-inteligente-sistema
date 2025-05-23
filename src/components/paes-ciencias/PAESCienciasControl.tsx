@@ -1,5 +1,5 @@
+
 import React from 'react';
-import { usePAESCienciasGenerator } from '@/hooks/use-paes-ciencias-generator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,25 +8,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Microscope, Beaker, Atom, Brain, BookOpen, Target, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
+import { useLectoGuia } from '@/contexts/LectoGuiaContext';
+import { TPAESPrueba } from '@/types/system-types';
 
 export const PAESCienciasControl: React.FC = () => {
   const {
-    loading,
-    diagnosticoActual,
-    ejerciciosActuales,
-    faseActual,
-    generarDiagnostico,
-    generarEjerciciosCiclo,
-    avanzarFase,
-    exportarResultados,
-    obtenerEstadisticas,
-    reiniciarEstado
-  } = usePAESCienciasGenerator();
+    setActiveTab,
+    handleNodeSelect,
+    nodes,
+    nodeProgress,
+    selectedPrueba,
+    setSelectedTestId
+  } = useLectoGuia();
 
   const [areaSeleccionada, setAreaSeleccionada] = useState<string>('Biología');
   const [cantidadPreguntas, setCantidadPreguntas] = useState<number>(15);
-
-  const estadisticas = obtenerEstadisticas();
 
   const iconosArea = {
     'Biología': Microscope,
@@ -34,10 +30,45 @@ export const PAESCienciasControl: React.FC = () => {
     'Química': Beaker
   };
 
+  // Filtrar nodos por área seleccionada
+  const nodosCiencias = nodes.filter(node => 
+    node.prueba === 'CIENCIAS' && 
+    (node.title.toLowerCase().includes(areaSeleccionada.toLowerCase()) ||
+     node.description.toLowerCase().includes(areaSeleccionada.toLowerCase()))
+  );
+
+  const handleGenerarDiagnostico = async () => {
+    // Cambiar a la prueba de ciencias
+    setSelectedTestId(4); // ID para CIENCIAS
+    
+    // Cambiar a la pestaña de progreso para mostrar nodos
+    setActiveTab('progress');
+  };
+
+  const handleGenerarEjerciciosCiclo = async () => {
+    // Buscar un nodo apropiado para el área seleccionada
+    const nodoApropiado = nodosCiencias.find(node => 
+      node.title.toLowerCase().includes(areaSeleccionada.toLowerCase()) ||
+      node.description.toLowerCase().includes(areaSeleccionada.toLowerCase())
+    );
+
+    if (nodoApropiado) {
+      // Usar el sistema existente de LectoGuía para generar ejercicios
+      await handleNodeSelect(nodoApropiado.id);
+    } else {
+      // Si no hay nodo específico, cambiar a ejercicios generales
+      setActiveTab('exercise');
+    }
+  };
+
   const getProgresoPorcentaje = () => {
-    const fases = ['explorar', 'explicar', 'aplicar', 'evaluar'];
-    const indiceActual = fases.indexOf(faseActual);
-    return ((indiceActual + 1) / fases.length) * 100;
+    if (nodosCiencias.length === 0) return 0;
+    
+    const nodosCompletados = nodosCiencias.filter(node => 
+      nodeProgress[node.id]?.status === 'completed'
+    ).length;
+    
+    return (nodosCompletados / nodosCiencias.length) * 100;
   };
 
   return (
@@ -50,7 +81,7 @@ export const PAESCienciasControl: React.FC = () => {
             PAES Ciencias - Generador de Diagnósticos y Ejercicios
           </CardTitle>
           <CardDescription>
-            Sistema completo basado en PAES Ciencias Técnico Profesional 2024 - Forma 183
+            Sistema integrado con LectoGuía - Conectado a nodos de aprendizaje de ciencias
           </CardDescription>
         </CardHeader>
       </Card>
@@ -58,7 +89,7 @@ export const PAESCienciasControl: React.FC = () => {
       <Tabs defaultValue="diagnostico" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="diagnostico">Diagnóstico</TabsTrigger>
-          <TabsTrigger value="ejercicios">Ejercicios por Ciclo</TabsTrigger>
+          <TabsTrigger value="ejercicios">Ejercicios por Área</TabsTrigger>
           <TabsTrigger value="estadisticas">Estadísticas</TabsTrigger>
         </TabsList>
 
@@ -66,33 +97,22 @@ export const PAESCienciasControl: React.FC = () => {
         <TabsContent value="diagnostico" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Generar Diagnóstico</CardTitle>
+              <CardTitle>Acceder a Nodos de Ciencias</CardTitle>
               <CardDescription>
-                Crea un diagnóstico personalizado basado en preguntas oficiales PAES 2024
+                Explora los nodos de aprendizaje de ciencias disponibles en el sistema
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Cantidad de Preguntas</label>
-                  <Select 
-                    value={cantidadPreguntas.toString()} 
-                    onValueChange={(value) => setCantidadPreguntas(parseInt(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10 preguntas</SelectItem>
-                      <SelectItem value="15">15 preguntas</SelectItem>
-                      <SelectItem value="20">20 preguntas</SelectItem>
-                      <SelectItem value="25">25 preguntas</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-medium">Nodos Disponibles</label>
+                  <div className="text-sm text-muted-foreground">
+                    {nodosCiencias.length} nodos de ciencias encontrados
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Áreas a Incluir</label>
+                  <label className="text-sm font-medium">Áreas Cubiertas</label>
                   <div className="flex gap-2">
                     {['Biología', 'Física', 'Química'].map(area => {
                       const Icon = iconosArea[area as keyof typeof iconosArea];
@@ -108,29 +128,27 @@ export const PAESCienciasControl: React.FC = () => {
               </div>
 
               <Button 
-                onClick={() => generarDiagnostico(cantidadPreguntas, ['Biología', 'Física', 'Química'])}
-                disabled={loading}
+                onClick={handleGenerarDiagnostico}
                 className="w-full"
               >
-                {loading ? 'Generando...' : 'Generar Diagnóstico'}
+                Ver Nodos de Ciencias Disponibles
               </Button>
 
-              {diagnosticoActual && (
+              {selectedPrueba === 'CIENCIAS' && (
                 <Card className="mt-4">
                   <CardContent className="pt-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h4 className="font-medium">{diagnosticoActual.metadatos.titulo}</h4>
+                        <h4 className="font-medium">Sistema de Ciencias Activo</h4>
                         <p className="text-sm text-muted-foreground">
-                          {diagnosticoActual.preguntas.length} preguntas generadas
+                          Conectado a {nodosCiencias.length} nodos de aprendizaje
                         </p>
                       </div>
                       <Button 
                         variant="outline" 
-                        onClick={() => exportarResultados(diagnosticoActual.diagnosticoId)}
-                        disabled={loading}
+                        onClick={() => setActiveTab('progress')}
                       >
-                        Exportar Resultados
+                        Ver Progreso
                       </Button>
                     </div>
                   </CardContent>
@@ -140,39 +158,25 @@ export const PAESCienciasControl: React.FC = () => {
           </Card>
         </TabsContent>
 
-        {/* Pestaña de Ejercicios por Ciclo */}
+        {/* Pestaña de Ejercicios por Área */}
         <TabsContent value="ejercicios" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Ciclo de Aprendizaje</CardTitle>
+              <CardTitle>Ejercicios por Área de Ciencias</CardTitle>
               <CardDescription>
-                Genera ejercicios adaptativos según la fase del ciclo de aprendizaje
+                Genera ejercicios específicos conectados a nodos de aprendizaje
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Progreso del Ciclo */}
+              {/* Progreso del Área */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Progreso del Ciclo</span>
+                  <span className="text-sm font-medium">Progreso en Ciencias</span>
                   <span className="text-sm text-muted-foreground">
-                    Fase: {faseActual}
+                    {Math.round(getProgresoPorcentaje())}% completado
                   </span>
                 </div>
                 <Progress value={getProgresoPorcentaje()} className="h-2" />
-                <div className="grid grid-cols-4 gap-2 text-xs">
-                  {['explorar', 'explicar', 'aplicar', 'evaluar'].map(fase => (
-                    <div 
-                      key={fase}
-                      className={`text-center p-2 rounded ${
-                        fase === faseActual ? 'bg-primary text-primary-foreground' :
-                        estadisticas.progresoCiclo[fase as keyof typeof estadisticas.progresoCiclo] === 'completado' ? 
-                        'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {fase.charAt(0).toUpperCase() + fase.slice(1)}
-                    </div>
-                  ))}
-                </div>
               </div>
 
               {/* Selección de Área */}
@@ -205,54 +209,41 @@ export const PAESCienciasControl: React.FC = () => {
                 </Select>
               </div>
 
-              {/* Botones de Acción */}
-              <div className="grid grid-cols-2 gap-4">
-                <Button 
-                  onClick={() => generarEjerciciosCiclo(areaSeleccionada, faseActual)}
-                  disabled={loading}
-                  variant="outline"
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Generar Ejercicios
-                </Button>
-                
-                <Button 
-                  onClick={() => avanzarFase(areaSeleccionada)}
-                  disabled={loading || faseActual === 'evaluar'}
-                >
-                  <Target className="h-4 w-4 mr-2" />
-                  Siguiente Fase
-                </Button>
-              </div>
-
-              {/* Ejercicios Actuales */}
-              {ejerciciosActuales.length > 0 && (
-                <Card>
-                  <CardContent className="pt-4">
-                    <h4 className="font-medium mb-2">
-                      Ejercicios Generados - Fase: {faseActual}
-                    </h4>
-                    <div className="space-y-2">
-                      {ejerciciosActuales.slice(0, 3).map((ejercicio, index) => (
-                        <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                          <p className="text-sm font-medium">
-                            {ejercicio.question?.substring(0, 100)}...
+              {/* Mostrar nodos del área seleccionada */}
+              {nodosCiencias.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Nodos de {areaSeleccionada} Disponibles
+                  </label>
+                  <div className="grid gap-2 max-h-40 overflow-y-auto">
+                    {nodosCiencias.slice(0, 5).map((nodo) => (
+                      <div key={nodo.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-medium">{nodo.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {nodo.description?.substring(0, 80)}...
                           </p>
-                          <div className="flex gap-2 mt-2">
-                            <Badge variant="secondary">{ejercicio.area}</Badge>
-                            <Badge variant="outline">{ejercicio.difficulty}</Badge>
-                          </div>
                         </div>
-                      ))}
-                      {ejerciciosActuales.length > 3 && (
-                        <p className="text-sm text-muted-foreground">
-                          Y {ejerciciosActuales.length - 3} ejercicios más...
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleNodeSelect(nodo.id)}
+                        >
+                          Practicar
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
+
+              {/* Botón principal */}
+              <Button 
+                onClick={handleGenerarEjerciciosCiclo}
+                className="w-full"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Generar Ejercicio de {areaSeleccionada}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -265,10 +256,10 @@ export const PAESCienciasControl: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
-                      Diagnósticos Generados
+                      Nodos de Ciencias
                     </p>
                     <p className="text-2xl font-bold">
-                      {diagnosticoActual ? 1 : 0}
+                      {nodosCiencias.length}
                     </p>
                   </div>
                   <Brain className="h-8 w-8 text-muted-foreground" />
@@ -281,13 +272,13 @@ export const PAESCienciasControl: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
-                      Ejercicios Disponibles
+                      Progreso General
                     </p>
                     <p className="text-2xl font-bold">
-                      {ejerciciosActuales.length}
+                      {Math.round(getProgresoPorcentaje())}%
                     </p>
                   </div>
-                  <BookOpen className="h-8 w-8 text-muted-foreground" />
+                  <TrendingUp className="h-8 w-8 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
@@ -297,13 +288,13 @@ export const PAESCienciasControl: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
-                      Progreso del Ciclo
+                      Sistema Activo
                     </p>
                     <p className="text-2xl font-bold">
-                      {Math.round(getProgresoPorcentaje())}%
+                      {selectedPrueba === 'CIENCIAS' ? 'SÍ' : 'NO'}
                     </p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-muted-foreground" />
+                  <Target className="h-8 w-8 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
@@ -317,18 +308,17 @@ export const PAESCienciasControl: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button 
                   variant="outline" 
-                  onClick={reiniciarEstado}
+                  onClick={() => setActiveTab('progress')}
                   className="w-full"
                 >
-                  Reiniciar Estado
+                  Ver Todos los Nodos
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => generarDiagnostico(15)}
-                  disabled={loading}
+                  onClick={() => setActiveTab('exercise')}
                   className="w-full"
                 >
-                  Generar Diagnóstico Rápido
+                  Ir a Ejercicios
                 </Button>
               </div>
             </CardContent>

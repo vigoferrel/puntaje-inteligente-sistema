@@ -1,211 +1,176 @@
 
-import { useState } from 'react';
-import { PAESCienciasGenerator } from '@/scripts/paes-ciencias-generator';
+import { useLectoGuia } from '@/contexts/LectoGuiaContext';
 import { toast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 export function usePAESCienciasGenerator() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [diagnosticoActual, setDiagnosticoActual] = useState<any>(null);
-  const [ejerciciosActuales, setEjerciciosActuales] = useState<any[]>([]);
-  const [faseActual, setFaseActual] = useState<'explorar' | 'explicar' | 'aplicar' | 'evaluar'>('explorar');
+  const {
+    isLoading,
+    nodes,
+    nodeProgress,
+    selectedPrueba,
+    setSelectedTestId,
+    handleNodeSelect,
+    setActiveTab
+  } = useLectoGuia();
 
   /**
-   * Genera un diagnóstico completo de ciencias
+   * Genera un diagnóstico redirigiendo al sistema de nodos
    */
   const generarDiagnostico = async (
     cantidadPreguntas: number = 15,
     areas: string[] = ['Biología', 'Física', 'Química']
   ) => {
-    if (!user) {
+    try {
+      // Cambiar a la prueba de ciencias
+      setSelectedTestId(4); // ID para CIENCIAS
+      
+      // Redirigir a la pestaña de progreso
+      setActiveTab('progress');
+      
+      toast({
+        title: "Sistema de Ciencias Activado",
+        description: "Ahora puedes ver todos los nodos de ciencias disponibles"
+      });
+      
+      return {
+        diagnosticoId: 'ciencias-system',
+        preguntas: [],
+        metadatos: {
+          titulo: 'Sistema de Ciencias PAES',
+          areas: areas
+        }
+      };
+    } catch (error) {
+      console.error('Error activando sistema de ciencias:', error);
       toast({
         title: "Error",
-        description: "Debes estar autenticado para generar diagnósticos",
+        description: "No se pudo activar el sistema de ciencias",
         variant: "destructive"
       });
       return null;
     }
-
-    setLoading(true);
-    try {
-      const resultado = await PAESCienciasGenerator.generarDiagnosticoCiencias(
-        cantidadPreguntas,
-        areas
-      );
-      
-      if (resultado) {
-        setDiagnosticoActual(resultado);
-        toast({
-          title: "Diagnóstico Generado",
-          description: `Se ha creado un diagnóstico con ${resultado.preguntas.length} preguntas`
-        });
-      }
-      
-      return resultado;
-    } catch (error) {
-      console.error('Error generando diagnóstico:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo generar el diagnóstico",
-        variant: "destructive"
-      });
-      return null;
-    } finally {
-      setLoading(false);
-    }
   };
 
   /**
-   * Genera ejercicios adaptativos para un nodo
-   */
-  const generarEjerciciosAdaptativos = async (
-    nodeId: string,
-    area: string,
-    nivel: 'basic' | 'intermediate' | 'advanced' = 'intermediate'
-  ) => {
-    setLoading(true);
-    try {
-      const ejercicios = await PAESCienciasGenerator.generarEjerciciosAdaptativos(
-        nodeId,
-        area,
-        nivel
-      );
-      
-      setEjerciciosActuales(ejercicios);
-      return ejercicios;
-    } catch (error) {
-      console.error('Error generando ejercicios adaptativos:', error);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Genera ejercicios por ciclo de aprendizaje
+   * Genera ejercicios por ciclo usando el sistema existente
    */
   const generarEjerciciosCiclo = async (
     area: string = 'Biología',
     fase: 'explorar' | 'explicar' | 'aplicar' | 'evaluar' = 'explorar'
   ) => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "Debes estar autenticado para acceder al ciclo de aprendizaje",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    setLoading(true);
     try {
-      const resultado = await PAESCienciasGenerator.generarEjerciciosPorCiclo(
-        user.id,
-        area,
-        fase
+      // Filtrar nodos por área
+      const nodosCiencias = nodes.filter(node => 
+        node.prueba === 'CIENCIAS' && 
+        (node.title.toLowerCase().includes(area.toLowerCase()) ||
+         node.description.toLowerCase().includes(area.toLowerCase()))
       );
-      
-      if (resultado) {
-        setEjerciciosActuales(resultado.ejercicios);
-        setFaseActual(fase);
+
+      if (nodosCiencias.length > 0) {
+        // Seleccionar el primer nodo apropiado
+        const nodoSeleccionado = nodosCiencias[0];
+        await handleNodeSelect(nodoSeleccionado.id);
+        
         toast({
-          title: `Fase ${fase}`,
-          description: `Se han generado ${resultado.ejercicios.length} ejercicios para la fase de ${fase}`
+          title: `Ejercicio de ${area}`,
+          description: `Generando ejercicio basado en: ${nodoSeleccionado.title}`
         });
+        
+        return {
+          fase,
+          area,
+          ejercicios: [],
+          nodoUtilizado: nodoSeleccionado
+        };
+      } else {
+        // Si no hay nodos específicos, ir a ejercicios generales
+        setActiveTab('exercise');
+        
+        toast({
+          title: "Ejercicios Generales",
+          description: "No se encontraron nodos específicos, usando sistema general"
+        });
+        
+        return null;
       }
-      
-      return resultado;
     } catch (error) {
       console.error('Error generando ejercicios por ciclo:', error);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   /**
-   * Avanza a la siguiente fase del ciclo
+   * Avanza a la siguiente fase (redirige al sistema general)
    */
   const avanzarFase = async (area: string) => {
-    const secuenciaFases: ('explorar' | 'explicar' | 'aplicar' | 'evaluar')[] = 
-      ['explorar', 'explicar', 'aplicar', 'evaluar'];
-    const indiceActual = secuenciaFases.indexOf(faseActual);
-    const siguienteFase = secuenciaFases[(indiceActual + 1) % secuenciaFases.length];
-    
-    return await generarEjerciciosCiclo(area, siguienteFase);
+    setActiveTab('exercise');
+    return await generarEjerciciosCiclo(area, 'explicar');
   };
 
   /**
-   * Exporta resultados del diagnóstico
+   * Exporta resultados (redirige al progreso)
    */
   const exportarResultados = async (diagnosticoId: string) => {
-    if (!user) return null;
-
-    setLoading(true);
-    try {
-      const reporte = await PAESCienciasGenerator.exportarResultados(
-        diagnosticoId,
-        user.id
-      );
-      
-      if (reporte) {
-        toast({
-          title: "Reporte Generado",
-          description: "Se ha generado el reporte de resultados"
-        });
-      }
-      
-      return reporte;
-    } catch (error) {
-      console.error('Error exportando resultados:', error);
-      return null;
-    } finally {
-      setLoading(false);
-    }
+    setActiveTab('progress');
+    
+    toast({
+      title: "Ver Progreso",
+      description: "Revisa tu progreso en la pestaña de progreso"
+    });
+    
+    return {
+      mensaje: "Ver progreso en la pestaña correspondiente"
+    };
   };
 
   /**
-   * Obtiene estadísticas del progreso
+   * Obtiene estadísticas basadas en el sistema actual
    */
   const obtenerEstadisticas = () => {
+    const nodosCiencias = nodes.filter(node => node.prueba === 'CIENCIAS');
+    const nodosCompletados = nodosCiencias.filter(node => 
+      nodeProgress[node.id]?.status === 'completed'
+    ).length;
+
     return {
-      diagnosticoActual,
-      ejerciciosActuales,
-      faseActual,
-      totalEjercicios: ejerciciosActuales.length,
+      diagnosticoActual: selectedPrueba === 'CIENCIAS' ? { id: 'ciencias-system' } : null,
+      ejerciciosActuales: [],
+      faseActual: 'explorar' as const,
+      totalNodos: nodosCiencias.length,
+      nodosCompletados,
       progresoCiclo: {
-        explorar: faseActual === 'explorar' ? 'actual' : 
-                 ['explicar', 'aplicar', 'evaluar'].includes(faseActual) ? 'completado' : 'pendiente',
-        explicar: faseActual === 'explicar' ? 'actual' : 
-                 ['aplicar', 'evaluar'].includes(faseActual) ? 'completado' : 'pendiente',
-        aplicar: faseActual === 'aplicar' ? 'actual' : 
-                faseActual === 'evaluar' ? 'completado' : 'pendiente',
-        evaluar: faseActual === 'evaluar' ? 'actual' : 'pendiente'
+        explorar: nodosCompletados > 0 ? 'completado' : 'pendiente',
+        explicar: nodosCompletados > 1 ? 'completado' : 'pendiente',
+        aplicar: nodosCompletados > 2 ? 'completado' : 'pendiente',
+        evaluar: nodosCompletados > 3 ? 'completado' : 'pendiente'
       }
     };
   };
 
+  /**
+   * Reinicia estado (vuelve al sistema general)
+   */
+  const reiniciarEstado = () => {
+    setActiveTab('chat');
+    toast({
+      title: "Estado Reiniciado",
+      description: "Volviendo al sistema general de LectoGuía"
+    });
+  };
+
   return {
-    // Estado
-    loading,
-    diagnosticoActual,
-    ejerciciosActuales,
-    faseActual,
+    // Estado basado en el sistema existente
+    loading: isLoading,
+    diagnosticoActual: selectedPrueba === 'CIENCIAS' ? { id: 'ciencias-system' } : null,
+    ejerciciosActuales: [],
+    faseActual: 'explorar' as const,
     
-    // Funciones
+    // Funciones que conectan con el sistema existente
     generarDiagnostico,
-    generarEjerciciosAdaptativos,
     generarEjerciciosCiclo,
     avanzarFase,
     exportarResultados,
     obtenerEstadisticas,
-    
-    // Utilidades
-    reiniciarEstado: () => {
-      setDiagnosticoActual(null);
-      setEjerciciosActuales([]);
-      setFaseActual('explorar');
-    }
+    reiniciarEstado
   };
 }
