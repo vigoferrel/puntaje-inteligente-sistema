@@ -7,7 +7,7 @@ import { ConnectionStatus } from '@/hooks/use-openrouter';
 import { ERROR_RATE_LIMIT_MESSAGE } from '@/contexts/lectoguia/types';
 import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MessageCircleAlert } from 'lucide-react';
+import { MessageCircleWarning } from 'lucide-react';
 
 interface ChatState {
   messages: any[];
@@ -39,7 +39,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
     if (connectionStatus === 'error') {
       return (
         <Alert variant="destructive">
-          <MessageCircleAlert className="h-4 w-4" />
+          <MessageCircleWarning className="h-4 w-4" />
           <AlertDescription>
             No se pudo conectar con el servicio. Por favor, revisa tu conexión a internet e inténtalo de nuevo.
           </AlertDescription>
@@ -53,6 +53,16 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   const resetConnectionStatus = useCallback(() => {
     setConnectionStatus('idle');
   }, []);
+  
+  // Function to change the subject
+  const changeSubject = useCallback((subject: string) => {
+    setActiveSubject(subject);
+  }, []);
+  
+  // Function to detect subject from message
+  const detectSubjectFromMessage = useCallback((message: string): string | null => {
+    return detectSubject(message);
+  }, [detectSubject]);
   
   // Función principal para procesar los mensajes del usuario
   const processUserMessage = useCallback(async (content: string, imageData?: string): Promise<string | null> => {
@@ -134,7 +144,9 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
     processUserMessage,
     resetConnectionStatus,
     showConnectionStatus,
-    // Añadir el setter de activeSubject para poder cambiarlo desde fuera
-    setActiveSubject
+    setActiveSubject,
+    addAssistantMessage,
+    changeSubject,
+    detectSubjectFromMessage
   };
 }
