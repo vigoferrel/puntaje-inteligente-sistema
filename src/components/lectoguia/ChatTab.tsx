@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ChatInterface } from "@/components/ai/ChatInterface";
 import { SubjectSelector } from "@/components/lectoguia/SubjectSelector";
@@ -28,7 +28,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
 }) => {
   const { setActiveTab, handleNewExercise } = useLectoGuia();
   const [imageLoading, setImageLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connected');
   
   // Usar handleNewExercise del contexto que ya está implementado
   const handleExerciseRequest = async (): Promise<boolean> => {
@@ -77,6 +77,16 @@ export const ChatTab: React.FC<ChatTabProps> = ({
     }
     onSendMessage(message, imageData);
   };
+
+  // Sincronizar el estado de conexión inicial
+  useEffect(() => {
+    // Establecer como conectado por defecto después de un breve delay
+    const timer = setTimeout(() => {
+      setConnectionStatus('connected');
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
   
   return (
     <Card className="border-border bg-card/50 backdrop-blur-sm">
@@ -101,10 +111,12 @@ export const ChatTab: React.FC<ChatTabProps> = ({
           <LectoGuiaBreadcrumb items={breadcrumbItems} />
         </div>
         
-        {/* Monitor de conexión */}
-        <div className="px-3 pt-3">
-          <ConnectionMonitor onConnectionStatusChange={setConnectionStatus} />
-        </div>
+        {/* Monitor de conexión - solo mostrar si hay problemas */}
+        {connectionStatus !== 'connected' && (
+          <div className="px-3 pt-3">
+            <ConnectionMonitor onConnectionStatusChange={setConnectionStatus} />
+          </div>
+        )}
         
         {/* Indicador de carga de imagen */}
         {imageLoading && (

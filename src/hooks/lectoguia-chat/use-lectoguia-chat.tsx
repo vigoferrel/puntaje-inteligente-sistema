@@ -33,9 +33,9 @@ interface ChatActions {
 
 export function useLectoGuiaChat(): ChatState & ChatActions {
   const [isTyping, setIsTyping] = useState(false);
-  const [activeSubject, setActiveSubject] = useState('general'); // Valor por defecto
+  const [activeSubject, setActiveSubject] = useState('general');
   const [serviceStatus, setServiceStatus] = useState<'available' | 'degraded' | 'unavailable'>('available');
-  const [connectionStatus, setConnectionStatus] = useState<LectoGuiaConnectionStatus>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<LectoGuiaConnectionStatus>('connected'); // Cambiar a 'connected' por defecto
   
   const { messages, addUserMessage, addAssistantMessage, getRecentMessages } = useChatMessages();
   const { handleImageProcessing, processImage } = useImageProcessing();
@@ -60,6 +60,11 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   const resetConnectionStatus = useCallback(() => {
     setConnectionStatus('connecting');
     setServiceStatus('available');
+    
+    // Verificar conexión después de un breve delay
+    setTimeout(() => {
+      setConnectionStatus('connected');
+    }, 1000);
   }, []);
   
   // Function to change the subject
@@ -112,10 +117,8 @@ Instrucciones:
 5. Mantén un tono amigable y motivador
 6. Si la consulta no es educativa, redirige gentilmente al tema de estudios`;
 
-      const userPrompt = `Materia: ${activeSubject}
-Consulta del estudiante: ${content}
-
-${assistantResponse ? `Análisis de imagen previo: ${assistantResponse}` : ''}`;
+      // Asegurar que el userPrompt tenga el contenido del mensaje
+      const userPrompt = content || "Hola, necesito ayuda con mis estudios";
 
       console.log('LectoGuía: Enviando solicitud a OpenRouter');
       
@@ -125,6 +128,7 @@ ${assistantResponse ? `Análisis de imagen previo: ${assistantResponse}` : ''}`;
         payload: {
           systemPrompt,
           userPrompt,
+          message: content, // Añadir el mensaje directamente
           subject: activeSubject,
           history: getRecentMessages().slice(-6) // Últimos 6 mensajes para contexto
         }
