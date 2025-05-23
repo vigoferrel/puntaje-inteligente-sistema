@@ -1,39 +1,61 @@
+/**
+ * Funciones de utilidad para la LectoGuía
+ */
 
-import { TPAESHabilidad, TPAESPrueba, getHabilidadDisplayName } from '@/types/system-types';
-import { SUBJECT_TO_PRUEBA_MAP } from '@/contexts/lectoguia/types';
+import { ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
-// Helper para obtener un nombre amigable para cada habilidad
-export function getSkillName(skillCode: string): string {
-  return getHabilidadDisplayName(skillCode as TPAESHabilidad);
+/**
+ * Función para combinar clases con tailwind-merge y clsx
+ * @param inputs Lista de clases a combinar
+ * @returns Clase combinada
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
 
-// Helper para formatear el nivel de habilidad
-export function formatSkillLevel(level: number): string {
-  const percentage = Math.round(level * 100);
-  return `${percentage}%`;
+/**
+ * Genera un identificador único
+ * @returns Identificador único
+ */
+export function generateId() {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
-// Función para obtener los niveles de habilidades iniciales
-export function getInitialSkillLevels(): Record<string, number> {
+/**
+ * Obtiene el nombre para mostrar de una materia
+ * @param subjectCode Código de materia
+ * @returns Nombre para mostrar
+ */
+export function getSubjectName(subjectCode: string): string {
+  const subjectNames: Record<string, string> = {
+    'lectura': 'Competencia Lectora',
+    'matematicas-basica': 'Matemática 1',
+    'matematicas-avanzada': 'Matemática 2',
+    'ciencias': 'Ciencias',
+    'historia': 'Historia'
+  };
+
+  return subjectNames[subjectCode] || subjectCode;
+}
+
+/**
+ * Obtiene los niveles de habilidad iniciales
+ * @returns Niveles de habilidad iniciales
+ */
+export function getInitialSkillLevels() {
   return {
-    // Competencia lectora
     'TRACK_LOCATE': 0,
     'INTERPRET_RELATE': 0,
     'EVALUATE_REFLECT': 0,
-    
-    // Matemáticas 1 y 2 (comparten habilidades)
     'SOLVE_PROBLEMS': 0,
     'REPRESENT': 0,
     'MODEL': 0,
     'ARGUE_COMMUNICATE': 0,
-    
-    // Ciencias
     'IDENTIFY_THEORIES': 0,
     'PROCESS_ANALYZE': 0,
     'APPLY_PRINCIPLES': 0,
     'SCIENTIFIC_ARGUMENT': 0,
-    
-    // Historia
     'TEMPORAL_THINKING': 0,
     'SOURCE_ANALYSIS': 0,
     'MULTICAUSAL_ANALYSIS': 0,
@@ -42,48 +64,42 @@ export function getInitialSkillLevels(): Record<string, number> {
   };
 }
 
-// Función para agrupar habilidades por tipo de prueba
-export function getSkillsByPrueba(): Record<TPAESPrueba, TPAESHabilidad[]> {
-  return {
-    'COMPETENCIA_LECTORA': ['TRACK_LOCATE', 'INTERPRET_RELATE', 'EVALUATE_REFLECT'],
-    'MATEMATICA_1': ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE'],
-    'MATEMATICA_2': ['SOLVE_PROBLEMS', 'REPRESENT', 'MODEL', 'ARGUE_COMMUNICATE'],
-    'CIENCIAS': ['IDENTIFY_THEORIES', 'PROCESS_ANALYZE', 'APPLY_PRINCIPLES', 'SCIENTIFIC_ARGUMENT'],
-    'HISTORIA': ['TEMPORAL_THINKING', 'SOURCE_ANALYSIS', 'MULTICAUSAL_ANALYSIS', 'CRITICAL_THINKING', 'REFLECTION']
-  };
+/**
+ * Formatea el tiempo restante en formato mm:ss
+ * @param timeInSeconds Tiempo en segundos
+ * @returns Tiempo formateado como string
+ */
+export function formatTimeRemaining(timeInSeconds: number): string {
+  const minutes = Math.floor(timeInSeconds / 60);
+  const seconds = timeInSeconds % 60;
+  
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Función para obtener el ID de una habilidad a partir de su código
-export function getSkillId(skillCode: string): number | null {
-  const skillIds: Record<string, number> = {
-    'TRACK_LOCATE': 1,
-    'INTERPRET_RELATE': 2,
-    'EVALUATE_REFLECT': 3,
-    'SOLVE_PROBLEMS': 4,
-    'REPRESENT': 5,
-    'MODEL': 6,
-    'ARGUE_COMMUNICATE': 7,
-    'IDENTIFY_THEORIES': 8,
-    'PROCESS_ANALYZE': 9,
-    'APPLY_PRINCIPLES': 10,
-    'SCIENTIFIC_ARGUMENT': 11,
-    'TEMPORAL_THINKING': 12,
-    'SOURCE_ANALYSIS': 13,
-    'MULTICAUSAL_ANALYSIS': 14,
-    'CRITICAL_THINKING': 15,
-    'REFLECTION': 16
+/**
+ * Obtiene el nombre para mostrar de una habilidad PAES
+ * @param skillCode Código de habilidad PAES
+ * @returns Nombre para mostrar
+ */
+export function getSkillName(skillCode: string): string {
+  const skillNames: Record<string, string> = {
+    'TRACK_LOCATE': 'Localizar información',
+    'INTERPRET_RELATE': 'Interpretar y relacionar',
+    'EVALUATE_REFLECT': 'Evaluar y reflexionar',
+    'SOLVE_PROBLEMS': 'Resolución de problemas',
+    'REPRESENT': 'Representación',
+    'MODEL': 'Modelamiento',
+    'ARGUE_COMMUNICATE': 'Argumentación y comunicación',
+    'IDENTIFY_THEORIES': 'Identificación de teorías',
+    'PROCESS_ANALYZE': 'Procesar y analizar',
+    'APPLY_PRINCIPLES': 'Aplicar principios',
+    'SCIENTIFIC_ARGUMENT': 'Argumentación científica',
+    'TEMPORAL_THINKING': 'Pensamiento temporal',
+    'SOURCE_ANALYSIS': 'Análisis de fuentes',
+    'MULTICAUSAL_ANALYSIS': 'Análisis multicausal',
+    'CRITICAL_THINKING': 'Pensamiento crítico',
+    'REFLECTION': 'Reflexión'
   };
   
-  return skillIds[skillCode] || null;
-}
-
-// Función para convertir una materia en su prueba PAES correspondiente
-export function subjectToPrueba(subject: string): TPAESPrueba {
-  return SUBJECT_TO_PRUEBA_MAP[subject] as TPAESPrueba || 'COMPETENCIA_LECTORA';
-}
-
-// Función para obtener las habilidades de una prueba PAES
-export function getSkillsForPrueba(prueba: TPAESPrueba): TPAESHabilidad[] {
-  const skillsByPrueba = getSkillsByPrueba();
-  return skillsByPrueba[prueba] || [];
+  return skillNames[skillCode] || skillCode;
 }
