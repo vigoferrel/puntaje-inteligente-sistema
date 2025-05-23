@@ -1,15 +1,17 @@
 
 import React, { useState } from "react";
 import { ProgressView } from "./ProgressView";
-import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
+import { LearningMapVisualization } from "./learning-map/LearningMapVisualization";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLectoGuia } from "@/contexts/LectoGuiaContext";
 import { getPruebaDisplayName, TPAESPrueba } from "@/types/system-types";
 import { ContextualActionButtons } from "./action-buttons/ContextualActionButtons";
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
 import { motion } from "framer-motion";
+import { BarChart3, Map } from "lucide-react";
 
 interface ProgressTabProps {
   onNodeSelect?: (nodeId: string) => void;
@@ -34,6 +36,7 @@ const itemVariants = {
 
 export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'overview' | 'map'>('overview');
   
   const {
     skillLevels,
@@ -120,18 +123,34 @@ export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
             </div>
           </div>
           
-          <Select value={selectedTestId?.toString() || "1"} onValueChange={handleTestChange}>
-            <SelectTrigger className="w-full md:w-[240px]">
-              <SelectValue placeholder="Seleccionar prueba" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">Competencia Lectora</SelectItem>
-              <SelectItem value="2">Matemática 1 (7° a 2° medio)</SelectItem>
-              <SelectItem value="3">Matemática 2 (3° y 4° medio)</SelectItem>
-              <SelectItem value="4">Ciencias</SelectItem>
-              <SelectItem value="5">Historia</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            {/* Selector de vista */}
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'overview' | 'map')}>
+              <TabsList>
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Resumen
+                </TabsTrigger>
+                <TabsTrigger value="map" className="flex items-center gap-2">
+                  <Map className="h-4 w-4" />
+                  Mapa Visual
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            <Select value={selectedTestId?.toString() || "1"} onValueChange={handleTestChange}>
+              <SelectTrigger className="w-full md:w-[240px]">
+                <SelectValue placeholder="Seleccionar prueba" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Competencia Lectora</SelectItem>
+                <SelectItem value="2">Matemática 1 (7° a 2° medio)</SelectItem>
+                <SelectItem value="3">Matemática 2 (3° y 4° medio)</SelectItem>
+                <SelectItem value="4">Ciencias</SelectItem>
+                <SelectItem value="5">Historia</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         <motion.div
@@ -150,26 +169,42 @@ export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
             />
           </motion.div>
           
-          {/* Sección de resumen de progreso con métricas de habilidades */}
-          <motion.div variants={itemVariants}>
-            <ProgressView 
-              skillLevels={skillLevels}
-              selectedPrueba={selectedPrueba} 
-              onStartSimulation={handleStartSimulation} 
-            />
-          </motion.div>
-          
-          {/* Visualización avanzada de habilidades y nodos con jerarquía de Bloom */}
-          <motion.div variants={itemVariants}>
-            <SkillNodeConnection 
-              skillLevels={skillLevels} 
-              nodes={nodes}
-              nodeProgress={nodeProgress}
-              onNodeSelect={handleNodeSelection}
-              selectedTest={selectedPrueba}
-              className="mt-8"
-            />
-          </motion.div>
+          {viewMode === 'overview' ? (
+            <>
+              {/* Sección de resumen de progreso con métricas de habilidades */}
+              <motion.div variants={itemVariants}>
+                <ProgressView 
+                  skillLevels={skillLevels}
+                  selectedPrueba={selectedPrueba} 
+                  onStartSimulation={handleStartSimulation} 
+                />
+              </motion.div>
+              
+              {/* Visualización básica de habilidades y nodos */}
+              <motion.div variants={itemVariants}>
+                <div className="mt-8 p-4 bg-muted/20 rounded-lg border-2 border-dashed border-muted">
+                  <div className="text-center space-y-2">
+                    <Map className="h-12 w-12 mx-auto text-muted-foreground" />
+                    <h3 className="text-lg font-semibold">¿Quieres una vista más detallada?</h3>
+                    <p className="text-muted-foreground">
+                      Cambia al "Mapa Visual" para ver una representación interactiva completa de tu progreso
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          ) : (
+            <motion.div variants={itemVariants}>
+              <LearningMapVisualization
+                nodes={nodes}
+                nodeProgress={nodeProgress}
+                skillLevels={skillLevels}
+                selectedPrueba={selectedPrueba}
+                onNodeSelect={handleNodeSelection}
+                className="mt-8"
+              />
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </TooltipProvider>
