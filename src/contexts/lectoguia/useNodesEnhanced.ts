@@ -6,10 +6,11 @@ import { useNodeProgress } from '@/hooks/lectoguia/use-node-progress';
 import { toast } from '@/components/ui/use-toast';
 import { 
   filterNodesWithValidation, 
-  validateNodesIntegrity 
+  validateNodesIntegrity,
+  validateNodeThematicCoherence 
 } from '@/utils/node-validation';
 
-export function useNodes(userId?: string) {
+export function useNodesEnhanced(userId?: string) {
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
   const [selectedTestId, setSelectedTestId] = useState<number | null>(1);
   const [selectedPrueba, setSelectedPrueba] = useState<TPAESPrueba>('COMPETENCIA_LECTORA');
@@ -18,12 +19,12 @@ export function useNodes(userId?: string) {
   const [validationStatus, setValidationStatus] = useState<{
     isValid: boolean;
     issuesCount: number;
+    lastValidation?: Date;
   }>({
     isValid: true,
     issuesCount: 0
   });
 
-  // Hook para manejar el progreso de nodos
   const { 
     nodeProgress, 
     updateNodeProgress, 
@@ -47,28 +48,68 @@ export function useNodes(userId?: string) {
     5: 'HISTORIA'
   };
 
-  // Función para cambiar la prueba seleccionada
+  // Función para cambiar la prueba seleccionada con validación
   const handlePruebaChange = useCallback((prueba: TPAESPrueba) => {
-    console.log(`🔄 useNodes: Cambiando prueba seleccionada: ${selectedPrueba} → ${prueba}`);
+    console.log(`🔄 useNodesEnhanced: Cambiando prueba seleccionada: ${selectedPrueba} → ${prueba}`);
     
     setSelectedPrueba(prueba);
     const newTestId = pruebaToTestIdMap[prueba];
     setSelectedTestId(newTestId);
     
-    console.log(`📋 useNodes: Nueva prueba ${prueba} con testId ${newTestId}`);
-  }, [selectedPrueba, pruebaToTestIdMap]);
+    // Validar que tenemos nodos para esta prueba
+    const filteredNodes = filterNodesWithValidation(nodes, prueba, true);
+    
+    if (filteredNodes.length === 0 && nodes.length > 0) {
+      toast({
+        title: "Atención",
+        description: `No se encontraron nodos para ${prueba}. Verificando integridad de datos...`,
+        variant: "destructive"
+      });
+    }
+    
+    console.log(`📋 useNodesEnhanced: Nueva prueba ${prueba} con ${filteredNodes.length} nodos válidos`);
+  }, [selectedPrueba, pruebaToTestIdMap, nodes]);
 
   // Función para cambiar por testId (para compatibilidad)
   const handleTestIdChange = useCallback((testId: number) => {
-    console.log(`🔄 useNodes: Cambiando testId: ${selectedTestId} → ${testId}`);
+    console.log(`🔄 useNodesEnhanced: Cambiando testId: ${selectedTestId} → ${testId}`);
     
     setSelectedTestId(testId);
     const newPrueba = testIdToPruebaMap[testId];
     if (newPrueba) {
       setSelectedPrueba(newPrueba);
-      console.log(`📋 useNodes: Nuevo testId ${testId} con prueba ${newPrueba}`);
+      console.log(`📋 useNodesEnhanced: Nuevo testId ${testId} con prueba ${newPrueba}`);
     }
   }, [selectedTestId, testIdToPruebaMap]);
+
+  // Función para validar integridad de nodos
+  const validateNodeIntegrity = useCallback((loadedNodes: TLearningNode[]) => {
+    const validation = validateNodesIntegrity(loadedNodes);
+    
+    setValidationStatus({
+      isValid: validation.isValid,
+      issuesCount: validation.issues.length,
+      lastValidation: new Date()
+    });
+
+    if (!validation.isValid) {
+      console.warn('🚨 Problemas de integridad detectados:', validation);
+      
+      // Agrupar issues por tipo
+      const thematicIssues = validation.issues.filter(i => i.type === 'thematic_mismatch');
+      const skillIssues = validation.issues.filter(i => i.type === 'skill_mismatch');
+      
+      if (thematicIssues.length > 0) {
+        toast({
+          title: "Inconsistencias Detectadas",
+          description: `${thematicIssues.length} nodos tienen contenido incoherente con su categoría`,
+          variant: "destructive"
+        });
+      }
+    }
+
+    return validation;
+  }, []);
 
   // Función para cargar nodos desde la base de datos
   const loadNodes = useCallback(async () => {
@@ -122,15 +163,7 @@ export function useNodes(userId?: string) {
       console.log(`✅ Nodos cargados: ${transformedNodes.length} total`);
       
       // Validar integridad
-      const validation = validateNodesIntegrity(transformedNodes);
-      setValidationStatus({
-        isValid: validation.isValid,
-        issuesCount: validation.issues.length
-      });
-      
-      if (!validation.isValid) {
-        console.warn(`⚠️ ${validation.issues.length} problemas de integridad detectados`);
-      }
+      const validation = validateNodeIntegrity(transformedNodes);
       
       // Log de distribución por prueba
       const nodesByPrueba = transformedNodes.reduce((acc, node) => {
@@ -139,6 +172,10 @@ export function useNodes(userId?: string) {
       }, {} as Record<TPAESPrueba, number>);
       
       console.log('📈 Distribución de nodos por prueba:', nodesByPrueba);
+
+      if (validation.issuesFound > 0) {
+        console.log(`⚠️ Validación completada: ${validation.summary.validNodes}/${validation.summary.totalNodes} nodos válidos`);
+      }
 
       setNodes(transformedNodes);
     } catch (error) {
@@ -152,9 +189,9 @@ export function useNodes(userId?: string) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [validateNodeIntegrity]);
 
-  // Función para obtener nodos filtrados por la prueba actual
+  // Función para obtener nodos filtrados por la prueba actual con validación
   const getFilteredNodes = useCallback(() => {
     return filterNodesWithValidation(nodes, selectedPrueba, true);
   }, [nodes, selectedPrueba]);
@@ -182,6 +219,7 @@ export function useNodes(userId?: string) {
     updateNodeProgress,
     refreshNodes: loadNodes,
     getFilteredNodes,
+    validateNodeIntegrity: () => validateNodeIntegrity(nodes),
     
     // Mapeos para compatibilidad
     pruebaToTestIdMap,

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +19,7 @@ import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
 import { LearningMapVisualization } from "./learning-map/LearningMapVisualization";
 import { TestTypeSelector } from "./test-selector/TestTypeSelector";
 import { TestSpecificStats } from "./test-stats/TestSpecificStats";
+import { ValidationStatus } from "./validation/ValidationStatus";
 import { useLectoGuia } from "@/contexts/LectoGuiaContext";
 import { formatSkillLevel } from "@/utils/lectoguia-utils";
 
@@ -35,7 +37,8 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
     nodeProgress, 
     selectedPrueba,
     handleNodeSelect,
-    setSelectedTestId
+    setSelectedTestId,
+    validationStatus
   } = useLectoGuia();
   
   const [activeView, setActiveView] = useState('overview');
@@ -82,6 +85,15 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
         selectedTest={selectedPrueba}
         onTestSelect={handleTestChange}
       />
+
+      {/* Estado de validación */}
+      {validationStatus && (
+        <ValidationStatus
+          isValid={validationStatus.isValid}
+          issuesCount={validationStatus.issuesCount}
+          currentTest={selectedPrueba}
+        />
+      )}
 
       {/* Estadísticas específicas del tipo de prueba */}
       <TestSpecificStats
