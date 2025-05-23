@@ -80,7 +80,18 @@ export function useExerciseFlow(
         }
       });
       
-      if (response && (response.question || response.response)) {
+      if (response) {
+        // Type-safe property access with fallbacks
+        const question = (response as any)?.question || (response as any)?.response || 'Ejercicio generado';
+        const options = (response as any)?.options || [
+          'Opción A',
+          'Opción B', 
+          'Opción C',
+          'Opción D'
+        ];
+        const correctAnswer = (response as any)?.correctAnswer || (response as any)?.options?.[0] || 'Opción A';
+        const explanation = (response as any)?.explanation || 'Selecciona una opción para ver la explicación detallada.';
+        
         // Crear ejercicio estructurado a partir de la respuesta
         const exercise: Exercise = {
           id: `exercise-${Date.now()}`,
@@ -89,15 +100,10 @@ export function useExerciseFlow(
           prueba: 'COMPETENCIA_LECTORA', 
           skill: currentSkill,
           difficulty: 'INTERMEDIATE',
-          question: response.question || response.response || 'Ejercicio generado',
-          options: response.options || [
-            'Opción A',
-            'Opción B', 
-            'Opción C',
-            'Opción D'
-          ],
-          correctAnswer: response.correctAnswer || response.options?.[0] || 'Opción A',
-          explanation: response.explanation || 'Selecciona una opción para ver la explicación detallada.'
+          question,
+          options,
+          correctAnswer,
+          explanation
         };
         
         setCurrentExercise(exercise);

@@ -142,8 +142,8 @@ ${assistantResponse ? `Análisis de imagen previo: ${assistantResponse}` : ''}`;
       
       console.log('LectoGuía: Respuesta recibida exitosamente');
       
-      // Extraer el contenido de la respuesta
-      const messageContent = response.response || response.result || response;
+      // Extraer el contenido de la respuesta con type-safe access
+      const messageContent = (response as any)?.response || (response as any)?.result || response;
       
       // Añadir la respuesta del asistente al estado
       addAssistantMessage(messageContent);

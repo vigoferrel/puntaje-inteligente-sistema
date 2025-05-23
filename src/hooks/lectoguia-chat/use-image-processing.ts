@@ -28,10 +28,15 @@ export function useImageProcessing() {
       
       console.log('Imagen procesada exitosamente');
       
+      // Type-safe property access with fallbacks
+      const response = (result as any)?.response || (result as any)?.result || 'Imagen procesada correctamente';
+      const extractedText = (result as any)?.extractedText || '';
+      const confidence = (result as any)?.confidence || 0.8;
+      
       return {
-        response: result.response || result.result || 'Imagen procesada correctamente',
-        extractedText: result.extractedText || '',
-        confidence: result.confidence || 0.8
+        response,
+        extractedText,
+        confidence
       };
     } catch (error) {
       console.error('Error procesando imagen:', error);
