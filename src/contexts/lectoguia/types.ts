@@ -1,7 +1,7 @@
 
 import { ChatMessage } from '@/components/ai/ChatInterface';
 import { Exercise } from '@/types/ai-types';
-import { TPAESHabilidad } from '@/types/system-types';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { ReactNode } from 'react';
 import { ConnectionStatus } from '@/hooks/use-openrouter';
 
@@ -35,7 +35,7 @@ export interface LectoGuiaContextType {
   handleNodeSelect: (nodeId: string) => void;
   selectedTestId: string | null;
   setSelectedTestId: (id: string | null) => void;
-  selectedPrueba: string;
+  selectedPrueba: TPAESPrueba;
   
   // Estado de conexión
   serviceStatus: 'available' | 'degraded' | 'unavailable';
@@ -44,12 +44,78 @@ export interface LectoGuiaContextType {
   showConnectionStatus: () => ReactNode | null;
 }
 
+// Interfaces para hooks individuales
+export interface UseTabsState {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+export interface UseSubjectsState {
+  activeSubject: string;
+  handleSubjectChange: (subject: string) => void;
+}
+
+export interface UseChatState {
+  messages: ChatMessage[];
+  isTyping: boolean;
+  handleSendMessage: (message: string, imageData?: string) => void;
+  addUserMessage: (content: string, imageData?: string) => ChatMessage | null;
+  addAssistantMessage: (content: string) => ChatMessage;
+}
+
+export interface UseExerciseState {
+  currentExercise: Exercise | null;
+  selectedOption: number | null;
+  showFeedback: boolean;
+  handleOptionSelect: (index: number) => void;
+  handleNewExercise: () => void;
+  isLoading: boolean;
+  setCurrentExercise: (exercise: Exercise | null) => void;
+  setIsLoading: (value: boolean) => void;
+}
+
+export interface UseNodesState {
+  nodes: any[];
+  nodeProgress: Record<string, any>;
+  handleNodeSelect: (nodeId: string) => void;
+  selectedTestId: string | null;
+  setSelectedTestId: (id: string | null) => void;
+  selectedPrueba: TPAESPrueba;
+}
+
+export interface UseSkillsState {
+  skillLevels: Record<TPAESHabilidad, number>;
+  updateSkillLevel: (skillId: number, isCorrect: boolean) => Promise<void>;
+  getSkillIdFromCode: (skillCode: TPAESHabilidad) => number | null;
+  handleStartSimulation: (skill?: string) => void;
+}
+
+// Valores iniciales
+export const initialSkillLevels: Record<TPAESHabilidad, number> = {
+  'TRACK_LOCATE': 0,
+  'INTERPRET_RELATE': 0,
+  'EVALUATE_REFLECT': 0,
+  'SOLVE_PROBLEMS': 0,
+  'REPRESENT': 0,
+  'MODEL': 0,
+  'ARGUE_COMMUNICATE': 0,
+  'IDENTIFY_THEORIES': 0,
+  'PROCESS_ANALYZE': 0,
+  'APPLY_PRINCIPLES': 0,
+  'SCIENTIFIC_ARGUMENT': 0,
+  'TEMPORAL_THINKING': 0,
+  'SOURCE_ANALYSIS': 0,
+  'MULTICAUSAL_ANALYSIS': 0,
+  'CRITICAL_THINKING': 0,
+  'REFLECTION': 0
+};
+
 // Constantes
-export const SUBJECT_TO_PRUEBA_MAP: Record<string, string> = {
+export const SUBJECT_TO_PRUEBA_MAP: Record<string, TPAESPrueba> = {
   'general': 'COMPETENCIA_LECTORA',
   'lectura': 'COMPETENCIA_LECTORA',
-  'matematicas-basica': 'MATEMATICA_BASICA',
-  'matematicas-avanzada': 'MATEMATICA_AVANZADA',
+  'matematicas-basica': 'MATEMATICA_1',
+  'matematicas-avanzada': 'MATEMATICA_2',
   'ciencias': 'CIENCIAS',
   'historia': 'HISTORIA'
 };

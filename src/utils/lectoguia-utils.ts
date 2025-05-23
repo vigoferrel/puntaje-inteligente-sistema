@@ -79,7 +79,7 @@ export function getSkillId(skillCode: string): number | null {
 
 // Función para convertir una materia en su prueba PAES correspondiente
 export function subjectToPrueba(subject: string): TPAESPrueba {
-  return SUBJECT_TO_PRUEBA_MAP[subject] || 'COMPETENCIA_LECTORA';
+  return SUBJECT_TO_PRUEBA_MAP[subject] as TPAESPrueba || 'COMPETENCIA_LECTORA';
 }
 
 // Función para obtener las habilidades de una prueba PAES

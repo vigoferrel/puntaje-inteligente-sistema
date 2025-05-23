@@ -97,7 +97,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             "Opción 3",
             "Opción 4"
           ],
-          correctOption: 0,
+          correctAnswer: "Opción 1",
           explanation: "Por favor selecciona una opción para recibir retroalimentación."
         };
         

@@ -10,12 +10,15 @@ import { testIdToPrueba } from '@/types/paes-types';
 export function useNodes(userId: string | null): UseNodesState {
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
   const [nodeProgress, setNodeProgress] = useState<Record<string, NodeProgress>>({});
-  const [selectedTestId, setSelectedTestId] = useState<number>(1); // Default: Competencia lectora
+  const [selectedTestId, setSelectedTestId] = useState<string | null>("1"); // Default: Competencia lectora
   const [selectedPrueba, setSelectedPrueba] = useState<TPAESPrueba>('COMPETENCIA_LECTORA');
 
   // Actualizar prueba seleccionada cuando cambia el ID de prueba
   useEffect(() => {
-    setSelectedPrueba(testIdToPrueba(selectedTestId));
+    if (selectedTestId) {
+      const testId = parseInt(selectedTestId, 10);
+      setSelectedPrueba(testIdToPrueba(testId));
+    }
   }, [selectedTestId]);
   
   // Cargar nodos para la prueba seleccionada
@@ -27,7 +30,7 @@ export function useNodes(userId: string | null): UseNodesState {
         const { data, error } = await supabase
           .from('learning_nodes')
           .select('*, skill:paes_skills(*)')
-          .eq('test_id', selectedTestId)
+          .eq('test_id', parseInt(selectedTestId, 10))
           .order('position', { ascending: true });
           
         if (error) throw error;

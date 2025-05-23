@@ -5,7 +5,7 @@ import { SkillNodeConnection } from "./skill-visualization/SkillNodeConnection";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLectoGuia } from "@/contexts/LectoGuiaContext";
-import { getPruebaDisplayName } from "@/types/system-types";
+import { getPruebaDisplayName, TPAESPrueba } from "@/types/system-types";
 import { ContextualActionButtons } from "./action-buttons/ContextualActionButtons";
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
@@ -55,8 +55,8 @@ export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
   
   // Manejar cambio de prueba
   const handleTestChange = (value: string) => {
-    const newTestId = parseInt(value, 10);
-    setSelectedTestId(newTestId);
+    // Convertir a string antes de pasar
+    setSelectedTestId(value);
     setSelectedSkill(null); // Resetear la habilidad seleccionada al cambiar de prueba
   };
   
@@ -92,7 +92,7 @@ export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
       active: false,
       onClick: () => {
         // Mapear la prueba a la materia correspondiente
-        const pruebaMappings: Record<string, string> = {
+        const pruebaMappings: Record<TPAESPrueba, string> = {
           'COMPETENCIA_LECTORA': 'lectura',
           'MATEMATICA_1': 'matematicas-basica',
           'MATEMATICA_2': 'matematicas-avanzada',
@@ -120,7 +120,7 @@ export function ProgressTab({ onNodeSelect }: ProgressTabProps) {
             </div>
           </div>
           
-          <Select value={selectedTestId.toString()} onValueChange={handleTestChange}>
+          <Select value={selectedTestId?.toString() || "1"} onValueChange={handleTestChange}>
             <SelectTrigger className="w-full md:w-[240px]">
               <SelectValue placeholder="Seleccionar prueba" />
             </SelectTrigger>
