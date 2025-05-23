@@ -1,35 +1,38 @@
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOpenRouter } from '@/hooks/use-openrouter';
-import { getSkillsByPrueba } from '@/utils/lectoguia-utils';
 import { toast } from '@/components/ui/use-toast';
 import { Exercise } from '@/types/ai-types';
-import { TPAESHabilidad } from '@/types/system-types';
-import { v4 as uuidv4 } from 'uuid';
 
 import { LectoGuiaContextType, SUBJECT_TO_PRUEBA_MAP } from './types';
 import { LectoGuiaContext } from './useLectoGuia';
 import { useTabs } from './useTabs';
 import { useSubjects } from './useSubjects';
 import { useNodes } from './useNodes';
-import { useChat } from './useChat';
 import { useSkills } from './useSkills';
 import { useExercises } from './useExercises';
+import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 
 // Proveedor del contexto
 export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Auth
   const { user } = useAuth();
-  const { callOpenRouter } = useOpenRouter();
   
   // Hooks para cada conjunto de funcionalidad
-  const { messages, isTyping: chatIsTyping, addUserMessage, addAssistantMessage } = useChat();
   const { activeTab, setActiveTab } = useTabs();
-  const { activeSubject, handleSubjectChange } = useSubjects(
-    'general',
-    addAssistantMessage
-  );
+  
+  const {
+    messages,
+    isTyping: chatIsTyping,
+    activeSubject,
+    handleSubjectChange,
+    processUserMessage,
+    serviceStatus,
+    connectionStatus,
+    resetConnectionStatus,
+    showConnectionStatus
+  } = useLectoGuiaChat();
+  
   const { 
     skillLevels, 
     updateSkillLevel, 
@@ -50,64 +53,14 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     selectedOption,
     showFeedback,
     handleOptionSelect,
-    handleNewExercise: baseHandleNewExercise,
+    handleNewExercise,
     isLoading,
     setCurrentExercise,
     setIsLoading
   } = useExercises(user?.id, updateSkillLevel, getSkillIdFromCode);
   
-  // Generación de ejercicios
-  const generateExercise = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      
-      // Obtener prueba correspondiente a la materia
-      const prueba = SUBJECT_TO_PRUEBA_MAP[activeSubject] || 'COMPETENCIA_LECTORA';
-      
-      // Obtener habilidades disponibles para esta prueba
-      const skills = getSkillsByPrueba()[prueba];
-      
-      // Seleccionar una habilidad aleatoria
-      const randomSkill = skills[Math.floor(Math.random() * skills.length)];
-      
-      // Llamar al API para generar ejercicio
-      const response = await callOpenRouter<Exercise>({
-        action: "generate_exercise", 
-        payload: {
-          skill: randomSkill,
-          prueba,
-          difficulty: "INTERMEDIATE"
-        }
-      });
-      
-      if (response) {
-        // Asegurarnos que el ejercicio tiene la información de prueba correcta
-        response.prueba = prueba;
-        setCurrentExercise(response);
-      } else {
-        toast({
-          title: 'Error',
-          description: 'No se pudo generar el ejercicio',
-          variant: 'destructive'
-        });
-      }
-      
-      return response;
-    } catch (error) {
-      console.error("Error al generar ejercicio:", error);
-      toast({
-        title: 'Error',
-        description: 'Ocurrió un error al generar el ejercicio',
-        variant: 'destructive'
-      });
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [activeSubject, callOpenRouter, setIsLoading, setCurrentExercise]);
-  
   // Generar un ejercicio para un nodo específico
-  const generateExerciseForNode = useCallback(async (nodeId: string) => {
+  const generateExerciseForNode = async (nodeId: string) => {
     try {
       setIsLoading(true);
       
@@ -122,30 +75,35 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return null;
       }
       
-      // Llamar al API para generar ejercicio según el nodo
-      const response = await callOpenRouter<Exercise>({
-        action: "generate_exercise", 
-        payload: {
-          skill: node.skill,
-          prueba: node.prueba,
-          difficulty: node.difficulty || "INTERMEDIATE",
-          nodeContext: {
-            nodeId: node.id,
-            title: node.title,
-            description: node.description
-          }
-        }
-      });
+      // Crear solicitud para generar ejercicio según el nodo
+      const response = await processUserMessage(
+        `Genera un ejercicio para el nodo "${node.title}" con habilidad ${node.skill} de dificultad ${node.difficulty || "INTERMEDIATE"}`,
+        undefined
+      );
       
       if (response) {
-        // Vincular el ejercicio con el nodo
-        response.nodeId = node.id;
-        response.nodeName = node.title;
-        response.prueba = node.prueba;
+        // Crear un objeto de ejercicio a partir de la respuesta
+        const exercise: Exercise = {
+          id: node.id,
+          nodeId: node.id,
+          nodeName: node.title,
+          prueba: node.prueba,
+          skill: node.skill,
+          difficulty: node.difficulty || "INTERMEDIATE",
+          question: response,
+          options: [
+            "Opción 1",
+            "Opción 2",
+            "Opción 3",
+            "Opción 4"
+          ],
+          correctOption: 0,
+          explanation: "Por favor selecciona una opción para recibir retroalimentación."
+        };
         
-        setCurrentExercise(response);
+        setCurrentExercise(exercise);
         setActiveTab('exercise');
-        return response;
+        return exercise;
       } else {
         toast({
           title: 'Error',
@@ -161,78 +119,40 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setIsLoading(false);
     }
-  }, [nodes, callOpenRouter, setActiveTab, setIsLoading, setCurrentExercise]);
+  };
   
-  // Implementación real de handleNewExercise
-  const handleNewExercise = useCallback(async () => {
-    baseHandleNewExercise();
-    await generateExercise();
-  }, [baseHandleNewExercise, generateExercise]);
-
   // Manejador para selección de nodo
-  const handleNodeSelect = useCallback((nodeId: string) => {
+  const handleNodeSelect = (nodeId: string) => {
     generateExerciseForNode(nodeId);
-  }, [generateExerciseForNode]);
+  };
   
   // Manejo de envío de mensajes
-  const handleSendMessage = useCallback(async (message: string, imageData?: string) => {
+  const handleSendMessage = async (message: string, imageData?: string) => {
     if (!message.trim() && !imageData) return;
-    
-    addUserMessage(message, imageData);
-    const typingState = chatIsTyping;
     
     try {
       // Detectar si el mensaje contiene una solicitud de ejercicio
       const isExerciseRequest = message.toLowerCase().includes("ejercicio") || 
-                               message.toLowerCase().includes("practica") || 
-                               message.toLowerCase().includes("ejemplo");
+                              message.toLowerCase().includes("practica") || 
+                              message.toLowerCase().includes("ejemplo");
       
       if (isExerciseRequest) {
-        addAssistantMessage("Generando un ejercicio para practicar...");
+        await processUserMessage(message, imageData);
         handleNewExercise();
         setActiveTab('exercise');
       } else {
         // Procesar mensaje normal
-        console.log('Sending message to backend:', message);
-        const response = await callOpenRouter<any>({
-          action: "provide_feedback", 
-          payload: {
-            userMessage: message,
-            context: `PAES preparation, subject: ${activeSubject}`,
-            previousMessages: messages.slice(-6)
-          }
-        });
-        
-        console.log('Response received from backend:', response);
-        
-        // Manejar diferentes formatos de respuesta
-        let botResponse: string;
-        
-        if (!response) {
-          botResponse = "Lo siento, no pude procesar tu solicitud. Por favor intenta de nuevo.";
-        } else if (typeof response === 'string') {
-          botResponse = response;
-        } else if (typeof response === 'object') {
-          // Si la respuesta ya tiene un campo 'response'
-          if ('response' in response) {
-            botResponse = response.response || "Lo siento, no pude procesar tu solicitud.";
-          } else {
-            // Intentar extraer el texto de cualquier campo
-            const values = Object.values(response);
-            const firstStringValue = values.find(v => typeof v === 'string');
-            botResponse = firstStringValue as string || "Lo siento, no pude procesar tu solicitud.";
-          }
-        } else {
-          botResponse = "Lo siento, no pude procesar tu solicitud correctamente.";
-        }
-        
-        addAssistantMessage(botResponse);
+        await processUserMessage(message, imageData);
       }
     } catch (error) {
       console.error("Error procesando mensaje:", error);
-      addAssistantMessage("Lo siento, tuve un problema al procesar tu mensaje. Por favor intenta de nuevo.");
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al procesar tu mensaje. Por favor intenta de nuevo.",
+        variant: "destructive"
+      });
     }
-  }, [messages, activeSubject, addUserMessage, addAssistantMessage, callOpenRouter, setActiveTab, handleNewExercise, chatIsTyping]);
+  };
   
   // Valores del contexto
   const contextValue = useMemo((): LectoGuiaContextType => ({
@@ -265,14 +185,21 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     handleNodeSelect,
     selectedTestId,
     setSelectedTestId,
-    selectedPrueba
+    selectedPrueba,
+    
+    // Estado de conexión
+    serviceStatus,
+    connectionStatus,
+    resetConnectionStatus,
+    showConnectionStatus
   }), [
-    activeTab, isLoading, messages, chatIsTyping, activeSubject,
-    currentExercise, selectedOption, showFeedback, skillLevels,
+    activeTab, isLoading, messages, chatIsTyping, activeSubject, 
+    currentExercise, selectedOption, showFeedback, skillLevels, 
     nodes, nodeProgress, selectedTestId, selectedPrueba,
-    handleSendMessage, handleSubjectChange, handleOptionSelect,
+    handleSendMessage, handleSubjectChange, handleOptionSelect, 
     handleNewExercise, handleStartSimulation, handleNodeSelect,
-    setActiveTab, setSelectedTestId
+    setActiveTab, setSelectedTestId, serviceStatus, connectionStatus,
+    resetConnectionStatus, showConnectionStatus
   ]);
   
   return (

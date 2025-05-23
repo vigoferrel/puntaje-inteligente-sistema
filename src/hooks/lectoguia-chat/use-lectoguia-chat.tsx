@@ -1,10 +1,11 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useOpenRouter } from '@/hooks/use-openrouter';
 import { toast } from '@/components/ui/use-toast';
 import { useChatMessages } from './use-chat-messages';
 import { useImageProcessing } from './use-image-processing';
 import { subjectNames, detectSubjectFromMessage } from './subject-detection';
-import { createUserMessage, createAssistantMessage, handleMessageError } from './message-handling';
+import { createUserMessage, createAssistantMessage, extractResponseContent } from './message-handling';
 import { ChatState, ChatActions, ERROR_RATE_LIMIT_MESSAGE, WELCOME_MESSAGE } from './types';
 import { CircuitBreaker } from '@/utils/circuit-breaker';
 import { ToastAction } from '@/components/ui/toast';
@@ -70,7 +71,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   const { isProcessing, handleImageProcessing } = useImageProcessing();
   
   // Comunicación con API con mejor manejo de errores
-  const { callOpenRouter, lastError, retryLastOperation, connectionStatus } = useOpenRouter();
+  const { callOpenRouter, lastError, retryLastOperation, connectionStatus, resetConnectionStatus } = useOpenRouter();
   
   // Estado local
   const [isTyping, setIsTyping] = useState(false);
@@ -80,15 +81,15 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   
   // Wrapper sobre addUserMessage para mantener consistencia de estado
   const addUserMessage = useCallback((content: string, imageData?: string) => {
-    const msg = createUserMessage(content, imageData);
-    addUserMsg(msg);
+    setIsTyping(true);
+    const msg = addUserMsg(content, imageData);
     return msg;
   }, [addUserMsg]);
   
   // Wrapper sobre addAssistantMessage para mantener consistencia de estado
   const addAssistantMessage = useCallback((content: string) => {
-    const msg = createAssistantMessage(content);
-    addAssistantMsg(msg);
+    const msg = addAssistantMsg(content);
+    setIsTyping(false);
     return msg;
   }, [addAssistantMsg]);
   
@@ -120,14 +121,13 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
           payload: {} 
         }, true);
         
-        if (healthCheck && typeof healthCheck === 'object' && 'status' in healthCheck) {
-          const status = healthCheck.status as string;
-          if (status === 'available' && serviceStatus !== 'available') {
-            setServiceStatus('available');
-            openRouterCircuitBreaker.reset();
-          }
-        } else {
-          setServiceStatus('degraded');
+        const status = typeof healthCheck === 'object' && healthCheck && 'status' in healthCheck 
+          ? String(healthCheck.status)
+          : '';
+          
+        if (status === 'available' && serviceStatus !== 'available') {
+          setServiceStatus('available');
+          openRouterCircuitBreaker.reset();
         }
       } catch (error) {
         console.error("Error verificando salud del servicio:", error);
@@ -233,7 +233,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
    * Procesa mensaje de usuario y genera una respuesta con mejor manejo de errores
    * y soporte offline
    */
-  const processUserMessage = async (message: string, imageData?: string) => {
+  const processUserMessage = useCallback(async (message: string, imageData?: string) => {
     if (!message.trim() && !imageData) return null;
     
     // Agregar mensaje del usuario al chat
@@ -310,28 +310,11 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
           return fallbackContent;
         }
         
-        // Procesar la respuesta
-        let finalResponse: string = "";
-        
-        if (typeof responseData === 'string') {
-          finalResponse = responseData;
-        } else if (responseData && typeof responseData === 'object') {
-          if ('response' in responseData) {
-            finalResponse = String(responseData.response || "");
-          } else {
-            // Buscar cualquier campo que contenga un string como respuesta
-            const stringValues = Object.values(responseData).filter(v => typeof v === 'string');
-            finalResponse = stringValues.length > 0 
-              ? stringValues[0] as string
-              : "Recibí tu mensaje, pero no pude generar una respuesta adecuada.";
-          }
-        } else {
-          finalResponse = "Recibí tu mensaje, pero tuve dificultades procesando la respuesta.";
-        }
+        // Extraer el contenido de la respuesta
+        const finalResponse = extractResponseContent(responseData);
         
         // Agregar la respuesta al chat
         addAssistantMessage(finalResponse);
-        setIsTyping(false);
         
         // Guardar en caché para futuras consultas similares
         cacheResponse(message, activeSubject, finalResponse);
@@ -363,12 +346,20 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
     } finally {
       setIsTyping(false);
     }
-  };
+  }, [
+    activeSubject,
+    addUserMessage,
+    addAssistantMessage,
+    callOpenRouter,
+    detectSubjectFromMsg,
+    getRecentMessages,
+    handleImageProcessing
+  ]);
   
   /**
    * Componente para mostrar estado de conexión
    */
-  const showConnectionStatus = () => {
+  const showConnectionStatus = useCallback(() => {
     if (serviceStatus === 'degraded' || connectionStatus === 'disconnected') {
       return (
         <Alert variant="destructive" className="mb-4 bg-destructive/20">
@@ -376,7 +367,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
           <AlertTitle>Modo limitado</AlertTitle>
           <AlertDescription>
             Funcionando con capacidades reducidas debido a problemas de conexión.
-            <ToastAction altText="Reintentar" onClick={() => retryLastOperation()}>
+            <ToastAction altText="Reintentar" onClick={() => resetConnectionStatus()}>
               Reintentar
             </ToastAction>
           </AlertDescription>
@@ -384,24 +375,13 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       );
     }
     return null;
-  };
+  }, [serviceStatus, connectionStatus, resetConnectionStatus]);
   
-  /**
-   * Resetea el estado de la conexión e intenta reconectar
-   */
-  const resetConnectionStatus = () => {
-    openRouterCircuitBreaker.reset();
-    retryLastOperation();
-    setServiceStatus('available');
-    setReconnectAttempts(0);
-    
-    toast({
-      title: "Reintentando conexión",
-      description: "Intentando restaurar la funcionalidad completa...",
-      duration: 3000
-    });
-  };
-
+  // Unificar manejo de cambio de materia (desde UI)
+  const handleSubjectChange = useCallback((subject: string) => {
+    changeSubject(subject);
+  }, [changeSubject]);
+  
   return {
     messages,
     isTyping,
@@ -413,6 +393,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
     changeSubject,
     detectSubjectFromMessage: detectSubjectFromMsg,
     showConnectionStatus,
-    resetConnectionStatus
+    resetConnectionStatus,
+    handleSubjectChange
   };
 }

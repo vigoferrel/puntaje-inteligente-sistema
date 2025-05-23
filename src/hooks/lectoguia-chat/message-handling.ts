@@ -11,7 +11,7 @@ export const createUserMessage = (content: string, imageData?: string): ChatMess
     id: uuidv4(),
     role: "user",
     content,
-    imageUrl: imageData, // Using imageUrl instead of imageData to match ChatMessageType
+    imageData,
     timestamp: new Date().toISOString()
   };
 };
@@ -64,7 +64,7 @@ export const extractResponseContent = (response: any): string => {
   if (response && typeof response === 'object') {
     // Priorizar el campo 'response' si existe
     if ('response' in response) {
-      return response.response;
+      return String(response.response || "");
     }
     
     // Buscar cualquier campo que contenga un string

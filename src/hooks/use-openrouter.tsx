@@ -1,163 +1,109 @@
-
-import { useState, useCallback } from "react";
-import { toast } from "@/components/ui/use-toast";
-import { openRouterService } from "@/services/openrouter/core";
+import { useState, useCallback } from 'react';
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected';
 
-interface OpenRouterRequest {
+export interface OpenRouterRequest {
   action: string;
-  payload: any;
-  requestId?: string;
+  payload: Record<string, any>;
 }
 
 export function useOpenRouter() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastError, setLastError] = useState<Error | null>(null);
-  const [lastOperation, setLastOperation] = useState<OpenRouterRequest | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connected');
-
+  const [lastError, setLastError] = useState<Error | null>(null);
+  const [lastRequest, setLastRequest] = useState<OpenRouterRequest | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
   /**
-   * Llama al servicio de OpenRouter con mejor manejo de errores y monitoreo de estado.
-   * @param request La solicitud a enviar
-   * @param silent Si es true, no mostrará notificaciones de error
+   * Reset connection status and retry last operation
    */
-  const callOpenRouter = useCallback(async <T,>(
-    request: OpenRouterRequest,
-    silent: boolean = false
-  ): Promise<T | null> => {
-    setLastOperation(request);
-    setIsLoading(true);
+  const resetConnectionStatus = useCallback(() => {
     setConnectionStatus('connecting');
-    
-    try {
-      console.log(`Llamando a OpenRouter - Acción: ${request.action}`);
-      
-      // Generar un ID de solicitud si no se proporciona uno
-      const requestWithId = {
-        ...request,
-        requestId: request.requestId || `req_${Math.random().toString(36).substring(2, 11)}`
-      };
-      
-      // Usar timeout para evitar bloqueos prolongados
-      const timeoutPromise = new Promise<null>((resolve) => {
-        setTimeout(() => resolve(null), 15000); // 15 segundos de timeout
-      });
-      
-      // Competir entre la solicitud real y el timeout
-      const response = await Promise.race([
-        openRouterService<T>(requestWithId),
-        timeoutPromise
-      ]);
-      
-      // Restablecer estado de éxito
-      setLastError(null);
-      setConnectionStatus('connected');
-      
-      if (!response) {
-        console.warn(`La solicitud ${request.action} no retornó datos o expiró el timeout`);
-        
-        if (!silent) {
-          toast({
-            title: "Sin respuesta",
-            description: "No se recibió una respuesta válida. Por favor intenta de nuevo.",
-            variant: "destructive"
-          });
-        }
-      }
-      
-      return response;
-    } catch (error) {
-      console.error(`Error llamando a OpenRouter (${request.action}):`, error);
-      
-      const isNetworkError = error instanceof Error && 
-        (error.message.includes('network') || 
-         error.message.includes('fetch') || 
-         error.message.includes('timeout'));
-      
-      setLastError(error instanceof Error ? error : new Error("Error desconocido"));
-      setConnectionStatus(isNetworkError ? 'disconnected' : 'connected');
-      
-      if (!silent) {
-        let errorMessage = "Ocurrió un error al procesar tu solicitud.";
-        
-        // Mensajes personalizados según el tipo de error
-        if (isNetworkError) {
-          errorMessage = "Error de conexión. Verifica tu conexión a internet.";
-        } else if (error instanceof Error) {
-          if (error.message.includes('rate limit') || error.message.includes('429')) {
-            errorMessage = "El servicio está experimentando alta demanda. Por favor intenta más tarde.";
-          } else if (error.message.includes('auth') || error.message.includes('401')) {
-            errorMessage = "Error de autenticación con el servicio.";
-          }
-        }
-        
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      }
-      
-      return null;
-    } finally {
-      setIsLoading(false);
+    if (lastRequest) {
+      return callOpenRouter(lastRequest);
     }
+    setConnectionStatus('connected');
+    return Promise.resolve(null);
+  }, [lastRequest]);
+  
+  /**
+   * Retry last API operation
+   */
+  const retryLastOperation = useCallback(() => {
+    if (lastRequest) {
+      return callOpenRouter(lastRequest);
+    }
+    return Promise.resolve(null);
+  }, [lastRequest]);
+  
+  /**
+   * Process image with vision model
+   */
+  const processImage = useCallback((imageData: string, prompt: string, context?: string) => {
+    return callOpenRouter<any>({
+      action: "process_image",
+      payload: { imageData, prompt, context }
+    });
   }, []);
 
   /**
-   * Reintenta la última operación fallida
+   * Call OpenRouter endpoint with better error handling
    */
-  const retryLastOperation = useCallback(async () => {
-    if (lastOperation) {
-      toast({
-        title: "Reintentando operación",
-        description: "Intentando nuevamente la solicitud anterior..."
+  const callOpenRouter = useCallback(async <T,>(request: OpenRouterRequest, silent: boolean = false): Promise<T> => {
+    try {
+      if (!silent) {
+        setIsLoading(true);
+        setLastRequest(request);
+      }
+      
+      setConnectionStatus('connecting');
+      
+      // Configure the request
+      const response = await fetch('/api/openrouter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request)
       });
       
-      return callOpenRouter(lastOperation);
-    }
-    
-    return null;
-  }, [lastOperation, callOpenRouter]);
-
-  /**
-   * Procesa una imagen y retorna el resultado del análisis
-   */
-  const processImage = useCallback(async (
-    imageData: string,
-    prompt: string,
-    context?: string
-  ) => {
-    return callOpenRouter({
-      action: "process_image",
-      payload: {
-        imageData,
-        prompt,
-        context
+      // Handle HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText}`);
       }
-    });
-  }, [callOpenRouter]);
-
-  /**
-   * Resetea el estado de conexión e intenta reconectar
-   */
-  const resetConnectionStatus = useCallback(() => {
-    setConnectionStatus('connected');
-    retryLastOperation();
-    
-    toast({
-      title: "Reintentando conexión",
-      description: "Intentando restaurar la conexión con el servicio...",
-      duration: 3000
-    });
-  }, [retryLastOperation]);
-
+      
+      // Parse JSON response with fallback
+      const result = await response.json();
+      
+      setConnectionStatus('connected');
+      setLastError(null);
+      
+      return result as T;
+    } catch (error) {
+      console.error('Error calling OpenRouter:', error);
+      
+      // Update connection status
+      setConnectionStatus('disconnected');
+      
+      // Store the error for retry mechanism
+      setLastError(error instanceof Error ? error : new Error(String(error)));
+      
+      // Return default value or re-throw depending on silent flag
+      if (silent) {
+        return {} as T;
+      }
+      
+      throw error;
+    } finally {
+      if (!silent) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+  
   return {
     callOpenRouter,
     retryLastOperation,
-    processImage,
     resetConnectionStatus,
+    processImage,
     isLoading,
     lastError,
     connectionStatus

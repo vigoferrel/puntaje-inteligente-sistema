@@ -1,20 +1,18 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { ChatInterface, ChatMessage } from "@/components/ai/ChatInterface";
+import { ChatInterface } from "@/components/ai/ChatInterface";
 import { SubjectSelector } from "@/components/lectoguia/SubjectSelector";
 import { ChatSettingsButton } from "@/components/lectoguia/chat-settings/ChatSettingsButton";
 import { ContextualActionButtons } from "@/components/lectoguia/action-buttons/ContextualActionButtons";
-import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { useLectoGuia } from '@/contexts/LectoGuiaContext';
-import { AlertTriangle, Wifi, WifiOff, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ConnectionStatusIndicator } from '@/components/lectoguia/ConnectionStatusIndicator';
 
 interface ChatTabProps {
-  messages: ChatMessage[];
+  messages: any[];
   onSendMessage: (message: string, imageData?: string) => void;
   isTyping: boolean;
   activeSubject: string;
@@ -28,7 +26,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   activeSubject,
   onSubjectChange
 }) => {
-  const { setActiveTab } = useLectoGuia();
+  const { setActiveTab, connectionStatus, serviceStatus, resetConnectionStatus, showConnectionStatus } = useLectoGuia();
   const [imageLoading, setImageLoading] = useState(false);
   
   const handleExerciseRequest = async () => {
@@ -36,59 +34,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
     return true;
   };
 
-  const { 
-    detectSubjectFromMessage, 
-    connectionStatus, 
-    showConnectionStatus, 
-    resetConnectionStatus,
-    serviceStatus
-  } = useLectoGuiaChat();
-  
   const { handleAction } = useContextualActions(setActiveTab, handleExerciseRequest);
-  
-  // Indicador de estado de conexión
-  const renderConnectionIndicator = () => {
-    if (connectionStatus === 'connected' && serviceStatus === 'available') {
-      return (
-        <div className="flex items-center text-xs text-green-600 gap-1 px-2">
-          <Wifi className="h-3 w-3" />
-          <span>Conectado</span>
-        </div>
-      );
-    } else if (connectionStatus === 'connecting') {
-      return (
-        <div className="flex items-center text-xs text-amber-600 gap-1 px-2">
-          <RefreshCw className="h-3 w-3 animate-spin" />
-          <span>Conectando...</span>
-        </div>
-      );
-    } else {
-      return (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="flex items-center text-xs text-destructive gap-1 h-6 px-2"
-          onClick={resetConnectionStatus}
-        >
-          <WifiOff className="h-3 w-3" />
-          <span className="whitespace-nowrap">Reconectar</span>
-        </Button>
-      );
-    }
-  };
-  
-  // Determinar la última materia mencionada en los mensajes
-  const getLastMentionedSubject = () => {
-    // Recorrer mensajes del usuario desde el último
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i];
-      if (message.role === 'user' && message.content) {
-        const detectedSubject = detectSubjectFromMessage(message.content);
-        if (detectedSubject) return detectedSubject;
-      }
-    }
-    return null;
-  };
   
   // Construir los elementos de migas de pan
   const breadcrumbItems = [
@@ -134,7 +80,11 @@ export const ChatTab: React.FC<ChatTabProps> = ({
               activeSubject={activeSubject} 
               onSelectSubject={onSubjectChange}
             />
-            {renderConnectionIndicator()}
+            <ConnectionStatusIndicator 
+              status={connectionStatus} 
+              serviceStatus={serviceStatus} 
+              onRetry={resetConnectionStatus}
+            />
           </div>
           <ChatSettingsButton />
         </div>
