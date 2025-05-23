@@ -1,5 +1,6 @@
 
 import { ChatMessage } from '@/components/ai/ChatInterface';
+import { ConnectionStatus } from '@/hooks/use-openrouter';
 
 export interface ImageProcessingResult {
   response: string;
@@ -7,6 +8,8 @@ export interface ImageProcessingResult {
   tags?: string[];
   confidence?: number;
 }
+
+export type LectoGuiaConnectionStatus = ConnectionStatus;
 
 export const WELCOME_MESSAGE = `👋 ¡Hola! Soy LectoGuía, tu asistente de aprendizaje personalizado.
 

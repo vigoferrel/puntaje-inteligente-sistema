@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Exercise } from '@/types/ai-types';
 
-import { LectoGuiaContextType, SUBJECT_TO_PRUEBA_MAP } from './types';
+import { LectoGuiaContextType } from './types';
 import { LectoGuiaContext } from './useLectoGuia';
 import { useTabs } from './useTabs';
 import { useNodes } from './useNodes';
@@ -30,7 +30,10 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     connectionStatus,
     resetConnectionStatus,
     showConnectionStatus,
-    setActiveSubject
+    setActiveSubject,
+    addAssistantMessage,
+    changeSubject,
+    detectSubjectFromMessage
   } = useLectoGuiaChat();
   
   // Usar el hook useSubjects para manejar el cambio de materias

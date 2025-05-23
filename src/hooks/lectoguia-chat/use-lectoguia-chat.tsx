@@ -4,13 +4,13 @@ import { useChatMessages } from './use-chat-messages';
 import { useImageProcessing } from './use-image-processing';
 import { useSubjectDetection } from './subject-detection';
 import { ConnectionStatus } from '@/hooks/use-openrouter';
-import { ERROR_RATE_LIMIT_MESSAGE } from '@/contexts/lectoguia/types';
+import { ERROR_RATE_LIMIT_MESSAGE } from './types';
 import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MessageCircleWarning } from 'lucide-react';
 
 // Define connection status type to match what's expected from use-openrouter
-type LectoGuiaConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
+type LectoGuiaConnectionStatus = ConnectionStatus;
 
 interface ChatState {
   messages: any[];
@@ -34,10 +34,10 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   const [isTyping, setIsTyping] = useState(false);
   const [activeSubject, setActiveSubject] = useState('general'); // Valor por defecto
   const [serviceStatus, setServiceStatus] = useState<'available' | 'degraded' | 'unavailable'>('available');
-  const [connectionStatus, setConnectionStatus] = useState<LectoGuiaConnectionStatus>('idle');
+  const [connectionStatus, setConnectionStatus] = useState<LectoGuiaConnectionStatus>('disconnected');
   
   const { messages, addUserMessage, addAssistantMessage, getRecentMessages } = useChatMessages();
-  const { processImage } = useImageProcessing();
+  const { handleImageProcessing, processImage } = useImageProcessing();
   const { detectSubject } = useSubjectDetection();
   
   // Estado para mostrar el estado de conexión
@@ -57,7 +57,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   
   // Resetear el estado de conexión
   const resetConnectionStatus = useCallback(() => {
-    setConnectionStatus('idle');
+    setConnectionStatus('disconnected');
   }, []);
   
   // Function to change the subject
@@ -84,7 +84,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       // Si hay una imagen, procesarla primero
       if (imageData) {
         const imageAnalysisResult = await processImage(imageData);
-        assistantResponse += imageAnalysisResult;
+        assistantResponse += imageAnalysisResult.response || '';
       }
       
       // Enviar el mensaje al servicio de inferencia
