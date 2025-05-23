@@ -1,27 +1,48 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
+import { useLectoGuia } from "@/contexts/LectoGuiaContext";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Brain, Dumbbell, LineChart } from "lucide-react";
+import { ConnectionStatusIndicator } from "./ConnectionStatusIndicator";
+import { useOpenRouter } from "@/hooks/use-openrouter";
 
-export const LectoGuiaHeader = () => {
+export const LectoGuiaHeader: React.FC = () => {
+  const { activeTab, setActiveTab } = useLectoGuia();
+  const { connectionStatus, resetConnectionStatus } = useOpenRouter();
+  
   return (
-    <Card className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border-none shadow-md overflow-hidden">
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-lg shadow-lg">
-            <Sparkles className="h-8 w-8 text-white" />
-          </div>
-          
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-              LectoGuía AI
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Tu asistente de Comprensión Lectora potenciado por inteligencia artificial
-            </p>
-          </div>
+    <div className="flex flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">LectoGuía</h1>
+        <div className="flex items-center gap-2">
+          <ConnectionStatusIndicator 
+            status={connectionStatus}
+            onRetry={resetConnectionStatus}
+          />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="chat" className="flex items-center gap-1.5">
+            <Brain className="h-4 w-4" />
+            <span className="hidden md:inline">Asistente</span>
+          </TabsTrigger>
+          <TabsTrigger value="exercise" className="flex items-center gap-1.5">
+            <Dumbbell className="h-4 w-4" />
+            <span className="hidden md:inline">Ejercicios</span>
+          </TabsTrigger>
+          <TabsTrigger value="progress" className="flex items-center gap-1.5">
+            <LineChart className="h-4 w-4" />
+            <span className="hidden md:inline">Progreso</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
   );
 };
