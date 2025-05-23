@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useLearningWorkflow } from "@/hooks/use-learning-workflow";
+import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PhaseGrid } from "./learning-cycle/phase-grid";
 import { ActionButtons } from "./learning-cycle/action-buttons";
@@ -18,7 +18,7 @@ export const LearningWorkflow = ({ className }: LearningWorkflowProps) => {
     handleLectoGuiaClick, 
     currentPhaseIndex,
     completionPercentage
-  } = useLearningWorkflow();
+  } = useLearningNodes();
 
   return (
     <Card className={className}>

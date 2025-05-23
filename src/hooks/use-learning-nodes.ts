@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { TLearningNode, TLearningCyclePhase } from "@/types/system-types";
+import { TLearningNode, TLearningCyclePhase, LEARNING_CYCLE_PHASES_ORDER } from "@/types/system-types";
 import { toast } from "@/components/ui/use-toast";
 import { NodeProgress } from "@/types/node-progress";
 import { 
@@ -17,6 +17,7 @@ export const useLearningNodes = () => {
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [nodeProgress, setNodeProgress] = useState<Record<string, NodeProgress>>({});
+  const [currentPhase, setCurrentPhase] = useState<TLearningCyclePhase>("DIAGNOSIS");
   
   const fetchLearningNodes = async (testId?: number, skillId?: number) => {
     try {
@@ -90,10 +91,11 @@ export const useLearningNodes = () => {
   };
 
   const getLearningCyclePhase = useCallback(async (userId: string): Promise<TLearningCyclePhase> => {
-    return await getCyclePhase(userId);
+    const phase = await getCyclePhase(userId);
+    setCurrentPhase(phase);
+    return phase;
   }, []);
 
-  // Añadir el nuevo método para buscar contenido de un nodo
   const fetchNodeContent = async (nodeId: string) => {
     try {
       return await getNodeContent(nodeId);
@@ -108,14 +110,53 @@ export const useLearningNodes = () => {
     }
   };
 
+  // Workflow functionality consolidada
+  const calculateProgress = () => {
+    if (!nodeProgress) return 0;
+    
+    const nodes = Object.values(nodeProgress);
+    if (nodes.length === 0) return 0;
+    
+    const completedNodes = nodes.filter(node => node.status === 'completed').length;
+    return Math.round((completedNodes / nodes.length) * 100);
+  };
+
+  const calculatePhaseProgress = (phase: TLearningCyclePhase) => {
+    if (!nodeProgress) return 0;
+    
+    // Simplificado: calculamos progreso basado en nodos completados
+    const allNodes = Object.values(nodeProgress);
+    if (allNodes.length === 0) return 0;
+    
+    const completedNodes = allNodes.filter(node => node.status === 'completed').length;
+    return Math.round((completedNodes / allNodes.length) * 100);
+  };
+
+  const handleLectoGuiaClick = () => {
+    toast({
+      title: "¡Consultando a LectoGuía!",
+      description: "Te ayudará con tu comprensión lectora mediante ejercicios personalizados."
+    });
+  };
+
+  const getCurrentPhaseIndex = () => LEARNING_CYCLE_PHASES_ORDER.indexOf(currentPhase);
+  const getCompletionPercentage = () => calculateProgress();
+
   return {
     nodes,
     loading,
     nodeProgress,
+    currentPhase,
     fetchLearningNodes,
     fetchUserNodeProgress,
     updateNodeProgress,
     getLearningCyclePhase,
-    fetchNodeContent
+    fetchNodeContent,
+    // Workflow functions
+    calculateProgress,
+    calculatePhaseProgress,
+    handleLectoGuiaClick,
+    currentPhaseIndex: getCurrentPhaseIndex(),
+    completionPercentage: getCompletionPercentage()
   };
 };
