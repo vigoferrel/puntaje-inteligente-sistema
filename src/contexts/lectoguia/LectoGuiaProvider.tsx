@@ -333,7 +333,10 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     },
     
     // Estado de conexión
-    serviceStatus,
+    serviceStatus: {
+      isOnline: true,
+      lastCheck: new Date()
+    },
     connectionStatus,
     resetConnectionStatus,
     showConnectionStatus

@@ -1,8 +1,70 @@
 
 import { TLearningNode, TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { Exercise } from '@/types/ai-types';
-import { TNodeProgress } from '@/types/node-progress';
-import { Message } from '@/hooks/lectoguia-chat/types';
+import { NodeProgress } from '@/types/node-progress';
+
+// Tipos de estado para los hooks
+export interface UseTabsState {
+  activeTab: 'chat' | 'exercise' | 'progress';
+  setActiveTab: (tab: 'chat' | 'exercise' | 'progress') => void;
+}
+
+export interface UseChatState {
+  messages: ChatMessage[];
+  isTyping: boolean;
+  activeSubject: string;
+  setActiveSubject: (subject: string) => void;
+}
+
+export interface UseSubjectsState {
+  activeSubject: string;
+  setActiveSubject: (subject: string) => void;
+}
+
+export interface UseExerciseState {
+  currentExercise: Exercise | null;
+  selectedOption: number | null;
+  showFeedback: boolean;
+  isLoading: boolean;
+  setCurrentExercise: (exercise: Exercise | null) => void;
+  setIsLoading: (loading: boolean) => void;
+}
+
+export interface UseSkillsState {
+  skillLevels: Record<TPAESHabilidad, number>;
+  updateSkillLevel: (skillId: number, isCorrect: boolean) => Promise<void>;
+  getSkillIdFromCode: (skillCode: TPAESHabilidad) => number | null;
+  handleStartSimulation: () => void;
+}
+
+// Mensaje de chat simple
+export interface ChatMessage {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  timestamp: Date;
+  imageData?: string;
+}
+
+// Niveles iniciales de habilidades
+export const initialSkillLevels: Record<TPAESHabilidad, number> = {
+  'TRACK_LOCATE': 0,
+  'INTERPRET_RELATE': 0,
+  'EVALUATE_REFLECT': 0,
+  'SOLVE_PROBLEMS': 0,
+  'REPRESENT': 0,
+  'MODEL': 0,
+  'ARGUE_COMMUNICATE': 0,
+  'IDENTIFY_THEORIES': 0,
+  'PROCESS_ANALYZE': 0,
+  'APPLY_PRINCIPLES': 0,
+  'SCIENTIFIC_ARGUMENT': 0,
+  'TEMPORAL_THINKING': 0,
+  'SOURCE_ANALYSIS': 0,
+  'MULTICAUSAL_ANALYSIS': 0,
+  'CRITICAL_THINKING': 0,
+  'REFLECTION': 0
+};
 
 export interface LectoGuiaContextType {
   // Estado general
@@ -11,7 +73,7 @@ export interface LectoGuiaContextType {
   isLoading: boolean;
   
   // Chat
-  messages: Message[];
+  messages: ChatMessage[];
   isTyping: boolean;
   activeSubject: string;
   handleSendMessage: (message: string, imageData?: string) => Promise<void>;
@@ -35,7 +97,7 @@ export interface LectoGuiaContextType {
   
   // Nodos
   nodes: TLearningNode[];
-  nodeProgress: Record<string, TNodeProgress>;
+  nodeProgress: Record<string, NodeProgress>;
   handleNodeSelect: (nodeId: string) => Promise<boolean>;
   selectedTestId: number;
   setSelectedTestId: (testId: number) => void;

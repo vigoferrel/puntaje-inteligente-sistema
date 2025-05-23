@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useLectoGuia } from "@/contexts/LectoGuiaContext";
 import { Button } from "@/components/ui/button";
@@ -25,13 +24,7 @@ export const LectoGuiaHeader: React.FC = () => {
   const { connectionStatus, resetConnectionStatus } = useOpenRouter();
   
   // Calcular métricas del tipo de prueba seleccionado
-  const testNodes = nodes.filter(node => node.testId === (selectedPrueba ? {
-    'COMPETENCIA_LECTORA': 1,
-    'MATEMATICA_1': 2,
-    'MATEMATICA_2': 3,
-    'CIENCIAS': 4,
-    'HISTORIA': 5
-  }[selectedPrueba] : 1));
+  const testNodes = nodes.filter(node => node.prueba === selectedPrueba);
   
   const completedNodes = Object.entries(nodeProgress)
     .filter(([nodeId, progress]) => 

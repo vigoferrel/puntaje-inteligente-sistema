@@ -55,7 +55,7 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
   
   // Verificar coherencia temática
   for (const [testType, keywords] of Object.entries(THEMATIC_KEYWORDS)) {
-    const score = keywords.reduce((acc: number, keyword: string) => {
+    const score = (keywords as readonly string[]).reduce((acc: number, keyword: string) => {
       return acc + (nodeText.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
     
@@ -75,7 +75,7 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
     issues.push(`Contenido temático no coincide con ${node.prueba}. Sugiere: ${suggestedTest}`);
   }
   
-  // Verificar skill_id coherencia usando testId en lugar de skillId
+  // Verificar skill_id coherencia usando test_id del nodo
   const testIdToNumber = {
     'COMPETENCIA_LECTORA': 1,
     'MATEMATICA_1': 2,
@@ -87,8 +87,8 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
   const testId = testIdToNumber[node.prueba];
   const validSkills = VALID_SKILLS_BY_TEST[testId as keyof typeof VALID_SKILLS_BY_TEST];
   
-  if (node.testId && !validSkills?.includes(node.testId)) {
-    issues.push(`Test ID ${node.testId} no es válido para ${node.prueba}`);
+  if (node.skillId && !validSkills?.includes(node.skillId)) {
+    issues.push(`Skill ID ${node.skillId} no es válido para ${node.prueba}`);
   }
   
   const confidence = maxScore > 0 ? Math.min(currentTestScore / maxScore, 1) : 1;
@@ -179,7 +179,7 @@ export function validateNodesIntegrity(nodes: TLearningNode[]): {
     if (!validation.isValid) {
       validation.issues.forEach(issue => {
         issues.push({
-          type: issue.includes('Test ID') ? 'skill_mismatch' : 'thematic_mismatch',
+          type: issue.includes('Skill ID') ? 'skill_mismatch' : 'thematic_mismatch',
           nodeId: node.id,
           description: `${node.title}: ${issue}`,
           suggestion: validation.suggestedTest
