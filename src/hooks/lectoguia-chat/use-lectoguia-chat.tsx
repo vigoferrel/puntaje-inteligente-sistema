@@ -11,6 +11,7 @@ import { provideChatFeedback } from '@/services/openrouter/feedback';
 import { ToastAction } from '@/components/ui/toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, WifiOff, RefreshCw } from 'lucide-react';
+import { ChatMessage } from '@/components/ai/ChatInterface';
 
 // Respuestas offline para cuando el servicio no está disponible
 const OFFLINE_RESPONSES: Record<string, string[]> = {
@@ -88,13 +89,21 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       setServiceStatus('degraded');
       
       // Mensaje de alerta en el chat
-      if (!messages.some(m => m.role === 'system' && m.content.includes('modo offline'))) {
-        addAssistantMessage({
-          role: 'system',
-          content: "⚠️ LectoGuía está funcionando en modo offline con funcionalidad limitada debido a problemas de conexión. Las respuestas serán básicas hasta que se restablezca la conexión.",
-          id: 'system-offline-alert',
-          timestamp: new Date().toISOString()
-        });
+      const offlineMessage: ChatMessage = {
+        role: "assistant",
+        content: "⚠️ LectoGuía está funcionando en modo offline con funcionalidad limitada debido a problemas de conexión. Las respuestas serán básicas hasta que se restablezca la conexión.",
+        id: 'system-offline-alert',
+        timestamp: new Date().toISOString()
+      };
+      
+      // Solo agregar el mensaje si no existe ya uno similar
+      const hasOfflineAlert = messages.some(m => 
+        m.role === "assistant" && 
+        m.content.includes("modo offline")
+      );
+      
+      if (!hasOfflineAlert) {
+        addAssistantMessage(offlineMessage.content);
       }
       
       // Notificación
@@ -103,7 +112,9 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         description: "Estamos experimentando dificultades técnicas. Funcionaré con capacidades limitadas.",
         variant: "destructive",
         duration: 10000,
-        action: <ToastAction altText="Reintentar conexión" onClick={resetConnectionStatus}>Reintentar</ToastAction>
+        action: <ToastAction altText="Reintentar conexión" onClick={resetConnectionStatus}>
+          Reintentar
+        </ToastAction>
       });
       
       // Resetear contador después de mostrar el mensaje
@@ -252,7 +263,9 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
           title: "Error de conexión",
           description: "Hubo un problema al conectar con el servicio. Inténtalo de nuevo.",
           variant: "destructive",
-          action: <ToastAction altText="Reintentar" onClick={retryLastOperation}>Reintentar</ToastAction>
+          action: <ToastAction altText="Reintentar" onClick={retryLastOperation}>
+            Reintentar
+          </ToastAction>
         });
         
         return errorResponse;
@@ -291,16 +304,15 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
     messages,
     isTyping: isTyping || isProcessing,
     activeSubject,
+    connectionStatus,
+    serviceStatus,
     
     // Actions
     processUserMessage,
     addAssistantMessage,
     changeSubject,
     detectSubjectFromMessage,
-    
-    // System status
-    connectionStatus,
-    serviceStatus,
-    showConnectionStatus
+    showConnectionStatus,
+    resetConnectionStatus
   };
 }

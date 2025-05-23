@@ -5,6 +5,8 @@ export interface ChatState {
   messages: ChatMessage[];
   isTyping: boolean;
   activeSubject: string;
+  connectionStatus?: 'connected' | 'connecting' | 'disconnected';
+  serviceStatus?: 'available' | 'degraded' | 'unavailable';
 }
 
 export interface ChatActions {
@@ -12,6 +14,8 @@ export interface ChatActions {
   addAssistantMessage: (content: string) => void;
   changeSubject: (subject: string) => void;
   detectSubjectFromMessage: (message: string) => string | null;
+  showConnectionStatus?: () => React.ReactNode;
+  resetConnectionStatus?: () => void;
 }
 
 export interface ImageProcessingResult {
