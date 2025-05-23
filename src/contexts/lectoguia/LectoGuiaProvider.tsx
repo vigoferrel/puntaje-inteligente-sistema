@@ -7,11 +7,11 @@ import { Exercise } from '@/types/ai-types';
 import { LectoGuiaContextType, SUBJECT_TO_PRUEBA_MAP } from './types';
 import { LectoGuiaContext } from './useLectoGuia';
 import { useTabs } from './useTabs';
-import { useSubjects } from './useSubjects';
 import { useNodes } from './useNodes';
 import { useSkills } from './useSkills';
 import { useExercises } from './useExercises';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
+import { useSubjects } from './useSubjects';
 
 // Proveedor del contexto
 export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -25,14 +25,19 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     messages,
     isTyping: chatIsTyping,
     activeSubject,
-    handleSubjectChange,
     processUserMessage,
     serviceStatus,
     connectionStatus,
     resetConnectionStatus,
-    showConnectionStatus
+    showConnectionStatus,
+    setActiveSubject
   } = useLectoGuiaChat();
   
+  // Usar el hook useSubjects para manejar el cambio de materias
+  const handleSubjectChange = (subject: string) => {
+    setActiveSubject(subject);
+  };
+
   const { 
     skillLevels, 
     updateSkillLevel, 
