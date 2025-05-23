@@ -41,16 +41,8 @@ export const TestSpecificStats: React.FC<TestSpecificStatsProps> = ({
   skillLevels,
   className
 }) => {
-  // Filtrar nodos por tipo de prueba
-  const testIdMap = {
-    'COMPETENCIA_LECTORA': 1,
-    'MATEMATICA_1': 2,
-    'MATEMATICA_2': 3,
-    'CIENCIAS': 4,
-    'HISTORIA': 5
-  };
-  
-  const testNodes = nodes.filter(node => node.testId === testIdMap[selectedPrueba]);
+  // Filtrar nodos por tipo de prueba usando la propiedad 'prueba' que existe en TLearningNode
+  const testNodes = nodes.filter(node => node.prueba === selectedPrueba);
   
   // Calcular estadísticas
   const completedNodes = Object.entries(nodeProgress)
@@ -80,12 +72,12 @@ export const TestSpecificStats: React.FC<TestSpecificStatsProps> = ({
     ? testSkillLevels.reduce((sum, level) => sum + level, 0) / testSkillLevels.length 
     : 0;
   
-  // Tiempo estimado restante
+  // Tiempo estimado restante usando estimatedTime o estimatedTimeMinutes
   const remainingNodes = testNodes.filter(node => 
     !nodeProgress[node.id] || nodeProgress[node.id].status !== 'completed'
   );
   const estimatedTimeRemaining = remainingNodes.reduce((total, node) => 
-    total + (node.estimatedTimeMinutes || 30), 0
+    total + (node.estimatedTimeMinutes || node.estimatedTime || 30), 0
   );
   
   const Icon = TEST_ICONS[selectedPrueba];
