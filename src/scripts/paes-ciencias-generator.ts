@@ -189,6 +189,7 @@ export class PAESCienciasGenerator {
       // Crear los ejercicios asociados
       const ejercicios = preguntas.map(pregunta => ({
         diagnostic_id: diagnostico.id,
+        node_id: '00000000-0000-0000-0000-000000000000', // Default node_id required by schema
         question: pregunta.enunciado,
         options: pregunta.alternativas,
         correct_answer: pregunta.respuesta_correcta,

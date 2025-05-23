@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { usePAESCienciasGenerator } from '@/hooks/use-paes-ciencias-generator';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Microscope, Flask, Atom, Brain, BookOpen, Target, TrendingUp } from 'lucide-react';
+import { Microscope, Beaker, Atom, Brain, BookOpen, Target, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 
 export const PAESCienciasControl: React.FC = () => {
@@ -32,7 +31,7 @@ export const PAESCienciasControl: React.FC = () => {
   const iconosArea = {
     'Biología': Microscope,
     'Física': Atom,
-    'Química': Flask
+    'Química': Beaker
   };
 
   const getProgresoPorcentaje = () => {
@@ -198,7 +197,7 @@ export const PAESCienciasControl: React.FC = () => {
                     </SelectItem>
                     <SelectItem value="Química">
                       <div className="flex items-center gap-2">
-                        <Flask className="h-4 w-4" />
+                        <Beaker className="h-4 w-4" />
                         Química
                       </div>
                     </SelectItem>
