@@ -6,13 +6,13 @@ import { SubjectSelector } from "@/components/lectoguia/SubjectSelector";
 import { ChatSettingsButton } from "@/components/lectoguia/chat-settings/ChatSettingsButton";
 import { ContextualActionButtons } from "@/components/lectoguia/action-buttons/ContextualActionButtons";
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
-import { ConnectionMonitor } from './ConnectionMonitor';
 import { NodeRecommendations } from './chat-skills/NodeRecommendations';
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { useLectoGuia } from '@/contexts/LectoGuiaContext';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle, AlertTriangle } from 'lucide-react';
 import { TPAESHabilidad } from '@/types/system-types';
-import { Exercise } from '@/types/ai-types';
 
 interface ChatTabProps {
   messages: any[];
@@ -35,12 +35,16 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   recommendedNodes = [],
   onNodeSelect
 }) => {
-  const { setActiveTab, handleNewExercise } = useLectoGuia();
-  const [imageLoading, setImageLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connected');
+  const { 
+    setActiveTab, 
+    handleNewExercise, 
+    selectedPrueba, 
+    nodes,
+    validationStatus 
+  } = useLectoGuia();
+  
   const [showNodeRecommendations, setShowNodeRecommendations] = useState(true);
   
-  // Usar handleNewExercise del contexto que ya está implementado
   const handleExerciseRequest = async (): Promise<boolean> => {
     try {
       await handleNewExercise();
@@ -53,7 +57,29 @@ export const ChatTab: React.FC<ChatTabProps> = ({
 
   const { handleAction } = useContextualActions(setActiveTab, handleExerciseRequest);
   
-  // Construir los elementos de migas de pan
+  // Obtener información de la materia actual
+  const subjectDisplayNames: Record<string, string> = {
+    'lectura': 'Competencia Lectora',
+    'matematicas-basica': 'Matemática 1',
+    'matematicas-avanzada': 'Matemática 2',
+    'ciencias': 'Ciencias',
+    'historia': 'Historia'
+  };
+  
+  // Filtrar nodos por materia actual
+  const currentSubjectNodes = nodes.filter(node => {
+    const subjectToPruebaMap: Record<string, string> = {
+      'lectura': 'COMPETENCIA_LECTORA',
+      'matematicas-basica': 'MATEMATICA_1',
+      'matematicas-avanzada': 'MATEMATICA_2',
+      'ciencias': 'CIENCIAS',
+      'historia': 'HISTORIA'
+    };
+    
+    return node.prueba === subjectToPruebaMap[activeSubject];
+  });
+  
+  // Construir breadcrumbs
   const breadcrumbItems = [
     { 
       label: 'LectoGuía', 
@@ -62,24 +88,14 @@ export const ChatTab: React.FC<ChatTabProps> = ({
     }
   ];
   
-  // Añadir la materia activa como un elemento adicional
   if (activeSubject && activeSubject !== 'general') {
-    const subjectNames: Record<string, string> = {
-      'lectura': 'Comprensión Lectora',
-      'matematicas-basica': 'Matemáticas (7° a 2° medio)',
-      'matematicas-avanzada': 'Matemáticas (3° y 4° medio)',
-      'ciencias': 'Ciencias',
-      'historia': 'Historia'
-    };
-    
     breadcrumbItems.push({
-      label: subjectNames[activeSubject] || activeSubject,
+      label: subjectDisplayNames[activeSubject] || activeSubject,
       active: true,
       onClick: () => onSubjectChange(activeSubject)
     });
   }
   
-  // Si hay una habilidad activa, añadirla a las migas de pan
   if (activeSkill) {
     breadcrumbItems.push({
       label: `Habilidad: ${activeSkill}`,
@@ -88,94 +104,73 @@ export const ChatTab: React.FC<ChatTabProps> = ({
     });
   }
   
-  // Manejar el envío de mensajes con carga de imágenes
-  const handleSendWithImage = (message: string, imageData?: string) => {
-    if (imageData) {
-      setImageLoading(true);
-      setTimeout(() => setImageLoading(false), 3000);
-    }
-    onSendMessage(message, imageData);
-  };
-  
-  // Manejador para la selección de nodo
   const handleNodeSelected = (nodeId: string) => {
     if (onNodeSelect) {
       onNodeSelect(nodeId);
-      // Ocultar las recomendaciones temporalmente después de seleccionar un nodo
       setShowNodeRecommendations(false);
       setTimeout(() => setShowNodeRecommendations(true), 5000);
     }
   };
 
-  // Procesar ejercicios en los mensajes
-  const hasExerciseInMessages = messages.some(msg => {
-    if (msg.role !== 'assistant') return false;
-    try {
-      const content = typeof msg.content === 'string' ? msg.content : '';
-      return content.includes('"question"') && 
-             content.includes('"options"') && 
-             content.includes('"correctAnswer"');
-    } catch (e) {
-      return false;
-    }
-  });
-
-  // Sincronizar el estado de conexión inicial
-  useEffect(() => {
-    // Establecer como conectado por defecto después de un breve delay
-    const timer = setTimeout(() => {
-      setConnectionStatus('connected');
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-  
   return (
     <Card className="border-border bg-card/50 backdrop-blur-sm">
       <CardContent className="p-0">
-        <div className="p-2 border-b border-border flex justify-between items-center">
-          <div className="flex items-center gap-2">
+        {/* Header con selector de materia */}
+        <div className="p-3 border-b border-border">
+          <div className="flex justify-between items-center mb-2">
             <SubjectSelector 
               activeSubject={activeSubject} 
               onSelectSubject={onSubjectChange}
             />
-            <div className="text-xs text-muted-foreground">
-              {connectionStatus === 'connected' && '🟢 Conectado'}
-              {connectionStatus === 'connecting' && '🟡 Conectando...'}
-              {connectionStatus === 'disconnected' && '🔴 Desconectado'}
-            </div>
+            <ChatSettingsButton />
           </div>
-          <ChatSettingsButton />
+          
+          {/* Indicadores de estado de la materia */}
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="secondary" className="px-2 py-1">
+              {subjectDisplayNames[activeSubject]}
+            </Badge>
+            <Badge variant="outline" className="px-2 py-1">
+              {currentSubjectNodes.length} nodos disponibles
+            </Badge>
+            {selectedPrueba && (
+              <Badge variant="default" className="px-2 py-1">
+                {selectedPrueba}
+              </Badge>
+            )}
+          </div>
         </div>
         
-        {/* Breadcrumbs para navegación contextual */}
+        {/* Breadcrumbs */}
         <div className="px-3 py-1.5 bg-muted/20">
           <LectoGuiaBreadcrumb items={breadcrumbItems} />
         </div>
         
-        {/* Monitor de conexión - solo mostrar si hay problemas */}
-        {connectionStatus !== 'connected' && (
-          <div className="px-3 pt-3">
-            <ConnectionMonitor onConnectionStatusChange={setConnectionStatus} />
+        {/* Alertas de validación */}
+        {!validationStatus.isValid && (
+          <div className="px-3 pt-2">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Se detectaron {validationStatus.issuesCount} problemas de coherencia en los datos. 
+                Algunos ejercicios podrían no corresponder exactamente a la materia seleccionada.
+              </AlertDescription>
+            </Alert>
           </div>
         )}
         
-        {/* Indicador de carga de imagen */}
-        {imageLoading && (
-          <div className="px-3 py-2">
-            <div className="flex items-center gap-2 text-sm bg-muted/30 p-2 rounded-md">
-              <Skeleton className="w-12 h-12 rounded-md" />
-              <div className="space-y-1">
-                <p className="text-xs font-medium">Procesando imagen...</p>
-                <div className="w-full bg-secondary h-1 rounded-full overflow-hidden">
-                  <div className="bg-primary h-1 w-1/2 animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Confirmación de materia activa */}
+        <div className="px-3 py-2">
+          <Alert>
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Materia activa:</strong> {subjectDisplayNames[activeSubject]}. 
+              Todos los ejercicios y nodos se filtrarán para esta materia específicamente.
+            </AlertDescription>
+          </Alert>
+        </div>
         
-        {/* Mostrar recomendaciones de nodos si hay una habilidad activa */}
+        {/* Recomendaciones de nodos */}
         {activeSkill && showNodeRecommendations && recommendedNodes.length > 0 && (
           <div className="px-3 pt-2">
             <NodeRecommendations 
@@ -186,16 +181,17 @@ export const ChatTab: React.FC<ChatTabProps> = ({
           </div>
         )}
         
-        <div className="h-[calc(100vh-350px)] min-h-[450px]">
+        {/* Interfaz de chat */}
+        <div className="h-[calc(100vh-400px)] min-h-[400px]">
           <ChatInterface
             messages={messages}
-            onSendMessage={handleSendWithImage}
+            onSendMessage={onSendMessage}
             isTyping={isTyping}
-            placeholder="Pregunta algo sobre cualquier materia PAES o sube una imagen para analizarla..."
+            placeholder={`Pregunta sobre ${subjectDisplayNames[activeSubject]} o sube una imagen...`}
           />
         </div>
         
-        {/* Botones de acción contextual */}
+        {/* Botones de acción */}
         <div className="border-t border-border p-2">
           <ContextualActionButtons 
             context="chat"

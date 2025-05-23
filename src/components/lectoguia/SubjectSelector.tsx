@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { 
   Select,
   SelectContent, 
@@ -8,7 +7,8 @@ import {
   SelectTrigger, 
   SelectValue
 } from "@/components/ui/select";
-import { SUBJECT_DISPLAY_NAMES } from '@/contexts/lectoguia/types';
+import { Badge } from "@/components/ui/badge";
+import { useLectoGuia } from '@/contexts/LectoGuiaContext';
 
 interface SubjectSelectorProps {
   activeSubject: string;
@@ -19,19 +19,65 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
   activeSubject, 
   onSelectSubject 
 }) => {
+  const { selectedPrueba, nodes } = useLectoGuia();
+  
+  const subjectOptions = [
+    { value: 'lectura', label: 'Comprensión Lectora', prueba: 'COMPETENCIA_LECTORA' },
+    { value: 'matematicas-basica', label: 'Matemática 1', prueba: 'MATEMATICA_1' },
+    { value: 'matematicas-avanzada', label: 'Matemática 2', prueba: 'MATEMATICA_2' },
+    { value: 'ciencias', label: 'Ciencias', prueba: 'CIENCIAS' },
+    { value: 'historia', label: 'Historia', prueba: 'HISTORIA' }
+  ];
+  
+  // Contar nodos disponibles por materia
+  const getNodesCount = (prueba: string) => {
+    return nodes.filter(node => node.prueba === prueba).length;
+  };
+  
+  const getCurrentSubjectLabel = () => {
+    const current = subjectOptions.find(opt => opt.value === activeSubject);
+    return current?.label || 'Selecciona una materia';
+  };
+
   return (
-    <Select value={activeSubject} onValueChange={onSelectSubject}>
-      <SelectTrigger className="max-w-[200px] bg-background">
-        <SelectValue placeholder="Selecciona una materia" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="general">General</SelectItem>
-        <SelectItem value="lectura">Comprensión Lectora</SelectItem>
-        <SelectItem value="matematicas-basica">Matemática 1 (7° a 2° medio)</SelectItem>
-        <SelectItem value="matematicas-avanzada">Matemática 2 (3° y 4° medio)</SelectItem>
-        <SelectItem value="ciencias">Ciencias</SelectItem>
-        <SelectItem value="historia">Historia</SelectItem>
-      </SelectContent>
-    </Select>
+    <div className="flex items-center gap-2">
+      <Select value={activeSubject} onValueChange={onSelectSubject}>
+        <SelectTrigger className="max-w-[220px] bg-background">
+          <SelectValue placeholder="Selecciona una materia" />
+        </SelectTrigger>
+        <SelectContent>
+          {subjectOptions.map((option) => {
+            const nodesCount = getNodesCount(option.prueba);
+            const isActive = option.prueba === selectedPrueba;
+            
+            return (
+              <SelectItem key={option.value} value={option.value}>
+                <div className="flex items-center justify-between w-full">
+                  <span className={isActive ? 'font-medium' : ''}>{option.label}</span>
+                  <div className="flex items-center gap-1 ml-2">
+                    {isActive && (
+                      <Badge variant="default" className="text-xs px-1">
+                        Activa
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs px-1">
+                      {nodesCount} nodos
+                    </Badge>
+                  </div>
+                </div>
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+      
+      {/* Indicador visual de la materia activa */}
+      <div className="flex items-center gap-1">
+        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+        <span className="text-xs text-muted-foreground">
+          {getCurrentSubjectLabel()}
+        </span>
+      </div>
+    </div>
   );
 };
