@@ -42,7 +42,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   
   // Estado para mostrar el estado de conexión
   const showConnectionStatus = useCallback(() => {
-    if (connectionStatus === 'error') {
+    if (connectionStatus === 'disconnected') {
       return (
         <Alert variant="destructive">
           <MessageCircleWarning className="h-4 w-4" />
@@ -130,7 +130,7 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         variant: "destructive"
       });
       console.error("Error procesando mensaje:", error);
-      setConnectionStatus('error');
+      setConnectionStatus('disconnected');
       return null;
     } finally {
       setIsTyping(false);
