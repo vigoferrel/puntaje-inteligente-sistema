@@ -6,31 +6,31 @@ import { TLearningNode, TPAESPrueba } from '@/types/system-types';
  */
 
 // Mapeo de palabras clave por tipo de prueba
-const THEMATIC_KEYWORDS = {
+const THEMATIC_KEYWORDS: Record<TPAESPrueba, readonly string[]> = {
   'COMPETENCIA_LECTORA': [
     'comprensión', 'lectura', 'texto', 'interpretación', 'análisis textual', 
     'comprensión lectora', 'estrategias de lectura', 'inferencia', 'síntesis'
-  ],
+  ] as const,
   'MATEMATICA_1': [
     'álgebra', 'geometría', 'aritmética', 'ecuación', 'números', 'operaciones',
     'fracciones', 'porcentaje', 'proporciones', 'estadística básica'
-  ],
+  ] as const,
   'MATEMATICA_2': [
     'función', 'cálculo', 'trigonometría', 'logaritmo', 'derivada', 'integral',
     'límite', 'probabilidad', 'estadística avanzada', 'modelamiento matemático'
-  ],
+  ] as const,
   'CIENCIAS': [
     'biología', 'química', 'física', 'célula', 'átomo', 'molécula', 'ecosistema',
     'genética', 'homeostasis', 'evolución', 'fuerza', 'energía', 'reacción química'
-  ],
+  ] as const,
   'HISTORIA': [
     'historia', 'civilización', 'guerra', 'independencia', 'revolución', 'imperio',
     'siglo', 'época', 'cultura', 'sociedad', 'política', 'económico', 'colonial'
-  ]
-} as const;
+  ] as const
+};
 
 // Mapeo de skills válidos por tipo de prueba
-const VALID_SKILLS_BY_TEST = {
+const VALID_SKILLS_BY_TEST: Record<number, readonly number[]> = {
   1: [1, 2, 3], // COMPETENCIA_LECTORA: TRACK_LOCATE, INTERPRET_RELATE, EVALUATE_REFLECT
   2: [4, 5, 6, 7], // MATEMATICA_1: SOLVE_PROBLEMS, REPRESENT, MODEL, ARGUE_COMMUNICATE
   3: [4, 5, 6, 7], // MATEMATICA_2: SOLVE_PROBLEMS, REPRESENT, MODEL, ARGUE_COMMUNICATE
@@ -55,7 +55,7 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
   
   // Verificar coherencia temática
   for (const [testType, keywords] of Object.entries(THEMATIC_KEYWORDS)) {
-    const score = (keywords as readonly string[]).reduce((acc: number, keyword: string) => {
+    const score = keywords.reduce((acc: number, keyword: string) => {
       return acc + (nodeText.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
     
@@ -76,7 +76,7 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
   }
   
   // Verificar skill_id coherencia usando test_id del nodo
-  const testIdToNumber = {
+  const testIdToNumber: Record<TPAESPrueba, number> = {
     'COMPETENCIA_LECTORA': 1,
     'MATEMATICA_1': 2,
     'MATEMATICA_2': 3,
@@ -85,10 +85,13 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
   };
   
   const testId = testIdToNumber[node.prueba];
-  const validSkills = VALID_SKILLS_BY_TEST[testId as keyof typeof VALID_SKILLS_BY_TEST];
+  const validSkills = VALID_SKILLS_BY_TEST[testId];
   
-  if (node.skillId && !validSkills?.includes(node.skillId)) {
-    issues.push(`Skill ID ${node.skillId} no es válido para ${node.prueba}`);
+  // Check if node has skillId property (from database) or derive from skill property
+  const nodeSkillId = (node as any).skillId || (node.skill ? getSkillIdFromCode(node.skill) : null);
+  
+  if (nodeSkillId && !validSkills?.includes(nodeSkillId)) {
+    issues.push(`Skill ID ${nodeSkillId} no es válido para ${node.prueba}`);
   }
   
   const confidence = maxScore > 0 ? Math.min(currentTestScore / maxScore, 1) : 1;
@@ -99,6 +102,29 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
     confidence,
     issues
   };
+}
+
+// Helper function to map skill codes to IDs
+function getSkillIdFromCode(skillCode: string): number | null {
+  const skillMap: Record<string, number> = {
+    'TRACK_LOCATE': 1,
+    'INTERPRET_RELATE': 2,
+    'EVALUATE_REFLECT': 3,
+    'SOLVE_PROBLEMS': 4,
+    'REPRESENT': 5,
+    'MODEL': 6,
+    'ARGUE_COMMUNICATE': 7,
+    'IDENTIFY_THEORIES': 8,
+    'PROCESS_ANALYZE': 9,
+    'APPLY_PRINCIPLES': 10,
+    'SCIENTIFIC_ARGUMENT': 11,
+    'TEMPORAL_THINKING': 12,
+    'SOURCE_ANALYSIS': 13,
+    'MULTICAUSAL_ANALYSIS': 14,
+    'CRITICAL_THINKING': 15,
+    'REFLECTION': 16
+  };
+  return skillMap[skillCode] || null;
 }
 
 /**

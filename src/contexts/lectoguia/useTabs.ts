@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { UseTabsState } from './types';
 
-export function useTabs(initialTab: string = 'chat'): UseTabsState {
-  const [activeTab, setActiveTab] = useState(initialTab);
+export function useTabs(initialTab: 'chat' | 'exercise' | 'progress' = 'chat'): UseTabsState {
+  const [activeTab, setActiveTab] = useState<'chat' | 'exercise' | 'progress'>(initialTab);
   
   return {
     activeTab,

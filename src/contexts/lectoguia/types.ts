@@ -19,6 +19,7 @@ export interface UseChatState {
 export interface UseSubjectsState {
   activeSubject: string;
   setActiveSubject: (subject: string) => void;
+  handleSubjectChange: (subject: string) => void;
 }
 
 export interface UseExerciseState {

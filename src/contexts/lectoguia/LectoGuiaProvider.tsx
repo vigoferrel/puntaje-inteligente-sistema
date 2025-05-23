@@ -339,7 +339,7 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     },
     connectionStatus,
     resetConnectionStatus,
-    showConnectionStatus
+    showConnectionStatus: false
   }), [
     activeTab, isLoading, messages, chatIsTyping, activeSubject, 
     currentExercise, selectedOption, showFeedback, skillLevels, 

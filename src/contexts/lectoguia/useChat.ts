@@ -1,7 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { UseChatState } from './types';
-import { ChatMessage } from '@/components/ai/ChatInterface';
+import { UseChatState, ChatMessage } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { WELCOME_MESSAGE } from '@/hooks/lectoguia-chat/types';
 
@@ -11,18 +10,19 @@ export function useChat(): UseChatState {
       id: uuidv4(),
       role: "assistant",
       content: WELCOME_MESSAGE,
-      timestamp: new Date().toISOString()
+      timestamp: new Date()
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [activeSubject, setActiveSubject] = useState('general');
   
   const addUserMessage = useCallback((content: string, imageData?: string) => {
     const newMessage: ChatMessage = {
       id: uuidv4(),
       role: "user",
       content,
-      timestamp: new Date().toISOString(),
-      imageUrl: imageData
+      timestamp: new Date(),
+      imageData
     };
     
     setMessages(prev => [...prev, newMessage]);
@@ -34,7 +34,7 @@ export function useChat(): UseChatState {
       id: uuidv4(),
       role: "assistant",
       content,
-      timestamp: new Date().toISOString()
+      timestamp: new Date()
     };
     
     setMessages(prev => [...prev, newMessage]);
@@ -56,8 +56,7 @@ export function useChat(): UseChatState {
   return {
     messages,
     isTyping,
-    handleSendMessage,
-    addUserMessage,
-    addAssistantMessage
+    activeSubject,
+    setActiveSubject
   };
 }
