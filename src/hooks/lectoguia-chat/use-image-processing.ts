@@ -1,58 +1,61 @@
 
-import { useState } from 'react';
-import { useOpenRouter } from '@/hooks/use-openrouter';
-import { ImageProcessingResult } from './types';
+import { useCallback } from 'react';
+import { openRouterService } from '@/services/openrouter/core';
+import { toast } from '@/components/ui/use-toast';
 
-/**
- * Hook para manejo de procesamiento de imágenes
- */
 export function useImageProcessing() {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { processImage: openRouterProcessImage } = useOpenRouter();
-  
-  /**
-   * Procesa una imagen y retorna el resultado
-   */
-  const handleImageProcessing = async (
-    imageData: string,
-    prompt?: string
-  ): Promise<ImageProcessingResult> => {
+  const processImage = useCallback(async (imageData: string, prompt?: string) => {
     try {
-      setIsProcessing(true);
+      console.log('Procesando imagen con LectoGuía...');
       
-      // Verificar que los datos de la imagen son válidos
-      if (!imageData || imageData.length < 100) {
-        throw new Error('Datos de imagen inválidos o incompletos');
+      if (!imageData) {
+        throw new Error('No se proporcionó imagen para procesar');
       }
       
-      // Prompt por defecto si no se proporciona uno específico
-      const defaultPrompt = 'Analiza esta imagen y proporciona información detallada sobre su contenido.';
-      
-      const result = await openRouterProcessImage(
-        imageData, 
-        prompt || defaultPrompt,
-        'Contexto: Imagen enviada por estudiante durante preparación PAES'
-      );
+      // Usar openRouterService para procesar la imagen
+      const result = await openRouterService({
+        action: 'process_image',
+        payload: {
+          image: imageData,
+          prompt: prompt || "Analiza esta imagen educativa y extrae el texto. Si contiene ejercicios o preguntas, identifícalos claramente.",
+          context: "Análisis educativo para LectoGuía - PAES Chile"
+        }
+      });
       
       if (!result) {
-        return {
-          response: "No se pudo procesar la imagen. Por favor intenta con una imagen más clara."
-        };
+        throw new Error('No se recibió respuesta del servicio de análisis de imagen');
       }
       
-      return result as ImageProcessingResult;
-    } catch (error) {
-      console.error('Error en el procesamiento de imagen:', error);
+      console.log('Imagen procesada exitosamente');
+      
       return {
-        response: "Ocurrió un error al procesar tu imagen. Por favor intenta de nuevo con una imagen de mejor calidad."
+        response: result.response || result.result || 'Imagen procesada correctamente',
+        extractedText: result.extractedText || '',
+        confidence: result.confidence || 0.8
       };
-    } finally {
-      setIsProcessing(false);
+    } catch (error) {
+      console.error('Error procesando imagen:', error);
+      
+      toast({
+        title: "Error procesando imagen",
+        description: "No se pudo analizar la imagen. Intenta de nuevo.",
+        variant: "destructive"
+      });
+      
+      return {
+        response: "No se pudo procesar la imagen en este momento.",
+        extractedText: '',
+        confidence: 0
+      };
     }
+  }, []);
+  
+  const handleImageProcessing = useCallback(async (imageData: string) => {
+    return await processImage(imageData);
+  }, [processImage]);
+  
+  return {
+    processImage,
+    handleImageProcessing
   };
-  
-  // Alias para mantener compatibilidad con el código existente
-  const processImage = handleImageProcessing;
-  
-  return { isProcessing, handleImageProcessing, processImage };
 }

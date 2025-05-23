@@ -8,6 +8,7 @@ import { ERROR_RATE_LIMIT_MESSAGE } from './types';
 import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MessageCircleWarning } from 'lucide-react';
+import { openRouterService } from '@/services/openrouter/core';
 
 // Define connection status type to match what's expected from use-openrouter
 type LectoGuiaConnectionStatus = ConnectionStatus;
@@ -57,7 +58,8 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
   
   // Resetear el estado de conexión
   const resetConnectionStatus = useCallback(() => {
-    setConnectionStatus('disconnected');
+    setConnectionStatus('connecting');
+    setServiceStatus('available');
   }, []);
   
   // Function to change the subject
@@ -70,12 +72,14 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
     return detectSubject(message);
   }, [detectSubject]);
   
-  // Función principal para procesar los mensajes del usuario
+  // Función principal para procesar los mensajes del usuario usando openRouterService
   const processUserMessage = useCallback(async (content: string, imageData?: string): Promise<string | null> => {
     setIsTyping(true);
     setConnectionStatus('connecting');
     
     try {
+      console.log('LectoGuía: Procesando mensaje del usuario:', content.substring(0, 100) + '...');
+      
       // Primero, añadir el mensaje del usuario a la conversación
       addUserMessage(content, imageData);
       
@@ -83,54 +87,86 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
       
       // Si hay una imagen, procesarla primero
       if (imageData) {
+        console.log('LectoGuía: Procesando imagen adjunta');
         const imageAnalysisResult = await processImage(imageData);
         assistantResponse += imageAnalysisResult.response || '';
       }
       
-      // Enviar el mensaje al servicio de inferencia
-      const inferenceResponse = await fetch('/api/lectoguia/inference', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: content,
+      // Crear el contexto para LectoGuía
+      const systemPrompt = `Eres LectoGuía, un asistente especializado en ayudar a estudiantes chilenos con la preparación para la PAES (Prueba de Acceso a la Educación Superior).
+
+Especialidades:
+- Comprensión Lectora: Análisis de textos, interpretación, localización de información
+- Matemáticas Básica (7° a 2° medio): Aritmética, geometría, álgebra básica
+- Matemáticas Avanzada (3° y 4° medio): Funciones, probabilidades, estadística
+- Ciencias: Biología, física, química aplicadas a la PAES
+- Historia: Historia de Chile y universal, geografía, educación cívica
+
+Materia activa: ${activeSubject}
+
+Instrucciones:
+1. Responde siempre en español chileno
+2. Adapta tu nivel al estudiante
+3. Usa ejemplos relevantes para Chile
+4. Si te piden ejercicios, genera preguntas tipo PAES
+5. Mantén un tono amigable y motivador
+6. Si la consulta no es educativa, redirige gentilmente al tema de estudios`;
+
+      const userPrompt = `Materia: ${activeSubject}
+Consulta del estudiante: ${content}
+
+${assistantResponse ? `Análisis de imagen previo: ${assistantResponse}` : ''}`;
+
+      console.log('LectoGuía: Enviando solicitud a OpenRouter');
+      
+      // Usar openRouterService en lugar del endpoint incorrecto
+      const response = await openRouterService({
+        action: 'provide_feedback',
+        payload: {
+          systemPrompt,
+          userPrompt,
           subject: activeSubject,
-          history: getRecentMessages(),
-        }),
+          history: getRecentMessages().slice(-6) // Últimos 6 mensajes para contexto
+        }
       });
       
-      if (!inferenceResponse.ok) {
-        if (inferenceResponse.status === 429) {
-          // Manejar el error de límite de tasa
-          addAssistantMessage(ERROR_RATE_LIMIT_MESSAGE);
-          setServiceStatus('degraded');
-          throw new Error(ERROR_RATE_LIMIT_MESSAGE);
-        } else {
-          setServiceStatus('unavailable');
-          throw new Error(`Error en la respuesta del servicio: ${inferenceResponse.statusText}`);
-        }
+      if (!response) {
+        console.error('LectoGuía: No se recibió respuesta del servicio');
+        setServiceStatus('unavailable');
+        setConnectionStatus('disconnected');
+        
+        const fallbackMessage = "Lo siento, estoy teniendo problemas para conectarme en este momento. Por favor intenta de nuevo en unos momentos.";
+        addAssistantMessage(fallbackMessage);
+        return fallbackMessage;
       }
       
-      const responseData = await inferenceResponse.json();
+      console.log('LectoGuía: Respuesta recibida exitosamente');
       
       // Extraer el contenido de la respuesta
-      const messageContent = responseData.response;
+      const messageContent = response.response || response.result || response;
       
       // Añadir la respuesta del asistente al estado
       addAssistantMessage(messageContent);
       setConnectionStatus('connected');
+      setServiceStatus('available');
       
       return messageContent;
     } catch (error: any) {
-      // Manejar los errores
+      console.error("LectoGuía: Error procesando mensaje:", error);
+      
+      setConnectionStatus('disconnected');
+      setServiceStatus('unavailable');
+      
+      // Mensaje de error más amigable
+      const errorMessage = "Estoy teniendo dificultades técnicas en este momento. Por favor intenta de nuevo más tarde.";
+      addAssistantMessage(errorMessage);
+      
       toast({
-        title: "Error",
-        description: "Ocurrió un error al procesar tu mensaje. Por favor intenta de nuevo.",
+        title: "Error de conexión",
+        description: "No se pudo procesar tu mensaje. Intenta de nuevo.",
         variant: "destructive"
       });
-      console.error("Error procesando mensaje:", error);
-      setConnectionStatus('disconnected');
+      
       return null;
     } finally {
       setIsTyping(false);

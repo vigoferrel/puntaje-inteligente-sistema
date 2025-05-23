@@ -4,6 +4,7 @@ import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 import { Exercise } from '@/types/ai-types';
 import { toast } from '@/components/ui/use-toast';
 import { TPAESHabilidad } from '@/types/system-types';
+import { openRouterService } from '@/services/openrouter/core';
 
 /**
  * Hook para manejar el flujo de ejercicios en LectoGuia
@@ -17,7 +18,7 @@ export function useExerciseFlow(
   const [showFeedback, setShowFeedback] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  const { addAssistantMessage, processUserMessage } = useLectoGuiaChat();
+  const { addAssistantMessage } = useLectoGuiaChat();
   
   // Mapeo de materias a habilidades principales
   const skillMap: Record<string, TPAESHabilidad> = {
@@ -37,11 +38,13 @@ export function useExerciseFlow(
     setShowFeedback(true);
   }, [selectedOption]);
   
-  // Generar un nuevo ejercicio usando el chat
+  // Generar un nuevo ejercicio usando openRouterService
   const handleNewExercise = useCallback(async () => {
     setIsLoading(true);
     
     try {
+      console.log('Generando nuevo ejercicio para:', activeSubject);
+      
       // Limpiar el estado actual
       setCurrentExercise(null);
       setSelectedOption(null);
@@ -49,20 +52,36 @@ export function useExerciseFlow(
       
       const currentSkill = skillMap[activeSubject] || 'INTERPRET_RELATE';
       
-      // Generar ejercicio usando el chat de LectoGuía
-      const exercisePrompt = `Genera un ejercicio de opción múltiple para ${activeSubject}. 
-      Debe incluir:
-      - Una pregunta clara
-      - 4 opciones de respuesta (A, B, C, D)
-      - Una respuesta correcta
-      - Una explicación detallada
+      // Mapeo de materias para generar ejercicios apropiados
+      const subjectNames: Record<string, string> = {
+        'general': 'comprensión general',
+        'lectura': 'comprensión lectora',
+        'matematicas-basica': 'matemáticas básicas (7° a 2° medio)',
+        'matematicas-avanzada': 'matemáticas avanzadas (3° y 4° medio)',
+        'ciencias': 'ciencias naturales',
+        'historia': 'historia y ciencias sociales'
+      };
       
-      Formato el ejercicio de manera estructurada.`;
+      const subjectName = subjectNames[activeSubject] || activeSubject;
       
-      const response = await processUserMessage(exercisePrompt);
+      // Usar openRouterService para generar el ejercicio
+      const response = await openRouterService({
+        action: 'generate_exercise',
+        payload: {
+          skill: currentSkill,
+          prueba: activeSubject === 'lectura' ? 'COMPETENCIA_LECTORA' : 
+                 activeSubject === 'matematicas-basica' ? 'MATEMATICA_1' :
+                 activeSubject === 'matematicas-avanzada' ? 'MATEMATICA_2' :
+                 activeSubject === 'ciencias' ? 'CIENCIAS' :
+                 activeSubject === 'historia' ? 'HISTORIA' : 'COMPETENCIA_LECTORA',
+          difficulty: 'INTERMEDIATE',
+          subject: subjectName,
+          includeExplanation: true
+        }
+      });
       
-      if (response) {
-        // Crear un ejercicio simulado basado en la respuesta
+      if (response && (response.question || response.response)) {
+        // Crear ejercicio estructurado a partir de la respuesta
         const exercise: Exercise = {
           id: `exercise-${Date.now()}`,
           nodeId: '',
@@ -70,25 +89,30 @@ export function useExerciseFlow(
           prueba: 'COMPETENCIA_LECTORA', 
           skill: currentSkill,
           difficulty: 'INTERMEDIATE',
-          question: response,
-          options: [
-            'Opción A - Análisis de la primera alternativa',
-            'Opción B - Consideración de la segunda alternativa', 
-            'Opción C - Evaluación de la tercera alternativa',
-            'Opción D - Examen de la cuarta alternativa'
+          question: response.question || response.response || 'Ejercicio generado',
+          options: response.options || [
+            'Opción A',
+            'Opción B', 
+            'Opción C',
+            'Opción D'
           ],
-          correctAnswer: 'Opción A - Análisis de la primera alternativa',
-          explanation: 'La respuesta correcta es A. Selecciona una opción para ver la explicación detallada.'
+          correctAnswer: response.correctAnswer || response.options?.[0] || 'Opción A',
+          explanation: response.explanation || 'Selecciona una opción para ver la explicación detallada.'
         };
         
         setCurrentExercise(exercise);
         setActiveTab('exercise');
         
         // Notificar al usuario
-        addAssistantMessage('He generado un nuevo ejercicio para ti. Puedes verlo en la pestaña de Ejercicios.');
+        addAssistantMessage(`He generado un nuevo ejercicio de ${subjectName} para ti. Puedes verlo en la pestaña de Ejercicios.`);
+        
+        console.log('Ejercicio generado exitosamente');
+      } else {
+        throw new Error('No se recibió un ejercicio válido del servicio');
       }
     } catch (error) {
       console.error("Error generando ejercicio:", error);
+      
       toast({
         title: "Error",
         description: "No se pudo generar un ejercicio. Por favor, intenta de nuevo.",
@@ -100,7 +124,7 @@ export function useExerciseFlow(
     } finally {
       setIsLoading(false);
     }
-  }, [activeSubject, setActiveTab, addAssistantMessage, processUserMessage, skillMap]);
+  }, [activeSubject, setActiveTab, addAssistantMessage, skillMap]);
   
   // Función para solicitar ejercicio que retorna una promesa
   const handleExerciseRequest = useCallback(async (): Promise<boolean> => {

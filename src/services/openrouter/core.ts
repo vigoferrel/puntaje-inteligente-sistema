@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 
 interface OpenRouterRequest {
@@ -65,6 +64,7 @@ async function checkServiceHealth(): Promise<boolean> {
     serviceHealthStatus = data?.result?.status === 'available';
     return serviceHealthStatus;
   } catch (error) {
+    console.warn('OpenRouter: Health check failed:', error);
     serviceHealthLastChecked = now;
     serviceHealthStatus = false;
     return false;
@@ -167,21 +167,25 @@ function cacheResponse(cacheKey: string, response: any) {
  * Con manejo mejorado de errores, caché y detección de estado
  */
 export async function openRouterService<T>(request: OpenRouterRequest): Promise<T | null> {
+  const requestId = request.requestId || generateRequestId();
+  
   try {
+    console.log(`OpenRouter [${requestId}]: Iniciando solicitud - action: ${request.action}`);
+    
     // Verificar estado del servicio antes de intentar la solicitud
     const cacheKey = generateCacheKey(request.action, request.payload);
     
     // Intentar obtener respuesta desde caché primero
     const cachedResponse = getCachedResponse(cacheKey);
     if (cachedResponse) {
-      console.log('OpenRouter: Usando respuesta en caché para', request.action);
+      console.log(`OpenRouter [${requestId}]: Usando respuesta en caché para ${request.action}`);
       return cachedResponse as T;
     }
     
     // Verificar la salud del servicio (sin bloquear)
     const isHealthy = await checkServiceHealth();
     if (!isHealthy && request.action !== 'health_check') {
-      console.warn('OpenRouter service health check failed, continuing with request anyway');
+      console.warn(`OpenRouter [${requestId}]: Servicio no disponible, continuando con capacidades limitadas`);
       
       // Para algunas acciones críticas, podemos devolver respuestas fallback inmediatas
       if (['provide_feedback', 'provide_exercise_feedback'].includes(request.action)) {
@@ -194,13 +198,13 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
     // Añadir un ID de solicitud para seguimiento si no existe
     const requestWithId = {
       ...request,
-      requestId: request.requestId || generateRequestId()
+      requestId
     };
     
     // URL completa de la función de borde de Supabase
     const functionUrl = 'https://settifboilityelprvjd.supabase.co/functions/v1/openrouter-ai';
     
-    console.log('OpenRouter: Enviando solicitud a', functionUrl, requestWithId);
+    console.log(`OpenRouter [${requestId}]: Enviando a ${functionUrl}`);
     
     // Implementar un timeout para evitar solicitudes pendientes indefinidamente
     const controller = new AbortController();
@@ -221,7 +225,7 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('OpenRouter: Error en la respuesta:', response.status, errorText);
+        console.error(`OpenRouter [${requestId}]: Error HTTP ${response.status}:`, errorText);
         
         // Actualizar estado del servicio si hay errores críticos
         if (response.status >= 500) {
@@ -232,18 +236,22 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
         if (request.action !== 'health_check') {
           // Manejos específicos según el código de estado con respuestas más amigables
           if (response.status === 404) {
+            console.error(`OpenRouter [${requestId}]: Endpoint no encontrado`);
             return { 
               response: "El servicio de AI está experimentando dificultades técnicas. Estamos trabajando para resolverlo." 
             } as unknown as T;
           } else if (response.status === 429) {
+            console.warn(`OpenRouter [${requestId}]: Rate limit alcanzado`);
             return {
               response: "El servicio está experimentando alta demanda en este momento. Por favor intenta de nuevo en unos minutos."
             } as unknown as T;
           } else if (response.status === 504 || response.status === 503) {
+            console.error(`OpenRouter [${requestId}]: Servicio no disponible`);
             return {
               response: "El servicio de IA está temporalmente no disponible. Funcionaré con capacidades limitadas."
             } as unknown as T;
           } else {
+            console.error(`OpenRouter [${requestId}]: Error general del servidor`);
             return {
               response: "Estoy teniendo problemas para acceder a mi base de conocimiento completa. Intentaré responder con lo que tengo disponible."
             } as unknown as T;
@@ -261,17 +269,17 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       try {
         data = await response.json();
       } catch (jsonError) {
-        console.error('Error al procesar respuesta JSON:', jsonError);
+        console.error(`OpenRouter [${requestId}]: Error procesando JSON:`, jsonError);
         throw new Error(`Error al procesar respuesta JSON: ${jsonError.message}`);
       }
       
       // Verificar estructura de respuesta esperada
       if (data.error) {
-        console.error('OpenRouter: Error reportado en la respuesta:', data.error);
+        console.error(`OpenRouter [${requestId}]: Error en respuesta:`, data.error);
         throw new Error(`Error de la API: ${data.error}`);
       }
       
-      console.log('OpenRouter: Respuesta exitosa de', request.action, data);
+      console.log(`OpenRouter [${requestId}]: Respuesta exitosa para ${request.action}`);
       
       // Cachear respuesta exitosa si es apropiada para caché (no health checks)
       if (request.action !== 'health_check') {
@@ -285,6 +293,7 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       
       // Detectar si fue un error de timeout
       if (fetchError.name === 'AbortError') {
+        console.warn(`OpenRouter [${requestId}]: Timeout de solicitud`);
         // Retornar respuesta fallback para timeout sin mostrar toast
         return {
           response: "La respuesta está tardando más de lo esperado. Estoy funcionando en modo limitado en este momento."
@@ -296,7 +305,7 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-    console.error('OpenRouter service error:', errorMessage, error);
+    console.error(`OpenRouter [${requestId}]: Error del servicio:`, errorMessage, error);
     
     // No mostrar notificación aquí - dejarlo para el nivel superior (useOpenRouter)
     return null;
