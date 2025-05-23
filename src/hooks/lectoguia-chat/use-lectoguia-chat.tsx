@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useOpenRouter } from '@/hooks/use-openrouter';
 import { toast } from '@/components/ui/use-toast';
 import { useChatMessages } from './use-chat-messages';
@@ -142,15 +142,15 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         const errorResponse = "Lo siento, estoy teniendo problemas para conectarme. Por favor, intenta de nuevo en unos momentos.";
         addAssistantMessage(errorResponse);
         
+        // Usar un objeto action en lugar de JSX directo para el botón
         toast({
           title: "Error de conexión",
           description: "Hubo un problema al conectar con el servicio. Inténtalo de nuevo.",
           variant: "destructive",
-          action: (
-            <button onClick={retryLastOperation} className="px-3 py-2 rounded bg-primary text-primary-foreground text-xs">
-              Reintentar
-            </button>
-          )
+          action: {
+            label: "Reintentar",
+            onClick: retryLastOperation
+          }
         });
         
         return errorResponse;
