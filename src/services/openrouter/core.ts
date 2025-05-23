@@ -65,7 +65,6 @@ async function checkServiceHealth(): Promise<boolean> {
       const authKey = getAuthorizationKey();
       
       console.log(`OpenRouter: Enviando health check a ${functionUrl}`);
-      console.log(`OpenRouter: Usando auth key: ${authKey.substring(0, 20)}...`);
       
       const response = await fetch(functionUrl, {
         method: 'POST',
@@ -220,6 +219,7 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
   
   try {
     console.log(`OpenRouter [${requestId}]: Iniciando solicitud - action: ${request.action}`);
+    console.log(`OpenRouter [${requestId}]: Payload:`, JSON.stringify(request.payload).substring(0, 200) + '...');
     
     const cacheKey = generateCacheKey(request.action, request.payload);
     
@@ -306,6 +306,7 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       let data;
       try {
         data = await response.json();
+        console.log(`OpenRouter [${requestId}]: Respuesta recibida:`, JSON.stringify(data).substring(0, 200) + '...');
       } catch (jsonError) {
         console.error(`OpenRouter [${requestId}]: Error procesando JSON:`, jsonError);
         throw new Error(`Error al procesar respuesta JSON: ${jsonError.message}`);
@@ -320,10 +321,10 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       
       // Cachear respuesta exitosa
       if (request.action !== 'health_check') {
-        cacheResponse(cacheKey, data.result);
+        cacheResponse(cacheKey, data.result || data);
       }
       
-      return data.result || null;
+      return data.result || data || null;
     } catch (fetchError) {
       clearTimeout(timeoutId);
       
@@ -345,6 +346,8 @@ export async function openRouterService<T>(request: OpenRouterRequest): Promise<
       return null;
     }
     
-    return null;
+    return {
+      response: "Lo siento, tuve un problema técnico. Por favor intenta de nuevo."
+    } as unknown as T;
   }
 }

@@ -117,19 +117,21 @@ Instrucciones:
 5. Mantén un tono amigable y motivador
 6. Si la consulta no es educativa, redirige gentilmente al tema de estudios`;
 
-      // Asegurar que el userPrompt tenga el contenido del mensaje
-      const userPrompt = content || "Hola, necesito ayuda con mis estudios";
+      // Asegurar que el mensaje tenga contenido
+      const messageContent = content || "Hola, necesito ayuda con mis estudios";
 
       console.log('LectoGuía: Enviando solicitud a OpenRouter');
       
-      // Usar openRouterService en lugar del endpoint incorrecto
+      // Enviar la solicitud con un formato consistente
       const response = await openRouterService({
         action: 'provide_feedback',
         payload: {
-          systemPrompt,
-          userPrompt,
-          message: content, // Añadir el mensaje directamente
-          subject: activeSubject,
+          message: messageContent,          // Parámetro principal esperado por el backend
+          userMessage: messageContent,      // Parámetro alternativo para compatibilidad
+          content: messageContent,          // Otra variante para compatibilidad
+          systemPrompt: systemPrompt,       // Instrucciones del sistema
+          subject: activeSubject,           // Materia activa
+          context: `subject:${activeSubject}`, // Contexto formateado
           history: getRecentMessages().slice(-6) // Últimos 6 mensajes para contexto
         }
       });

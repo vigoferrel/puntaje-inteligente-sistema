@@ -7,16 +7,29 @@ import { processAIResponse, createSuccessResponse, createErrorResponse } from ".
  */
 export async function provideFeedback(payload: any): Promise<any> {
   try {
-    const { userMessage, context, previousMessages = [] } = payload;
+    // Extraer los parámetros enviados desde el frontend
+    // Aceptar tanto 'message' como 'userMessage' para compatibilidad
+    const userMessage = payload.message || payload.userMessage || payload.content || "";
+    const context = payload.context || payload.subject || '';
+    const previousMessages = payload.history || payload.previousMessages || [];
+    const systemPromptOverride = payload.systemPrompt || '';
 
-    if (!userMessage) {
+    console.log('Feedback Handler: Recibido payload:', {
+      messageLength: userMessage.length,
+      context,
+      prevMsgCount: previousMessages.length,
+      hasSystemPrompt: !!systemPromptOverride
+    });
+
+    if (!userMessage && !systemPromptOverride) {
+      console.warn('Feedback Handler: No se proporcionó mensaje de usuario');
       return createErrorResponse('Se requiere un mensaje del usuario para proporcionar feedback');
     }
     
     // Determinar el contexto de materia o el contexto general
     const currentSubject = context?.includes('subject:') 
       ? context.split('subject:')[1]?.split(',')[0]?.trim() 
-      : 'general';
+      : (context || 'general');
     
     let subjectPrompt = '';
     switch (currentSubject) {
@@ -24,6 +37,8 @@ export async function provideFeedback(payload: any): Promise<any> {
         subjectPrompt = 'especialista en comprensión lectora y análisis de textos';
         break;
       case 'matematicas':
+      case 'matematicas-basica':
+      case 'matematicas-avanzada':  
         subjectPrompt = 'especialista en matemáticas, álgebra, geometría y estadística';
         break;
       case 'ciencias':
@@ -36,7 +51,7 @@ export async function provideFeedback(payload: any): Promise<any> {
         subjectPrompt = 'asistente educativo general';
     }
 
-    const systemPrompt = `You are LectoGuía, an AI educational assistant specializing in helping students prepare for the Chilean PAES exam.
+    const systemPrompt = systemPromptOverride || `You are LectoGuía, an AI educational assistant specializing in helping students prepare for the Chilean PAES exam.
     You are currently acting as a ${subjectPrompt}.
     Your goal is to provide clear, accurate, and helpful responses to student queries related to PAES preparation.
     You also know about the platform's features including: Diagnostic tests, Learning Plan, Simulations, History content, and Exercises.
@@ -46,7 +61,7 @@ export async function provideFeedback(payload: any): Promise<any> {
     let conversationContext = '';
     if (previousMessages && previousMessages.length > 0) {
       conversationContext = "Previous conversation:\n" + previousMessages
-        .map((msg: any) => `${msg.role}: ${msg.content.substring(0, 150)}...`)
+        .map((msg: any) => `${msg.role || 'user'}: ${(msg.content || '').substring(0, 150)}...`)
         .join("\n");
     }
 
