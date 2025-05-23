@@ -3,6 +3,8 @@ import { useState, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { openRouterService } from "@/services/openrouter/core";
 
+export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected';
+
 interface OpenRouterRequest {
   action: string;
   payload: any;
@@ -13,7 +15,7 @@ export function useOpenRouter() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastError, setLastError] = useState<Error | null>(null);
   const [lastOperation, setLastOperation] = useState<OpenRouterRequest | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connected');
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connected');
 
   /**
    * Llama al servicio de OpenRouter con mejor manejo de errores y monitoreo de estado.
@@ -137,10 +139,25 @@ export function useOpenRouter() {
     });
   }, [callOpenRouter]);
 
+  /**
+   * Resetea el estado de conexión e intenta reconectar
+   */
+  const resetConnectionStatus = useCallback(() => {
+    setConnectionStatus('connected');
+    retryLastOperation();
+    
+    toast({
+      title: "Reintentando conexión",
+      description: "Intentando restaurar la conexión con el servicio...",
+      duration: 3000
+    });
+  }, [retryLastOperation]);
+
   return {
     callOpenRouter,
     retryLastOperation,
     processImage,
+    resetConnectionStatus,
     isLoading,
     lastError,
     connectionStatus

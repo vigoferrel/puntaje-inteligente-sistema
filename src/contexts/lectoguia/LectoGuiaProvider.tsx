@@ -1,3 +1,4 @@
+
 import React, { useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOpenRouter } from '@/hooks/use-openrouter';
@@ -70,10 +71,13 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const randomSkill = skills[Math.floor(Math.random() * skills.length)];
       
       // Llamar al API para generar ejercicio
-      const response = await callOpenRouter<Exercise>("generate_exercise", {
-        skill: randomSkill,
-        prueba,
-        difficulty: "INTERMEDIATE"
+      const response = await callOpenRouter<Exercise>({
+        action: "generate_exercise", 
+        payload: {
+          skill: randomSkill,
+          prueba,
+          difficulty: "INTERMEDIATE"
+        }
       });
       
       if (response) {
@@ -119,14 +123,17 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
       
       // Llamar al API para generar ejercicio según el nodo
-      const response = await callOpenRouter<Exercise>("generate_exercise", {
-        skill: node.skill,
-        prueba: node.prueba,
-        difficulty: node.difficulty || "INTERMEDIATE",
-        nodeContext: {
-          nodeId: node.id,
-          title: node.title,
-          description: node.description
+      const response = await callOpenRouter<Exercise>({
+        action: "generate_exercise", 
+        payload: {
+          skill: node.skill,
+          prueba: node.prueba,
+          difficulty: node.difficulty || "INTERMEDIATE",
+          nodeContext: {
+            nodeId: node.id,
+            title: node.title,
+            description: node.description
+          }
         }
       });
       
@@ -187,10 +194,13 @@ export const LectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } else {
         // Procesar mensaje normal
         console.log('Sending message to backend:', message);
-        const response = await callOpenRouter<any>("provide_feedback", {
-          userMessage: message,
-          context: `PAES preparation, subject: ${activeSubject}`,
-          previousMessages: messages.slice(-6)
+        const response = await callOpenRouter<any>({
+          action: "provide_feedback", 
+          payload: {
+            userMessage: message,
+            context: `PAES preparation, subject: ${activeSubject}`,
+            previousMessages: messages.slice(-6)
+          }
         });
         
         console.log('Response received from backend:', response);

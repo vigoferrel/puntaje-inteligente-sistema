@@ -121,8 +121,9 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
           payload: {} 
         }, true);
         
-        if (healthCheck && healthCheck.status === 'available') {
-          if (serviceStatus !== 'available') {
+        if (healthCheck && typeof healthCheck === 'object' && 'status' in healthCheck) {
+          const status = healthCheck.status as string;
+          if (status === 'available' && serviceStatus !== 'available') {
             setServiceStatus('available');
             openRouterCircuitBreaker.reset();
           }
@@ -311,13 +312,13 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
         }
         
         // Procesar la respuesta
-        let finalResponse: string;
+        let finalResponse: string = "";
         
         if (typeof responseData === 'string') {
           finalResponse = responseData;
         } else if (responseData && typeof responseData === 'object') {
           if ('response' in responseData) {
-            finalResponse = responseData.response;
+            finalResponse = String(responseData.response || "");
           } else {
             // Buscar cualquier campo que contenga un string como respuesta
             const stringValues = Object.values(responseData).filter(v => typeof v === 'string');

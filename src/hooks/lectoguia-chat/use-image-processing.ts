@@ -40,7 +40,7 @@ export function useImageProcessing() {
         };
       }
       
-      return result;
+      return result as ImageProcessingResult;
     } catch (error) {
       console.error('Error en el procesamiento de imagen:', error);
       return {
