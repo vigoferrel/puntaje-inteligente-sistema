@@ -1,8 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { updateSkillLevelInDb } from '@/services/lectoguia-service';
-import { getSkillId } from '@/utils/lectoguia-utils';
+import { fetchSkillLevels } from '@/services/lectoguia-service';
+import { TPAESHabilidad } from '@/types/system-types';
 
 export function useSkillLevels(
   initialSkillLevels: Record<string, number>,
@@ -12,15 +12,38 @@ export function useSkillLevels(
   const [updating, setUpdating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load skill levels when userId changes
+  useEffect(() => {
+    if (userId) {
+      loadSkillLevels();
+    }
+  }, [userId]);
+
+  const loadSkillLevels = async () => {
+    if (!userId) return;
+    
+    try {
+      setUpdating(true);
+      setError(null);
+      const levels = await fetchSkillLevels(userId);
+      setSkillLevels(prev => ({ ...prev, ...levels }));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error loading skill levels';
+      console.error('Error loading skill levels:', error);
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: "Failed to load skill levels",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const updateSkillLevel = async (skillCode: string, isCorrect: boolean): Promise<boolean> => {
     if (!userId) {
       setError("No user ID provided. User must be logged in to update skill levels.");
-      return false;
-    }
-    
-    const skillId = getSkillId(skillCode);
-    if (!skillId) {
-      setError(`Invalid skill code: ${skillCode}`);
       return false;
     }
     
@@ -28,12 +51,8 @@ export function useSkillLevels(
       setUpdating(true);
       setError(null);
       
-      // Obtain current level of skill
+      // Calculate new level based on current performance
       const currentLevel = skillLevels[skillCode] || 0;
-      
-      // Simple algorithm to adjust skill level:
-      // Correct answers increase the level by 0.05 up to 1.0
-      // Incorrect answers decrease the level by 0.03, but not below 0
       let newLevel = currentLevel;
       
       if (isCorrect) {
@@ -42,14 +61,14 @@ export function useSkillLevels(
         newLevel = Math.max(0, currentLevel - 0.03);
       }
       
-      // Update in database
-      await updateSkillLevelInDb(userId, skillId, newLevel);
-      
-      // Update local state
+      // Update local state immediately for better UX
       setSkillLevels(prev => ({
         ...prev,
         [skillCode]: newLevel
       }));
+      
+      // Reload skill levels from database to get accurate calculation
+      await loadSkillLevels();
       
       return true;
     } catch (error) {
@@ -72,6 +91,7 @@ export function useSkillLevels(
     updateSkillLevel,
     setSkillLevels,
     updating,
-    error
+    error,
+    reload: loadSkillLevels
   };
 }

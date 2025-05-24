@@ -17,23 +17,18 @@ export function usePreferences(
       return false;
     }
     
-    if (!key || key.trim() === '') {
-      setError("Invalid preference key");
-      return false;
-    }
-    
     try {
       setSaving(true);
       setError(null);
       
-      // Save to database
-      await saveUserPreference(userId, key, value);
-      
-      // Update local state
+      // Update local state immediately
       setPreferences(prev => ({
         ...prev,
         [key]: value
       }));
+      
+      // Save to database
+      await saveUserPreference(userId, key, value);
       
       return true;
     } catch (error) {
@@ -45,6 +40,14 @@ export function usePreferences(
         description: "Failed to save preference. Please try again.",
         variant: "destructive"
       });
+      
+      // Revert local state on error
+      setPreferences(prev => {
+        const reverted = { ...prev };
+        delete reverted[key];
+        return reverted;
+      });
+      
       return false;
     } finally {
       setSaving(false);
