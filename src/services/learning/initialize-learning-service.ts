@@ -1,14 +1,13 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { initializeRLSPolicies } from "@/services/database/rls-service";
-import { mapEnumToSkillId, mapEnumToTestId } from "@/utils/supabase-mappers";
 import { v4 as uuidv4 } from 'uuid';
 import { initializePAESContent } from './paes-content-service';
 
-// First, check if paes_skills and paes_tests already exist before initializing nodes
+// Check if required tables exist and have data
 const checkRequiredTables = async (): Promise<{exists: boolean, skillIds: number[], testIds: number[]}> => {
   try {
-    // Check if paes_skills table has data
     const { data: skillsData, error: skillsError } = await supabase
       .from('paes_skills')
       .select('id, code');
@@ -18,7 +17,6 @@ const checkRequiredTables = async (): Promise<{exists: boolean, skillIds: number
       return {exists: false, skillIds: [], testIds: []};
     }
     
-    // Check if paes_tests table has data
     const { data: testsData, error: testsError } = await supabase
       .from('paes_tests')
       .select('id, code');
@@ -35,21 +33,16 @@ const checkRequiredTables = async (): Promise<{exists: boolean, skillIds: number
     console.log('Available skill IDs:', skillIds);
     console.log('Available test IDs:', testIds);
     
-    return {
-      exists,
-      skillIds,
-      testIds
-    };
+    return { exists, skillIds, testIds };
   } catch (error) {
     console.error('Error checking required tables:', error);
     return {exists: false, skillIds: [], testIds: []};
   }
 };
 
-// Initialize foundation tables if they don't exist
+// Initialize foundation tables with complete data structure
 const initializeFoundationTables = async (): Promise<boolean> => {
   try {
-    // First check if tables already have data
     const {exists} = await checkRequiredTables();
     
     if (exists) {
@@ -57,7 +50,7 @@ const initializeFoundationTables = async (): Promise<boolean> => {
       return true;
     }
     
-    // Define paes_skills data
+    // Define complete paes_skills data
     const skillsData = [
       { id: 1, name: 'Rastrear y Localizar', code: 'TRACK_LOCATE', description: 'Habilidad para encontrar información específica en textos' },
       { id: 2, name: 'Interpretar y Relacionar', code: 'INTERPRET_RELATE', description: 'Habilidad para comprender e interconectar información' },
@@ -77,16 +70,66 @@ const initializeFoundationTables = async (): Promise<boolean> => {
       { id: 16, name: 'Reflexión', code: 'REFLECTION', description: 'Habilidad para considerar implicaciones históricas' }
     ];
     
-    // Define paes_tests data
+    // Define complete paes_tests data with all required fields
     const testsData = [
-      { id: 1, name: 'Competencia Lectora', code: 'COMPETENCIA_LECTORA', description: 'Prueba de comprensión de lectura', is_required: true },
-      { id: 2, name: 'Matemática 1', code: 'MATEMATICA_1', description: 'Prueba de matemáticas para 7° a 2° medio', is_required: true },
-      { id: 3, name: 'Matemática 2', code: 'MATEMATICA_2', description: 'Prueba de matemáticas para 3° y 4° medio', is_required: false },
-      { id: 4, name: 'Ciencias', code: 'CIENCIAS', description: 'Prueba de ciencias', is_required: false },
-      { id: 5, name: 'Historia', code: 'HISTORIA', description: 'Prueba de historia y ciencias sociales', is_required: false }
+      { 
+        id: 1, 
+        name: 'Competencia Lectora', 
+        code: 'COMPETENCIA_LECTORA', 
+        description: 'Prueba de comprensión de lectura', 
+        is_required: true,
+        complexity_level: 'intermediate',
+        questions_count: 65,
+        time_minutes: 150,
+        relative_weight: 1.0
+      },
+      { 
+        id: 2, 
+        name: 'Matemática 1', 
+        code: 'MATEMATICA_1', 
+        description: 'Prueba de matemáticas para 7° a 2° medio', 
+        is_required: true,
+        complexity_level: 'basic',
+        questions_count: 65,
+        time_minutes: 140,
+        relative_weight: 1.0
+      },
+      { 
+        id: 3, 
+        name: 'Matemática 2', 
+        code: 'MATEMATICA_2', 
+        description: 'Prueba de matemáticas para 3° y 4° medio', 
+        is_required: false,
+        complexity_level: 'advanced',
+        questions_count: 55,
+        time_minutes: 160,
+        relative_weight: 1.0
+      },
+      { 
+        id: 4, 
+        name: 'Ciencias', 
+        code: 'CIENCIAS', 
+        description: 'Prueba de ciencias', 
+        is_required: false,
+        complexity_level: 'intermediate',
+        questions_count: 80,
+        time_minutes: 160,
+        relative_weight: 1.0
+      },
+      { 
+        id: 5, 
+        name: 'Historia', 
+        code: 'HISTORIA', 
+        description: 'Prueba de historia y ciencias sociales', 
+        is_required: false,
+        complexity_level: 'intermediate',
+        questions_count: 80,
+        time_minutes: 160,
+        relative_weight: 1.0
+      }
     ];
     
-    // Insert paes_skills data
+    // Insert skills data
     const { error: skillsError } = await supabase
       .from('paes_skills')
       .insert(skillsData);
@@ -96,7 +139,7 @@ const initializeFoundationTables = async (): Promise<boolean> => {
       return false;
     }
     
-    // Insert paes_tests data
+    // Insert tests data
     const { error: testsError } = await supabase
       .from('paes_tests')
       .insert(testsData);
@@ -114,16 +157,11 @@ const initializeFoundationTables = async (): Promise<boolean> => {
   }
 };
 
-// Define learning nodes with skills and tests that match our foundation tables
+// Get initial learning nodes with complete structure
 const getInitialLearningNodes = (availableSkillIds: number[], availableTestIds: number[]) => {
-  // Use default values that will work if the recommended IDs exist
   const defaultSkills = [15, 4, 9]; // CRITICAL_THINKING, SOLVE_PROBLEMS, PROCESS_ANALYZE
   const defaultTests = [1, 2, 4];   // COMPETENCIA_LECTORA, MATEMATICA_1, CIENCIAS
   
-  // Map to track which nodes we've created
-  const createdNodes: {skill: number, test: number}[] = [];
-  
-  // Get valid skill IDs (use first available if default not found)
   const getValidSkillId = (preferredId: number, index: number) => {
     if (availableSkillIds.includes(preferredId)) {
       return preferredId;
@@ -132,7 +170,6 @@ const getInitialLearningNodes = (availableSkillIds: number[], availableTestIds: 
     return availableSkillIds[index % availableSkillIds.length] || 1;
   };
   
-  // Get valid test IDs (use first available if default not found)
   const getValidTestId = (preferredId: number, index: number) => {
     if (availableTestIds.includes(preferredId)) {
       return preferredId;
@@ -153,6 +190,10 @@ const getInitialLearningNodes = (availableSkillIds: number[], availableTestIds: 
       depends_on: [],
       difficulty: 'basic' as const,
       estimated_time_minutes: 30,
+      subject_area: 'COMPETENCIA_LECTORA',
+      domain_category: 'comprension_lectora',
+      cognitive_level: 'comprender' as const,
+      tier_priority: 'tier1_critico' as const,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -167,6 +208,10 @@ const getInitialLearningNodes = (availableSkillIds: number[], availableTestIds: 
       depends_on: [],
       difficulty: 'basic' as const,
       estimated_time_minutes: 45,
+      subject_area: 'MATEMATICA_1',
+      domain_category: 'algebra_basica',
+      cognitive_level: 'aplicar' as const,
+      tier_priority: 'tier1_critico' as const,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -181,16 +226,19 @@ const getInitialLearningNodes = (availableSkillIds: number[], availableTestIds: 
       depends_on: [],
       difficulty: 'basic' as const,
       estimated_time_minutes: 60,
+      subject_area: 'CIENCIAS',
+      domain_category: 'metodologia_cientifica',
+      cognitive_level: 'analizar' as const,
+      tier_priority: 'tier2_importante' as const,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
   ];
 };
 
-// Validate DB content before inserting to help diagnose issues
+// Validate database content
 const validateDatabaseContent = async (): Promise<string | null> => {
   try {
-    // Check skills
     const { data: skillsData, error: skillsError } = await supabase
       .from('paes_skills')
       .select('id, name, code');
@@ -205,7 +253,6 @@ const validateDatabaseContent = async (): Promise<string | null> => {
     
     console.log('Skills encontrados:', skillsData.length);
     
-    // Check tests
     const { data: testsData, error: testsError } = await supabase
       .from('paes_tests')
       .select('id, name, code');
@@ -228,16 +275,13 @@ const validateDatabaseContent = async (): Promise<string | null> => {
 
 export const ensureLearningNodesExist = async (): Promise<boolean> => {
   try {
-    // First check if the user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       console.error('Usuario no autenticado. Se requiere autenticación para inicializar los nodos de aprendizaje.');
-      // Return a specific error that we can handle in the UI
       throw new Error('AUTH_REQUIRED');
     }
     
-    // Check if there are already nodes in the database
     const { count, error: countError } = await supabase
       .from('learning_nodes')
       .select('*', { count: 'exact', head: true });
@@ -247,20 +291,17 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       return false;
     }
     
-    // If we already have nodes, return success
     if (count && count > 0) {
       console.log('Learning nodes already exist, skipping initialization');
       return true;
     }
     
-    // Validate database content to ensure required tables have data
     const validationError = await validateDatabaseContent();
     if (validationError) {
       console.error(validationError);
       throw new Error(`VALIDATION_ERROR: ${validationError}`);
     }
     
-    // No nodes exist, so first ensure RLS policies are properly configured
     console.log('No learning nodes found, initializing RLS policies first...');
     const rlsPoliciesInitialized = await initializeRLSPolicies();
     
@@ -269,7 +310,6 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       return false;
     }
     
-    // Make sure the foundation tables exist and have data
     console.log('Ensuring foundation tables are initialized...');
     const foundationTablesInitialized = await initializeFoundationTables();
     
@@ -278,7 +318,6 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       return false;
     }
     
-    // Get available skill and test IDs to ensure we use valid IDs
     const { skillIds, testIds } = await checkRequiredTables();
     
     if (skillIds.length === 0 || testIds.length === 0) {
@@ -286,14 +325,12 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       throw new Error('MISSING_REFERENCE_DATA');
     }
     
-    // Get initial learning nodes with valid IDs
     const initialLearningNodes = getInitialLearningNodes(skillIds, testIds);
     
     console.log('Foundation tables ready, now inserting learning nodes...');
     console.log('Using skill IDs:', initialLearningNodes.map(node => node.skill_id));
     console.log('Using test IDs:', initialLearningNodes.map(node => node.test_id));
     
-    // Insert initial learning nodes
     const { error: insertError } = await supabase
       .from('learning_nodes')
       .insert(initialLearningNodes);
@@ -314,7 +351,6 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       }
     }
     
-    // Initialize PAES content after basic nodes
     console.log('Basic nodes created successfully, now initializing PAES educational content...');
     try {
       const paesResults = await initializePAESContent();
@@ -327,13 +363,11 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
       }
     } catch (paesError: any) {
       console.error('Error initializing PAES content:', paesError);
-      // Don't throw here, as we already have basic nodes
     }
     
     console.log('Learning nodes initialized successfully');
     return true;
   } catch (error: any) {
-    // Propagate specific error types we explicitly threw
     if (['AUTH_REQUIRED', 'PERMISSION_DENIED', 'DUPLICATE_KEY', 'FOREIGN_KEY_VIOLATION', 'VALIDATION_ERROR', 'MISSING_REFERENCE_DATA', 'INSERT_ERROR'].some(
       errType => error.message?.includes(errType)
     )) {
@@ -344,14 +378,12 @@ export const ensureLearningNodesExist = async (): Promise<boolean> => {
   }
 };
 
-// Export a function specifically for initializing PAES content
 export const initializePAESNodesOnly = async (): Promise<{
   success: number;
   failed: number;
   errors: string[];
 }> => {
   try {
-    // First check if the user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
