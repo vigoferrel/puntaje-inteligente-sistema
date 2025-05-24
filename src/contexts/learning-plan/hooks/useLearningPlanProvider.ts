@@ -1,191 +1,140 @@
 
-import { useState, useEffect } from "react";
-import { LearningPlan, PlanProgress } from "@/types/learning-plan";
-import { TPAESHabilidad } from "@/types/system-types";
-import { toast } from "@/components/ui/use-toast";
-import { 
-  ensureUserHasLearningPlan, 
-  fetchPlansWithNodes, 
-  fetchPlanProgress, 
-  generateNodesForPlan 
-} from "../services";
-import { LearningPlanContextType } from "../types";
+import { useState, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { LearningPlan } from '../types';
+import { createLearningPlan, fetchLearningPlans, updateLearningPlan, deleteLearningPlan } from '../services';
 
-// Import Supabase client using ES module syntax instead of require
-import { supabase } from '@/integrations/supabase/client';
-
-/**
- * Custom hook that provides all the learning plan state and logic
- */
-export const useLearningPlanProvider = (): LearningPlanContextType => {
-  const [plans, setPlans] = useState<LearningPlan[]>([]);
+export const useLearningPlanProvider = () => {
+  const { user } = useAuth();
   const [currentPlan, setCurrentPlan] = useState<LearningPlan | null>(null);
+  const [plans, setPlans] = useState<LearningPlan[]>([]);
   const [loading, setLoading] = useState(false);
-  const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [progressData, setProgressData] = useState<Record<string, PlanProgress>>({});
-  const [progressLoading, setProgressLoading] = useState(false);
-  const [recommendedNodeId, setRecommendedNodeId] = useState<string | null>(null);
 
-  // Function to fetch all plans for a user
-  const refreshPlans = async (userId: string) => {
-    if (!userId) return;
-    
+  // Fetch plans for current user
+  const fetchPlans = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
       setLoading(true);
       setError(null);
-      console.log(`Fetching plans for user ${userId}`);
       
-      // Ensure default plans exist if user has none
-      await ensureUserHasLearningPlan(userId);
+      const fetchedPlans = await fetchLearningPlans(user.id);
+      setPlans(fetchedPlans);
       
-      // Fetch plans with their nodes
-      const plansWithNodes = await fetchPlansWithNodes(userId);
-      
-      setPlans(plansWithNodes);
-      
-      // Set the current plan to the most recent one if not already set
-      if (!currentPlan && plansWithNodes.length > 0) {
-        setCurrentPlan(plansWithNodes[0]);
-        // Also load progress data for this plan
-        if (userId) {
-          updatePlanProgress(userId, plansWithNodes[0].id);
-        }
+      // Set current plan to the first one if available
+      if (fetchedPlans.length > 0 && !currentPlan) {
+        setCurrentPlan(fetchedPlans[0]);
       }
-      
-    } catch (error) {
-      console.error("Error fetching learning plans:", error);
-      setError("No se pudieron cargar los planes de estudio");
-      toast({
-        title: "Error",
-        description: "Ocurrió un problema al cargar los planes de estudio",
-        variant: "destructive"
-      });
+    } catch (err) {
+      console.error('Error fetching plans:', err);
+      setError('Error al cargar los planes de estudio');
     } finally {
       setLoading(false);
-      setInitializing(false);
     }
-  };
-  
-  // Function to create a new learning plan
-  const createPlan = async (
-    userId: string,
-    title: string,
-    description?: string,
-    targetDate?: string,
-    skillPriorities?: Record<TPAESHabilidad, number>
-  ): Promise<LearningPlan | null> => {
+  }, [user?.id, currentPlan]);
+
+  // Create new plan
+  const createPlan = useCallback(async (planData: Partial<LearningPlan>) => {
+    if (!user?.id) return null;
+
     try {
       setLoading(true);
+      setError(null);
+
+      const newPlan = await createLearningPlan(user.id, planData);
       
-      // Insert the new plan using Supabase
-      const { data: planData, error: planError } = await supabase
-        .from('learning_plans')
-        .insert({
-          user_id: userId,
-          title,
-          description,
-          target_date: targetDate
-        })
-        .select()
-        .single();
+      if (newPlan) {
+        setPlans(prev => [...prev, newPlan]);
+        setCurrentPlan(newPlan);
+        return newPlan;
+      }
       
-      if (planError) throw planError;
-      if (!planData) throw new Error("No se pudo crear el plan");
-      
-      // Now generate nodes for this plan based on skills
-      await generateNodesForPlan(planData.id, skillPriorities);
-      
-      // Fetch the complete plan with nodes
-      await refreshPlans(userId);
-      
-      // Find the newly created plan in the updated plans list
-      const newPlan = plans.find(p => p.id === planData.id) || {
-        id: planData.id,
-        title: planData.title,
-        description: planData.description || '',
-        userId: planData.user_id,
-        createdAt: planData.created_at,
-        updatedAt: planData.updated_at,
-        targetDate: planData.target_date || null,
-        nodes: []
-      };
-      
-      // Set as current plan
-      setCurrentPlan(newPlan);
-      
-      // Show success message
-      toast({
-        title: "Plan creado",
-        description: "Se ha creado tu nuevo plan de estudio",
-      });
-      
-      return newPlan;
-    } catch (error) {
-      console.error("Error creating learning plan:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el plan de estudio",
-        variant: "destructive"
-      });
+      return null;
+    } catch (err) {
+      console.error('Error creating plan:', err);
+      setError('Error al crear el plan de estudio');
       return null;
     } finally {
       setLoading(false);
     }
-  };
-  
-  // Function to update plan progress
-  const updatePlanProgress = async (userId: string, planId: string) => {
-    if (!userId || !planId) return;
-    
-    try {
-      setProgressLoading(true);
-      
-      const progress = await fetchPlanProgress(userId, planId);
-      
-      if (progress) {
-        // Update state
-        setProgressData(prev => ({
-          ...prev,
-          [planId]: progress
-        }));
-      }
-    } catch (error) {
-      console.error("Error updating plan progress:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el progreso del plan",
-        variant: "destructive"
-      });
-    } finally {
-      setProgressLoading(false);
-    }
-  };
-  
-  // Function to get plan progress
-  const getPlanProgress = (planId: string): PlanProgress | null => {
-    return progressData[planId] || null;
-  };
-  
-  // Function to select a plan
-  const selectPlan = (plan: LearningPlan) => {
-    setCurrentPlan(plan);
-  };
+  }, [user?.id]);
 
-  // Return everything needed for the context
+  // Update existing plan
+  const updatePlan = useCallback(async (planId: string, updates: Partial<LearningPlan>) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const updatedPlan = await updateLearningPlan(planId, updates);
+      
+      if (updatedPlan) {
+        setPlans(prev => prev.map(plan => 
+          plan.id === planId ? { ...plan, ...updates } : plan
+        ));
+        
+        if (currentPlan?.id === planId) {
+          setCurrentPlan(prev => prev ? { ...prev, ...updates } : null);
+        }
+      }
+      
+      return updatedPlan;
+    } catch (err) {
+      console.error('Error updating plan:', err);
+      setError('Error al actualizar el plan de estudio');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPlan]);
+
+  // Delete plan
+  const deletePlan = useCallback(async (planId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const success = await deleteLearningPlan(planId);
+      
+      if (success) {
+        setPlans(prev => prev.filter(plan => plan.id !== planId));
+        
+        if (currentPlan?.id === planId) {
+          setCurrentPlan(null);
+        }
+      }
+      
+      return success;
+    } catch (err) {
+      console.error('Error deleting plan:', err);
+      setError('Error al eliminar el plan de estudio');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPlan]);
+
+  // Set current plan
+  const setActivePlan = useCallback((plan: LearningPlan | null) => {
+    setCurrentPlan(plan);
+  }, []);
+
   return {
-    plans,
+    // State
     currentPlan,
+    plans,
     loading,
-    initializing,
     error,
-    progressData,
-    progressLoading,
-    recommendedNodeId,
-    refreshPlans,
-    selectPlan,
+    
+    // Actions
+    fetchPlans,
     createPlan,
-    updatePlanProgress,
-    getPlanProgress
+    updatePlan,
+    deletePlan,
+    setActivePlan,
+    
+    // Computed
+    hasPlans: plans.length > 0,
+    isReady: !loading && error === null
   };
 };

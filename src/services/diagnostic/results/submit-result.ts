@@ -5,7 +5,6 @@ import { DiagnosticResult } from "@/types/diagnostic";
 import { TPAESHabilidad } from "@/types/system-types";
 import { updateUserSkillLevels } from "../skill-services";
 import { fetchDiagnosticQuestions } from "../question/fetch-questions";
-import { RawExerciseData } from "../types";
 
 /**
  * Submits diagnostic test results to Supabase
@@ -29,8 +28,7 @@ export const submitDiagnosticResult = async (
       throw new Error("No se pudo recuperar la información del diagnóstico");
     }
     
-    // Instead of directly accessing diagnostic_questions table, use fetchDiagnosticQuestions
-    // which already handles question retrieval safely
+    // Fetch questions for this diagnostic
     const questions = await fetchDiagnosticQuestions(diagnosticId, testData.test_id);
     
     if (!questions || questions.length === 0) {
@@ -55,12 +53,16 @@ export const submitDiagnosticResult = async (
     
     if (error) throw error;
     
-    // Update user skill levels
-    await updateUserSkillLevels(userId, results);
+    // Update user skill levels if available
+    try {
+      await updateUserSkillLevels(userId, results);
+    } catch (skillError) {
+      console.warn('Could not update skill levels:', skillError);
+      // Continue without failing the submission
+    }
     
     // Return the result
     if (data) {
-      // Cast data.results to the correct type
       const resultData = data.results as unknown as Record<TPAESHabilidad, number>;
       
       const newResult: DiagnosticResult = {

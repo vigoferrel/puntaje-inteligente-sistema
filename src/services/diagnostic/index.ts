@@ -1,6 +1,12 @@
 
 // Re-export from existing services
-export { fetchDiagnosticTests, submitDiagnosticResult } from './test-services';
+export { 
+  fetchDiagnosticTests, 
+  submitDiagnosticResult, 
+  calculateDiagnosticResults,
+  fetchOptimizedDiagnosticTests, 
+  getTestTypes 
+} from './test-services';
 export { fetchDiagnosticResults } from './results-services';
 export { ensureDefaultDiagnosticsExist, createLocalFallbackDiagnostics } from './default-services';
 
