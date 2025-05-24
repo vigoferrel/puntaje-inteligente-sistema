@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback } from 'react';
 import { LectoGuiaContext } from './useLectoGuia';
 import { LectoGuiaContextType } from './types';
@@ -185,6 +186,11 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     return result !== undefined ? true : false;
   }, [selectedPrueba, validateState, getFilteredNodes, subjectDisplayNames, activeSubject, addAssistantMessage, baseHandleNewExercise]);
 
+  // Wrapper function to ensure type safety for setSelectedTestId
+  const handleSetSelectedTestId = useCallback((testId: number) => {
+    changeTestId(testId);
+  }, [changeTestId]);
+
   // Estado de conexión simplificado
   const connectionStatus = 'connected' as const;
   const serviceStatus = {
@@ -232,7 +238,7 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     nodeProgress,
     handleNodeSelect,
     selectedTestId,
-    setSelectedTestId: changeTestId,
+    setSelectedTestId: handleSetSelectedTestId,
     selectedPrueba,
     recommendedNodes,
     
