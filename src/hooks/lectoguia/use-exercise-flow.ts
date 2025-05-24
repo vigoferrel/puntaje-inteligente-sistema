@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 import { Exercise } from '@/types/ai-types';
 import { toast } from '@/components/ui/use-toast';
-import { TPAESHabilidad } from '@/types/system-types';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { openRouterService } from '@/services/openrouter/core';
 
 /**
@@ -20,7 +20,7 @@ export function useExerciseFlow(
   
   const { addAssistantMessage } = useLectoGuiaChat();
   
-  // Mapeo de materias a habilidades principales
+  // Mapeo correcto de materias a habilidades principales
   const skillMap: Record<string, TPAESHabilidad> = {
     'general': 'INTERPRET_RELATE',
     'lectura': 'INTERPRET_RELATE',
@@ -28,6 +28,16 @@ export function useExerciseFlow(
     'matematicas-avanzada': 'MODEL',
     'ciencias': 'APPLY_PRINCIPLES',
     'historia': 'SOURCE_ANALYSIS'
+  };
+
+  // Mapeo correcto de materias a pruebas PAES
+  const subjectToPruebaMap: Record<string, TPAESPrueba> = {
+    'general': 'COMPETENCIA_LECTORA',
+    'lectura': 'COMPETENCIA_LECTORA',
+    'matematicas-basica': 'MATEMATICA_1',
+    'matematicas-avanzada': 'MATEMATICA_2',
+    'ciencias': 'CIENCIAS',
+    'historia': 'HISTORIA'
   };
   
   // Manejar la selección de opciones
@@ -51,6 +61,9 @@ export function useExerciseFlow(
       setShowFeedback(false);
       
       const currentSkill = skillMap[activeSubject] || 'INTERPRET_RELATE';
+      const currentPrueba = subjectToPruebaMap[activeSubject] || 'COMPETENCIA_LECTORA';
+      
+      console.log(`Generando ejercicio: skill=${currentSkill}, prueba=${currentPrueba}, subject=${activeSubject}`);
       
       // Mapeo de materias para generar ejercicios apropiados
       const subjectNames: Record<string, string> = {
@@ -69,11 +82,7 @@ export function useExerciseFlow(
         action: 'generate_exercise',
         payload: {
           skill: currentSkill,
-          prueba: activeSubject === 'lectura' ? 'COMPETENCIA_LECTORA' : 
-                 activeSubject === 'matematicas-basica' ? 'MATEMATICA_1' :
-                 activeSubject === 'matematicas-avanzada' ? 'MATEMATICA_2' :
-                 activeSubject === 'ciencias' ? 'CIENCIAS' :
-                 activeSubject === 'historia' ? 'HISTORIA' : 'COMPETENCIA_LECTORA',
+          prueba: currentPrueba,
           difficulty: 'INTERMEDIATE',
           subject: subjectName,
           includeExplanation: true
@@ -97,7 +106,7 @@ export function useExerciseFlow(
           id: `exercise-${Date.now()}`,
           nodeId: '',
           nodeName: '',
-          prueba: 'COMPETENCIA_LECTORA', 
+          prueba: currentPrueba, // Usar la prueba correcta según la materia
           skill: currentSkill,
           difficulty: 'INTERMEDIATE',
           question,
@@ -106,13 +115,21 @@ export function useExerciseFlow(
           explanation
         };
         
+        console.log(`Ejercicio generado correctamente:`, {
+          prueba: exercise.prueba,
+          skill: exercise.skill,
+          activeSubject,
+          question: exercise.question.substring(0, 50) + '...'
+        });
+        
         setCurrentExercise(exercise);
         setActiveTab('exercise');
         
-        // Notificar al usuario
-        addAssistantMessage(`He generado un nuevo ejercicio de ${subjectName} para ti. Puedes verlo en la pestaña de Ejercicios.`);
+        // Notificar al usuario con la información correcta
+        addAssistantMessage(`✅ He generado un nuevo ejercicio de ${subjectName} (${currentPrueba}) para ti. Puedes verlo en la pestaña de Ejercicios.`);
         
-        console.log('Ejercicio generado exitosamente');
+        console.log('Ejercicio generado exitosamente y sincronizado');
+        return exercise;
       } else {
         throw new Error('No se recibió un ejercicio válido del servicio');
       }
@@ -127,16 +144,17 @@ export function useExerciseFlow(
       
       setActiveTab('chat');
       addAssistantMessage("Lo siento, no pude generar un ejercicio en este momento. ¿Te gustaría intentar con otro tema?");
+      return null;
     } finally {
       setIsLoading(false);
     }
-  }, [activeSubject, setActiveTab, addAssistantMessage, skillMap]);
+  }, [activeSubject, setActiveTab, addAssistantMessage, skillMap, subjectToPruebaMap]);
   
   // Función para solicitar ejercicio que retorna una promesa
   const handleExerciseRequest = useCallback(async (): Promise<boolean> => {
     try {
-      await handleNewExercise();
-      return true;
+      const exercise = await handleNewExercise();
+      return exercise !== null;
     } catch (error) {
       console.error("Error en solicitud de ejercicio:", error);
       return false;
@@ -153,6 +171,7 @@ export function useExerciseFlow(
     isLoading,
     setIsLoading,
     setCurrentExercise,
-    skillMap
+    skillMap,
+    subjectToPruebaMap
   };
 }

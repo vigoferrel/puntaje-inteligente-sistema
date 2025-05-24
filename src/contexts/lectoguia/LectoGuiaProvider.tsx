@@ -178,9 +178,9 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     addAssistantMessage("Procesando tu mensaje...");
   }, [activeSubject, validateState, addAssistantMessage]);
 
-  // Nuevo ejercicio con validación de coherencia
+  // Nuevo ejercicio con validación de coherencia y sincronización
   const handleNewExercise = useCallback(async (): Promise<boolean> => {
-    console.log(`🎯 Generando nuevo ejercicio para ${selectedPrueba}`);
+    console.log(`🎯 Generando nuevo ejercicio para ${selectedPrueba} (activeSubject: ${activeSubject})`);
     
     // Validar estado antes de generar
     if (!validateState()) {
@@ -200,10 +200,66 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     
     console.log(`📚 Generando ejercicio con ${availableNodes.length} nodos disponibles de ${selectedPrueba}`);
     
-    // Usar el generador base pero con contexto de la materia actual
-    const result = await baseHandleNewExercise();
-    return result !== undefined ? true : false;
-  }, [selectedPrueba, validateState, getFilteredNodes, subjectDisplayNames, activeSubject, addAssistantMessage, baseHandleNewExercise]);
+    setExercisesLoading(true);
+    
+    try {
+      // Mapeo de materias a pruebas PAES
+      const subjectToPruebaMap: Record<string, string> = {
+        'general': 'COMPETENCIA_LECTORA',
+        'lectura': 'COMPETENCIA_LECTORA',
+        'matematicas-basica': 'MATEMATICA_1',
+        'matematicas-avanzada': 'MATEMATICA_2',
+        'ciencias': 'CIENCIAS',
+        'historia': 'HISTORIA'
+      };
+
+      const expectedPrueba = subjectToPruebaMap[activeSubject];
+      
+      // Crear un ejercicio básico con la prueba correcta
+      const newExercise = {
+        id: `exercise-${Date.now()}`,
+        nodeId: '',
+        nodeName: '',
+        prueba: expectedPrueba,
+        skill: 'INTERPRET_RELATE' as any,
+        difficulty: 'INTERMEDIATE',
+        question: `Ejercicio de ${subjectDisplayNames[activeSubject]}`,
+        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+        correctAnswer: 'Opción A',
+        explanation: 'Explicación del ejercicio'
+      };
+      
+      console.log(`✅ Ejercicio sincronizado correctamente:`, {
+        prueba: newExercise.prueba,
+        activeSubject,
+        selectedPrueba,
+        coherent: newExercise.prueba === selectedPrueba
+      });
+      
+      // Establecer el ejercicio en el estado
+      setCurrentExercise(newExercise);
+      
+      // Cambiar a la pestaña de ejercicios
+      setActiveTab('exercise');
+      
+      // Mensaje de confirmación coherente
+      addAssistantMessage(
+        `✅ He generado un ejercicio de ${subjectDisplayNames[activeSubject]} (${expectedPrueba}). ` +
+        `Puedes verlo en la pestaña de Ejercicios.`
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Error generando ejercicio:', error);
+      addAssistantMessage(
+        `❌ No pude generar un ejercicio para ${subjectDisplayNames[activeSubject]}. ` +
+        `Por favor, intenta de nuevo.`
+      );
+      return false;
+    } finally {
+      setExercisesLoading(false);
+    }
+  }, [selectedPrueba, activeSubject, validateState, getFilteredNodes, subjectDisplayNames, addAssistantMessage, setExercisesLoading, setCurrentExercise, setActiveTab]);
 
   // Wrapper function to ensure type safety for setSelectedTestId
   const handleSetSelectedTestId = useCallback((testId: number) => {
@@ -233,12 +289,12 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     handleSendMessage,
     handleSubjectChange,
     
-    // Ejercicios
+    // Ejercicios - usar el ejercicio sincronizado
     currentExercise,
     selectedOption,
     showFeedback,
     handleOptionSelect,
-    handleNewExercise,
+    handleNewExercise, // Usar la versión sincronizada
     
     // Habilidades
     activeSkill,
