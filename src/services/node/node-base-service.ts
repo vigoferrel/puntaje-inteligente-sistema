@@ -75,7 +75,15 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
       theory: node.content?.theory || '',
       examples: node.content?.examples || [],
       exerciseCount: node.content?.exerciseCount || 15
-    } as any
+    } as any,
+    // Mapear las nuevas propiedades
+    cognitive_level: node.cognitive_level,
+    subject_area: node.subject_area,
+    code: node.code,
+    skillId: node.skill_id,
+    testId: node.test_id,
+    createdAt: node.created_at,
+    updatedAt: node.updated_at
   };
 };
 
