@@ -30,7 +30,7 @@ export interface PlanProgress {
   completedNodes: number;
   inProgressNodes: number;
   overallProgress: number;
-  nodeProgress?: Record<string, number>;
+  nodeProgress: Record<string, number>; // Make this required to match the main types
 }
 
 // Define the context state type
