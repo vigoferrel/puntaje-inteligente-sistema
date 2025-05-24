@@ -1,7 +1,28 @@
 
-export { fetchDiagnosticTests, fetchDiagnosticResults } from './fetch-services';
-export { submitDiagnosticResult } from './submit-services';
-export { ensureDefaultDiagnosticsExist, createLocalFallbackDiagnostics } from './default-diagnostics';
+// Re-export from existing services
+export { fetchDiagnosticTests, submitDiagnosticResult } from './test-services';
+export { fetchDiagnosticResults } from './results-services';
+export { ensureDefaultDiagnosticsExist, createLocalFallbackDiagnostics } from './default-services';
 
-// Re-export types for convenience
-export type { DiagnosticTest, DiagnosticQuestion, DiagnosticResult } from '@/types/diagnostic';
+// Export new hierarchical services
+export {
+  fetchPAESTests,
+  fetchPAESSkills,
+  fetchLearningNodes,
+  fetchTier1CriticalNodes,
+  calculateAdaptiveWeight,
+  fetchUserNodeWeights,
+  getRecommendedLearningPath,
+  getSystemMetrics
+} from './hierarchical-services';
+
+// Export types
+export type {
+  LearningNode,
+  NodeWeight,
+  PAESTest,
+  PAESSkill,
+  TierPriority,
+  BloomLevel,
+  DifficultyLevel
+} from '@/types/diagnostic';

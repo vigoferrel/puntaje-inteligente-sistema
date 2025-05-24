@@ -5,13 +5,16 @@ import { DiagnosticBrowser } from "@/components/diagnostic/DiagnosticBrowser";
 import { DiagnosticExecution } from "@/components/diagnostic/DiagnosticExecution";
 import { DiagnosticResults } from "@/components/diagnostic/DiagnosticResults";
 import { DiagnosticProgressBar } from "@/components/diagnostic/DiagnosticProgressBar";
+import { HierarchicalMetrics } from "@/components/diagnostic/HierarchicalMetrics";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, AlertCircle, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDiagnosticManager } from "@/hooks/diagnostic/use-diagnostic-manager";
 
 export default function Diagnostico() {
+  const diagnosticManager = useDiagnosticManager();
   const {
     // State
     tests,
@@ -34,8 +37,11 @@ export default function Diagnostico() {
     navigateToQuestion,
     toggleHint,
     finishTest,
-    restart
-  } = useDiagnosticManager();
+    restart,
+    
+    // Hierarchical system data
+    hierarchicalData
+  } = diagnosticManager;
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -69,6 +75,28 @@ export default function Diagnostico() {
           </div>
         )}
         
+        {/* System Status Banner */}
+        {hierarchicalData.isSystemReady && !testStarted && (
+          <Alert className="mb-6 bg-green-50 border-green-200">
+            <TrendingUp className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700">
+              <div className="flex items-center justify-between">
+                <span>
+                  Sistema PAES Pro activo: {hierarchicalData.systemMetrics.totalNodes} nodos jerárquicos cargados
+                </span>
+                <div className="flex gap-2">
+                  <Badge variant="destructive" className="text-xs">
+                    {hierarchicalData.systemMetrics.tier1Count} Críticos
+                  </Badge>
+                  <Badge variant="default" className="text-xs">
+                    Tier 1 Coverage: {hierarchicalData.tier1Coverage.toFixed(1)}%
+                  </Badge>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {/* Progress bar during test */}
         {testStarted && currentTest && (
           <DiagnosticProgressBar 
@@ -97,6 +125,11 @@ export default function Diagnostico() {
               </Button>
             </AlertDescription>
           </Alert>
+        )}
+        
+        {/* Hierarchical Metrics - Show only when not in test mode */}
+        {!testStarted && !resultSubmitted && hierarchicalData.isSystemReady && (
+          <HierarchicalMetrics />
         )}
         
         {/* Main content */}
@@ -130,6 +163,23 @@ export default function Diagnostico() {
             results={testResults}
             onRestart={restart}
           />
+        )}
+        
+        {/* Debug info in development */}
+        {process.env.NODE_ENV === 'development' && !testStarted && (
+          <div className="mt-8 p-4 bg-gray-100 rounded text-xs">
+            <strong>Debug Info:</strong>
+            <br />
+            System Ready: {hierarchicalData.isSystemReady ? 'Yes' : 'No'}
+            <br />
+            PAES Tests: {hierarchicalData.paesTests.length}
+            <br />
+            Tier 1 Nodes: {hierarchicalData.tier1Nodes.length}
+            <br />
+            Diagnostic Tests: {tests.length}
+            <br />
+            Recommended Path: {hierarchicalData.recommendedPath.length}
+          </div>
         )}
       </div>
     </AppLayout>

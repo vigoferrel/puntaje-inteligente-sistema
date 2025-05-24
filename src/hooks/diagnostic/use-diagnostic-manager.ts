@@ -4,6 +4,7 @@ import { DiagnosticTest, DiagnosticResult } from "@/types/diagnostic";
 import { fetchDiagnosticTests, submitDiagnosticResult } from "@/services/diagnostic";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import { useHierarchicalDiagnostic } from "./use-hierarchical-diagnostic";
 
 interface DiagnosticManagerState {
   // Data state
@@ -45,8 +46,12 @@ interface DiagnosticManagerActions {
   restart: () => void;
 }
 
-export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManagerActions => {
+export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManagerActions & {
+  // Hierarchical system data
+  hierarchicalData: ReturnType<typeof useHierarchicalDiagnostic>;
+} => {
   const { user } = useAuth();
+  const hierarchicalData = useHierarchicalDiagnostic();
   
   // State initialization
   const [state, setState] = useState<DiagnosticManagerState>({
@@ -64,13 +69,23 @@ export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManag
     testResults: null
   });
 
-  // Load tests from database
+  // Load tests from database (integrated with hierarchical system)
   const loadTests = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
       const userId = user?.id || "auto-generated";
-      const loadedTests = await fetchDiagnosticTests(userId, 50);
+      
+      // Use hierarchical diagnostic tests if available, fallback to original
+      let loadedTests: DiagnosticTest[] = [];
+      
+      if (hierarchicalData.diagnosticTests.length > 0) {
+        loadedTests = hierarchicalData.diagnosticTests;
+        console.log(`✅ Using hierarchical diagnostic tests: ${loadedTests.length}`);
+      } else {
+        loadedTests = await fetchDiagnosticTests(userId, 50);
+        console.log(`✅ Using fallback diagnostic tests: ${loadedTests.length}`);
+      }
       
       if (loadedTests.length === 0) {
         setState(prev => ({ 
@@ -88,7 +103,7 @@ export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManag
         error: null
       }));
       
-      console.log(`✅ Cargados ${loadedTests.length} diagnósticos`);
+      console.log(`✅ Diagnósticos cargados: ${loadedTests.length}`);
       
     } catch (error) {
       console.error("Error al cargar diagnósticos:", error);
@@ -104,7 +119,19 @@ export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManag
         variant: "destructive"
       });
     }
-  }, [user?.id]);
+  }, [user?.id, hierarchicalData.diagnosticTests]);
+
+  // Auto-sync with hierarchical system
+  useEffect(() => {
+    if (hierarchicalData.diagnosticTests.length > 0 && state.tests.length === 0) {
+      setState(prev => ({ 
+        ...prev, 
+        tests: hierarchicalData.diagnosticTests,
+        loading: false,
+        error: null
+      }));
+    }
+  }, [hierarchicalData.diagnosticTests, state.tests.length]);
 
   // Test selection
   const selectTest = useCallback((testId: string) => {
@@ -177,6 +204,11 @@ export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManag
           testStarted: false
         }));
         
+        // Refresh hierarchical data to update user weights
+        if (hierarchicalData.loadUserWeights) {
+          await hierarchicalData.loadUserWeights();
+        }
+        
         toast({
           title: "Diagnóstico completado",
           description: "Tus resultados han sido guardados exitosamente"
@@ -190,7 +222,7 @@ export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManag
         variant: "destructive"
       });
     }
-  }, [state.currentTest, state.answers, state.timeStarted, user?.id]);
+  }, [state.currentTest, state.answers, state.timeStarted, user?.id, hierarchicalData.loadUserWeights]);
 
   // Restart
   const restart = useCallback(() => {
@@ -208,10 +240,12 @@ export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManag
     }));
   }, []);
 
-  // Load tests on mount
+  // Load tests on mount or when hierarchical system is ready
   useEffect(() => {
-    loadTests();
-  }, [loadTests]);
+    if (hierarchicalData.isSystemReady) {
+      loadTests();
+    }
+  }, [loadTests, hierarchicalData.isSystemReady]);
 
   return {
     // State
@@ -225,6 +259,9 @@ export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManag
     navigateToQuestion,
     toggleHint,
     finishTest,
-    restart
+    restart,
+    
+    // Hierarchical system data
+    hierarchicalData
   };
 };
