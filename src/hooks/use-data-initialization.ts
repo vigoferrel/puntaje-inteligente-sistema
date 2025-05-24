@@ -54,11 +54,10 @@ export const useDataInitialization = () => {
         .from('paes_tests')
         .select('*', { count: 'exact', head: true });
         
-      // Check PAES content (nodes with specific content types)
-      const { count: paesContentCount, error: paesContentError } = await supabase
-        .from('node_content')
-        .select('*', { count: 'exact', head: true })
-        .in('content_type', ['sistema_principal', 'prueba_principal', 'dimension', 'nodo_critico', 'eje', 'modulo', 'asignatura']);
+      // Check exercise content as proxy for PAES content
+      const { count: exerciseCount, error: exerciseError } = await supabase
+        .from('exercises')
+        .select('*', { count: 'exact', head: true });
         
       // Update status based on results
       setStatus({
@@ -79,9 +78,9 @@ export const useDataInitialization = () => {
             : 'empty',
       });
       
-      setPaesContentStatus(paesContentError
+      setPaesContentStatus(exerciseError
         ? 'error'
-        : (paesContentCount && paesContentCount > 0)
+        : (exerciseCount && exerciseCount > 0)
           ? 'populated'
           : 'empty');
       
@@ -92,7 +91,7 @@ export const useDataInitialization = () => {
         learningNodes: learningNodesCount,
         paesSkills: paesSkillsCount,
         paesTests: paesTestsCount,
-        paesContent: paesContentCount
+        exercises: exerciseCount
       });
     } catch (err: any) {
       console.error("Error checking database status:", err);

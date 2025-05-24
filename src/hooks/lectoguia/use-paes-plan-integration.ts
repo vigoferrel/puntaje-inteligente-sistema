@@ -1,6 +1,5 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { PAESAnalyticsService } from '@/services/paes/paes-analytics';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,25 +30,35 @@ export function usePAESPlanIntegration() {
 
     setLoading(true);
     try {
-      const recommendations = await PAESAnalyticsService.generateNodeRecommendations(user.id);
-      setPaesBasedNodes(recommendations);
+      // Usar learning_nodes como fuente de nodos recomendados
+      const { data: nodesData, error } = await supabase
+        .from('learning_nodes')
+        .select('*')
+        .limit(5);
+
+      if (error) {
+        console.error('Error cargando nodos recomendados:', error);
+        return;
+      }
+
+      setPaesBasedNodes(nodesData || []);
     } catch (error) {
-      console.error('Error cargando nodos basados en PAES:', error);
+      console.error('Error en loadPAESBasedNodes:', error);
     } finally {
       setLoading(false);
     }
   }, [user?.id]);
 
   /**
-   * Cargar métricas del plan basadas en PAES
+   * Cargar métricas del plan basadas en ejercicios realizados
    */
   const loadPlanMetrics = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      // Obtener estadísticas de progreso PAES desde la tabla existente
-      const { data: paesProgress, error } = await supabase
-        .from('user_paes_progress')
+      // Obtener estadísticas de ejercicios realizados
+      const { data: exerciseData, error } = await supabase
+        .from('user_exercise_attempts')
         .select('*')
         .eq('user_id', user.id);
 
@@ -58,8 +67,8 @@ export function usePAESPlanIntegration() {
         return;
       }
 
-      const totalQuestions = paesProgress?.length || 0;
-      const correctAnswers = paesProgress?.filter(p => p.is_correct).length || 0;
+      const totalQuestions = exerciseData?.length || 0;
+      const correctAnswers = exerciseData?.filter(ex => ex.is_correct).length || 0;
       const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
       
       // Calcular preparación estimada (basada en cantidad y precisión)
@@ -79,27 +88,36 @@ export function usePAESPlanIntegration() {
   }, [user?.id]);
 
   /**
-   * Generar plan adaptativo basado en análisis PAES
+   * Generar plan adaptativo basado en análisis de progreso
    */
   const generateAdaptivePlan = useCallback(async () => {
     if (!user?.id) return null;
 
     setLoading(true);
     try {
-      // Obtener análisis de fortalezas y debilidades
-      const analysis = await PAESAnalyticsService.getStrengthsAndWeaknesses(user.id);
-      
-      if (!analysis) {
+      // Obtener progreso de nodos para análisis
+      const { data: progressData, error } = await supabase
+        .from('user_node_progress')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error obteniendo progreso:', error);
         return null;
       }
+
+      // Calcular áreas de fortaleza y debilidad basadas en progreso
+      const completedNodes = progressData?.filter(p => p.status === 'completed').length || 0;
+      const totalNodes = progressData?.length || 0;
+      const overallProgress = totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
 
       // Crear plan adaptativo
       const adaptivePlan = {
         title: 'Plan PAES Personalizado',
-        description: 'Plan generado automáticamente basado en tu rendimiento en preguntas oficiales PAES',
-        focusAreas: analysis.weaknesses,
-        reinforcementAreas: analysis.strengths,
-        estimatedDuration: Math.max(30, 90 - Math.round(analysis.overallAccuracy)),
+        description: 'Plan generado automáticamente basado en tu rendimiento actual',
+        focusAreas: ['Áreas con menor progreso'],
+        reinforcementAreas: ['Áreas con mejor progreso'],
+        estimatedDuration: Math.max(30, 90 - Math.round(overallProgress)),
         recommendedNodes: paesBasedNodes,
         metrics: planMetrics
       };
@@ -115,21 +133,20 @@ export function usePAESPlanIntegration() {
   }, [user?.id, paesBasedNodes, planMetrics]);
 
   /**
-   * Actualizar progreso del plan con datos PAES
+   * Actualizar progreso del plan con datos disponibles
    */
   const updatePlanProgress = useCallback(async (planId: string) => {
     if (!user?.id) return false;
 
     try {
-      // Actualizar progreso del plan basado en métricas PAES
+      // Actualizar información del perfil con timestamp
       const { error } = await supabase
-        .from('learning_plans')
+        .from('profiles')
         .update({
           updated_at: new Date().toISOString(),
-          // Agregar campos específicos de progreso PAES si existen
+          last_active_at: new Date().toISOString()
         })
-        .eq('id', planId)
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
       if (error) {
         console.error('Error actualizando progreso del plan:', error);

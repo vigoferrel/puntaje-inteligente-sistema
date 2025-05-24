@@ -1,305 +1,197 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { LearningNode, NodeWeight, PAESTest, PAESSkill, TierPriority, BloomLevel } from "@/types/diagnostic";
-import { toast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+
+// Simplified type definitions to match actual database schema
+export interface PAESTest {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  time_minutes: number;
+  questions_count: number;
+  complexity_level: string;
+  is_required: boolean;
+  relative_weight: number;
+}
+
+export interface PAESSkill {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  test_id?: number;
+  impact_weight: number;
+  node_count: number;
+  display_order: number;
+}
+
+export interface LearningNode {
+  id: string;
+  title: string;
+  description?: string;
+  code: string;
+  difficulty: string;
+  skill_id?: number;
+  test_id?: number;
+}
 
 /**
- * Servicios para el sistema jerárquico PAES Pro
+ * Fetch PAES tests from database
  */
-
-// Fetch PAES Tests
 export const fetchPAESTests = async (): Promise<PAESTest[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('paes_tests')
-      .select('*')
-      .order('relative_weight', { ascending: false });
+  const { data, error } = await supabase
+    .from('paes_tests')
+    .select('*')
+    .order('id');
 
-    if (error) throw error;
-    
-    return data || [];
-  } catch (error) {
+  if (error) {
     console.error('Error fetching PAES tests:', error);
     return [];
   }
+
+  return data as PAESTest[];
 };
 
-// Fetch PAES Skills
-export const fetchPAESSkills = async (testId?: number): Promise<PAESSkill[]> => {
-  try {
-    let query = supabase
-      .from('paes_skills')
-      .select('*')
-      .order('impact_weight', { ascending: false });
+/**
+ * Fetch PAES skills from database
+ */
+export const fetchPAESSkills = async (): Promise<PAESSkill[]> => {
+  const { data, error } = await supabase
+    .from('paes_skills')
+    .select('*')
+    .order('display_order');
 
-    if (testId) {
-      query = query.eq('test_id', testId);
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    
-    return data || [];
-  } catch (error) {
+  if (error) {
     console.error('Error fetching PAES skills:', error);
     return [];
   }
+
+  return data as PAESSkill[];
 };
 
-// Fetch Learning Nodes with hierarchical filtering
-export const fetchLearningNodes = async (options: {
-  tierPriority?: TierPriority;
-  testId?: number;
-  skillId?: number;
-  limit?: number;
-  offset?: number;
-} = {}): Promise<{ nodes: LearningNode[], total: number }> => {
-  try {
-    const { tierPriority, testId, skillId, limit = 50, offset = 0 } = options;
+/**
+ * Fetch learning nodes from database
+ */
+export const fetchLearningNodes = async (limit?: number): Promise<LearningNode[]> => {
+  let query = supabase
+    .from('learning_nodes')
+    .select('*')
+    .order('position');
 
-    let query = supabase
-      .from('learning_nodes')
-      .select('*', { count: 'exact' })
-      .order('base_weight', { ascending: false })
-      .order('position', { ascending: true })
-      .range(offset, offset + limit - 1);
+  if (limit) {
+    query = query.limit(limit);
+  }
 
-    if (tierPriority) {
-      query = query.eq('tier_priority', tierPriority);
-    }
+  const { data, error } = await query;
 
-    if (testId) {
-      query = query.eq('test_id', testId);
-    }
-
-    if (skillId) {
-      query = query.eq('skill_id', skillId);
-    }
-
-    const { data, error, count } = await query;
-
-    if (error) throw error;
-
-    return {
-      nodes: data || [],
-      total: count || 0
-    };
-  } catch (error) {
+  if (error) {
     console.error('Error fetching learning nodes:', error);
-    return { nodes: [], total: 0 };
+    return [];
   }
+
+  return data as LearningNode[];
 };
 
-// Fetch Tier 1 Critical Nodes
-export const fetchTier1CriticalNodes = async (testId?: number): Promise<LearningNode[]> => {
-  const { nodes } = await fetchLearningNodes({
-    tierPriority: 'tier1_critico',
-    testId,
-    limit: 100
-  });
-  return nodes;
-};
+/**
+ * Get tier 1 critical nodes based on priority
+ */
+export const fetchTier1CriticalNodes = async (): Promise<LearningNode[]> => {
+  const { data, error } = await supabase
+    .from('learning_nodes')
+    .select('*')
+    .eq('tier_priority', 'tier1_critico')
+    .order('position');
 
-// Calculate adaptive weight for a node and user
-export const calculateAdaptiveWeight = async (
-  userId: string,
-  nodeId: string,
-  userPerformance?: number,
-  careerRelevance?: number
-): Promise<number> => {
-  try {
-    // Get base node data
-    const { data: nodeData, error: nodeError } = await supabase
-      .from('learning_nodes')
-      .select('*')
-      .eq('id', nodeId)
-      .single();
-
-    if (nodeError || !nodeData) {
-      console.error('Error fetching node data:', nodeError);
-      return 1.0;
-    }
-
-    // Calculate base weight
-    let finalWeight = nodeData.base_weight || 1.0;
-    finalWeight *= nodeData.difficulty_multiplier || 1.0;
-    finalWeight += nodeData.frequency_bonus || 0.0;
-    finalWeight += nodeData.prerequisite_weight || 0.0;
-
-    // Apply career relevance multiplier
-    if (careerRelevance) {
-      finalWeight *= careerRelevance;
-    }
-
-    // Apply performance adjustment
-    if (userPerformance !== undefined) {
-      if (userPerformance < 0.7) {
-        finalWeight *= 1.3; // Increase weight for weak nodes
-      } else if (userPerformance > 0.9) {
-        finalWeight *= 0.8; // Reduce weight for mastered nodes
-      }
-    }
-
-    // Store calculated weight
-    await supabase
-      .from('node_weights')
-      .upsert({
-        user_id: userId,
-        node_id: nodeId,
-        calculated_weight: Math.round(finalWeight * 100) / 100,
-        career_relevance: careerRelevance || 1.0,
-        performance_adjustment: userPerformance ? (userPerformance < 0.7 ? 1.3 : userPerformance > 0.9 ? 0.8 : 1.0) : 1.0,
-        last_calculated: new Date().toISOString()
-      });
-
-    return Math.round(finalWeight * 100) / 100;
-  } catch (error) {
-    console.error('Error calculating adaptive weight:', error);
-    return 1.0;
+  if (error) {
+    console.error('Error fetching tier 1 critical nodes:', error);
+    return [];
   }
+
+  return data as LearningNode[];
 };
 
-// Get user's adaptive weights
-export const fetchUserNodeWeights = async (userId: string): Promise<NodeWeight[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('node_weights')
-      .select('*')
-      .eq('user_id', userId)
-      .order('calculated_weight', { ascending: false });
+/**
+ * Calculate adaptive weight for a node based on user performance
+ */
+export const calculateAdaptiveWeight = async (userId: string, nodeId: string): Promise<number> => {
+  // Get user progress for this node
+  const { data: progress } = await supabase
+    .from('user_node_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('node_id', nodeId)
+    .single();
 
-    if (error) throw error;
-    
-    return data || [];
-  } catch (error) {
+  if (!progress) {
+    return 1.0; // Default weight for new nodes
+  }
+
+  // Calculate weight based on performance
+  const baseWeight = 1.0;
+  const difficultyMultiplier = progress.mastery_level < 0.5 ? 1.5 : 1.0;
+  const frequencyBonus = progress.attempts_count > 5 ? 0.2 : 0.0;
+
+  return baseWeight * difficultyMultiplier + frequencyBonus;
+};
+
+/**
+ * Fetch user-specific node weights
+ */
+export const fetchUserNodeWeights = async (userId: string): Promise<Record<string, number>> => {
+  const { data, error } = await supabase
+    .from('node_weights')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
     console.error('Error fetching user node weights:', error);
-    return [];
+    return {};
   }
+
+  return data.reduce((acc, weight) => {
+    acc[weight.node_id] = weight.calculated_weight;
+    return acc;
+  }, {} as Record<string, number>);
 };
 
-// Get recommended learning path based on hierarchy
-export const getRecommendedLearningPath = async (
-  userId: string,
-  testId?: number,
-  maxNodes: number = 10
-): Promise<LearningNode[]> => {
-  try {
-    // First, get Tier 1 critical nodes
-    const tier1Nodes = await fetchTier1CriticalNodes(testId);
-    
-    // Get user's current progress
-    const { data: progressData } = await supabase
-      .from('user_node_progress')
-      .select('node_id, mastery_level, status')
-      .eq('user_id', userId);
+/**
+ * Get recommended learning path for user
+ */
+export const getRecommendedLearningPath = async (userId: string, limit: number = 10): Promise<LearningNode[]> => {
+  // For now, return nodes ordered by priority and user progress
+  const { data, error } = await supabase
+    .from('learning_nodes')
+    .select(`
+      *,
+      user_node_progress!left(progress, status)
+    `)
+    .order('tier_priority')
+    .order('position')
+    .limit(limit);
 
-    const progressMap = new Map(
-      (progressData || []).map(p => [p.node_id, p])
-    );
-
-    // Filter out completed nodes and sort by priority
-    const availableNodes = tier1Nodes.filter(node => {
-      const progress = progressMap.get(node.id);
-      return !progress || progress.status !== 'completed' || (progress.mastery_level || 0) < 0.8;
-    });
-
-    // Sort by adaptive weight (higher weight = higher priority)
-    const sortedNodes = availableNodes.sort((a, b) => {
-      const weightA = a.baseWeight * a.difficultyMultiplier + a.frequencyBonus;
-      const weightB = b.baseWeight * b.difficultyMultiplier + b.frequencyBonus;
-      return weightB - weightA;
-    });
-
-    return sortedNodes.slice(0, maxNodes);
-  } catch (error) {
-    console.error('Error getting recommended learning path:', error);
+  if (error) {
+    console.error('Error fetching recommended learning path:', error);
     return [];
   }
+
+  return data as LearningNode[];
 };
 
-// Get system metrics for dashboard
-export const getSystemMetrics = async (): Promise<{
-  totalNodes: number;
-  tier1Count: number;
-  tier2Count: number;
-  tier3Count: number;
-  distributionByTest: Record<string, number>;
-  avgBloomLevel: number;
-}> => {
-  try {
-    // Get total nodes by tier
-    const { data: tierCounts } = await supabase
-      .from('learning_nodes')
-      .select('tier_priority')
-      .then(result => {
-        if (result.error) throw result.error;
-        
-        const counts = { tier1: 0, tier2: 0, tier3: 0 };
-        (result.data || []).forEach(node => {
-          if (node.tier_priority === 'tier1_critico') counts.tier1++;
-          else if (node.tier_priority === 'tier2_importante') counts.tier2++;
-          else if (node.tier_priority === 'tier3_complementario') counts.tier3++;
-        });
-        
-        return { data: counts, error: null };
-      });
+/**
+ * Get system metrics for dashboard
+ */
+export const getSystemMetrics = async () => {
+  const [tests, skills, nodes] = await Promise.all([
+    fetchPAESTests(),
+    fetchPAESSkills(),
+    fetchLearningNodes()
+  ]);
 
-    // Get distribution by test
-    const { data: testDistribution } = await supabase
-      .from('learning_nodes')
-      .select('test_id, paes_tests(code)')
-      .then(result => {
-        if (result.error) throw result.error;
-        
-        const distribution: Record<string, number> = {};
-        (result.data || []).forEach(node => {
-          const testCode = node.paes_tests?.code || 'Unknown';
-          distribution[testCode] = (distribution[testCode] || 0) + 1;
-        });
-        
-        return { data: distribution, error: null };
-      });
-
-    // Calculate average Bloom level
-    const bloomLevelMap: Record<BloomLevel, number> = {
-      'recordar': 1,
-      'comprender': 2,
-      'aplicar': 3,
-      'analizar': 4,
-      'evaluar': 5,
-      'crear': 6
-    };
-
-    const { data: bloomData } = await supabase
-      .from('learning_nodes')
-      .select('cognitive_level')
-      .then(result => {
-        if (result.error) throw result.error;
-        
-        const levels = (result.data || []).map(node => bloomLevelMap[node.cognitive_level as BloomLevel] || 3);
-        const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
-        
-        return { data: avgLevel, error: null };
-      });
-
-    return {
-      totalNodes: (tierCounts?.tier1 || 0) + (tierCounts?.tier2 || 0) + (tierCounts?.tier3 || 0),
-      tier1Count: tierCounts?.tier1 || 0,
-      tier2Count: tierCounts?.tier2 || 0,
-      tier3Count: tierCounts?.tier3 || 0,
-      distributionByTest: testDistribution || {},
-      avgBloomLevel: bloomData || 3.2
-    };
-  } catch (error) {
-    console.error('Error getting system metrics:', error);
-    return {
-      totalNodes: 0,
-      tier1Count: 0,
-      tier2Count: 0,
-      tier3Count: 0,
-      distributionByTest: {},
-      avgBloomLevel: 3.2
-    };
-  }
+  return {
+    totalTests: tests.length,
+    totalSkills: skills.length,
+    totalNodes: nodes.length,
+    tier1Nodes: nodes.filter(n => (n as any).tier_priority === 'tier1_critico').length,
+    lastUpdated: new Date().toISOString()
+  };
 };
