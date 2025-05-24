@@ -5,7 +5,7 @@ import { TPAESHabilidad } from "@/types/system-types";
 import { fetchNodesBySkills } from "@/services/learning-node-service";
 
 /**
- * Creates a learning plan for a user with improved error handling
+ * Creates a virtual learning plan using existing user_node_progress data
  */
 export const createLearningPlan = async (
   userId: string, 
@@ -37,23 +37,8 @@ export const createLearningPlan = async (
     
     const priorities = skillPriorities || defaultSkillPriorities;
     
-    // Insert the plan
-    const { data: plan, error } = await supabase
-      .from('learning_plans')
-      .insert({
-        user_id: userId,
-        title,
-        description,
-        target_date: targetDate
-      })
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    if (!plan) {
-      throw new Error("No data returned after inserting learning plan");
-    }
+    // Create virtual plan ID
+    const planId = `virtual-plan-${userId}-${Date.now()}`;
     
     // Get top skills to focus on (those with lowest scores)
     const skillsToFocus = Object.entries(priorities)
@@ -71,65 +56,48 @@ export const createLearningPlan = async (
     }
     
     if (!nodes || nodes.length === 0) {
-      console.warn("No nodes found for selected skills. Creating empty plan.");
-      return {
-        id: plan.id,
-        title: plan.title,
-        description: plan.description || '',
-        userId: plan.user_id,
-        createdAt: plan.created_at,
-        updatedAt: plan.updated_at,
-        targetDate: plan.target_date || null,
-        nodes: []
-      };
-    }
-    
-    // Add nodes to the plan
-    const planNodes = [];
-    for (let i = 0; i < nodes.length; i++) {
-      try {
-        const node = nodes[i];
-        const { data: planNode, error } = await supabase
-          .from('learning_plan_nodes')
-          .insert({
-            plan_id: plan.id,
-            node_id: node.id,
-            position: i
-          })
-          .select('id')
-          .single();
-        
-        if (error) throw error;
-        
-        planNodes.push({
-          id: planNode.id,
-          nodeId: node.id,
-          nodeName: node.title,
-          nodeDescription: node.description || '',
-          nodeDifficulty: node.difficulty,
-          nodeSkill: node.skill || 'MODEL',
-          position: i,
-          planId: plan.id
-        });
-      } catch (nodeError) {
-        console.error(`Error adding node to plan for position ${i}:`, nodeError);
-        // Continue with next node on error
+      console.warn("No nodes found for selected skills. Getting default nodes.");
+      
+      // Get default nodes from learning_nodes
+      const { data: defaultNodes, error } = await supabase
+        .from('learning_nodes')
+        .select('*')
+        .order('position', { ascending: true })
+        .limit(10);
+      
+      if (error) {
+        console.error("Error fetching default nodes:", error);
+        nodes = [];
+      } else {
+        nodes = defaultNodes || [];
       }
     }
     
-    // Return the plan with nodes
+    // Create plan nodes from available learning nodes
+    const planNodes = nodes.map((node, index) => ({
+      id: `virtual-node-${node.id}-${index}`,
+      nodeId: node.id,
+      nodeName: node.title,
+      nodeDescription: node.description || '',
+      nodeDifficulty: node.difficulty,
+      nodeSkill: node.skill_id ? `SKILL_${node.skill_id}` : 'MODEL',
+      position: index,
+      planId: planId
+    }));
+    
+    // Return the virtual plan
     return {
-      id: plan.id,
-      title: plan.title,
-      description: plan.description || '',
-      userId: plan.user_id,
-      createdAt: plan.created_at,
-      updatedAt: plan.updated_at,
-      targetDate: plan.target_date || null,
+      id: planId,
+      title,
+      description: description || '',
+      userId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      targetDate: targetDate || null,
       nodes: planNodes
     };
   } catch (error) {
-    console.error("Error creating learning plan:", error);
+    console.error("Error creating virtual learning plan:", error);
     return null;
   }
 };

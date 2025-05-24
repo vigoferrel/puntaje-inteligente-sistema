@@ -68,3 +68,34 @@ export class PAESContentService {
     }
   }
 }
+
+/**
+ * Initialize PAES content using existing data
+ */
+export async function initializePAESContent(userId?: string) {
+  try {
+    console.log('Initializing PAES content with existing data...');
+    
+    // Ensure learning nodes exist
+    const { data: nodes, error } = await supabase
+      .from('learning_nodes')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      console.error('Error checking learning nodes:', error);
+      return false;
+    }
+    
+    if (!nodes || nodes.length === 0) {
+      console.warn('No learning nodes found. PAES content may be limited.');
+      return false;
+    }
+    
+    console.log('PAES content initialized successfully');
+    return true;
+  } catch (error) {
+    console.error('Error initializing PAES content:', error);
+    return false;
+  }
+}
