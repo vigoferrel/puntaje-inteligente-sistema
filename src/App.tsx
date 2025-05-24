@@ -1,7 +1,7 @@
 
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { LearningPlanProvider } from '@/contexts/LearningPlanContext';
+import { LearningPlanProvider } from '@/contexts/learning-plan';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import { Toaster } from './components/ui/toaster';

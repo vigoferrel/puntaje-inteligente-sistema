@@ -95,32 +95,34 @@ const Plan = () => {
     }
     
     const targetCareer = user?.targetCareer || "General";
-    await createPlan(
+    const newPlan = await createPlan(
       `Plan PAES ${targetCareer}`,
       `Plan de preparación PAES personalizado para ${targetCareer}`
     );
     
-    toast({
-      title: "¡Plan creado!",
-      description: "Tu nuevo plan de estudio ha sido creado exitosamente."
-    });
+    if (newPlan) {
+      toast({
+        title: "¡Plan creado!",
+        description: "Tu nuevo plan de estudio ha sido creado exitosamente."
+      });
+    }
   };
   
-  // Contenido de carga
-  if (loading || initializing) {
+  // Show loading only if we're actually initializing
+  if (initializing && loading) {
     return (
       <AppLayout>
         <div className="container py-8">
           <h1 className="text-3xl font-bold mb-6 text-white">Mi Plan</h1>
           <LoadingState 
-            message={initializing ? "Inicializando datos de aprendizaje..." : "Cargando plan de estudio..."} 
+            message="Inicializando datos de aprendizaje..." 
           />
         </div>
       </AppLayout>
     );
   }
   
-  // Contenido de error
+  // Show error state
   if (error) {
     console.error("Error en Plan component:", error);
     return (
@@ -133,8 +135,16 @@ const Plan = () => {
     );
   }
   
-  // Obtener el progreso del plan actual
+  // Get the progress of the current plan
   const currentPlanProgress = currentPlan ? getPlanProgress(currentPlan.id) : null;
+  
+  console.log('Plan component render:', {
+    initializing,
+    loading,
+    plans: plans.length,
+    currentPlan: currentPlan?.title,
+    currentPlanProgress
+  });
   
   return (
     <AppLayout>

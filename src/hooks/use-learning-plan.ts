@@ -7,16 +7,20 @@ export const useLearningPlan = () => {
   const { profile } = useAuth();
   const planContext = useLearningPlanContext();
   
-  // Load plans when the user profile is available
+  // Auto-load plans when user is available and context is initializing
   useEffect(() => {
     if (profile?.id && planContext.initializing) {
+      console.log('Auto-loading plans for user:', profile.id);
       planContext.refreshPlans(profile.id);
     }
-  }, [profile?.id, planContext.initializing]);
+  }, [profile?.id, planContext.initializing, planContext.refreshPlans]);
   
   // Function to create a new plan
   const createNewPlan = async (title: string, description?: string) => {
-    if (!profile?.id) return null;
+    if (!profile?.id) {
+      console.warn('Cannot create plan: no user profile available');
+      return null;
+    }
     
     const targetDate = new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString();
     return await planContext.createPlan(profile.id, title, description, targetDate);
@@ -24,8 +28,21 @@ export const useLearningPlan = () => {
   
   // Function to update progress for the current plan
   const updateCurrentPlanProgress = async () => {
-    if (!profile?.id || !planContext.currentPlan) return;
+    if (!profile?.id || !planContext.currentPlan) {
+      console.warn('Cannot update progress: missing user or plan');
+      return;
+    }
     await planContext.updatePlanProgress(profile.id, planContext.currentPlan.id);
+  };
+  
+  // Manual refresh function
+  const refreshPlans = () => {
+    if (profile?.id) {
+      console.log('Manual refresh of plans for user:', profile.id);
+      planContext.refreshPlans(profile.id);
+    } else {
+      console.warn('Cannot refresh plans: no user profile available');
+    }
   };
   
   return {
@@ -36,7 +53,7 @@ export const useLearningPlan = () => {
     initializing: planContext.initializing,
     progressLoading: planContext.progressLoading,
     getPlanProgress: planContext.getPlanProgress,
-    refreshPlans: () => profile?.id && planContext.refreshPlans(profile.id),
+    refreshPlans,
     selectPlan: planContext.selectPlan,
     createPlan: createNewPlan,
     updateCurrentPlanProgress
