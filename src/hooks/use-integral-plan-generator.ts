@@ -35,7 +35,8 @@ export const useIntegralPlanGenerator = () => {
         let priority = 0;
         
         // Bonificación por debilidades detectadas
-        if (weakestSkills.includes(node.paes_skills?.code)) {
+        const skillCode = node.paes_skills?.code;
+        if (skillCode && weakestSkills.includes(skillCode as any)) {
           priority += 100;
         }
         
