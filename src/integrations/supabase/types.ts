@@ -425,6 +425,7 @@ export type Database = {
       learning_nodes: {
         Row: {
           code: string
+          cognitive_level: string | null
           created_at: string | null
           depends_on: string[] | null
           description: string | null
@@ -433,12 +434,14 @@ export type Database = {
           id: string
           position: number
           skill_id: number | null
+          subject_area: string | null
           test_id: number | null
           title: string
           updated_at: string | null
         }
         Insert: {
           code: string
+          cognitive_level?: string | null
           created_at?: string | null
           depends_on?: string[] | null
           description?: string | null
@@ -447,12 +450,14 @@ export type Database = {
           id?: string
           position: number
           skill_id?: number | null
+          subject_area?: string | null
           test_id?: number | null
           title: string
           updated_at?: string | null
         }
         Update: {
           code?: string
+          cognitive_level?: string | null
           created_at?: string | null
           depends_on?: string[] | null
           description?: string | null
@@ -461,6 +466,7 @@ export type Database = {
           id?: string
           position?: number
           skill_id?: number | null
+          subject_area?: string | null
           test_id?: number | null
           title?: string
           updated_at?: string | null

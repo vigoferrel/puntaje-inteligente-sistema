@@ -5,27 +5,33 @@ import { TLearningNode, TPAESPrueba } from '@/types/system-types';
  * Utilidades para validar la coherencia de nodos de aprendizaje
  */
 
-// Mapeo de palabras clave por tipo de prueba
+// Mapeo de palabras clave por tipo de prueba actualizado
 const THEMATIC_KEYWORDS: Record<TPAESPrueba, readonly string[]> = {
   'COMPETENCIA_LECTORA': [
     'comprensión', 'lectura', 'texto', 'interpretación', 'análisis textual', 
-    'comprensión lectora', 'estrategias de lectura', 'inferencia', 'síntesis'
+    'comprensión lectora', 'estrategias de lectura', 'inferencia', 'síntesis',
+    'información explícita', 'información implícita', 'propósito comunicativo',
+    'vocabulario', 'secuencias', 'argumentos', 'evaluar', 'localizar'
   ] as const,
   'MATEMATICA_1': [
     'álgebra', 'geometría', 'aritmética', 'ecuación', 'números', 'operaciones',
-    'fracciones', 'porcentaje', 'proporciones', 'estadística básica'
+    'fracciones', 'porcentaje', 'proporciones', 'estadística básica', 'enteros',
+    'racionales', 'potencias', 'raíces', 'función lineal', 'pitágoras', 'polígonos'
   ] as const,
   'MATEMATICA_2': [
     'función', 'cálculo', 'trigonometría', 'logaritmo', 'derivada', 'integral',
-    'límite', 'probabilidad', 'estadística avanzada', 'modelamiento matemático'
+    'límite', 'probabilidad', 'estadística avanzada', 'modelamiento matemático',
+    'función cuadrática', 'función exponencial', 'vectores', 'ecuación de la recta'
   ] as const,
   'CIENCIAS': [
     'biología', 'química', 'física', 'célula', 'átomo', 'molécula', 'ecosistema',
-    'genética', 'homeostasis', 'evolución', 'fuerza', 'energía', 'reacción química'
+    'genética', 'homeostasis', 'evolución', 'fuerza', 'energía', 'reacción química',
+    'metabolismo', 'cinemática', 'estructura atómica', 'organización biológica'
   ] as const,
   'HISTORIA': [
     'historia', 'civilización', 'guerra', 'independencia', 'revolución', 'imperio',
-    'siglo', 'época', 'cultura', 'sociedad', 'política', 'económico', 'colonial'
+    'siglo', 'época', 'cultura', 'sociedad', 'política', 'económico', 'colonial',
+    'prehispánico', 'conquista', 'democracia', 'participación', 'temporal', 'multicausal'
   ] as const
 };
 
@@ -37,6 +43,11 @@ const VALID_SKILLS_BY_TEST: Record<number, readonly number[]> = {
   4: [8, 9, 10, 11], // CIENCIAS: IDENTIFY_THEORIES, PROCESS_ANALYZE, APPLY_PRINCIPLES, SCIENTIFIC_ARGUMENT
   5: [12, 13, 14, 15, 16] // HISTORIA: TEMPORAL_THINKING, SOURCE_ANALYSIS, MULTICAUSAL_ANALYSIS, CRITICAL_THINKING, REFLECTION
 } as const;
+
+// Validación de niveles cognitivos válidos
+const VALID_COGNITIVE_LEVELS = [
+  'RECORDAR', 'COMPRENDER', 'APLICAR', 'ANALIZAR', 'EVALUAR', 'CREAR'
+] as const;
 
 /**
  * Valida si un nodo es temáticamente coherente con su tipo de prueba asignado
@@ -70,6 +81,18 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
   const currentTestScore = currentTestKeywords.reduce((acc: number, keyword: string) => {
     return acc + (nodeText.includes(keyword.toLowerCase()) ? 1 : 0);
   }, 0);
+  
+  // Validar coherencia entre subject_area y prueba
+  const subjectArea = (node as any).subject_area || node.prueba;
+  if (subjectArea && subjectArea !== node.prueba) {
+    issues.push(`Subject area (${subjectArea}) no coincide con prueba (${node.prueba})`);
+  }
+  
+  // Validar cognitive_level
+  const cognitiveLevel = (node as any).cognitive_level;
+  if (cognitiveLevel && !VALID_COGNITIVE_LEVELS.includes(cognitiveLevel)) {
+    issues.push(`Nivel cognitivo inválido: ${cognitiveLevel}`);
+  }
   
   if (currentTestScore === 0 && maxScore > 0) {
     issues.push(`Contenido temático no coincide con ${node.prueba}. Sugiere: ${suggestedTest}`);
@@ -135,7 +158,11 @@ export function filterNodesWithValidation(
   selectedPrueba: TPAESPrueba,
   enableLogging = true
 ): TLearningNode[] {
-  const filtered = nodes.filter(node => node.prueba === selectedPrueba);
+  const filtered = nodes.filter(node => {
+    // Verificar tanto por prueba como por subject_area
+    const subjectArea = (node as any).subject_area;
+    return node.prueba === selectedPrueba || subjectArea === selectedPrueba;
+  });
   
   if (enableLogging) {
     console.group(`🔍 Filtrado de nodos para ${selectedPrueba}`);
@@ -151,22 +178,12 @@ export function filterNodesWithValidation(
     const invalidNodes = validationResults.filter(r => !r.validation.isValid);
     
     if (invalidNodes.length > 0) {
-      console.warn(`⚠️ Nodos con problemas de coherencia:`, invalidNodes);
-    }
-    
-    // Buscar nodos que podrían pertenecer a esta prueba pero están en otras
-    const potentialNodes = nodes.filter(node => {
-      if (node.prueba === selectedPrueba) return false;
-      const validation = validateNodeThematicCoherence({
-        ...node,
-        prueba: selectedPrueba
+      console.warn(`⚠️ Nodos con problemas de coherencia: ${invalidNodes.length}/${filtered.length}`);
+      invalidNodes.forEach(invalid => {
+        console.warn(`- ${invalid.node}: ${invalid.validation.issues.join(', ')}`);
       });
-      return validation.confidence > 0.7;
-    });
-    
-    if (potentialNodes.length > 0) {
-      console.warn(`🔄 Nodos que podrían pertenecer a ${selectedPrueba}:`, 
-        potentialNodes.map(n => `${n.title} (actualmente en ${n.prueba})`));
+    } else {
+      console.log(`✅ Todos los nodos son coherentes temáticamente`);
     }
     
     console.groupEnd();
@@ -181,7 +198,7 @@ export function filterNodesWithValidation(
 export function validateNodesIntegrity(nodes: TLearningNode[]): {
   isValid: boolean;
   issues: Array<{
-    type: 'thematic_mismatch' | 'skill_mismatch' | 'missing_content';
+    type: 'thematic_mismatch' | 'skill_mismatch' | 'missing_content' | 'cognitive_level_mismatch' | 'subject_area_mismatch';
     nodeId: string;
     description: string;
     suggestion?: string;
@@ -193,7 +210,7 @@ export function validateNodesIntegrity(nodes: TLearningNode[]): {
   };
 } {
   const issues: Array<{
-    type: 'thematic_mismatch' | 'skill_mismatch' | 'missing_content';
+    type: 'thematic_mismatch' | 'skill_mismatch' | 'missing_content' | 'cognitive_level_mismatch' | 'subject_area_mismatch';
     nodeId: string;
     description: string;
     suggestion?: string;
@@ -204,8 +221,20 @@ export function validateNodesIntegrity(nodes: TLearningNode[]): {
     
     if (!validation.isValid) {
       validation.issues.forEach(issue => {
+        let type: 'thematic_mismatch' | 'skill_mismatch' | 'missing_content' | 'cognitive_level_mismatch' | 'subject_area_mismatch';
+        
+        if (issue.includes('Skill ID')) {
+          type = 'skill_mismatch';
+        } else if (issue.includes('Subject area')) {
+          type = 'subject_area_mismatch';
+        } else if (issue.includes('Nivel cognitivo')) {
+          type = 'cognitive_level_mismatch';
+        } else {
+          type = 'thematic_mismatch';
+        }
+        
         issues.push({
-          type: issue.includes('Skill ID') ? 'skill_mismatch' : 'thematic_mismatch',
+          type,
           nodeId: node.id,
           description: `${node.title}: ${issue}`,
           suggestion: validation.suggestedTest
@@ -227,7 +256,9 @@ export function validateNodesIntegrity(nodes: TLearningNode[]): {
     issues,
     summary: {
       totalNodes: nodes.length,
-      validNodes: nodes.length - issues.length,
+      validNodes: nodes.length - issues.filter((issue, index, arr) => 
+        arr.findIndex(i => i.nodeId === issue.nodeId) === index
+      ).length,
       issuesCount: issues.length
     }
   };

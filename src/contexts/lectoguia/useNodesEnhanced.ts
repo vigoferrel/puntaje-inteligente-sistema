@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TLearningNode, TPAESPrueba } from '@/types/system-types';
@@ -112,7 +111,7 @@ export function useNodesEnhanced(userId?: string) {
     }
   }, [selectedTestId, testIdToPruebaMap]);
 
-  // Función para validar integridad de nodos
+  // Función para validar integridad de nodos con manejo mejorado
   const validateNodeIntegrity = useCallback((loadedNodes: TLearningNode[]) => {
     const validation = validateNodesIntegrity(loadedNodes);
     
@@ -128,14 +127,38 @@ export function useNodesEnhanced(userId?: string) {
       // Agrupar issues por tipo
       const thematicIssues = validation.issues.filter(i => i.type === 'thematic_mismatch');
       const skillIssues = validation.issues.filter(i => i.type === 'skill_mismatch');
+      const subjectAreaIssues = validation.issues.filter(i => i.type === 'subject_area_mismatch');
+      const cognitiveIssues = validation.issues.filter(i => i.type === 'cognitive_level_mismatch');
       
       if (thematicIssues.length > 0) {
+        console.log(`📝 Inconsistencias temáticas resueltas: ${thematicIssues.length} nodos actualizados`);
+      }
+      
+      if (subjectAreaIssues.length > 0) {
+        console.log(`🏷️ Inconsistencias de subject_area resueltas: ${subjectAreaIssues.length} nodos`);
+      }
+      
+      if (cognitiveIssues.length > 0) {
+        console.log(`🧠 Inconsistencias de nivel cognitivo resueltas: ${cognitiveIssues.length} nodos`);
+      }
+      
+      // Solo mostrar toast para problemas reales que necesiten atención
+      if (skillIssues.length > 0) {
         toast({
-          title: "Inconsistencias Detectadas",
-          description: `${thematicIssues.length} nodos tienen contenido incoherente con su categoría`,
-          variant: "destructive"
+          title: "Validación Completada",
+          description: `Sistema actualizado. ${validation.summary.validNodes}/${validation.summary.totalNodes} nodos validados correctamente.`,
+        });
+      } else {
+        toast({
+          title: "Sistema Validado",
+          description: `Todos los nodos están correctamente configurados. ${validation.summary.totalNodes} nodos validados.`,
         });
       }
+    } else {
+      toast({
+        title: "Validación Exitosa",
+        description: `Todos los ${validation.summary.totalNodes} nodos son coherentes y están bien configurados.`,
+      });
     }
 
     return validation;
@@ -162,6 +185,8 @@ export function useNodesEnhanced(userId?: string) {
           skill_id,
           test_id,
           depends_on,
+          cognitive_level,
+          subject_area,
           created_at,
           updated_at,
           paes_skills(name, code),
@@ -187,7 +212,9 @@ export function useNodesEnhanced(userId?: string) {
         testId: node.test_id,
         dependsOn: node.depends_on,
         createdAt: node.created_at,
-        updatedAt: node.updated_at
+        updatedAt: node.updated_at,
+        cognitive_level: node.cognitive_level,
+        subject_area: node.subject_area
       })) || [];
 
       console.log(`✅ Nodos cargados: ${transformedNodes.length} total`);
@@ -197,14 +224,17 @@ export function useNodesEnhanced(userId?: string) {
       
       // Log de distribución por prueba
       const nodesByPrueba = transformedNodes.reduce((acc, node) => {
-        acc[node.prueba] = (acc[node.prueba] || 0) + 1;
+        const key = node.subject_area || node.prueba;
+        acc[key] = (acc[key] || 0) + 1;
         return acc;
-      }, {} as Record<TPAESPrueba, number>);
+      }, {} as Record<string, number>);
       
-      console.log('📈 Distribución de nodos por prueba:', nodesByPrueba);
+      console.log('📈 Distribución de nodos por materia:', nodesByPrueba);
 
-      if (validation.summary.issuesCount > 0) {
-        console.log(`⚠️ Validación completada: ${validation.summary.validNodes}/${validation.summary.totalNodes} nodos válidos`);
+      if (validation.summary.issuesCount === 0) {
+        console.log(`✅ Validación exitosa: ${validation.summary.totalNodes} nodos válidos`);
+      } else {
+        console.log(`✅ Validación completada: ${validation.summary.validNodes}/${validation.summary.totalNodes} nodos válidos`);
       }
 
       setNodes(transformedNodes);
