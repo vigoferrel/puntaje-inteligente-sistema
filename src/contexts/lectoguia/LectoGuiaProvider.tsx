@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from 'react';
 import { LectoGuiaContext } from './useLectoGuia';
 import { LectoGuiaContextType } from './types';
@@ -7,7 +6,7 @@ import { useUnifiedSubjectManagement } from '@/hooks/lectoguia/use-unified-subje
 import { useNodesEnhanced } from './useNodesEnhanced';
 import { useChat } from './useChat';
 import { useTabs } from './useTabs';
-import { useExercises } from './useExercises';
+import { useEnhancedExerciseFlow } from '@/hooks/lectoguia/use-enhanced-exercise-flow';
 import { useSkills } from './useSkills';
 
 interface LectoGuiaProviderProps {
@@ -58,16 +57,18 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     handleStartSimulation
   } = useSkills(user?.id);
   
+  // Usar el hook mejorado de ejercicios con integración PAES
   const {
     currentExercise,
     selectedOption,
     showFeedback,
     handleOptionSelect,
-    handleNewExercise: baseHandleNewExercise,
+    handleNewExercise: enhancedHandleNewExercise,
     isLoading: exercisesLoading,
     setCurrentExercise,
-    setIsLoading: setExercisesLoading
-  } = useExercises(user?.id, updateSkillLevel, getSkillIdFromCode);
+    setIsLoading: setExercisesLoading,
+    exerciseSource
+  } = useEnhancedExerciseFlow(activeSubject, setActiveTab);
 
   // Sincronizar cambios de prueba con nodos
   useEffect(() => {
@@ -289,7 +290,7 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     handleSendMessage,
     handleSubjectChange,
     
-    // Ejercicios - usar el ejercicio sincronizado
+    // Ejercicios - usar el hook mejorado con PAES
     currentExercise,
     selectedOption,
     showFeedback,

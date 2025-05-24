@@ -223,6 +223,48 @@ export type Database = {
           },
         ]
       }
+      examenes: {
+        Row: {
+          año: number | null
+          codigo: string
+          created_at: string | null
+          duracion_minutos: number | null
+          id: number
+          instrucciones: string | null
+          nombre: string
+          preguntas_validas: number | null
+          tipo: string | null
+          total_preguntas: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          año?: number | null
+          codigo: string
+          created_at?: string | null
+          duracion_minutos?: number | null
+          id?: number
+          instrucciones?: string | null
+          nombre: string
+          preguntas_validas?: number | null
+          tipo?: string | null
+          total_preguntas?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          año?: number | null
+          codigo?: string
+          created_at?: string | null
+          duracion_minutos?: number | null
+          id?: number
+          instrucciones?: string | null
+          nombre?: string
+          preguntas_validas?: number | null
+          tipo?: string | null
+          total_preguntas?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           correct_answer: string
@@ -660,6 +702,41 @@ export type Database = {
           },
         ]
       }
+      opciones_respuesta: {
+        Row: {
+          contenido: string
+          created_at: string | null
+          es_correcta: boolean | null
+          id: number
+          letra: string
+          pregunta_id: number | null
+        }
+        Insert: {
+          contenido: string
+          created_at?: string | null
+          es_correcta?: boolean | null
+          id?: number
+          letra: string
+          pregunta_id?: number | null
+        }
+        Update: {
+          contenido?: string
+          created_at?: string | null
+          es_correcta?: boolean | null
+          id?: number
+          letra?: string
+          pregunta_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opciones_respuesta_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       paes_skills: {
         Row: {
           code: string
@@ -736,6 +813,47 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      preguntas: {
+        Row: {
+          contexto: string | null
+          created_at: string | null
+          enunciado: string
+          examen_id: number | null
+          id: number
+          imagen_url: string | null
+          numero: number
+          tipo_pregunta: string | null
+        }
+        Insert: {
+          contexto?: string | null
+          created_at?: string | null
+          enunciado: string
+          examen_id?: number | null
+          id?: number
+          imagen_url?: string | null
+          numero: number
+          tipo_pregunta?: string | null
+        }
+        Update: {
+          contexto?: string | null
+          created_at?: string | null
+          enunciado?: string
+          examen_id?: number | null
+          id?: number
+          imagen_url?: string | null
+          numero?: number
+          tipo_pregunta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preguntas_examen_id_fkey"
+            columns: ["examen_id"]
+            isOneToOne: false
+            referencedRelation: "examenes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

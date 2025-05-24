@@ -7,6 +7,8 @@ import { ContextualActionButtons } from "./action-buttons/ContextualActionButton
 import { useContextualActions } from '@/hooks/lectoguia/use-contextual-actions';
 import { LectoGuiaBreadcrumb } from './navigation/LectoGuiaBreadcrumb';
 import { TestSpecificStats } from './test-stats';
+import { PAESBadge } from './exercise/PAESBadge';
+import { PAESStatsCard } from './exercise/PAESStatsCard';
 import { useLectoGuia } from '@/contexts/LectoGuiaContext';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +21,7 @@ interface ExerciseTabProps {
   onOptionSelect: (index: number) => void;
   onContinue: () => void;
   isLoading?: boolean;
+  exerciseSource?: 'PAES' | 'AI' | null;
 }
 
 export const ExerciseTab: React.FC<ExerciseTabProps> = ({
@@ -27,7 +30,8 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
   showFeedback,
   onOptionSelect,
   onContinue,
-  isLoading = false
+  isLoading = false,
+  exerciseSource = null
 }) => {
   const { 
     setActiveTab, 
@@ -35,7 +39,8 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
     selectedPrueba, 
     nodes, 
     nodeProgress, 
-    skillLevels 
+    skillLevels,
+    activeSubject
   } = useLectoGuia();
   const [exerciseProgress, setExerciseProgress] = useState(0);
   const [showCompletionCard, setShowCompletionCard] = useState(false);
@@ -150,6 +155,17 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Estadísticas PAES si está disponible para la materia */}
+      {!exercise && !isLoading && activeSubject && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <PAESStatsCard activeSubject={activeSubject} />
+        </motion.div>
+      )}
+      
       {/* Estadísticas específicas del tipo de prueba - solo mostrar si no hay ejercicio cargado */}
       {!exercise && !isLoading && selectedPrueba && (
         <motion.div
@@ -180,6 +196,12 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
                     Nodo específico
                   </Badge>
                 )}
+                {/* Badge para indicar fuente del ejercicio */}
+                <PAESBadge 
+                  source={exerciseSource} 
+                  questionNumber={getPAESQuestionNumber(exercise)}
+                  className="text-xs"
+                />
               </div>
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
@@ -199,10 +221,21 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
         <CardContent className={`p-6 ${exercise?.nodeId ? 'pt-4' : 'pt-6'}`}>
           {/* Barra de progreso */}
           {exercise && !isLoading && !showCompletionCard && (
-            <ExerciseProgressBar 
-              progress={exerciseProgress} 
-              difficulty={exercise.difficulty || 'INTERMEDIO'} 
-            />
+            <div className="mb-4">
+              <ExerciseProgressBar 
+                progress={exerciseProgress} 
+                difficulty={exercise.difficulty || 'INTERMEDIO'} 
+              />
+              {/* Mostrar fuente del ejercicio debajo de la barra de progreso */}
+              {exerciseSource && (
+                <div className="mt-2 flex justify-center">
+                  <PAESBadge 
+                    source={exerciseSource} 
+                    questionNumber={getPAESQuestionNumber(exercise)}
+                  />
+                </div>
+              )}
+            </div>
           )}
           
           <div className="h-[calc(100vh-350px)] min-h-[450px] overflow-auto custom-scrollbar">
@@ -255,4 +288,12 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
       </Card>
     </div>
   );
+};
+
+// Función para extraer número de pregunta PAES si existe
+const getPAESQuestionNumber = (exercise: Exercise | null): number | undefined => {
+  if (!exercise || !exercise.id.startsWith('paes-')) return undefined;
+  // El ID es "paes-{id}", donde id es el ID de la pregunta en la base de datos
+  // Para mostrar el número real necesitaríamos consultarlo, por ahora retornamos undefined
+  return undefined;
 };
