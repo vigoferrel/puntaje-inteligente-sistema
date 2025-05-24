@@ -67,9 +67,13 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
       targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       nodes: progress?.map(p => ({
         id: p.node_id,
-        status: p.status,
-        progress: p.progress,
-        estimated_time: 45
+        nodeId: p.node_id,
+        position: 0,
+        nodeName: 'Nodo de aprendizaje',
+        nodeDescription: 'Descripción del nodo',
+        nodeDifficulty: 'INTERMEDIATE',
+        nodeSkill: 'INTERPRET_RELATE',
+        planId: `plan_${userId}`
       })) || []
     };
 

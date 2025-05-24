@@ -27,15 +27,16 @@ export function usePAESExerciseTracking() {
 
     setSubmitting(true);
     try {
+      // Usar user_exercise_attempts en lugar de user_paes_progress
       const { error } = await supabase
-        .from('user_paes_progress')
+        .from('user_exercise_attempts')
         .insert({
           user_id: user.id,
-          question_id: questionId,
+          exercise_id: `paes-q-${questionId}`,
+          answer: isCorrect ? 'correct' : 'incorrect',
           is_correct: isCorrect,
-          skill: skill,
-          phase: phase || null,
-          completed_at: new Date().toISOString()
+          skill_demonstrated: skill,
+          created_at: new Date().toISOString()
         });
 
       if (error) {
@@ -61,10 +62,11 @@ export function usePAESExerciseTracking() {
 
     try {
       const { data, error } = await supabase
-        .from('user_paes_progress')
+        .from('user_exercise_attempts')
         .select('*')
         .eq('user_id', user.id)
-        .order('completed_at', { ascending: false })
+        .eq('skill_demonstrated', 'TRACK_LOCATE') // Filter by a PAES skill
+        .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) {
@@ -96,7 +98,7 @@ export function usePAESExerciseTracking() {
 
     try {
       const { data, error } = await supabase
-        .from('user_paes_progress')
+        .from('user_exercise_attempts')
         .select('*')
         .eq('user_id', user.id);
 
@@ -107,7 +109,9 @@ export function usePAESExerciseTracking() {
 
       // Agrupar por habilidad
       const skillProgress = (data || []).reduce((acc, record) => {
-        const skill = record.skill;
+        const skill = record.skill_demonstrated;
+        if (!skill) return acc;
+        
         if (!acc[skill]) {
           acc[skill] = { total: 0, correct: 0, accuracy: 0 };
         }

@@ -63,27 +63,6 @@ const extractExerciseFromResponse = (response: string): Exercise | null => {
   }
 };
 
-// Helper to get skill from code
-const getSkillIdFromCode = async (skillCode: TPAESHabilidad): Promise<number | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('paes_skills')
-      .select('id')
-      .eq('code', skillCode)
-      .single();
-      
-    if (error || !data) {
-      console.error("Error getting skill ID:", error);
-      return null;
-    }
-    
-    return data.id;
-  } catch (error) {
-    console.error("Error in getSkillIdFromCode:", error);
-    return null;
-  }
-};
-
 export function useLectoGuiaChat(): ChatState & ChatActions {
   const [isTyping, setIsTyping] = useState(false);
   const [activeSubject, setActiveSubject] = useState('general');
@@ -168,50 +147,33 @@ export function useLectoGuiaChat(): ChatState & ChatActions {
     return detectSubject(message);
   }, [detectSubject]);
   
-  // Actualizar nivel de habilidad para un usuario
+  // Actualizar nivel de habilidad usando user_exercise_attempts en lugar de user_skill_levels
   const updateSkillLevel = useCallback(async (skill: TPAESHabilidad, isCorrect: boolean): Promise<boolean> => {
     try {
-      // Primero obtener el ID de la habilidad
-      const skillId = await getSkillIdFromCode(skill);
-      if (!skillId) return false;
-      
-      // Verificar si ya existe un nivel para esta habilidad
+      // Obtener usuario actual
       const { data: user } = await supabase.auth.getUser();
       if (!user?.user?.id) return false;
       
-      const { data: existingLevel } = await supabase
-        .from('user_skill_levels')
-        .select('*')
-        .eq('user_id', user.user.id)
-        .eq('skill_id', skillId)
-        .maybeSingle();
+      // Insertar un nuevo intento de ejercicio para reflejar el nivel de habilidad
+      const { error } = await supabase
+        .from('user_exercise_attempts')
+        .insert({
+          user_id: user.user.id,
+          exercise_id: `skill-update-${Date.now()}`,
+          answer: isCorrect ? 'correct' : 'incorrect',
+          is_correct: isCorrect,
+          skill_demonstrated: skill,
+          created_at: new Date().toISOString()
+        });
         
-      const change = isCorrect ? 0.05 : -0.02;
-      
-      if (existingLevel) {
-        // Actualizar nivel existente
-        const newLevel = Math.min(1, Math.max(0, existingLevel.level + change));
-        
-        await supabase
-          .from('user_skill_levels')
-          .update({ level: newLevel })
-          .eq('id', existingLevel.id);
-      } else {
-        // Crear nuevo nivel
-        const initialLevel = isCorrect ? 0.05 : 0;
-        
-        await supabase
-          .from('user_skill_levels')
-          .insert({
-            user_id: user.user.id,
-            skill_id: skillId,
-            level: initialLevel
-          });
+      if (error) {
+        console.error("Error al actualizar nivel de habilidad:", error);
+        return false;
       }
       
       return true;
     } catch (error) {
-      console.error("Error al actualizar nivel de habilidad:", error);
+      console.error("Error en updateSkillLevel:", error);
       return false;
     }
   }, []);
