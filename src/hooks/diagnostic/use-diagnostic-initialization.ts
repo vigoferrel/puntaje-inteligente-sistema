@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useDiagnostic } from "@/hooks/use-diagnostic";
 import { toast } from "@/components/ui/use-toast";
 import { useDemonstrationMode } from "./use-demonstration-mode";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DiagnosticInitializationResult {
   initializing: boolean;
@@ -26,86 +27,119 @@ export const useDiagnosticInitialization = (): DiagnosticInitializationResult =>
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
+  const { user } = useAuth();
   
   // Get demo mode hook
   const demoMode = useDemonstrationMode();
   
-  // Función para activar el modo demostración de forma simplificada
-  const activateDemonstrationMode = useCallback(() => {
-    // Activar el modo demo si no está ya activado
-    if (!demoMode.demoActivated) {
-      // Activar el modo demo
-      demoMode.activateDemoMode();
-      setIsDemoMode(true);
-      
-      // Sustituir los tests del servicio con tests de demostración
-      diagnosticService.tests = demoMode.getDemoDiagnosticTests();
-      
-      console.log("Modo demostración activado, tests cargados:", diagnosticService.tests.length);
-      
-      // Notificar al usuario que estamos en modo demostración
-      toast({
-        title: "Modo demostración activado",
-        description: "Se han cargado diagnósticos de demostración para visualización",
-      });
-      
-      setProgress(100);
-      setError(null);
+  // Función para cargar diagnósticos reales de la base de datos
+  const loadRealDiagnostics = useCallback(async () => {
+    if (!user?.id) {
+      console.log("No hay usuario autenticado, usando ID por defecto");
     }
     
-    // Finalizar inicialización
-    setInitializing(false);
-    setGeneratingDiagnostic(false);
+    setLoadingStep("Cargando diagnósticos de la base de datos");
+    setProgress(30);
+    
+    // Intentar cargar diagnósticos reales
+    const userId = user?.id || "auto-generated";
+    const loadedTests = await diagnosticService.fetchDiagnosticTests(userId);
+    
+    setProgress(80);
+    
+    if (loadedTests && loadedTests.length > 0) {
+      console.log(`✅ Diagnósticos reales cargados: ${loadedTests.length}`);
+      setProgress(100);
+      setError(null);
+      return true;
+    }
+    
+    return false;
+  }, [diagnosticService, user?.id]);
+  
+  // Función para activar el modo demostración como fallback
+  const activateDemonstrationMode = useCallback(() => {
+    console.log("🔄 Activando modo demostración como fallback");
+    setLoadingStep("Cargando diagnósticos de demostración");
+    
+    // Activar el modo demo
+    demoMode.activateDemoMode();
+    setIsDemoMode(true);
+    
+    // Sustituir los tests del servicio con tests de demostración
+    diagnosticService.tests = demoMode.getDemoDiagnosticTests();
+    
+    console.log("Modo demostración activado, tests cargados:", diagnosticService.tests.length);
+    
+    toast({
+      title: "Modo demostración",
+      description: "Se han cargado diagnósticos de demostración debido a problemas de conectividad",
+    });
+    
+    setProgress(100);
+    setError(null);
   }, [demoMode, diagnosticService]);
   
-  // Función simplificada para inicializar diagnósticos
+  // Función principal para inicializar diagnósticos
   const initDiagnostics = useCallback(async () => {
     try {
-      // Reset states
       setError(null);
       setInitializing(true);
-      setProgress(30);
+      setIsDemoMode(false);
+      setProgress(10);
+      setLoadingStep("Conectando con la base de datos");
       
-      // Verificar si ya hay diagnósticos cargados
-      const hasTests = diagnosticService.tests && diagnosticService.tests.length > 0;
+      // Primero intentar cargar diagnósticos reales
+      const realDataLoaded = await loadRealDiagnostics();
       
-      if (hasTests) {
-        // Si ya hay diagnósticos, simplemente completamos
-        console.log("Diagnósticos ya están cargados:", diagnosticService.tests.length);
-        setProgress(100);
+      if (realDataLoaded) {
+        // Si se cargaron datos reales exitosamente
         setInitializing(false);
         return;
       }
       
-      // Si no hay diagnósticos, activamos el modo demostración directamente
-      // para evitar múltiples llamadas a la base de datos
-      console.log("No hay diagnósticos cargados, activando modo demostración");
+      // Si no hay datos reales, intentar generar diagnósticos por defecto
+      setLoadingStep("Generando diagnósticos por defecto");
+      setProgress(50);
+      
+      const hasDefaultTests = await diagnosticService.ensureDefaultDiagnosticsExist();
+      
+      if (hasDefaultTests) {
+        // Reintentar cargar después de generar por defecto
+        const retryLoaded = await loadRealDiagnostics();
+        if (retryLoaded) {
+          setInitializing(false);
+          return;
+        }
+      }
+      
+      // Como último recurso, activar modo demostración
+      console.warn("⚠️ No se pudieron cargar diagnósticos reales, activando modo demo");
       activateDemonstrationMode();
       
     } catch (error) {
-      console.error("Error initializing diagnostics:", error);
+      console.error("❌ Error al inicializar diagnósticos:", error);
+      setError(error instanceof Error ? error.message : 'Error desconocido');
       
-      // En caso de cualquier error, activar modo demostración
+      // En caso de error, usar modo demostración
       activateDemonstrationMode();
+    } finally {
+      setInitializing(false);
+      setGeneratingDiagnostic(false);
     }
-  }, [diagnosticService, activateDemonstrationMode]);
+  }, [loadRealDiagnostics, diagnosticService, activateDemonstrationMode]);
 
   // Inicializar datos solo una vez al cargar
   useEffect(() => {
     initDiagnostics();
-    // No incluimos dependencias para que solo se ejecute al montar
+    // Solo ejecutar al montar el componente
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Función para reintentar inicialización
   const retryInitialization = async () => {
     setRetryCount(prev => prev + 1);
-    // Si ya hemos reintentado más de una vez, vamos directo al modo demo
-    if (retryCount >= 1) {
-      activateDemonstrationMode();
-    } else {
-      await initDiagnostics();
-    }
+    await initDiagnostics();
   };
 
   return {

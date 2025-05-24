@@ -48,6 +48,7 @@ export default function Diagnostico() {
         resultSubmitted,
         testResults,
         isDemoMode,
+        testsAvailable,
         handleTestSelect,
         handleStartTest,
         handleResumeTest,
@@ -67,12 +68,12 @@ export default function Diagnostico() {
               <DiagnosticSkeleton 
                 message={generatingDiagnostic 
                   ? "Generando diagnósticos básicos..." 
-                  : "Cargando diagnósticos..."} 
+                  : "Cargando diagnósticos desde la base de datos..."} 
               />
             ) : error ? (
               <DiagnosticErrorView 
                 error={error}
-                message="Ocurrió un error al cargar los diagnósticos. Es posible que haya un problema de conectividad o con el servicio."
+                message="Ocurrió un error al cargar los diagnósticos de la base de datos."
                 onRetry={handleRetryInitialization}
                 retryCount={retryCount}
               />
@@ -82,7 +83,16 @@ export default function Diagnostico() {
                   <Alert className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
                     <Info className="h-4 w-4 text-amber-600" />
                     <AlertDescription>
-                      Modo de demostración activado. Los datos mostrados son ejemplos y no se guardarán en tu perfil.
+                      Modo de demostración: Los diagnósticos mostrados son ejemplos. No se pudo cargar la base de datos.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {!testsAvailable && !isDemoMode && (
+                  <Alert className="mb-4 bg-blue-50 border-blue-200 text-blue-800">
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <AlertDescription>
+                      No hay diagnósticos disponibles en este momento. Los diagnósticos aparecerán aquí cuando estén listos.
                     </AlertDescription>
                   </Alert>
                 )}

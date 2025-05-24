@@ -12,7 +12,7 @@ export const useDiagnosticController = () => {
   // Diagnostic state hooks
   const { selectedTestId, testStarted, setSelectedTestId, setTestStarted } = useDiagnosticState();
   
-  // Initialization hook
+  // Initialization hook con mejor manejo de estados
   const { 
     initializing, 
     generatingDiagnostic, 
@@ -24,6 +24,23 @@ export const useDiagnosticController = () => {
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
+  
+  // Estado adicional para rastrear si los tests están disponibles
+  const [testsAvailable, setTestsAvailable] = useState(false);
+  
+  // Verificar disponibilidad de tests cuando la inicialización termine
+  useEffect(() => {
+    if (!initializing && !generatingDiagnostic) {
+      const hasTests = diagnosticService.tests && diagnosticService.tests.length > 0;
+      setTestsAvailable(hasTests);
+      
+      if (hasTests) {
+        console.log(`✅ Tests disponibles: ${diagnosticService.tests.length}`);
+      } else {
+        console.warn("⚠️ No hay tests disponibles después de la inicialización");
+      }
+    }
+  }, [initializing, generatingDiagnostic, diagnosticService.tests]);
   
   // Compose the sub-hooks
   const selectionState = useDiagnosticTestSelection({
@@ -56,10 +73,14 @@ export const useDiagnosticController = () => {
     setTestStarted
   });
 
-  // Función para manejar el reintento de inicialización
+  // Función para manejar el reintento con mejor feedback
   const handleRetryInitialization = async () => {
+    console.log(`🔄 Reintentando inicialización (intento ${retryCount + 1})`);
     await retryInitialization();
   };
+  
+  // Determinar el estado de loading general
+  const isLoading = initializing || generatingDiagnostic || selectionState.loading;
   
   return {
     // State from initialization
@@ -68,10 +89,11 @@ export const useDiagnosticController = () => {
     error,
     retryCount,
     isDemoMode,
+    testsAvailable,
     
-    // State from hooks
-    tests: selectionState.tests,
-    loading: selectionState.loading || initializing || generatingDiagnostic,
+    // State from hooks - usar los tests del servicio directamente
+    tests: diagnosticService.tests || [],
+    loading: isLoading,
     selectedTestId,
     pausedProgress: selectionState.pausedProgress,
     testStarted,
