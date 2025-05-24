@@ -1,109 +1,121 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { TLearningNode } from "@/types/system-types";
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Fetches content for a specific learning node
- */
-export const fetchNodeContent = async (nodeId: string) => {
+export interface NodeContent {
+  id: string;
+  nodeId: string;
+  content: string;
+  contentType: 'text' | 'video' | 'interactive' | 'exercise';
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Since we don't have a node_content table, we'll simulate content based on learning_nodes
+export async function fetchNodeContent(nodeId: string): Promise<NodeContent | null> {
   try {
-    const { data, error } = await supabase
-      .from('node_content')
+    // Get node information from learning_nodes table
+    const { data: node, error } = await supabase
+      .from('learning_nodes')
       .select('*')
-      .eq('node_id', nodeId)
-      .order('created_at', { ascending: false })
-      .limit(1);
-      
-    if (error) throw error;
+      .eq('id', nodeId)
+      .single();
     
-    return data?.[0]?.content || null;
+    if (error || !node) {
+      console.warn('Node not found:', nodeId);
+      return null;
+    }
+
+    // Create simulated content based on node data
+    return {
+      id: `content-${node.id}`,
+      nodeId: node.id,
+      content: node.description || 'Contenido educativo para este nodo de aprendizaje.',
+      contentType: 'text',
+      metadata: {
+        title: node.title,
+        difficulty: node.difficulty,
+        skillCategory: node.skill_category,
+        cognitiveLevel: node.cognitive_level
+      },
+      createdAt: node.created_at,
+      updatedAt: node.updated_at
+    };
   } catch (error) {
     console.error('Error fetching node content:', error);
     return null;
   }
-};
+}
 
-/**
- * Type definition for node creation payload
- */
-type NodeCreationPayload = {
-  title: string;
-  description: string;
-  code: string;
-  skillId: number | null;
-  testId: number | null;
-  contentType: string;
-  contentText: string;
-  position: number;
-  difficulty: 'basic' | 'intermediate' | 'advanced';
-};
-
-/**
- * Create multiple educational nodes in batch
- */
-export const batchCreateEducationalNodes = async (
-  nodes: NodeCreationPayload[]
-): Promise<{ success: number; failed: number; errors: string[] }> => {
-  const results = {
-    success: 0,
-    failed: 0,
-    errors: [] as string[]
-  };
-  
+export async function createNodeContent(content: Omit<NodeContent, 'id' | 'createdAt' | 'updatedAt'>): Promise<NodeContent | null> {
   try {
-    console.log(`Starting batch creation of ${nodes.length} educational nodes`);
-    
-    // Process nodes one by one to handle errors individually
-    for (const nodeData of nodes) {
-      try {
-        // Create the learning node first
-        const { data: nodeResult, error: nodeError } = await supabase
-          .from('learning_nodes')
-          .insert({
-            title: nodeData.title,
-            description: nodeData.description,
-            code: nodeData.code,
-            skill_id: nodeData.skillId,
-            test_id: nodeData.testId,
-            position: nodeData.position,
-            difficulty: nodeData.difficulty
-          })
-          .select('id')
-          .single();
-        
-        if (nodeError) {
-          throw nodeError;
-        }
-        
-        // Then create the associated content
-        const nodeId = nodeResult.id;
-        const { error: contentError } = await supabase
-          .from('node_content')
-          .insert({
-            node_id: nodeId,
-            content_type: nodeData.contentType,
-            content: nodeData.contentText
-          });
-        
-        if (contentError) {
-          throw contentError;
-        }
-        
-        results.success++;
-        
-      } catch (error: any) {
-        results.failed++;
-        results.errors.push(`Error creating node ${nodeData.code}: ${error.message}`);
-        console.error(`Failed to create educational node: ${nodeData.code}`, error);
-      }
+    // Since we don't have a node_content table, we'll update the learning_nodes description
+    const { data: node, error } = await supabase
+      .from('learning_nodes')
+      .update({
+        description: content.content,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', content.nodeId)
+      .select()
+      .single();
+
+    if (error || !node) {
+      console.error('Error updating node content:', error);
+      return null;
     }
-    
-    return results;
-    
-  } catch (error: any) {
-    console.error('Batch creation failed:', error);
-    results.failed = nodes.length - results.success;
-    results.errors.push(`Batch operation failed: ${error.message}`);
-    return results;
+
+    return {
+      id: `content-${node.id}`,
+      nodeId: node.id,
+      content: node.description || content.content,
+      contentType: content.contentType,
+      metadata: content.metadata,
+      createdAt: node.created_at,
+      updatedAt: node.updated_at
+    };
+  } catch (error) {
+    console.error('Error creating node content:', error);
+    return null;
   }
-};
+}
+
+export async function updateNodeContent(contentId: string, updates: Partial<NodeContent>): Promise<NodeContent | null> {
+  try {
+    // Extract nodeId from contentId (format: content-{nodeId})
+    const nodeId = contentId.replace('content-', '');
+    
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (updates.content) {
+      updateData.description = updates.content;
+    }
+
+    const { data: node, error } = await supabase
+      .from('learning_nodes')
+      .update(updateData)
+      .eq('id', nodeId)
+      .select()
+      .single();
+
+    if (error || !node) {
+      console.error('Error updating node content:', error);
+      return null;
+    }
+
+    return {
+      id: contentId,
+      nodeId: node.id,
+      content: node.description || updates.content || '',
+      contentType: updates.contentType || 'text',
+      metadata: updates.metadata || {},
+      createdAt: node.created_at,
+      updatedAt: node.updated_at
+    };
+  } catch (error) {
+    console.error('Error updating node content:', error);
+    return null;
+  }
+}

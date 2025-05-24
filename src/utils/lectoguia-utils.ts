@@ -1,5 +1,8 @@
 
-import { TPAESHabilidad } from '@/types/system-types';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
+
+// Re-export cn from lib/utils for convenience
+export { cn } from '@/lib/utils';
 
 export const getInitialSkillLevels = (): Record<string, number> => {
   const skills: TPAESHabilidad[] = [
@@ -73,4 +76,83 @@ export const getSkillDisplayName = (skillCode: string): string => {
   };
 
   return displayNames[skillCode] || skillCode;
+};
+
+// Alias for compatibility
+export const getSkillName = getSkillDisplayName;
+
+export const getSkillColor = (skillCode: string): string => {
+  const colors: Record<string, string> = {
+    'TRACK_LOCATE': '#3B82F6', // blue-500
+    'INTERPRET_RELATE': '#10B981', // emerald-500
+    'EVALUATE_REFLECT': '#8B5CF6', // violet-500
+    'SOLVE_PROBLEMS': '#F59E0B', // amber-500
+    'REPRESENT': '#EF4444', // red-500
+    'MODEL': '#06B6D4', // cyan-500
+    'ARGUE_COMMUNICATE': '#84CC16', // lime-500
+    'IDENTIFY_THEORIES': '#EC4899', // pink-500
+    'PROCESS_ANALYZE': '#6366F1', // indigo-500
+    'APPLY_PRINCIPLES': '#14B8A6', // teal-500
+    'SCIENTIFIC_ARGUMENT': '#F97316', // orange-500
+    'TEMPORAL_THINKING': '#A855F7', // purple-500
+    'SOURCE_ANALYSIS': '#059669', // emerald-600
+    'MULTICAUSAL_ANALYSIS': '#DC2626', // red-600
+    'CRITICAL_THINKING': '#7C3AED', // violet-600
+    'REFLECTION': '#0891B2' // cyan-600
+  };
+
+  return colors[skillCode] || '#6B7280'; // gray-500 default
+};
+
+export const formatSkillLevel = (level: number): string => {
+  const percentage = Math.round(level * 100);
+  return `${percentage}%`;
+};
+
+export const getSkillsByPrueba = (prueba: TPAESPrueba): TPAESHabilidad[] => {
+  const skillsByPrueba: Record<TPAESPrueba, TPAESHabilidad[]> = {
+    'COMPETENCIA_LECTORA': [
+      'TRACK_LOCATE',
+      'INTERPRET_RELATE',
+      'EVALUATE_REFLECT'
+    ],
+    'MATEMATICA_1': [
+      'SOLVE_PROBLEMS',
+      'REPRESENT',
+      'MODEL'
+    ],
+    'MATEMATICA_2': [
+      'SOLVE_PROBLEMS',
+      'REPRESENT',
+      'MODEL',
+      'ARGUE_COMMUNICATE'
+    ],
+    'CIENCIAS': [
+      'IDENTIFY_THEORIES',
+      'PROCESS_ANALYZE',
+      'APPLY_PRINCIPLES',
+      'SCIENTIFIC_ARGUMENT'
+    ],
+    'HISTORIA': [
+      'TEMPORAL_THINKING',
+      'SOURCE_ANALYSIS',
+      'MULTICAUSAL_ANALYSIS',
+      'CRITICAL_THINKING',
+      'REFLECTION'
+    ]
+  };
+
+  return skillsByPrueba[prueba] || [];
+};
+
+export const formatTimeRemaining = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  } else {
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
 };
