@@ -46,7 +46,7 @@ export const useAuthProfile = () => {
           REFLECTION: 0.45
         };
         
-        // Actualizar niveles de habilidad basados en datos de ejercicios
+        // Actualizar niveles de habilidad basados en datos de ejercicios disponibles
         if (exerciseData && exerciseData.length > 0) {
           const skillStats: Record<string, { total: number; correct: number }> = {};
           

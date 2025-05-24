@@ -1,42 +1,19 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-// Simplified type definitions to match actual database schema
-export interface PAESTest {
-  id: number;
-  name: string;
-  code: string;
-  description?: string;
-  time_minutes: number;
-  questions_count: number;
-  complexity_level: string;
-  is_required: boolean;
-  relative_weight: number;
-}
-
-export interface PAESSkill {
-  id: number;
-  name: string;
-  code: string;
-  description?: string;
-  test_id?: number;
-  impact_weight: number;
-  node_count: number;
-  display_order: number;
-}
-
-export interface LearningNode {
-  id: string;
-  title: string;
-  description?: string;
-  code: string;
-  difficulty: string;
-  skill_id?: number;
-  test_id?: number;
-}
+import { 
+  PAESTest, 
+  PAESSkill, 
+  LearningNode, 
+  NodeWeight,
+  SystemMetrics,
+  transformPAESTest,
+  transformPAESSkill,
+  transformLearningNode,
+  transformNodeWeight
+} from '@/types/unified-diagnostic';
 
 /**
- * Fetch PAES tests from database
+ * Fetch PAES tests from database with unified types
  */
 export const fetchPAESTests = async (): Promise<PAESTest[]> => {
   const { data, error } = await supabase
@@ -49,11 +26,11 @@ export const fetchPAESTests = async (): Promise<PAESTest[]> => {
     return [];
   }
 
-  return data as PAESTest[];
+  return data.map(transformPAESTest);
 };
 
 /**
- * Fetch PAES skills from database
+ * Fetch PAES skills from database with unified types
  */
 export const fetchPAESSkills = async (): Promise<PAESSkill[]> => {
   const { data, error } = await supabase
@@ -66,11 +43,11 @@ export const fetchPAESSkills = async (): Promise<PAESSkill[]> => {
     return [];
   }
 
-  return data as PAESSkill[];
+  return data.map(transformPAESSkill);
 };
 
 /**
- * Fetch learning nodes from database
+ * Fetch learning nodes from database with unified types
  */
 export const fetchLearningNodes = async (limit?: number): Promise<LearningNode[]> => {
   let query = supabase
@@ -89,7 +66,7 @@ export const fetchLearningNodes = async (limit?: number): Promise<LearningNode[]
     return [];
   }
 
-  return data as LearningNode[];
+  return data.map(transformLearningNode);
 };
 
 /**
@@ -107,7 +84,7 @@ export const fetchTier1CriticalNodes = async (): Promise<LearningNode[]> => {
     return [];
   }
 
-  return data as LearningNode[];
+  return data.map(transformLearningNode);
 };
 
 /**
@@ -135,9 +112,9 @@ export const calculateAdaptiveWeight = async (userId: string, nodeId: string): P
 };
 
 /**
- * Fetch user-specific node weights
+ * Fetch user-specific node weights with unified types
  */
-export const fetchUserNodeWeights = async (userId: string): Promise<Record<string, number>> => {
+export const fetchUserNodeWeights = async (userId: string): Promise<NodeWeight[]> => {
   const { data, error } = await supabase
     .from('node_weights')
     .select('*')
@@ -145,13 +122,10 @@ export const fetchUserNodeWeights = async (userId: string): Promise<Record<strin
 
   if (error) {
     console.error('Error fetching user node weights:', error);
-    return {};
+    return [];
   }
 
-  return data.reduce((acc, weight) => {
-    acc[weight.node_id] = weight.calculated_weight;
-    return acc;
-  }, {} as Record<string, number>);
+  return data.map(transformNodeWeight);
 };
 
 /**
@@ -174,24 +148,42 @@ export const getRecommendedLearningPath = async (userId: string, limit: number =
     return [];
   }
 
-  return data as LearningNode[];
+  return data.map(transformLearningNode);
 };
 
 /**
  * Get system metrics for dashboard
  */
-export const getSystemMetrics = async () => {
+export const getSystemMetrics = async (): Promise<SystemMetrics> => {
   const [tests, skills, nodes] = await Promise.all([
     fetchPAESTests(),
     fetchPAESSkills(),
     fetchLearningNodes()
   ]);
 
+  const tier1Count = nodes.filter(n => n.tierPriority === 'tier1_critico').length;
+  const tier2Count = nodes.filter(n => n.tierPriority === 'tier2_importante').length;
+  const tier3Count = nodes.filter(n => n.tierPriority === 'tier3_complementario').length;
+
+  // Calculate distribution by test
+  const distributionByTest: Record<string, number> = {};
+  tests.forEach(test => {
+    const nodeCount = nodes.filter(n => n.testId === test.id).length;
+    distributionByTest[test.code] = nodeCount;
+  });
+
+  // Calculate average Bloom level
+  const bloomValues = { 'recordar': 1, 'comprender': 2, 'aplicar': 3, 'analizar': 4, 'evaluar': 5, 'crear': 6 };
+  const avgBloomLevel = nodes.length > 0 
+    ? nodes.reduce((sum, node) => sum + (bloomValues[node.cognitiveLevel] || 3), 0) / nodes.length
+    : 3.0;
+
   return {
-    totalTests: tests.length,
-    totalSkills: skills.length,
     totalNodes: nodes.length,
-    tier1Nodes: nodes.filter(n => (n as any).tier_priority === 'tier1_critico').length,
-    lastUpdated: new Date().toISOString()
+    tier1Count,
+    tier2Count,
+    tier3Count,
+    distributionByTest,
+    avgBloomLevel
   };
 };

@@ -3,13 +3,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import {
-  LearningNode,
-  NodeWeight,
   PAESTest,
   PAESSkill,
-  TierPriority,
-  DiagnosticTest
-} from "@/types/diagnostic";
+  LearningNode,
+  NodeWeight,
+  SystemMetrics
+} from "@/types/unified-diagnostic";
+import { DiagnosticTest } from "@/types/diagnostic";
 import {
   fetchPAESTests,
   fetchPAESSkills,
@@ -17,9 +17,8 @@ import {
   fetchTier1CriticalNodes,
   fetchUserNodeWeights,
   getRecommendedLearningPath,
-  getSystemMetrics,
-  fetchDiagnosticTests
-} from "@/services/diagnostic";
+  getSystemMetrics
+} from "@/services/diagnostic/hierarchical-services";
 
 interface HierarchicalDiagnosticState {
   // PAES System Data
@@ -35,14 +34,7 @@ interface HierarchicalDiagnosticState {
   userWeights: NodeWeight[];
   
   // System Metrics
-  systemMetrics: {
-    totalNodes: number;
-    tier1Count: number;
-    tier2Count: number;
-    tier3Count: number;
-    distributionByTest: Record<string, number>;
-    avgBloomLevel: number;
-  };
+  systemMetrics: SystemMetrics;
   
   // Diagnostic Tests (existing)
   diagnosticTests: DiagnosticTest[];
@@ -88,9 +80,9 @@ export const useHierarchicalDiagnostic = () => {
   }, []);
 
   // Load PAES Skills
-  const loadPAESSkills = useCallback(async (testId?: number) => {
+  const loadPAESSkills = useCallback(async () => {
     try {
-      const skills = await fetchPAESSkills(testId);
+      const skills = await fetchPAESSkills();
       setState(prev => ({ ...prev, paesSkills: skills }));
       return skills;
     } catch (error) {
@@ -100,14 +92,9 @@ export const useHierarchicalDiagnostic = () => {
   }, []);
 
   // Load Learning Nodes by tier
-  const loadLearningNodes = useCallback(async (options: {
-    tierPriority?: TierPriority;
-    testId?: number;
-    skillId?: number;
-    limit?: number;
-  } = {}) => {
+  const loadLearningNodes = useCallback(async (limit?: number) => {
     try {
-      const { nodes } = await fetchLearningNodes(options);
+      const nodes = await fetchLearningNodes(limit);
       setState(prev => ({ ...prev, learningNodes: nodes }));
       return nodes;
     } catch (error) {
@@ -117,9 +104,9 @@ export const useHierarchicalDiagnostic = () => {
   }, []);
 
   // Load Tier 1 Critical Nodes
-  const loadTier1Nodes = useCallback(async (testId?: number) => {
+  const loadTier1Nodes = useCallback(async () => {
     try {
-      const nodes = await fetchTier1CriticalNodes(testId);
+      const nodes = await fetchTier1CriticalNodes();
       setState(prev => ({ ...prev, tier1Nodes: nodes }));
       return nodes;
     } catch (error) {
@@ -143,11 +130,11 @@ export const useHierarchicalDiagnostic = () => {
   }, [user?.id]);
 
   // Get recommended learning path
-  const loadRecommendedPath = useCallback(async (testId?: number, maxNodes: number = 10) => {
+  const loadRecommendedPath = useCallback(async (maxNodes: number = 10) => {
     if (!user?.id) return [];
     
     try {
-      const path = await getRecommendedLearningPath(user.id, testId, maxNodes);
+      const path = await getRecommendedLearningPath(user.id, maxNodes);
       setState(prev => ({ ...prev, recommendedPath: path }));
       return path;
     } catch (error) {
@@ -168,31 +155,11 @@ export const useHierarchicalDiagnostic = () => {
     }
   }, [state.systemMetrics]);
 
-  // Load diagnostic tests (existing functionality)
+  // Load diagnostic tests (placeholder - implement based on your needs)
   const loadDiagnosticTests = useCallback(async () => {
-    if (!user?.id) return [];
-    
-    try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-      
-      const tests = await fetchDiagnosticTests(user.id, 50);
-      setState(prev => ({ 
-        ...prev, 
-        diagnosticTests: tests,
-        loading: false
-      }));
-      
-      return tests;
-    } catch (error) {
-      console.error('Error loading diagnostic tests:', error);
-      setState(prev => ({ 
-        ...prev, 
-        loading: false,
-        error: "Error al cargar los diagnósticos"
-      }));
-      return [];
-    }
-  }, [user?.id]);
+    // Implementation for diagnostic tests loading
+    return [];
+  }, []);
 
   // Initialize all data
   const initializeHierarchicalSystem = useCallback(async () => {

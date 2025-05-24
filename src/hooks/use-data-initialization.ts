@@ -165,7 +165,7 @@ export const useDataInitialization = () => {
         });
       } else if (err.message?.includes('FOREIGN_KEY_VIOLATION')) {
         errorMessage = "Error de referencia en los datos. Verifica que las tablas de habilidades y pruebas estén inicializadas.";
-        detailedErr = err.message; // Show the specific violation message
+        detailedErr = err.message;
         toast({
           title: "Error de referencia",
           description: "Las tablas paes_skills y paes_tests deben estar inicializadas antes de cargar los nodos.",

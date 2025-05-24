@@ -48,8 +48,8 @@ export const useDashboardStats = () => {
         const userTopSkills = await getTopSkills(profile.id, 3);
         setTopSkills(userTopSkills);
 
-        // Use a simulated total plans count since learning_plans table doesn't exist
-        const totalPlans = 1; // Virtual plan count
+        // Use learning nodes as our primary data source
+        const totalPlans = 1; // Virtual plan count since learning_plans doesn't exist
 
         // Fetch total number of learning nodes from available data
         const { data: nodesData, error: nodesError } = await supabase
