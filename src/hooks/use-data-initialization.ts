@@ -1,7 +1,8 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { ensureLearningNodesExist, initializePAESNodesOnly } from "@/services/learning/initialize-learning-service";
+import { ensureLearningNodesExist, initializePAESNodes } from "@/services/learning/initialize-learning-service";
 import { useAuth } from "@/contexts/AuthContext";
 
 type DatabaseStatus = {
@@ -224,7 +225,7 @@ export const useDataInitialization = () => {
     
     try {
       console.log("Comenzando la inicialización de contenido PAES...");
-      const result = await initializePAESNodesOnly();
+      const result = await initializePAESNodes();
       console.log("Resultado de inicialización PAES:", result);
       
       if (result.success > 0) {

@@ -74,3 +74,81 @@ export async function initializeUserLearningProgress(userId: string): Promise<bo
     return false;
   }
 }
+
+/**
+ * Initialize PAES learning nodes using existing data structure
+ */
+export async function initializePAESNodes(): Promise<{ success: number; failed: number; errors: string[] }> {
+  try {
+    console.log("🎯 Initializing PAES-specific learning nodes...");
+    
+    // Check if we already have PAES nodes
+    const { data: existingNodes, error: checkError } = await supabase
+      .from('learning_nodes')
+      .select('id, code')
+      .ilike('code', 'PAES_%');
+    
+    if (checkError) {
+      console.error("Error checking existing PAES nodes:", checkError);
+      return { success: 0, failed: 1, errors: [checkError.message] };
+    }
+    
+    if (existingNodes && existingNodes.length > 0) {
+      console.log(`✅ PAES nodes already exist: ${existingNodes.length}`);
+      return { success: existingNodes.length, failed: 0, errors: ['PAES nodes already exist'] };
+    }
+    
+    // Get available skills and tests from database
+    const { data: skills, error: skillsError } = await supabase
+      .from('paes_skills')
+      .select('*')
+      .limit(5);
+    
+    const { data: tests, error: testsError } = await supabase
+      .from('paes_tests')
+      .select('*')
+      .limit(3);
+    
+    if (skillsError || testsError) {
+      console.error("Error fetching reference data:", { skillsError, testsError });
+      return { success: 0, failed: 1, errors: ['Reference data not available'] };
+    }
+    
+    if (!skills || skills.length === 0 || !tests || tests.length === 0) {
+      console.warn("No skills or tests found for PAES initialization");
+      return { success: 0, failed: 1, errors: ['Missing reference data'] };
+    }
+    
+    // Create PAES learning nodes
+    const paesNodes = skills.slice(0, 3).map((skill, index) => ({
+      code: `PAES_${skill.code}_${index + 1}`,
+      title: `Nodo PAES: ${skill.name}`,
+      description: skill.description || `Nodo de aprendizaje para habilidad ${skill.name}`,
+      subject_area: "PAES",
+      domain_category: skill.code,
+      difficulty: "intermediate" as const,
+      cognitive_level: "aplicar" as const,
+      tier_priority: "tier1_critico" as const,
+      position: 100 + index,
+      skill_id: skill.id,
+      test_id: tests[index % tests.length]?.id || tests[0]?.id
+    }));
+    
+    const { data: createdNodes, error: insertError } = await supabase
+      .from('learning_nodes')
+      .insert(paesNodes)
+      .select();
+    
+    if (insertError) {
+      console.error("Error creating PAES nodes:", insertError);
+      return { success: 0, failed: paesNodes.length, errors: [insertError.message] };
+    }
+    
+    console.log(`✅ Successfully created ${createdNodes?.length || 0} PAES nodes`);
+    return { success: createdNodes?.length || 0, failed: 0, errors: [] };
+    
+  } catch (error) {
+    console.error("Error in initializePAESNodes:", error);
+    return { success: 0, failed: 1, errors: [error instanceof Error ? error.message : 'Unknown error'] };
+  }
+}
