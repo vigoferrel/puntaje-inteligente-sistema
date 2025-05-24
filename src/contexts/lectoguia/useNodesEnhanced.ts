@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TLearningNode, TPAESPrueba } from '@/types/system-types';
@@ -6,7 +7,8 @@ import { useNodeProgress } from '@/hooks/lectoguia/use-node-progress';
 import { toast } from '@/components/ui/use-toast';
 import { 
   filterNodesWithValidation, 
-  validateNodesIntegrity 
+  validateNodesIntegrity,
+  autoCorrectNodeIssues
 } from '@/utils/node-validation';
 
 export function useNodesEnhanced(userId?: string) {
