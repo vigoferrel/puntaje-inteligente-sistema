@@ -1,21 +1,24 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { useUserData } from "@/hooks/use-user-data";
 import { toast } from "@/components/ui/use-toast";
 import { useLearningPlan } from "@/hooks/use-learning-plan";
 import { LoadingState } from "@/components/plan/LoadingState";
 import { ErrorState } from "@/components/plan/ErrorState";
-import { PlanContent } from "@/components/plan/PlanContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudyStreak } from "@/hooks/use-study-streak";
+import { PlanMeta } from "@/components/plan/modern/PlanMeta";
+import { PlanPersonalizado } from "@/components/plan/modern/PlanPersonalizado";
+import { PlanInteligente } from "@/components/plan/modern/PlanInteligente";
 
 const Plan = () => {
   const { user } = useUserData();
   const { profile } = useAuth();
+  const [activeTab, setActiveTab] = useState("personalizado");
   
   const { 
     plans, 
@@ -108,7 +111,7 @@ const Plan = () => {
     return (
       <AppLayout>
         <div className="container py-8">
-          <h1 className="text-3xl font-bold mb-6">Plan de Estudio</h1>
+          <h1 className="text-3xl font-bold mb-6 text-white">Mi Plan</h1>
           <LoadingState 
             message={initializing ? "Inicializando datos de aprendizaje..." : "Cargando plan de estudio..."} 
           />
@@ -123,7 +126,7 @@ const Plan = () => {
     return (
       <AppLayout>
         <div className="container py-8">
-          <h1 className="text-3xl font-bold mb-6">Plan de Estudio</h1>
+          <h1 className="text-3xl font-bold mb-6 text-white">Mi Plan</h1>
           <ErrorState onRetry={refreshPlans} />
         </div>
       </AppLayout>
@@ -135,23 +138,62 @@ const Plan = () => {
   
   return (
     <AppLayout>
-      <div className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start mb-6">
-          <h1 className="text-3xl font-bold">Plan de Estudio</h1>
+      <div className="min-h-screen bg-gray-900">
+        <div className="container mx-auto py-8 px-4">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">Mi Plan</h1>
+            <p className="text-gray-400">Gestiona tu preparación PAES de manera inteligente</p>
+          </div>
+          
+          {/* Meta Section */}
+          <PlanMeta 
+            profile={profile}
+            currentPlan={currentPlan}
+            currentPlanProgress={currentPlanProgress}
+          />
+          
+          {/* Main Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-8">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-800 border-gray-700">
+              <TabsTrigger 
+                value="personalizado" 
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-300"
+              >
+                Plan Personalizado
+              </TabsTrigger>
+              <TabsTrigger 
+                value="inteligente"
+                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
+              >
+                Plan Inteligente
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="personalizado" className="mt-6">
+              <PlanPersonalizado 
+                plans={plans}
+                currentPlan={currentPlan}
+                currentPlanProgress={currentPlanProgress}
+                progressLoading={progressLoading}
+                recommendedNodeId={recommendedNodeId}
+                onCreatePlan={handleCreatePlan}
+                onSelectPlan={selectPlan}
+                onUpdateProgress={updateCurrentPlanProgress}
+                streakData={streakData}
+                onStudyActivity={updateStreak}
+              />
+            </TabsContent>
+            
+            <TabsContent value="inteligente" className="mt-6">
+              <PlanInteligente 
+                profile={profile}
+                nodeProgress={nodeProgress}
+                onCreatePlan={handleCreatePlan}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
-        
-        <PlanContent 
-          plans={plans}
-          currentPlan={currentPlan}
-          currentPlanProgress={currentPlanProgress}
-          progressLoading={progressLoading}
-          recommendedNodeId={recommendedNodeId}
-          onCreatePlan={handleCreatePlan}
-          onSelectPlan={selectPlan}
-          onUpdateProgress={updateCurrentPlanProgress}
-          streakData={streakData}
-          onStudyActivity={updateStreak}
-        />
       </div>
     </AppLayout>
   );
