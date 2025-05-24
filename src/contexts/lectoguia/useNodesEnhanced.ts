@@ -1,15 +1,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { TLearningNode, TPAESPrueba } from '@/types/system-types';
 import { NodeStatus } from '@/types/node-progress';
 import { useNodeProgress } from '@/hooks/lectoguia/use-node-progress';
 import { toast } from '@/components/ui/use-toast';
-import { 
-  filterNodesWithValidation, 
-  validateNodesIntegrity,
-  autoCorrectNodeIssues
-} from '@/utils/node-validation';
+import { filterNodesWithValidation } from '@/utils/node-validation';
+import { NodeDataService } from './services/nodeDataService';
+import { NodeValidationService } from './services/nodeValidationService';
+import { PruebaMappingUtil } from './utils/pruebaMapping';
 
 export function useNodesEnhanced(userId?: string) {
   const [nodes, setNodes] = useState<TLearningNode[]>([]);
@@ -32,24 +30,7 @@ export function useNodesEnhanced(userId?: string) {
     loading: progressLoading 
   } = useNodeProgress(userId);
 
-  // Mapeo bidireccional entre prueba y testId
-  const pruebaToTestIdMap: Record<TPAESPrueba, number> = {
-    'COMPETENCIA_LECTORA': 1,
-    'MATEMATICA_1': 2,
-    'MATEMATICA_2': 3,
-    'CIENCIAS': 4,
-    'HISTORIA': 5
-  };
-
-  const testIdToPruebaMap: Record<number, TPAESPrueba> = {
-    1: 'COMPETENCIA_LECTORA',
-    2: 'MATEMATICA_1',
-    3: 'MATEMATICA_2',
-    4: 'CIENCIAS',
-    5: 'HISTORIA'
-  };
-
-  // Wrapper para updateNodeProgress con validación de tipos mejorada
+  // Enhanced wrapper for updateNodeProgress with improved validation
   const updateNodeProgress = useCallback((nodeId: string, status: NodeStatus, progress: number) => {
     if (typeof nodeId !== 'string' || !nodeId.trim()) {
       console.error('❌ updateNodeProgress: nodeId debe ser string válido, recibido:', typeof nodeId, nodeId);
@@ -75,12 +56,12 @@ export function useNodesEnhanced(userId?: string) {
     originalUpdateNodeProgress(nodeId, normalizedProgress, status);
   }, [originalUpdateNodeProgress]);
 
-  // Función para cambiar la prueba seleccionada con validación mejorada
+  // Function to change selected prueba with enhanced validation
   const handlePruebaChange = useCallback((prueba: TPAESPrueba) => {
     console.log(`🔄 useNodesEnhanced: Cambiando prueba seleccionada: ${selectedPrueba} → ${prueba}`);
     
     setSelectedPrueba(prueba);
-    const newTestId = pruebaToTestIdMap[prueba];
+    const newTestId = PruebaMappingUtil.getTestIdFromPrueba(prueba);
     setSelectedTestId(newTestId);
     
     const filteredNodes = filterNodesWithValidation(nodes, prueba, true);
@@ -94,170 +75,35 @@ export function useNodesEnhanced(userId?: string) {
     }
     
     console.log(`📋 useNodesEnhanced: Nueva prueba ${prueba} con ${filteredNodes.length} nodos válidos`);
-  }, [selectedPrueba, pruebaToTestIdMap, nodes]);
+  }, [selectedPrueba, nodes]);
 
-  // Función para cambiar por testId (para compatibilidad)
+  // Function to change by testId (for compatibility)
   const handleTestIdChange = useCallback((testId: number) => {
     console.log(`🔄 useNodesEnhanced: Cambiando testId: ${selectedTestId} → ${testId}`);
     
     setSelectedTestId(testId);
-    const newPrueba = testIdToPruebaMap[testId];
+    const newPrueba = PruebaMappingUtil.getPruebaFromTestId(testId);
     if (newPrueba) {
       setSelectedPrueba(newPrueba);
       console.log(`📋 useNodesEnhanced: Nuevo testId ${testId} con prueba ${newPrueba}`);
     }
-  }, [selectedTestId, testIdToPruebaMap]);
+  }, [selectedTestId]);
 
-  // Función mejorada para validar integridad con manejo de correcciones automáticas
-  const validateNodeIntegrity = useCallback((loadedNodes: TLearningNode[]) => {
-    console.log('🔍 Iniciando validación integral de nodos...');
-    
-    const validation = validateNodesIntegrity(loadedNodes);
-    
-    setValidationStatus({
-      isValid: validation.isValid,
-      issuesCount: validation.issues.length,
-      lastValidation: new Date()
-    });
-
-    // Log detallado de resultados
-    console.group('📊 Resultados de Validación Integral');
-    console.log(`Total de nodos: ${validation.summary.totalNodes}`);
-    console.log(`Nodos válidos: ${validation.summary.validNodes}`);
-    console.log(`Problemas encontrados: ${validation.summary.issuesCount}`);
-    
-    if (validation.summary.issuesCount > 0) {
-      console.log('📋 Distribución de problemas por tipo:');
-      Object.entries(validation.summary.issuesByType).forEach(([type, count]) => {
-        console.log(`  - ${type}: ${count}`);
-      });
-      
-      console.log('🚨 Problemas detectados:');
-      validation.issues.forEach((issue, index) => {
-        console.log(`  ${index + 1}. [${issue.type}] ${issue.description}`);
-        if (issue.suggestion) {
-          console.log(`     💡 Sugerencia: ${issue.suggestion}`);
-        }
-      });
-    }
-    console.groupEnd();
-
-    if (!validation.isValid) {
-      console.log('🔧 Sistema aplicó correcciones automáticas donde fue posible');
-      
-      toast({
-        title: validation.summary.issuesCount === 0 ? "Validación Exitosa" : "Problemas Detectados",
-        description: validation.summary.issuesCount === 0 
-          ? `Sistema completamente coherente: ${validation.summary.totalNodes} nodos validados correctamente.`
-          : `Se detectaron ${validation.summary.issuesCount} problemas en ${validation.summary.totalNodes - validation.summary.validNodes} nodos. Revisa la consola para detalles.`,
-        variant: validation.summary.issuesCount === 0 ? "default" : "destructive"
-      });
-    } else {
-      console.log('✅ Sistema validado: Todos los nodos son coherentes');
-      toast({
-        title: "Validación Exitosa",
-        description: `Sistema completamente coherente: ${validation.summary.totalNodes} nodos validados correctamente.`,
-      });
-    }
-
-    return validation;
-  }, []);
-
-  // Función mejorada para cargar nodos con mapeo corregido y auto-corrección
+  // Enhanced function to load nodes with validation and auto-correction
   const loadNodes = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log('📊 Cargando nodos con sistema de validación mejorado...');
+      const transformedNodes = await NodeDataService.loadNodes();
       
-      const { data, error } = await supabase
-        .from('learning_nodes')
-        .select(`
-          id,
-          title,
-          description,
-          code,
-          position,
-          difficulty,
-          estimated_time_minutes,
-          skill_id,
-          test_id,
-          depends_on,
-          cognitive_level,
-          subject_area,
-          created_at,
-          updated_at,
-          paes_skills(name, code),
-          paes_tests(name, code)
-        `)
-        .order('test_id', { ascending: true })
-        .order('position', { ascending: true });
-
-      if (error) throw error;
-
-      // Transformar datos con mapeo mejorado y auto-corrección
-      const transformedNodes: TLearningNode[] = data?.map(node => {
-        const mappedNode: TLearningNode = {
-          id: node.id,
-          title: node.title,
-          description: node.description || '',
-          code: node.code || `${node.id.slice(0, 8)}`,
-          position: node.position || 0,
-          difficulty: node.difficulty as 'basic' | 'intermediate' | 'advanced',
-          estimatedTimeMinutes: node.estimated_time_minutes || 30,
-          skill: node.paes_skills?.code as any,
-          prueba: node.paes_tests?.code as TPAESPrueba,
-          skillId: node.skill_id || 1,
-          testId: node.test_id || 1,
-          dependsOn: node.depends_on || [],
-          createdAt: node.created_at,
-          updatedAt: node.updated_at,
-          // Propiedades ahora requeridas con valores por defecto seguros
-          cognitive_level: node.cognitive_level || 'COMPRENDER',
-          subject_area: node.subject_area || node.paes_tests?.code || 'COMPETENCIA_LECTORA'
-        };
-
-        // Aplicar auto-corrección
-        return autoCorrectNodeIssues(mappedNode);
-      }) || [];
-
-      console.log(`✅ Nodos cargados y auto-corregidos: ${transformedNodes.length} total`);
+      // Validate integrity of corrected data
+      const { validation, validationStatus: newValidationStatus } = NodeValidationService.validateNodeIntegrity(transformedNodes);
       
-      // Validar integridad de datos corregidos
-      const validation = validateNodeIntegrity(transformedNodes);
+      setValidationStatus(newValidationStatus);
       
-      // Log de distribución corregida por prueba
-      const nodesByPrueba = transformedNodes.reduce((acc, node) => {
-        const key = `${node.prueba} (${node.subject_area})`;
-        acc[key] = (acc[key] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      console.log('📈 Distribución final de nodos por prueba:', nodesByPrueba);
-
-      // Log de coherencia por test_id
-      const coherenceByTest = transformedNodes.reduce((acc, node) => {
-        const key = `Test ${node.testId}`;
-        if (!acc[key]) acc[key] = { total: 0, coherent: 0 };
-        acc[key].total++;
-        
-        const expectedSubjectArea = {
-          1: 'COMPETENCIA_LECTORA',
-          2: 'MATEMATICA_1', 
-          3: 'MATEMATICA_2',
-          4: 'CIENCIAS',
-          5: 'HISTORIA'
-        }[node.testId];
-        
-        if (node.subject_area === expectedSubjectArea && node.prueba === expectedSubjectArea) {
-          acc[key].coherent++;
-        }
-        
-        return acc;
-      }, {} as Record<string, { total: number; coherent: number }>);
-
-      console.log('🎯 Coherencia por test_id:', coherenceByTest);
+      // Log coherence statistics
+      PruebaMappingUtil.logCoherenceStats(transformedNodes);
 
       setNodes(transformedNodes);
     } catch (error) {
@@ -271,48 +117,50 @@ export function useNodesEnhanced(userId?: string) {
     } finally {
       setLoading(false);
     }
-  }, [validateNodeIntegrity]);
+  }, []);
 
-  // Función para obtener nodos filtrados por la prueba actual con validación
+  // Function to get filtered nodes for current prueba with validation
   const getFilteredNodes = useCallback(() => {
     return filterNodesWithValidation(nodes, selectedPrueba, true);
   }, [nodes, selectedPrueba]);
 
-  // Cargar nodos al montar el componente
+  // Load nodes on mount
   useEffect(() => {
     loadNodes();
   }, [loadNodes]);
 
   return {
-    // Estado base
+    // Base state
     nodes,
     nodeProgress,
     loading: loading || progressLoading,
     error,
     validationStatus,
     
-    // Estado de selección
+    // Selection state
     selectedTestId,
     selectedPrueba,
     setSelectedTestId: useCallback((testId: number) => {
       setSelectedTestId(testId);
-      const newPrueba = testIdToPruebaMap[testId];
+      const newPrueba = PruebaMappingUtil.getPruebaFromTestId(testId);
       if (newPrueba) {
         setSelectedPrueba(newPrueba);
       }
-    }, [testIdToPruebaMap]),
+    }, []),
     
-    // Funciones
+    // Functions
     handlePruebaChange,
     updateNodeProgress,
     refreshNodes: loadNodes,
-    getFilteredNodes: useCallback(() => {
-      return filterNodesWithValidation(nodes, selectedPrueba, true);
-    }, [nodes, selectedPrueba]),
-    validateNodeIntegrity: () => validateNodeIntegrity(nodes),
+    getFilteredNodes,
+    validateNodeIntegrity: () => {
+      const { validation, validationStatus: newValidationStatus } = NodeValidationService.validateNodeIntegrity(nodes);
+      setValidationStatus(newValidationStatus);
+      return validation;
+    },
     
-    // Mapeos para compatibilidad
-    pruebaToTestIdMap,
-    testIdToPruebaMap
+    // Mappings for compatibility
+    pruebaToTestIdMap: PruebaMappingUtil.pruebaToTestIdMap,
+    testIdToPruebaMap: PruebaMappingUtil.testIdToPruebaMap
   };
 }
