@@ -133,6 +133,68 @@ export type Database = {
           },
         ]
       }
+      generated_study_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_duration_weeks: number
+          estimated_hours: number
+          goal_id: string | null
+          id: string
+          is_active: boolean
+          metrics: Json | null
+          plan_type: string
+          schedule: Json | null
+          target_tests: string[]
+          title: string
+          total_nodes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_duration_weeks: number
+          estimated_hours?: number
+          goal_id?: string | null
+          id?: string
+          is_active?: boolean
+          metrics?: Json | null
+          plan_type: string
+          schedule?: Json | null
+          target_tests?: string[]
+          title: string
+          total_nodes?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_duration_weeks?: number
+          estimated_hours?: number
+          goal_id?: string | null
+          id?: string
+          is_active?: boolean
+          metrics?: Json | null
+          plan_type?: string
+          schedule?: Json | null
+          target_tests?: string[]
+          title?: string
+          total_nodes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_study_plans_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "user_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_nodes: {
         Row: {
           adaptive_adjustment: number | null
@@ -401,6 +463,57 @@ export type Database = {
         }
         Relationships: []
       }
+      study_plan_nodes: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          estimated_hours: number
+          id: string
+          is_completed: boolean
+          node_id: string
+          plan_id: string
+          position: number
+          week_number: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          estimated_hours?: number
+          id?: string
+          is_completed?: boolean
+          node_id: string
+          plan_id: string
+          position: number
+          week_number: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          estimated_hours?: number
+          id?: string
+          is_completed?: boolean
+          node_id?: string
+          plan_id?: string
+          position?: number
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_plan_nodes_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_plan_nodes_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "generated_study_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_diagnostic_results: {
         Row: {
           completed_at: string | null
@@ -508,6 +621,54 @@ export type Database = {
           },
         ]
       }
+      user_goals: {
+        Row: {
+          created_at: string
+          goal_type: string
+          id: string
+          is_active: boolean
+          priority_areas: string[] | null
+          target_date: string | null
+          target_score_cl: number | null
+          target_score_cs: number | null
+          target_score_hcs: number | null
+          target_score_m1: number | null
+          target_score_m2: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal_type: string
+          id?: string
+          is_active?: boolean
+          priority_areas?: string[] | null
+          target_date?: string | null
+          target_score_cl?: number | null
+          target_score_cs?: number | null
+          target_score_hcs?: number | null
+          target_score_m1?: number | null
+          target_score_m2?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          is_active?: boolean
+          priority_areas?: string[] | null
+          target_date?: string | null
+          target_score_cl?: number | null
+          target_score_cs?: number | null
+          target_score_hcs?: number | null
+          target_score_m1?: number | null
+          target_score_m2?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_node_progress: {
         Row: {
           attempts_count: number | null
@@ -560,6 +721,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_study_schedules: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean
+          session_duration_minutes: number
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean
+          session_duration_minutes?: number
+          start_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          session_duration_minutes?: number
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
