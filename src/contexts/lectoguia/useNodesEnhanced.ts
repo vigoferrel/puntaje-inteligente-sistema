@@ -56,7 +56,10 @@ export function useNodesEnhanced(userId?: string) {
       return;
     }
     
-    if (typeof progress !== 'number' || progress < 0 || progress > 100 || isNaN(progress)) {
+    // Convertir progress a número si viene como string
+    const progressNumber = typeof progress === 'string' ? parseFloat(progress) : progress;
+    
+    if (typeof progressNumber !== 'number' || progressNumber < 0 || progressNumber > 100 || isNaN(progressNumber)) {
       console.error('❌ updateNodeProgress: progress debe ser número 0-100, recibido:', typeof progress, progress);
       return;
     }
@@ -67,8 +70,8 @@ export function useNodesEnhanced(userId?: string) {
       return;
     }
     
-    console.log(`✅ Actualizando progreso: nodeId=${nodeId} (${typeof nodeId}), status=${status}, progress=${progress} (${typeof progress})`);
-    originalUpdateNodeProgress(nodeId, status, progress);
+    console.log(`✅ Actualizando progreso: nodeId=${nodeId} (${typeof nodeId}), status=${status}, progress=${progressNumber} (${typeof progressNumber})`);
+    originalUpdateNodeProgress(nodeId, status, progressNumber);
   }, [originalUpdateNodeProgress]);
 
   // Función para cambiar la prueba seleccionada con validación

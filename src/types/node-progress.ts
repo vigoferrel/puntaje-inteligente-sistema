@@ -19,3 +19,11 @@ export interface NodeProgressData {
     lastUpdated?: Date;
   };
 }
+
+// Nuevo tipo para el progreso individual de un nodo
+export interface NodeProgress {
+  nodeId: string;
+  status: NodeStatus;
+  progress: number; // 0-1 (decimal) o 0-100 (porcentaje)
+  timeSpentMinutes?: number;
+}
