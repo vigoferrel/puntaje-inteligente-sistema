@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TLearningNode, TPAESPrueba } from '@/types/system-types';
@@ -71,7 +72,10 @@ export function useNodesEnhanced(userId?: string) {
     }
     
     console.log(`✅ Actualizando progreso: nodeId=${nodeId} (${typeof nodeId}), status=${status}, progress=${progressNumber} (${typeof progressNumber})`);
-    originalUpdateNodeProgress(nodeId, status, progressNumber);
+    
+    // Convertir progreso de 0-100 a 0-1 para el hook useNodeProgress
+    const normalizedProgress = progressNumber / 100;
+    originalUpdateNodeProgress(nodeId, normalizedProgress, status);
   }, [originalUpdateNodeProgress]);
 
   // Función para cambiar la prueba seleccionada con validación
