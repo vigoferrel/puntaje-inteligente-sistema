@@ -2,6 +2,7 @@
 import React from 'react';
 import { LectoGuiaTabs } from './LectoGuiaTabs';
 import { useLectoGuia } from '@/contexts/LectoGuiaContext';
+import { ChatMessageType } from '@/components/ai/chat/types';
 
 export const LectoGuiaContent: React.FC = () => {
   const {
@@ -21,12 +22,21 @@ export const LectoGuiaContent: React.FC = () => {
     isLoading
   } = useLectoGuia();
 
+  // Convert ChatMessage[] to ChatMessageType[] format
+  const convertedMessages: ChatMessageType[] = messages.map(message => ({
+    id: message.id,
+    role: message.role,
+    content: message.content,
+    timestamp: message.timestamp.toISOString(),
+    imageData: message.imageData
+  }));
+
   return (
     <div className="space-y-4">
       <LectoGuiaTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        messages={messages}
+        messages={convertedMessages}
         onSendMessage={handleSendMessage}
         isTyping={isTyping}
         activeSubject={activeSubject}
