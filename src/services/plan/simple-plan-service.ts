@@ -93,23 +93,14 @@ export class SimplePlanService {
       const overallProgress = totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
       
       return {
-        planId,
-        userId,
-        overallProgress: Math.round(overallProgress),
-        completedNodes,
         totalNodes,
+        completedNodes,
         inProgressNodes,
-        lastUpdated: new Date().toISOString(),
+        overallProgress: Math.round(overallProgress),
         nodeProgress: progressData.reduce((acc, progress) => {
-          acc[progress.node_id] = {
-            nodeId: progress.node_id,
-            status: progress.status,
-            progress: progress.progress || 0,
-            lastActivity: progress.last_activity_at,
-            masteryLevel: progress.mastery_level || 0
-          };
+          acc[progress.node_id] = (progress.progress || 0) * 100;
           return acc;
-        }, {} as Record<string, any>)
+        }, {} as Record<string, number>)
       };
       
     } catch (error) {

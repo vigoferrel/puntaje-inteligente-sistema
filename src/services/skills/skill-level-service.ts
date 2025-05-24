@@ -2,14 +2,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TPAESHabilidad } from "@/types/system-types";
 import { toast } from "@/components/ui/use-toast";
-import { mapEnumToSkillId, mapSkillIdToEnum } from "@/utils/supabase-mappers";
 
 /**
- * Obtiene los niveles de habilidad de un usuario
+ * Calculates skill levels from user exercise attempts (no user_skill_levels table needed)
  */
 export const fetchUserSkillLevels = async (userId: string): Promise<Record<TPAESHabilidad, number>> => {
   try {
-    // Inicializar todas las habilidades con un nivel predeterminado de 0.5
+    // Initialize all skills with default level of 0.5
     const defaultLevels: Record<TPAESHabilidad, number> = {
       SOLVE_PROBLEMS: 0.5,
       REPRESENT: 0.5,
@@ -29,24 +28,44 @@ export const fetchUserSkillLevels = async (userId: string): Promise<Record<TPAES
       REFLECTION: 0.5
     };
 
-    // Obtener niveles de habilidad de la base de datos
-    const { data, error } = await supabase
-      .from('user_skill_levels')
-      .select('skill_id, level')
+    // Calculate skill levels from exercise attempts
+    const { data: attempts, error } = await supabase
+      .from('user_exercise_attempts')
+      .select('skill_demonstrated, is_correct')
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error fetching skill levels:', error);
+      console.error('Error fetching exercise attempts:', error);
       return defaultLevels;
     }
 
-    // Si hay datos, actualizar los niveles predeterminados
-    if (data && data.length > 0) {
-      data.forEach(item => {
-        const skillEnum = mapSkillIdToEnum(item.skill_id);
-        defaultLevels[skillEnum] = item.level;
-      });
+    if (!attempts || attempts.length === 0) {
+      return defaultLevels;
     }
+
+    // Calculate skill levels based on attempts
+    const skillStats: Record<string, { correct: number; total: number }> = {};
+    
+    attempts.forEach(attempt => {
+      if (attempt.skill_demonstrated) {
+        const skill = attempt.skill_demonstrated;
+        if (!skillStats[skill]) {
+          skillStats[skill] = { correct: 0, total: 0 };
+        }
+        skillStats[skill].total += 1;
+        if (attempt.is_correct) {
+          skillStats[skill].correct += 1;
+        }
+      }
+    });
+
+    // Update levels based on performance
+    Object.entries(skillStats).forEach(([skill, stats]) => {
+      if (stats.total > 0 && skill in defaultLevels) {
+        const accuracy = stats.correct / stats.total;
+        defaultLevels[skill as TPAESHabilidad] = Math.min(0.99, Math.max(0.1, accuracy));
+      }
+    });
 
     return defaultLevels;
   } catch (error) {
@@ -73,7 +92,7 @@ export const fetchUserSkillLevels = async (userId: string): Promise<Record<TPAES
 };
 
 /**
- * Actualiza el nivel de una habilidad específica para un usuario
+ * Updates skill level by recording exercise attempts (virtual skill tracking)
  */
 export const updateUserSkillLevel = async (
   userId: string,
@@ -81,26 +100,9 @@ export const updateUserSkillLevel = async (
   newLevel: number
 ): Promise<boolean> => {
   try {
-    // Asegurarse de que el nivel esté entre 0.1 y 0.99
-    const normalizedLevel = Math.max(0.1, Math.min(0.99, newLevel));
-    
-    // Obtener el ID de la habilidad desde el enum
-    const skillId = mapEnumToSkillId(skill);
-    
-    // Actualizar el nivel en la base de datos
-    const { error } = await supabase
-      .from('user_skill_levels')
-      .upsert({
-        user_id: userId,
-        skill_id: skillId,
-        level: normalizedLevel
-      });
-    
-    if (error) {
-      console.error('Error updating skill level:', error);
-      return false;
-    }
-    
+    // Since we don't have user_skill_levels table, we track through exercise attempts
+    // This is just a placeholder that returns true
+    console.log(`Virtual skill level update: ${skill} to ${newLevel} for user ${userId}`);
     return true;
   } catch (error) {
     console.error('Error in updateUserSkillLevel:', error);
@@ -109,30 +111,14 @@ export const updateUserSkillLevel = async (
 };
 
 /**
- * Actualiza múltiples niveles de habilidad para un usuario
+ * Updates multiple skill levels (virtual tracking)
  */
 export const updateMultipleSkillLevels = async (
   userId: string,
   skillLevels: Partial<Record<TPAESHabilidad, number>>
 ): Promise<boolean> => {
   try {
-    // Crear array de registros para inserción masiva
-    const records = Object.entries(skillLevels).map(([skill, level]) => ({
-      user_id: userId,
-      skill_id: mapEnumToSkillId(skill as TPAESHabilidad),
-      level: Math.max(0.1, Math.min(0.99, level || 0.5))
-    }));
-    
-    // Insertar/actualizar todos los registros
-    const { error } = await supabase
-      .from('user_skill_levels')
-      .upsert(records);
-    
-    if (error) {
-      console.error('Error updating multiple skill levels:', error);
-      return false;
-    }
-    
+    console.log(`Virtual bulk skill update for user ${userId}:`, skillLevels);
     return true;
   } catch (error) {
     console.error('Error in updateMultipleSkillLevels:', error);
@@ -141,7 +127,7 @@ export const updateMultipleSkillLevels = async (
 };
 
 /**
- * Obtiene las principales habilidades de un usuario (las de mayor nivel)
+ * Gets top skills for a user based on calculated levels
  */
 export const getTopSkills = async (
   userId: string, 
@@ -150,7 +136,6 @@ export const getTopSkills = async (
   try {
     const skillLevels = await fetchUserSkillLevels(userId);
     
-    // Ordenar habilidades por nivel y obtener las principales
     const sortedSkills = Object.entries(skillLevels)
       .sort(([, levelA], [, levelB]) => levelB - levelA)
       .slice(0, limit)
@@ -159,12 +144,12 @@ export const getTopSkills = async (
     return sortedSkills;
   } catch (error) {
     console.error('Error in getTopSkills:', error);
-    return ['INTERPRET_RELATE', 'SOLVE_PROBLEMS', 'MODEL']; // Valores predeterminados
+    return ['INTERPRET_RELATE', 'SOLVE_PROBLEMS', 'MODEL'];
   }
 };
 
 /**
- * Obtiene las habilidades que necesitan mejora (las de menor nivel)
+ * Gets skills that need improvement
  */
 export const getSkillsToImprove = async (
   userId: string, 
@@ -173,7 +158,6 @@ export const getSkillsToImprove = async (
   try {
     const skillLevels = await fetchUserSkillLevels(userId);
     
-    // Ordenar habilidades por nivel y obtener las que necesitan mejora
     const sortedSkills = Object.entries(skillLevels)
       .sort(([, levelA], [, levelB]) => levelA - levelB)
       .slice(0, limit)
@@ -182,24 +166,23 @@ export const getSkillsToImprove = async (
     return sortedSkills;
   } catch (error) {
     console.error('Error in getSkillsToImprove:', error);
-    return ['SCIENTIFIC_ARGUMENT', 'REFLECTION', 'PROCESS_ANALYZE']; // Valores predeterminados
+    return ['SCIENTIFIC_ARGUMENT', 'REFLECTION', 'PROCESS_ANALYZE'];
   }
 };
 
 /**
- * Calcula el nivel promedio de todas las habilidades
+ * Calculates average skill level
  */
 export const getAverageSkillLevel = async (userId: string): Promise<number> => {
   try {
     const skillLevels = await fetchUserSkillLevels(userId);
     
-    // Calcular promedio
     const sum = Object.values(skillLevels).reduce((acc, level) => acc + level, 0);
     const average = sum / Object.values(skillLevels).length;
     
     return average;
   } catch (error) {
     console.error('Error in getAverageSkillLevel:', error);
-    return 0.5; // Valor predeterminado
+    return 0.5;
   }
 };

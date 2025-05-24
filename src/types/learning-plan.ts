@@ -26,5 +26,5 @@ export interface PlanProgress {
   completedNodes: number;
   inProgressNodes: number;
   overallProgress: number;
-  nodeProgress?: Record<string, number>; // Mapa de nodeId -> valor de progreso (0-100)
+  nodeProgress: Record<string, number>; // Map of nodeId -> progress value (0-100)
 }
