@@ -47,7 +47,7 @@ export function useNodesEnhanced(userId?: string) {
     5: 'HISTORIA'
   };
 
-  // Wrapper para updateNodeProgress con validación de tipos
+  // Wrapper para updateNodeProgress con validación de tipos mejorada
   const updateNodeProgress = useCallback((nodeId: string, status: NodeStatus, progress: number) => {
     if (typeof nodeId !== 'string' || !nodeId.trim()) {
       console.error('❌ updateNodeProgress: nodeId debe ser string válido, recibido:', typeof nodeId, nodeId);
@@ -106,8 +106,10 @@ export function useNodesEnhanced(userId?: string) {
     }
   }, [selectedTestId, testIdToPruebaMap]);
 
-  // Función mejorada para validar integridad con manejo de correcciones
+  // Función mejorada para validar integridad con manejo de correcciones automáticas
   const validateNodeIntegrity = useCallback((loadedNodes: TLearningNode[]) => {
+    console.log('🔍 Iniciando validación integral de nodos...');
+    
     const validation = validateNodesIntegrity(loadedNodes);
     
     setValidationStatus({
@@ -116,13 +118,37 @@ export function useNodesEnhanced(userId?: string) {
       lastValidation: new Date()
     });
 
-    if (!validation.isValid) {
-      console.log('🔧 Problemas de integridad detectados y corregidos:', validation);
+    // Log detallado de resultados
+    console.group('📊 Resultados de Validación Integral');
+    console.log(`Total de nodos: ${validation.summary.totalNodes}`);
+    console.log(`Nodos válidos: ${validation.summary.validNodes}`);
+    console.log(`Problemas encontrados: ${validation.summary.issuesCount}`);
+    
+    if (validation.summary.issuesCount > 0) {
+      console.log('📋 Distribución de problemas por tipo:');
+      Object.entries(validation.summary.issuesByType).forEach(([type, count]) => {
+        console.log(`  - ${type}: ${count}`);
+      });
       
-      // Mostrar resultado de la corrección
+      console.log('🚨 Problemas detectados:');
+      validation.issues.forEach((issue, index) => {
+        console.log(`  ${index + 1}. [${issue.type}] ${issue.description}`);
+        if (issue.suggestion) {
+          console.log(`     💡 Sugerencia: ${issue.suggestion}`);
+        }
+      });
+    }
+    console.groupEnd();
+
+    if (!validation.isValid) {
+      console.log('🔧 Sistema aplicó correcciones automáticas donde fue posible');
+      
       toast({
-        title: "Sistema Corregido",
-        description: `Se han corregido las inconsistencias de datos. ${validation.summary.validNodes}/${validation.summary.totalNodes} nodos ahora son coherentes.`,
+        title: validation.summary.issuesCount === 0 ? "Validación Exitosa" : "Problemas Detectados",
+        description: validation.summary.issuesCount === 0 
+          ? `Sistema completamente coherente: ${validation.summary.totalNodes} nodos validados correctamente.`
+          : `Se detectaron ${validation.summary.issuesCount} problemas en ${validation.summary.totalNodes - validation.summary.validNodes} nodos. Revisa la consola para detalles.`,
+        variant: validation.summary.issuesCount === 0 ? "default" : "destructive"
       });
     } else {
       console.log('✅ Sistema validado: Todos los nodos son coherentes');
@@ -135,13 +161,13 @@ export function useNodesEnhanced(userId?: string) {
     return validation;
   }, []);
 
-  // Función mejorada para cargar nodos con mapeo corregido
+  // Función mejorada para cargar nodos con mapeo corregido y auto-corrección
   const loadNodes = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log('📊 Cargando nodos de aprendizaje con datos corregidos...');
+      console.log('📊 Cargando nodos con sistema de validación mejorado...');
       
       const { data, error } = await supabase
         .from('learning_nodes')
@@ -168,44 +194,68 @@ export function useNodesEnhanced(userId?: string) {
 
       if (error) throw error;
 
-      // Transformar datos con mapeo mejorado
-      const transformedNodes: TLearningNode[] = data?.map(node => ({
-        id: node.id,
-        title: node.title,
-        description: node.description || '',
-        code: node.code || `${node.id.slice(0, 8)}`,
-        position: node.position || 0,
-        difficulty: node.difficulty as 'basic' | 'intermediate' | 'advanced',
-        estimatedTimeMinutes: node.estimated_time_minutes || 30,
-        skill: node.paes_skills?.code as any,
-        prueba: node.paes_tests?.code as TPAESPrueba,
-        skillId: node.skill_id || 1,
-        testId: node.test_id || 1,
-        dependsOn: node.depends_on || [],
-        createdAt: node.created_at,
-        updatedAt: node.updated_at,
-        // Propiedades ahora requeridas con valores por defecto seguros
-        cognitive_level: node.cognitive_level || 'COMPRENDER',
-        subject_area: node.subject_area || node.paes_tests?.code || 'COMPETENCIA_LECTORA'
-      })) || [];
+      // Transformar datos con mapeo mejorado y auto-corrección
+      const transformedNodes: TLearningNode[] = data?.map(node => {
+        const mappedNode: TLearningNode = {
+          id: node.id,
+          title: node.title,
+          description: node.description || '',
+          code: node.code || `${node.id.slice(0, 8)}`,
+          position: node.position || 0,
+          difficulty: node.difficulty as 'basic' | 'intermediate' | 'advanced',
+          estimatedTimeMinutes: node.estimated_time_minutes || 30,
+          skill: node.paes_skills?.code as any,
+          prueba: node.paes_tests?.code as TPAESPrueba,
+          skillId: node.skill_id || 1,
+          testId: node.test_id || 1,
+          dependsOn: node.depends_on || [],
+          createdAt: node.created_at,
+          updatedAt: node.updated_at,
+          // Propiedades ahora requeridas con valores por defecto seguros
+          cognitive_level: node.cognitive_level || 'COMPRENDER',
+          subject_area: node.subject_area || node.paes_tests?.code || 'COMPETENCIA_LECTORA'
+        };
 
-      console.log(`✅ Nodos cargados y corregidos: ${transformedNodes.length} total`);
+        // Aplicar auto-corrección
+        return autoCorrectNodeIssues(mappedNode);
+      }) || [];
+
+      console.log(`✅ Nodos cargados y auto-corregidos: ${transformedNodes.length} total`);
       
       // Validar integridad de datos corregidos
       const validation = validateNodeIntegrity(transformedNodes);
       
       // Log de distribución corregida por prueba
       const nodesByPrueba = transformedNodes.reduce((acc, node) => {
-        const key = node.subject_area;
+        const key = `${node.prueba} (${node.subject_area})`;
         acc[key] = (acc[key] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
       
-      console.log('📈 Distribución corregida de nodos por materia:', nodesByPrueba);
+      console.log('📈 Distribución final de nodos por prueba:', nodesByPrueba);
 
-      if (validation.summary.issuesCount === 0) {
-        console.log(`✅ Validación exitosa: ${validation.summary.totalNodes} nodos coherentes`);
-      }
+      // Log de coherencia por test_id
+      const coherenceByTest = transformedNodes.reduce((acc, node) => {
+        const key = `Test ${node.testId}`;
+        if (!acc[key]) acc[key] = { total: 0, coherent: 0 };
+        acc[key].total++;
+        
+        const expectedSubjectArea = {
+          1: 'COMPETENCIA_LECTORA',
+          2: 'MATEMATICA_1', 
+          3: 'MATEMATICA_2',
+          4: 'CIENCIAS',
+          5: 'HISTORIA'
+        }[node.testId];
+        
+        if (node.subject_area === expectedSubjectArea && node.prueba === expectedSubjectArea) {
+          acc[key].coherent++;
+        }
+        
+        return acc;
+      }, {} as Record<string, { total: number; coherent: number }>);
+
+      console.log('🎯 Coherencia por test_id:', coherenceByTest);
 
       setNodes(transformedNodes);
     } catch (error) {

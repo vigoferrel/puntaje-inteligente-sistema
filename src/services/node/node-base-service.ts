@@ -3,12 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { TLearningNode, TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { getSkillId } from "@/utils/lectoguia-utils";
 import { testIdToPrueba } from "@/types/paes-types";
+import { autoCorrectNodeIssues } from "@/utils/node-validation";
 
 /**
- * Maps database nodes to frontend type with improved consistency
+ * Maps database nodes to frontend type with improved consistency and auto-correction
  */
 export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
-  console.log('Mapeando nodo desde DB:', {
+  console.log('Mapeando nodo desde DB con auto-corrección:', {
     id: node.id,
     skill_id: node.skill_id,
     test_id: node.test_id,
@@ -16,7 +17,7 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
     cognitive_level: node.cognitive_level
   });
 
-  // Mapeo seguro para skill_id
+  // Mapeo mejorado de skill_id con validación por test
   let skill: TPAESHabilidad = 'MODEL';
   
   if (node.skill && node.skill.code) {
@@ -24,17 +25,21 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
   } else if (node.skill_id) {
     try {
       const skillMap: Record<number, TPAESHabilidad> = {
+        // COMPETENCIA_LECTORA (test_id: 1)
         1: 'TRACK_LOCATE',
-        2: 'INTERPRET_RELATE',
+        2: 'INTERPRET_RELATE', 
         3: 'EVALUATE_REFLECT',
+        // MATEMATICA_1 y MATEMATICA_2 (test_id: 2, 3)
         4: 'SOLVE_PROBLEMS',
         5: 'REPRESENT',
         6: 'MODEL',
         7: 'ARGUE_COMMUNICATE',
+        // CIENCIAS (test_id: 4)
         8: 'IDENTIFY_THEORIES',
         9: 'PROCESS_ANALYZE',
         10: 'APPLY_PRINCIPLES',
         11: 'SCIENTIFIC_ARGUMENT',
+        // HISTORIA (test_id: 5)
         12: 'TEMPORAL_THINKING',
         13: 'SOURCE_ANALYSIS',
         14: 'MULTICAUSAL_ANALYSIS',
@@ -59,11 +64,8 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
     console.error(`Error mapeando test_id ${node.test_id}:`, e);
   }
 
-  // Asegurar coherencia entre subject_area y prueba
-  const subject_area = node.subject_area || prueba;
-  const cognitive_level = node.cognitive_level || 'COMPRENDER';
-
-  return {
+  // Crear nodo base
+  const baseNode: TLearningNode = {
     id: node.id,
     title: node.title,
     description: node.description || '',
@@ -79,18 +81,27 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
       exerciseCount: node.content?.exerciseCount || 15
     } as any,
     // Propiedades ahora requeridas con valores seguros
-    cognitive_level,
-    subject_area,
+    cognitive_level: node.cognitive_level || 'COMPRENDER',
+    subject_area: node.subject_area || prueba,
     code: node.code || `${node.id.slice(0, 8)}`,
     skillId: node.skill_id || 1,
     testId: node.test_id || 1,
     createdAt: node.created_at,
     updatedAt: node.updated_at
   };
+
+  // Aplicar auto-corrección
+  const correctedNode = autoCorrectNodeIssues(baseNode);
+  
+  if (JSON.stringify(baseNode) !== JSON.stringify(correctedNode)) {
+    console.log(`🔧 Nodo auto-corregido: ${correctedNode.title}`);
+  }
+
+  return correctedNode;
 };
 
 /**
- * Función mejorada para mapear skills y pruebas
+ * Función mejorada para mapear skills y pruebas con validación
  */
 export const mapSkillIdToEnum = (skillId: number): TPAESHabilidad => {
   const skillMap: Record<number, TPAESHabilidad> = {
@@ -113,12 +124,34 @@ export const mapSkillIdToEnum = (skillId: number): TPAESHabilidad => {
   };
   
   if (!skillMap[skillId]) {
-    throw new Error(`Skill ID ${skillId} not found in mapping`);
+    console.warn(`Skill ID ${skillId} not found in mapping, using MODEL as fallback`);
+    return 'MODEL';
   }
   
   return skillMap[skillId];
 };
 
 export const mapTestIdToEnum = (testId: number): TPAESPrueba => {
-  return testIdToPrueba(testId);
+  try {
+    return testIdToPrueba(testId);
+  } catch (e) {
+    console.warn(`Test ID ${testId} not found in mapping, using COMPETENCIA_LECTORA as fallback`);
+    return 'COMPETENCIA_LECTORA';
+  }
+};
+
+/**
+ * Validar coherencia entre skill_id y test_id
+ */
+export const validateSkillTestCoherence = (skillId: number, testId: number): boolean => {
+  const validSkillsByTest: Record<number, number[]> = {
+    1: [1, 2, 3], // COMPETENCIA_LECTORA
+    2: [4, 5, 6, 7], // MATEMATICA_1
+    3: [4, 5, 6, 7], // MATEMATICA_2
+    4: [8, 9, 10, 11], // CIENCIAS
+    5: [12, 13, 14, 15, 16] // HISTORIA
+  };
+  
+  const validSkills = validSkillsByTest[testId];
+  return validSkills ? validSkills.includes(skillId) : false;
 };
