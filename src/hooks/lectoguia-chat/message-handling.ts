@@ -12,7 +12,7 @@ export const createUserMessage = (content: string, imageData?: string): ChatMess
     role: "user",
     content,
     imageData,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString() // Usar timestamp string consistente
   };
 };
 
@@ -24,7 +24,7 @@ export const createAssistantMessage = (content: string): ChatMessage => {
     id: uuidv4(),
     role: "assistant",
     content,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString() // Usar timestamp string consistente
   };
 };
 

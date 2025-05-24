@@ -9,13 +9,13 @@ import { createUserMessage, createAssistantMessage } from './message-handling';
  * Hook for managing chat messages
  */
 export function useChatMessages() {
-  // Initialize with welcome message
+  // Initialize with welcome message usando timestamp string consistente
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: uuidv4(),
       role: "assistant",
       content: WELCOME_MESSAGE,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString() // Usar string ISO consistentemente
     }
   ]);
   

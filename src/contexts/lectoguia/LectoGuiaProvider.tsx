@@ -1,13 +1,14 @@
+
 import React, { useEffect, useCallback } from 'react';
 import { LectoGuiaContext } from './useLectoGuia';
 import { LectoGuiaContextType } from './types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnifiedSubjectManagement } from '@/hooks/lectoguia/use-unified-subject-management';
 import { useNodesEnhanced } from './useNodesEnhanced';
-import { useChat } from './useChat';
 import { useTabs } from './useTabs';
 import { useEnhancedExerciseFlow } from '@/hooks/lectoguia/use-enhanced-exercise-flow';
 import { useSkills } from './useSkills';
+import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
 
 interface LectoGuiaProviderProps {
   children: React.ReactNode;
@@ -42,16 +43,20 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     getFilteredNodes
   } = useNodesEnhanced(user?.id);
   
+  // Integrar correctamente el hook de chat
   const {
     messages,
     isTyping,
+    processUserMessage,
+    activeSkill,
+    setActiveSkill,
+    connectionStatus,
+    serviceStatus,
     addAssistantMessage
-  } = useChat();
+  } = useLectoGuiaChat();
   
   const {
     skillLevels,
-    activeSkill,
-    setActiveSkill,
     updateSkillLevel,
     getSkillIdFromCode,
     handleStartSimulation
@@ -168,16 +173,23 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     );
   }, [changeSubject, subjectDisplayNames, addAssistantMessage]);
 
-  // Manejar envío de mensajes
+  // Implementar correctamente el manejo de mensajes usando el hook de chat
   const handleSendMessage = useCallback(async (message: string, imageData?: string) => {
     console.log(`💬 Enviando mensaje en contexto de ${activeSubject}:`, message);
     
     // Validar estado antes de procesar
     validateState();
     
-    // Aquí se implementaría la lógica de chat específica
-    addAssistantMessage("Procesando tu mensaje...");
-  }, [activeSubject, validateState, addAssistantMessage]);
+    try {
+      // Usar el processUserMessage del hook de chat
+      await processUserMessage(message, imageData);
+    } catch (error) {
+      console.error('❌ Error al procesar mensaje:', error);
+      addAssistantMessage(
+        "Lo siento, tuve un problema al procesar tu mensaje. Por favor intenta de nuevo."
+      );
+    }
+  }, [activeSubject, validateState, processUserMessage, addAssistantMessage]);
 
   // Nuevo ejercicio con validación de coherencia y sincronización
   const handleNewExercise = useCallback(async (): Promise<boolean> => {
@@ -267,12 +279,8 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     changeTestId(testId);
   }, [changeTestId]);
 
-  // Estado de conexión simplificado
-  const connectionStatus = 'connected' as const;
-  const serviceStatus = {
-    isOnline: true,
-    lastCheck: new Date()
-  };
+  // Estado de conexión del chat
+  const showConnectionStatus = connectionStatus !== 'connected';
 
   // Nodos recomendados filtrados por materia actual
   const recommendedNodes = getFilteredNodes().slice(0, 3);
@@ -283,11 +291,11 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     setActiveTab,
     isLoading: nodesLoading || exercisesLoading,
     
-    // Chat
+    // Chat - usar los valores del hook de chat
     messages,
     isTyping,
     activeSubject,
-    handleSendMessage,
+    handleSendMessage, // Usar la implementación real
     handleSubjectChange,
     
     // Ejercicios - usar el hook mejorado con PAES
@@ -321,11 +329,11 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     // Estado de validación
     validationStatus,
     
-    // Estado de conexión
-    serviceStatus,
+    // Estado de conexión del chat
+    serviceStatus: { isOnline: serviceStatus === 'available', lastCheck: new Date() },
     connectionStatus,
     resetConnectionStatus: () => {},
-    showConnectionStatus: false
+    showConnectionStatus
   };
 
   return (

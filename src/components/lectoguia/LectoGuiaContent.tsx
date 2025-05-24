@@ -22,13 +22,19 @@ export const LectoGuiaContent: React.FC = () => {
     isLoading
   } = useLectoGuia();
 
-  // Convert ChatMessage[] to ChatMessageType[] format
+  // Convertir mensajes del chat a formato ChatMessageType con manejo seguro de timestamps
   const convertedMessages: ChatMessageType[] = messages.map(message => ({
     id: message.id,
     role: message.role,
     content: message.content,
-    timestamp: message.timestamp.toISOString(),
-    imageData: message.imageData
+    // Convertir timestamp de manera segura
+    timestamp: typeof message.timestamp === 'string' 
+      ? message.timestamp 
+      : message.timestamp instanceof Date 
+        ? message.timestamp.toISOString()
+        : new Date().toISOString(),
+    imageData: message.imageData,
+    imageUrl: message.imageData // Usar imageData como imageUrl para compatibilidad
   }));
 
   return (
