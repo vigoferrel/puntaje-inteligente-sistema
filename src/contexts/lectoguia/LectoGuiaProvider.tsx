@@ -86,6 +86,25 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     }
   }, [selectedPrueba, selectedTestId, getFilteredNodes, nodes.length, subjectDisplayNames, activeSubject, addAssistantMessage]);
 
+  // Función wrapper para updateNodeProgress con validación de tipos
+  const handleUpdateNodeProgress = useCallback((nodeId: string, status: 'not_started' | 'in_progress' | 'completed', progress: number) => {
+    console.log(`📈 Actualizando progreso del nodo: ${nodeId}, estado: ${status}, progreso: ${progress}`);
+    
+    // Validar tipos antes de la llamada
+    if (typeof nodeId !== 'string') {
+      console.error('❌ Error: nodeId debe ser string, recibido:', typeof nodeId, nodeId);
+      return;
+    }
+    
+    if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+      console.error('❌ Error: progress debe ser número entre 0-100, recibido:', typeof progress, progress);
+      return;
+    }
+    
+    // Llamar a la función original con tipos correctos
+    updateNodeProgress(nodeId, status, progress);
+  }, [updateNodeProgress]);
+
   // Manejar selección de nodo con validación de coherencia
   const handleNodeSelect = useCallback(async (nodeId: string): Promise<boolean> => {
     try {
@@ -125,8 +144,8 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
         `Generando ejercicio específico...`
       );
       
-      // Actualizar progreso del nodo
-      updateNodeProgress(nodeId, 'in_progress', 0);
+      // Actualizar progreso del nodo con tipos correctos
+      handleUpdateNodeProgress(nodeId, 'in_progress', 0);
       
       setExercisesLoading(false);
       return true;
@@ -136,7 +155,7 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
       setExercisesLoading(false);
       return false;
     }
-  }, [nodes, selectedPrueba, changePrueba, subjectDisplayNames, activeSubject, setActiveTab, setExercisesLoading, addAssistantMessage, updateNodeProgress]);
+  }, [nodes, selectedPrueba, changePrueba, subjectDisplayNames, activeSubject, setActiveTab, setExercisesLoading, addAssistantMessage, handleUpdateNodeProgress]);
 
   // Manejar cambio de materia con mensaje al usuario
   const handleSubjectChange = useCallback((subject: string) => {

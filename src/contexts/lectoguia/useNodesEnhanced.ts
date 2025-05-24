@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TLearningNode, TPAESPrueba } from '@/types/system-types';
+import { NodeStatus } from '@/types/node-progress';
 import { useNodeProgress } from '@/hooks/lectoguia/use-node-progress';
 import { toast } from '@/components/ui/use-toast';
 import { 
@@ -26,7 +27,7 @@ export function useNodesEnhanced(userId?: string) {
 
   const { 
     nodeProgress, 
-    updateNodeProgress, 
+    updateNodeProgress: originalUpdateNodeProgress, 
     loading: progressLoading 
   } = useNodeProgress(userId);
 
@@ -46,6 +47,29 @@ export function useNodesEnhanced(userId?: string) {
     4: 'CIENCIAS',
     5: 'HISTORIA'
   };
+
+  // Wrapper para updateNodeProgress con validación de tipos
+  const updateNodeProgress = useCallback((nodeId: string, status: NodeStatus, progress: number) => {
+    // Validación estricta de tipos
+    if (typeof nodeId !== 'string' || !nodeId.trim()) {
+      console.error('❌ updateNodeProgress: nodeId debe ser string válido, recibido:', typeof nodeId, nodeId);
+      return;
+    }
+    
+    if (typeof progress !== 'number' || progress < 0 || progress > 100 || isNaN(progress)) {
+      console.error('❌ updateNodeProgress: progress debe ser número 0-100, recibido:', typeof progress, progress);
+      return;
+    }
+    
+    const validStatuses: NodeStatus[] = ['not_started', 'in_progress', 'completed'];
+    if (!validStatuses.includes(status)) {
+      console.error('❌ updateNodeProgress: status inválido, recibido:', status);
+      return;
+    }
+    
+    console.log(`✅ Actualizando progreso: nodeId=${nodeId} (${typeof nodeId}), status=${status}, progress=${progress} (${typeof progress})`);
+    originalUpdateNodeProgress(nodeId, status, progress);
+  }, [originalUpdateNodeProgress]);
 
   // Función para cambiar la prueba seleccionada con validación
   const handlePruebaChange = useCallback((prueba: TPAESPrueba) => {
