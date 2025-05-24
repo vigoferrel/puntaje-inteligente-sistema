@@ -1,13 +1,13 @@
 
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useDiagnosticRecommendations } from '@/hooks/use-diagnostic-recommendations';
+import { usePAESData } from '@/hooks/use-paes-data';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
 export const useIntegralPlanGenerator = () => {
   const { user } = useAuth();
-  const { weakestSkills, recommendedNodeIds } = useDiagnosticRecommendations();
+  const { skills, recommendations } = usePAESData();
   const [generating, setGenerating] = useState(false);
 
   const generateIntegralPlan = useCallback(async () => {
@@ -30,19 +30,22 @@ export const useIntegralPlanGenerator = () => {
 
       if (nodesError) throw nodesError;
 
-      // 2. Priorizar nodos basado en diagnóstico
-      const prioritizedNodes = allNodes?.map(node => {
+      // 2. Priorizar nodos basado en datos reales
+      const prioritizedNodes = (allNodes || []).map(node => {
         let priority = 0;
         
         // Bonificación por debilidades detectadas
         const skillCode = node.paes_skills?.code;
-        if (skillCode && weakestSkills.includes(skillCode as any)) {
-          priority += 100;
-        }
-        
-        // Bonificación por nodos recomendados específicamente
-        if (recommendedNodeIds.includes(node.id)) {
-          priority += 50;
+        if (skillCode) {
+          const skill = skills.find(s => s.code === skillCode);
+          if (skill && skill.priority === 'high') {
+            priority += 100;
+          }
+          
+          const recommendation = recommendations.find(r => r.skillCode === skillCode);
+          if (recommendation && recommendation.type === 'weakness') {
+            priority += 80;
+          }
         }
         
         // Bonificación por tier crítico
@@ -56,7 +59,7 @@ export const useIntegralPlanGenerator = () => {
         priority += (node.paes_frequency || 0) * 2;
         
         return { ...node, calculatedPriority: priority };
-      }) || [];
+      });
 
       // 3. Ordenar por prioridad calculada
       prioritizedNodes.sort((a, b) => b.calculatedPriority - a.calculatedPriority);
@@ -73,7 +76,7 @@ export const useIntegralPlanGenerator = () => {
         .insert({
           user_id: user.id,
           title: 'Plan Integral PAES - Generado Automáticamente',
-          description: 'Plan completo basado en análisis de fortalezas y debilidades',
+          description: 'Plan completo basado en análisis inteligente de fortalezas y debilidades',
           plan_type: 'comprehensive',
           target_tests: ['COMPETENCIA_LECTORA', 'MATEMATICA_1', 'MATEMATICA_2', 'HISTORIA', 'CIENCIAS'],
           estimated_duration_weeks: 12,
@@ -81,10 +84,11 @@ export const useIntegralPlanGenerator = () => {
           estimated_hours: selectedNodes.reduce((total, node) => total + (node.estimated_time_minutes / 60), 0),
           schedule: weeklySchedule,
           metrics: {
-            weaknessesAddressed: weakestSkills.length,
+            weaknessesAddressed: skills.filter(s => s.priority === 'high').length,
             priorityDistribution: calculatePriorityDistribution(selectedNodes),
             generatedAt: new Date().toISOString(),
-            diagnosticBased: true
+            diagnosticBased: true,
+            aiOptimized: true
           }
         })
         .select()
@@ -109,7 +113,7 @@ export const useIntegralPlanGenerator = () => {
 
       toast({
         title: "¡Plan Integral Generado!",
-        description: `Se creó un plan personalizado con ${selectedNodes.length} nodos priorizados según tu diagnóstico`,
+        description: `Se creó un plan personalizado con ${selectedNodes.length} nodos priorizados según tu análisis`,
       });
 
       return plan;
@@ -124,7 +128,7 @@ export const useIntegralPlanGenerator = () => {
     } finally {
       setGenerating(false);
     }
-  }, [user?.id, weakestSkills, recommendedNodeIds]);
+  }, [user?.id, skills, recommendations]);
 
   const organizeNodesInWeeks = (nodes: any[], totalWeeks: number) => {
     const schedule = [];
