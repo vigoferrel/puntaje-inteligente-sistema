@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TPAESHabilidad } from "@/types/system-types";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { TLearningNode } from "@/types/system-types";
 
 /**
@@ -12,8 +12,10 @@ export const fetchNodeById = async (nodeId: string): Promise<TLearningNode | nul
       .from('learning_nodes')
       .select(`
         id, code, title, description, difficulty, position, 
-        depends_on, estimated_time_minutes,
-        skill:skill_id (id, name, code)
+        depends_on, estimated_time_minutes, skill_id, test_id,
+        cognitive_level, subject_area, created_at, updated_at,
+        skill:skill_id (id, name, code),
+        test:test_id (id, name, code)
       `)
       .eq('id', nodeId)
       .single();
@@ -48,13 +50,15 @@ export const fetchNodesBySkills = async (skills: TPAESHabilidad[]): Promise<TLea
     
     const skillIds = skillsData.map(s => s.id);
     
-    // Then fetch nodes for those skills
+    // Then fetch nodes for those skills with all required data
     const { data: nodesData, error: nodesError } = await supabase
       .from('learning_nodes')
       .select(`
         id, code, title, description, difficulty, position, 
-        depends_on, estimated_time_minutes,
-        skill:skill_id (id, name, code)
+        depends_on, estimated_time_minutes, skill_id, test_id,
+        cognitive_level, subject_area, created_at, updated_at,
+        skill:skill_id (id, name, code),
+        test:test_id (id, name, code)
       `)
       .in('skill_id', skillIds)
       .order('difficulty', { ascending: true })
@@ -66,22 +70,7 @@ export const fetchNodesBySkills = async (skills: TPAESHabilidad[]): Promise<TLea
       return [];
     }
     
-    return nodesData.map(node => ({
-      id: node.id,
-      title: node.title,
-      description: node.description || '',
-      skill: node.skill?.code as TPAESHabilidad || 'MODEL',
-      prueba: 'MATEMATICA_1', // Default value
-      difficulty: node.difficulty || 'basic',
-      position: node.position || 0,
-      dependsOn: node.depends_on || [],
-      estimatedTimeMinutes: node.estimated_time_minutes || 30,
-      content: {
-        theory: '',
-        examples: [],
-        exerciseCount: 15
-      } as any
-    }));
+    return nodesData.map(node => mapDbNodeToLearningNode(node));
   } catch (error) {
     console.error("Error fetching nodes by skills:", error);
     return [];
@@ -89,19 +78,27 @@ export const fetchNodesBySkills = async (skills: TPAESHabilidad[]): Promise<TLea
 };
 
 /**
- * Maps a raw database node to the TLearningNode type
+ * Maps a raw database node to the TLearningNode type with all required properties
  */
 const mapDbNodeToLearningNode = (data: any): TLearningNode => {
   return {
     id: data.id,
     title: data.title,
     description: data.description || '',
-    skill: data.skill?.code as TPAESHabilidad || 'MODEL',
-    prueba: 'MATEMATICA_1', // Default value
-    difficulty: data.difficulty || 'basic',
+    code: data.code || `${data.id.slice(0, 8)}`,
     position: data.position || 0,
-    dependsOn: data.depends_on || [],
+    difficulty: data.difficulty || 'basic',
     estimatedTimeMinutes: data.estimated_time_minutes || 30,
+    skill: data.skill?.code as TPAESHabilidad || 'MODEL',
+    prueba: data.test?.code as TPAESPrueba || 'COMPETENCIA_LECTORA',
+    skillId: data.skill_id || 1,
+    testId: data.test_id || 1,
+    dependsOn: data.depends_on || [],
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    // Propiedades ahora requeridas con valores seguros
+    cognitive_level: data.cognitive_level || 'COMPRENDER',
+    subject_area: data.subject_area || data.test?.code || 'COMPETENCIA_LECTORA',
     content: {
       theory: '',
       examples: [],
