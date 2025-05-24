@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from 'react';
 import { LectoGuiaContext } from './useLectoGuia';
 import { LectoGuiaContextType } from './types';
