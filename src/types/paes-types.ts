@@ -1,5 +1,6 @@
+
 /**
- * Types related to PAES tests and skills
+ * Types related to PAES tests and skills - ACTUALIZADO POST-MIGRACIÓN
  */
 
 export type TPAESPrueba =
@@ -27,22 +28,22 @@ export type TPAESHabilidad =
   | 'CRITICAL_THINKING'
   | 'REFLECTION';
 
-// Mapeo de ID de test a tipo de prueba PAES
+// Mapeo de ID de test a tipo de prueba PAES CORREGIDO POST-MIGRACIÓN
 export const TEST_ID_TO_PRUEBA_MAP: Record<number, TPAESPrueba> = {
   1: 'COMPETENCIA_LECTORA',
   2: 'MATEMATICA_1',
   3: 'MATEMATICA_2',
-  4: 'CIENCIAS',
-  5: 'HISTORIA'
+  4: 'HISTORIA', // CORREGIDO
+  5: 'CIENCIAS'  // CORREGIDO
 };
 
-// Mapeo inverso de prueba PAES a ID de test
+// Mapeo inverso de prueba PAES a ID de test CORREGIDO POST-MIGRACIÓN
 export const PRUEBA_TO_TEST_ID_MAP: Record<TPAESPrueba, number> = {
   'COMPETENCIA_LECTORA': 1,
   'MATEMATICA_1': 2,
   'MATEMATICA_2': 3,
-  'CIENCIAS': 4,
-  'HISTORIA': 5
+  'HISTORIA': 4, // CORREGIDO
+  'CIENCIAS': 5  // CORREGIDO
 };
 
 /**
@@ -111,12 +112,29 @@ export function getHabilidadDisplayName(habilidad: TPAESHabilidad): string {
  * Convierte un ID de prueba a su tipo TPAESPrueba correspondiente
  */
 export function testIdToPrueba(testId: number): TPAESPrueba {
-  return TEST_ID_TO_PRUEBA_MAP[testId] || 'COMPETENCIA_LECTORA';
+  const prueba = TEST_ID_TO_PRUEBA_MAP[testId];
+  if (!prueba) {
+    console.warn(`⚠️ testId ${testId} no encontrado, usando COMPETENCIA_LECTORA como fallback`);
+    return 'COMPETENCIA_LECTORA';
+  }
+  return prueba;
 }
 
 /**
  * Convierte un tipo TPAESPrueba a su ID de prueba correspondiente
  */
 export function pruebaToTestId(prueba: TPAESPrueba): number {
-  return PRUEBA_TO_TEST_ID_MAP[prueba] || 1;
+  const testId = PRUEBA_TO_TEST_ID_MAP[prueba];
+  if (!testId) {
+    console.warn(`⚠️ Prueba ${prueba} no encontrada, usando 1 como fallback`);
+    return 1;
+  }
+  return testId;
+}
+
+/**
+ * Valida si un mapeo prueba-testId es correcto
+ */
+export function validatePruebaTestIdMapping(prueba: TPAESPrueba, testId: number): boolean {
+  return PRUEBA_TO_TEST_ID_MAP[prueba] === testId;
 }

@@ -3,6 +3,7 @@ import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 
 /**
  * Mapeadores para convertir entre IDs numéricos de la base de datos y enums de TypeScript
+ * ACTUALIZADO POST-MIGRACIÓN
  */
 
 /**
@@ -59,30 +60,58 @@ export const mapEnumToSkillId = (skill: TPAESHabilidad): number => {
 
 /**
  * Convierte un test ID numérico de la base de datos en un enum de TPAESPrueba
+ * CORREGIDO POST-MIGRACIÓN
  */
 export const mapTestIdToEnum = (testId: number): TPAESPrueba => {
   const mapping: Record<number, TPAESPrueba> = {
     1: "COMPETENCIA_LECTORA",  // Competencia Lectora
     2: "MATEMATICA_1",         // Matemática 1
     3: "MATEMATICA_2",         // Matemática 2
-    4: "CIENCIAS",             // Ciencias
-    5: "HISTORIA"              // Historia
+    4: "HISTORIA",             // Historia (CORREGIDO)
+    5: "CIENCIAS"              // Ciencias (CORREGIDO)
   };
   
-  return mapping[testId] || "COMPETENCIA_LECTORA"; // Default fallback
+  const result = mapping[testId];
+  if (!result) {
+    console.warn(`⚠️ Test ID ${testId} no encontrado en mapeo, usando COMPETENCIA_LECTORA como fallback`);
+    return "COMPETENCIA_LECTORA";
+  }
+  
+  return result;
 };
 
 /**
  * Convierte un enum de TPAESPrueba en un test ID numérico para la base de datos
+ * CORREGIDO POST-MIGRACIÓN
  */
 export const mapEnumToTestId = (test: TPAESPrueba): number => {
   const mapping: Record<TPAESPrueba, number> = {
     "COMPETENCIA_LECTORA": 1,
     "MATEMATICA_1": 2,
     "MATEMATICA_2": 3,
-    "CIENCIAS": 4,
-    "HISTORIA": 5
+    "HISTORIA": 4,  // CORREGIDO
+    "CIENCIAS": 5   // CORREGIDO
   };
   
-  return mapping[test] || 1; // Default fallback to COMPETENCIA_LECTORA's ID
+  const result = mapping[test];
+  if (!result) {
+    console.warn(`⚠️ Prueba ${test} no encontrada en mapeo, usando 1 como fallback`);
+    return 1;
+  }
+  
+  return result;
+};
+
+/**
+ * Valida que un test_id corresponda a la prueba esperada
+ */
+export const validateTestMapping = (testId: number, expectedPrueba: TPAESPrueba): boolean => {
+  const actualPrueba = mapTestIdToEnum(testId);
+  const isValid = actualPrueba === expectedPrueba;
+  
+  if (!isValid) {
+    console.warn(`⚠️ Mapeo incorrecto: test_id ${testId} mapea a ${actualPrueba}, se esperaba ${expectedPrueba}`);
+  }
+  
+  return isValid;
 };

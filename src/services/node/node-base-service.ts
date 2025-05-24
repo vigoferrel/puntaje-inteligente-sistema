@@ -7,9 +7,10 @@ import { autoCorrectNodeIssues } from "@/utils/node-validation";
 
 /**
  * Maps database nodes to frontend type with improved consistency and auto-correction
+ * ACTUALIZADO POST-MIGRACIÓN
  */
 export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
-  console.log('Mapeando nodo desde DB con auto-corrección:', {
+  console.log('Mapeando nodo desde DB con auto-corrección POST-MIGRACIÓN:', {
     id: node.id,
     skill_id: node.skill_id,
     test_id: node.test_id,
@@ -17,7 +18,7 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
     cognitive_level: node.cognitive_level
   });
 
-  // Mapeo mejorado de skill_id con validación por test
+  // Mapeo mejorado de skill_id con validación por test ACTUALIZADO
   let skill: TPAESHabilidad = 'MODEL';
   
   if (node.skill && node.skill.code) {
@@ -34,12 +35,12 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
         5: 'REPRESENT',
         6: 'MODEL',
         7: 'ARGUE_COMMUNICATE',
-        // CIENCIAS (test_id: 4)
+        // CIENCIAS (test_id: 5) - CORREGIDO
         8: 'IDENTIFY_THEORIES',
         9: 'PROCESS_ANALYZE',
         10: 'APPLY_PRINCIPLES',
         11: 'SCIENTIFIC_ARGUMENT',
-        // HISTORIA (test_id: 5)
+        // HISTORIA (test_id: 4) - CORREGIDO
         12: 'TEMPORAL_THINKING',
         13: 'SOURCE_ANALYSIS',
         14: 'MULTICAUSAL_ANALYSIS',
@@ -53,7 +54,7 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
     }
   }
   
-  // Mapeo seguro para test_id a prueba
+  // Mapeo seguro para test_id a prueba con validación actualizada
   let prueba: TPAESPrueba = 'COMPETENCIA_LECTORA';
   
   try {
@@ -90,18 +91,18 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
     updatedAt: node.updated_at
   };
 
-  // Aplicar auto-corrección
+  // Aplicar auto-corrección con validaciones actualizadas
   const correctedNode = autoCorrectNodeIssues(baseNode);
   
   if (JSON.stringify(baseNode) !== JSON.stringify(correctedNode)) {
-    console.log(`🔧 Nodo auto-corregido: ${correctedNode.title}`);
+    console.log(`🔧 Nodo auto-corregido POST-MIGRACIÓN: ${correctedNode.title}`);
   }
 
   return correctedNode;
 };
 
 /**
- * Función mejorada para mapear skills y pruebas con validación
+ * Función mejorada para mapear skills y pruebas con validación ACTUALIZADA
  */
 export const mapSkillIdToEnum = (skillId: number): TPAESHabilidad => {
   const skillMap: Record<number, TPAESHabilidad> = {
@@ -141,17 +142,23 @@ export const mapTestIdToEnum = (testId: number): TPAESPrueba => {
 };
 
 /**
- * Validar coherencia entre skill_id y test_id
+ * Validar coherencia entre skill_id y test_id ACTUALIZADO POST-MIGRACIÓN
  */
 export const validateSkillTestCoherence = (skillId: number, testId: number): boolean => {
   const validSkillsByTest: Record<number, number[]> = {
     1: [1, 2, 3], // COMPETENCIA_LECTORA
     2: [4, 5, 6, 7], // MATEMATICA_1
     3: [4, 5, 6, 7], // MATEMATICA_2
-    4: [8, 9, 10, 11], // CIENCIAS
-    5: [12, 13, 14, 15, 16] // HISTORIA
+    4: [12, 13, 14, 15, 16], // HISTORIA (CORREGIDO)
+    5: [8, 9, 10, 11] // CIENCIAS (CORREGIDO)
   };
   
   const validSkills = validSkillsByTest[testId];
-  return validSkills ? validSkills.includes(skillId) : false;
+  const isValid = validSkills ? validSkills.includes(skillId) : false;
+  
+  if (!isValid) {
+    console.warn(`⚠️ Skill ID ${skillId} no es válido para test_id ${testId}. Válidos: ${validSkills?.join(', ') || 'ninguno'}`);
+  }
+  
+  return isValid;
 };
