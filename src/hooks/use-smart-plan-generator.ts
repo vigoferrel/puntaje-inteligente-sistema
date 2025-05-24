@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -92,11 +91,11 @@ export const useSmartPlanGenerator = () => {
       // Estimar resultados
       const estimatedOutcome = estimateOutcome(config, skills, recommendations);
 
-      // Crear el plan en la base de datos
+      // Crear el plan en la base de datos - corregido para usar los campos correctos
       const { data: planData, error: planError } = await supabase
         .from('generated_study_plans')
         .insert({
-          user_id: user.id,
+          user_id: user.id, // Campo correcto según el esquema
           title: generatePlanTitle(config),
           description: generatePlanDescription(config, metrics),
           plan_type: config.goalType,
@@ -104,13 +103,13 @@ export const useSmartPlanGenerator = () => {
           estimated_duration_weeks: config.duration,
           total_nodes: prioritizedNodes.length,
           estimated_hours: metrics.totalHours,
-          schedule: schedule,
+          schedule: schedule as any, // Conversión a JSON compatible
           metrics: {
             ...metrics,
             estimatedOutcome,
             generatedAt: new Date().toISOString(),
             aiGenerated: true
-          }
+          } as any // Conversión a JSON compatible
         })
         .select()
         .single();
@@ -135,7 +134,7 @@ export const useSmartPlanGenerator = () => {
       const generatedPlan: GeneratedSmartPlan = {
         id: planData.id,
         title: planData.title,
-        description: planData.description,
+        description: planData.description || '',
         config,
         schedule,
         metrics,
