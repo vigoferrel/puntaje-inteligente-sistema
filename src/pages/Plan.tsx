@@ -1,12 +1,10 @@
 
 import React, { useEffect, useState } from "react";
 import { AppLayout } from "@/components/app-layout";
-import { useUserData } from "@/hooks/use-user-data";
 import { toast } from "@/components/ui/use-toast";
 import { useLearningPlan } from "@/hooks/use-learning-plan";
 import { LoadingState } from "@/components/plan/LoadingState";
 import { ErrorState } from "@/components/plan/ErrorState";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +14,6 @@ import { PlanPersonalizado } from "@/components/plan/modern/PlanPersonalizado";
 import { PlanInteligente } from "@/components/plan/modern/PlanInteligente";
 
 const Plan = () => {
-  const { user } = useUserData();
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState("personalizado");
   
@@ -85,16 +82,16 @@ const Plan = () => {
   const recommendedNodeId = findRecommendedNodeId();
   
   const handleCreatePlan = async () => {
-    if (!user) {
+    if (!profile?.id) {
       toast({
         title: "Error",
-        description: "Debes iniciar sesión para crear un plan",
+        description: "No se pudo obtener la información del usuario. Por favor, recarga la página.",
         variant: "destructive"
       });
       return;
     }
     
-    const targetCareer = user?.targetCareer || "General";
+    const targetCareer = profile?.targetCareer || "General";
     const newPlan = await createPlan(
       `Plan PAES ${targetCareer}`,
       `Plan de preparación PAES personalizado para ${targetCareer}`
@@ -143,7 +140,8 @@ const Plan = () => {
     loading,
     plans: plans.length,
     currentPlan: currentPlan?.title,
-    currentPlanProgress
+    currentPlanProgress,
+    profile: profile?.id
   });
   
   return (
