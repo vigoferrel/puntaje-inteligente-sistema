@@ -1,6 +1,4 @@
 
-import { supabase } from '@/integrations/supabase/client';
-
 export interface PAESQuestion {
   id: number;
   numero: number;
@@ -28,26 +26,32 @@ export interface PAESExam {
 }
 
 /**
- * Servicio para gestionar preguntas oficiales de PAES
+ * Servicio para gestionar preguntas oficiales de PAES (versión simplificada)
  */
 export class PAESService {
   /**
-   * Obtener información del examen PAES
+   * Mock exam data since we don't have the examenes table
+   */
+  private static mockExam: PAESExam = {
+    id: 1,
+    codigo: 'FORMA_113_2024',
+    nombre: 'PAES Matemática Forma 113',
+    tipo: 'MATEMATICA_1',
+    año: 2024,
+    duracion_minutos: 120,
+    total_preguntas: 65,
+    preguntas_validas: 65,
+    instrucciones: 'Instrucciones de la prueba PAES'
+  };
+
+  /**
+   * Obtener información del examen PAES (versión mock)
    */
   static async getExam(codigo: string): Promise<PAESExam | null> {
     try {
-      const { data, error } = await supabase
-        .from('examenes')
-        .select('*')
-        .eq('codigo', codigo)
-        .single();
-
-      if (error) {
-        console.error('Error obteniendo examen:', error);
-        return null;
-      }
-
-      return data;
+      console.log(`Getting exam for code: ${codigo}`);
+      // Return mock exam for now
+      return this.mockExam;
     } catch (error) {
       console.error('Error en getExam:', error);
       return null;
@@ -55,72 +59,35 @@ export class PAESService {
   }
 
   /**
-   * Obtener una pregunta aleatoria de PAES por rango de dificultad
+   * Generar pregunta mock de PAES por rango de dificultad
    */
   static async getRandomQuestion(
     examCode: string = 'FORMA_113_2024',
     difficultyRange: { min: number; max: number } = { min: 1, max: 35 }
   ): Promise<PAESQuestion | null> {
     try {
-      console.log(`🎯 Obteniendo pregunta PAES aleatoria (${difficultyRange.min}-${difficultyRange.max})`);
+      console.log(`🎯 Generando pregunta PAES mock (${difficultyRange.min}-${difficultyRange.max})`);
 
-      // Primero obtener el examen
-      const exam = await this.getExam(examCode);
-      if (!exam) {
-        console.error('Examen no encontrado:', examCode);
-        return null;
-      }
-
-      // Obtener pregunta aleatoria en el rango especificado
-      const { data: questions, error } = await supabase
-        .from('preguntas')
-        .select(`
-          id,
-          numero,
-          enunciado,
-          contexto,
-          imagen_url,
-          tipo_pregunta,
-          opciones_respuesta (
-            letra,
-            contenido,
-            es_correcta
-          )
-        `)
-        .eq('examen_id', exam.id)
-        .gte('numero', difficultyRange.min)
-        .lte('numero', difficultyRange.max);
-
-      if (error) {
-        console.error('Error obteniendo preguntas:', error);
-        return null;
-      }
-
-      if (!questions || questions.length === 0) {
-        console.warn('No hay preguntas disponibles en el rango especificado');
-        return null;
-      }
-
-      // Seleccionar pregunta aleatoria
-      const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+      // Generate a mock question
+      const questionNumber = Math.floor(Math.random() * (difficultyRange.max - difficultyRange.min + 1)) + difficultyRange.min;
       
-      // Formatear la respuesta
-      const formattedQuestion: PAESQuestion = {
-        id: randomQuestion.id,
-        numero: randomQuestion.numero,
-        enunciado: randomQuestion.enunciado,
-        contexto: randomQuestion.contexto,
-        imagen_url: randomQuestion.imagen_url,
-        tipo_pregunta: randomQuestion.tipo_pregunta,
-        opciones: (randomQuestion.opciones_respuesta as any[]).map(option => ({
-          letra: option.letra,
-          contenido: option.contenido,
-          es_correcta: option.es_correcta
-        }))
+      const mockQuestion: PAESQuestion = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        numero: questionNumber,
+        enunciado: `¿Cuál de las siguientes expresiones algebraicas representa correctamente la función lineal mostrada en el gráfico? (Pregunta ${questionNumber})`,
+        contexto: 'Considera la función lineal f(x) = mx + b, donde m es la pendiente y b es el intercepto en y.',
+        tipo_pregunta: 'multiple_choice',
+        opciones: [
+          { letra: 'A', contenido: 'f(x) = 2x + 3', es_correcta: true },
+          { letra: 'B', contenido: 'f(x) = 3x + 2', es_correcta: false },
+          { letra: 'C', contenido: 'f(x) = -2x + 3', es_correcta: false },
+          { letra: 'D', contenido: 'f(x) = 2x - 3', es_correcta: false },
+          { letra: 'E', contenido: 'f(x) = x + 5', es_correcta: false }
+        ]
       };
 
-      console.log(`✅ Pregunta PAES obtenida: #${formattedQuestion.numero}`);
-      return formattedQuestion;
+      console.log(`✅ Pregunta PAES mock generada: #${mockQuestion.numero}`);
+      return mockQuestion;
 
     } catch (error) {
       console.error('Error en getRandomQuestion:', error);
@@ -147,29 +114,19 @@ export class PAESService {
   }
 
   /**
-   * Obtener estadísticas del examen
+   * Obtener estadísticas del examen (versión mock)
    */
   static async getExamStats(examCode: string = 'FORMA_113_2024') {
     try {
       const exam = await this.getExam(examCode);
       if (!exam) return null;
 
-      const { data: questionCount, error } = await supabase
-        .from('preguntas')
-        .select('numero', { count: 'exact' })
-        .eq('examen_id', exam.id);
-
-      if (error) {
-        console.error('Error obteniendo estadísticas:', error);
-        return null;
-      }
-
       return {
         exam,
-        questionsLoaded: questionCount?.length || 0,
+        questionsLoaded: exam.total_preguntas,
         totalQuestions: exam.total_preguntas,
         validQuestions: exam.preguntas_validas,
-        loadingProgress: ((questionCount?.length || 0) / exam.total_preguntas) * 100
+        loadingProgress: 100
       };
     } catch (error) {
       console.error('Error en getExamStats:', error);

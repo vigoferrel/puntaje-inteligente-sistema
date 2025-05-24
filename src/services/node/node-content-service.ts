@@ -35,7 +35,7 @@ export async function fetchNodeContent(nodeId: string): Promise<NodeContent | nu
       metadata: {
         title: node.title,
         difficulty: node.difficulty,
-        skillCategory: node.skill_category,
+        domainCategory: node.domain_category, // Use correct field name
         cognitiveLevel: node.cognitive_level
       },
       createdAt: node.created_at,
@@ -117,5 +117,21 @@ export async function updateNodeContent(contentId: string, updates: Partial<Node
   } catch (error) {
     console.error('Error updating node content:', error);
     return null;
+  }
+}
+
+/**
+ * Batch create educational nodes (placeholder implementation)
+ */
+export async function batchCreateEducationalNodes(nodes: any[]): Promise<any[]> {
+  try {
+    console.log('Batch creating educational nodes:', nodes.length);
+    
+    // For now, return empty array as this is a placeholder
+    // In the future, this could create multiple learning nodes
+    return [];
+  } catch (error) {
+    console.error('Error in batchCreateEducationalNodes:', error);
+    return [];
   }
 }
