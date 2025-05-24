@@ -47,7 +47,7 @@ export function usePAESPlanIntegration() {
     if (!user?.id) return;
 
     try {
-      // Obtener estadísticas de progreso PAES
+      // Obtener estadísticas de progreso PAES desde la tabla existente
       const { data: paesProgress, error } = await supabase
         .from('user_paes_progress')
         .select('*')

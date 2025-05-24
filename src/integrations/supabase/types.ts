@@ -1183,6 +1183,39 @@ export type Database = {
           },
         ]
       }
+      user_paes_progress: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          phase: string | null
+          question_id: number
+          skill: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          phase?: string | null
+          question_id: number
+          skill: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          phase?: string | null
+          question_id?: number
+          skill?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_simulations: {
         Row: {
           completed_at: string | null
