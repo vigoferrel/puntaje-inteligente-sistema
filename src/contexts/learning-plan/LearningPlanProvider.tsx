@@ -3,22 +3,8 @@ import React, { createContext, useContext, ReactNode } from "react";
 import { LearningPlanContextType } from "./types";
 import { useLearningPlanProvider } from "./hooks/useLearningPlanProvider";
 
-// Create context with default values
-const LearningPlanContext = createContext<LearningPlanContextType>({
-  plans: [],
-  currentPlan: null,
-  loading: false,
-  initializing: true,
-  error: null,
-  progressData: {},
-  progressLoading: false,
-  recommendedNodeId: null,
-  refreshPlans: async () => {},
-  selectPlan: () => {},
-  createPlan: async () => null,
-  updatePlanProgress: async () => {},
-  getPlanProgress: () => null
-});
+// Create context with undefined default (will be provided by provider)
+const LearningPlanContext = createContext<LearningPlanContextType | undefined>(undefined);
 
 // Provider component
 export const LearningPlanProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -34,4 +20,10 @@ export const LearningPlanProvider: React.FC<{ children: ReactNode }> = ({ childr
 };
 
 // Custom hook to use the learning plan context
-export const useLearningPlanContext = () => useContext(LearningPlanContext);
+export const useLearningPlanContext = () => {
+  const context = useContext(LearningPlanContext);
+  if (!context) {
+    throw new Error('useLearningPlanContext must be used within a LearningPlanProvider');
+  }
+  return context;
+};

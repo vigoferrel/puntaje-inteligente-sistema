@@ -34,18 +34,19 @@ export function useExercises(userId: string | null, updateSkill: (skillId: numbe
     }
   }, [currentExercise, showFeedback, userId]);
   
-  // Guardar intento de ejercicio en la base de datos
+  // Guardar intento de ejercicio en la base de datos usando la nueva tabla
   const saveExerciseAttempt = useCallback(async (exercise: Exercise, selectedOption: number, isCorrect: boolean) => {
     if (!userId || !exercise) return;
     
     try {
-      await supabase.from('lectoguia_exercise_attempts').insert({
+      // Usar la nueva tabla user_exercise_attempts
+      await supabase.from('user_exercise_attempts').insert({
         user_id: userId,
         exercise_id: exercise.id || uuidv4(),
-        selected_option: selectedOption,
+        answer: selectedOption.toString(),
         is_correct: isCorrect,
-        skill_type: exercise.skill,
-        prueba: exercise.prueba || 'COMPETENCIA_LECTORA'
+        skill_demonstrated: exercise.skill as TPAESHabilidad,
+        created_at: new Date().toISOString()
       });
       
       // Actualizar nivel de habilidad en la base de datos
@@ -67,8 +68,6 @@ export function useExercises(userId: string | null, updateSkill: (skillId: numbe
     // generateExercise será implementado en el provider
     console.log("New exercise requested");
   }, []);
-  
-  // La función handleNewExercise real será reemplazada en el provider
   
   return {
     currentExercise,
