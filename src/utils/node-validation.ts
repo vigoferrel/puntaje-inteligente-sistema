@@ -37,11 +37,11 @@ const THEMATIC_KEYWORDS: Record<TPAESPrueba, readonly string[]> = {
 
 // Mapeo de skills válidos por tipo de prueba
 const VALID_SKILLS_BY_TEST: Record<number, readonly number[]> = {
-  1: [1, 2, 3], // COMPETENCIA_LECTORA: TRACK_LOCATE, INTERPRET_RELATE, EVALUATE_REFLECT
-  2: [4, 5, 6, 7], // MATEMATICA_1: SOLVE_PROBLEMS, REPRESENT, MODEL, ARGUE_COMMUNICATE
-  3: [4, 5, 6, 7], // MATEMATICA_2: SOLVE_PROBLEMS, REPRESENT, MODEL, ARGUE_COMMUNICATE
-  4: [8, 9, 10, 11], // CIENCIAS: IDENTIFY_THEORIES, PROCESS_ANALYZE, APPLY_PRINCIPLES, SCIENTIFIC_ARGUMENT
-  5: [12, 13, 14, 15, 16] // HISTORIA: TEMPORAL_THINKING, SOURCE_ANALYSIS, MULTICAUSAL_ANALYSIS, CRITICAL_THINKING, REFLECTION
+  1: [1, 2, 3], // COMPETENCIA_LECTORA
+  2: [4, 5, 6, 7], // MATEMATICA_1
+  3: [4, 5, 6, 7], // MATEMATICA_2
+  4: [8, 9, 10, 11], // CIENCIAS
+  5: [12, 13, 14, 15, 16] // HISTORIA
 } as const;
 
 // Validación de niveles cognitivos válidos
@@ -82,39 +82,25 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
     return acc + (nodeText.includes(keyword.toLowerCase()) ? 1 : 0);
   }, 0);
   
-  // Validar coherencia entre subject_area y prueba
-  const subjectArea = (node as any).subject_area || node.prueba;
-  if (subjectArea && subjectArea !== node.prueba) {
-    issues.push(`Subject area (${subjectArea}) no coincide con prueba (${node.prueba})`);
+  // Validar coherencia entre subject_area y prueba usando propiedades tipadas
+  if (node.subject_area && node.subject_area !== node.prueba) {
+    issues.push(`Subject area (${node.subject_area}) no coincide con prueba (${node.prueba})`);
   }
   
-  // Validar cognitive_level
-  const cognitiveLevel = (node as any).cognitive_level;
-  if (cognitiveLevel && !VALID_COGNITIVE_LEVELS.includes(cognitiveLevel)) {
-    issues.push(`Nivel cognitivo inválido: ${cognitiveLevel}`);
+  // Validar cognitive_level usando propiedades tipadas
+  if (node.cognitive_level && !VALID_COGNITIVE_LEVELS.includes(node.cognitive_level as any)) {
+    issues.push(`Nivel cognitivo inválido: ${node.cognitive_level}`);
   }
   
   if (currentTestScore === 0 && maxScore > 0) {
     issues.push(`Contenido temático no coincide con ${node.prueba}. Sugiere: ${suggestedTest}`);
   }
   
-  // Verificar skill_id coherencia usando test_id del nodo
-  const testIdToNumber: Record<TPAESPrueba, number> = {
-    'COMPETENCIA_LECTORA': 1,
-    'MATEMATICA_1': 2,
-    'MATEMATICA_2': 3,
-    'CIENCIAS': 4,
-    'HISTORIA': 5
-  };
+  // Verificar skill_id coherencia usando testId tipado
+  const validSkills = VALID_SKILLS_BY_TEST[node.testId];
   
-  const testId = testIdToNumber[node.prueba];
-  const validSkills = VALID_SKILLS_BY_TEST[testId];
-  
-  // Check if node has skillId property (from database) or derive from skill property
-  const nodeSkillId = (node as any).skillId || (node.skill ? getSkillIdFromCode(node.skill) : null);
-  
-  if (nodeSkillId && !validSkills?.includes(nodeSkillId)) {
-    issues.push(`Skill ID ${nodeSkillId} no es válido para ${node.prueba}`);
+  if (node.skillId && !validSkills?.includes(node.skillId)) {
+    issues.push(`Skill ID ${node.skillId} no es válido para ${node.prueba}`);
   }
   
   const confidence = maxScore > 0 ? Math.min(currentTestScore / maxScore, 1) : 1;
@@ -127,31 +113,8 @@ export function validateNodeThematicCoherence(node: TLearningNode): {
   };
 }
 
-// Helper function to map skill codes to IDs
-function getSkillIdFromCode(skillCode: string): number | null {
-  const skillMap: Record<string, number> = {
-    'TRACK_LOCATE': 1,
-    'INTERPRET_RELATE': 2,
-    'EVALUATE_REFLECT': 3,
-    'SOLVE_PROBLEMS': 4,
-    'REPRESENT': 5,
-    'MODEL': 6,
-    'ARGUE_COMMUNICATE': 7,
-    'IDENTIFY_THEORIES': 8,
-    'PROCESS_ANALYZE': 9,
-    'APPLY_PRINCIPLES': 10,
-    'SCIENTIFIC_ARGUMENT': 11,
-    'TEMPORAL_THINKING': 12,
-    'SOURCE_ANALYSIS': 13,
-    'MULTICAUSAL_ANALYSIS': 14,
-    'CRITICAL_THINKING': 15,
-    'REFLECTION': 16
-  };
-  return skillMap[skillCode] || null;
-}
-
 /**
- * Filtra nodos con validación de coherencia temática y logs de debugging
+ * Filtra nodos con validación de coherencia temática mejorada
  */
 export function filterNodesWithValidation(
   nodes: TLearningNode[], 
@@ -159,9 +122,8 @@ export function filterNodesWithValidation(
   enableLogging = true
 ): TLearningNode[] {
   const filtered = nodes.filter(node => {
-    // Verificar tanto por prueba como por subject_area
-    const subjectArea = (node as any).subject_area;
-    return node.prueba === selectedPrueba || subjectArea === selectedPrueba;
+    // Usar propiedades tipadas para filtrado más preciso
+    return node.prueba === selectedPrueba || node.subject_area === selectedPrueba;
   });
   
   if (enableLogging) {
@@ -193,7 +155,7 @@ export function filterNodesWithValidation(
 }
 
 /**
- * Valida la integridad completa del conjunto de nodos
+ * Valida la integridad completa del conjunto de nodos con mejor tipado
  */
 export function validateNodesIntegrity(nodes: TLearningNode[]): {
   isValid: boolean;

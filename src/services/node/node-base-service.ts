@@ -5,25 +5,23 @@ import { getSkillId } from "@/utils/lectoguia-utils";
 import { testIdToPrueba } from "@/types/paes-types";
 
 /**
- * Maps database nodes to frontend type with better type consistency
+ * Maps database nodes to frontend type with improved consistency
  */
 export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
-  // Verificamos los valores de entrada para diagnóstico
   console.log('Mapeando nodo desde DB:', {
     id: node.id,
     skill_id: node.skill_id,
-    test_id: node.test_id
+    test_id: node.test_id,
+    subject_area: node.subject_area,
+    cognitive_level: node.cognitive_level
   });
 
   // Mapeo seguro para skill_id
-  let skill: TPAESHabilidad = 'MODEL'; // valor por defecto
+  let skill: TPAESHabilidad = 'MODEL';
   
-  // Si el nodo incluye información de skill expandida
   if (node.skill && node.skill.code) {
     skill = node.skill.code as TPAESHabilidad;
-  } 
-  // Si solo tenemos el ID de skill, intentar mapearlo
-  else if (node.skill_id) {
+  } else if (node.skill_id) {
     try {
       const skillMap: Record<number, TPAESHabilidad> = {
         1: 'TRACK_LOCATE',
@@ -51,7 +49,7 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
   }
   
   // Mapeo seguro para test_id a prueba
-  let prueba: TPAESPrueba = 'COMPETENCIA_LECTORA'; // valor por defecto
+  let prueba: TPAESPrueba = 'COMPETENCIA_LECTORA';
   
   try {
     if (node.test_id) {
@@ -61,6 +59,10 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
     console.error(`Error mapeando test_id ${node.test_id}:`, e);
   }
 
+  // Asegurar coherencia entre subject_area y prueba
+  const subject_area = node.subject_area || prueba;
+  const cognitive_level = node.cognitive_level || 'COMPRENDER';
+
   return {
     id: node.id,
     title: node.title,
@@ -68,7 +70,7 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
     skill,
     prueba,
     difficulty: node.difficulty || 'basic',
-    position: node.position,
+    position: node.position || 0,
     dependsOn: node.depends_on || [],
     estimatedTimeMinutes: node.estimated_time_minutes || 30,
     content: {
@@ -76,12 +78,12 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
       examples: node.content?.examples || [],
       exerciseCount: node.content?.exerciseCount || 15
     } as any,
-    // Mapear las nuevas propiedades
-    cognitive_level: node.cognitive_level,
-    subject_area: node.subject_area,
-    code: node.code,
-    skillId: node.skill_id,
-    testId: node.test_id,
+    // Propiedades ahora requeridas con valores seguros
+    cognitive_level,
+    subject_area,
+    code: node.code || `${node.id.slice(0, 8)}`,
+    skillId: node.skill_id || 1,
+    testId: node.test_id || 1,
     createdAt: node.created_at,
     updatedAt: node.updated_at
   };

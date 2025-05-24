@@ -30,10 +30,10 @@ export interface TLearningNode {
   createdAt?: string;
   updatedAt?: string;
   position?: number;
-  // Nuevas propiedades agregadas en la migración
-  cognitive_level?: string;
-  subject_area?: string;
-  code?: string;
-  skillId?: number;
-  testId?: number;
+  // Propiedades ahora requeridas para coherencia
+  cognitive_level: string;
+  subject_area: string;
+  code: string;
+  skillId: number;
+  testId: number;
 }
