@@ -1,24 +1,25 @@
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Brain, Target, TrendingUp, Zap, Star, PlayCircle,
-  BookOpen, Award, Clock, BarChart3, Lightbulb,
-  Rocket, Trophy, Eye, Sparkles
+  Brain, Sparkles, Target, Zap, Award, Map, 
+  Gamepad2, Trophy, TrendingUp, Eye, Cpu, Rocket
 } from 'lucide-react';
 import { useEducationSystem } from '@/core/unified-education-system/EducationDataHub';
-import { useAuth } from '@/contexts/AuthContext';
-import { SkillVisualization3D } from './SkillVisualization3D';
-import { IntelligentRecommendations } from './IntelligentRecommendations';
-import { LearningAnalytics } from './LearningAnalytics';
 import { AdaptiveContentGeneration } from './AdaptiveContentGeneration';
+import { LearningAnalytics } from './LearningAnalytics';
+import { IntelligentRecommendations } from './IntelligentRecommendations';
+import { ImmersiveVisualization3D } from './ImmersiveVisualization3D';
+import { AdaptiveDiagnostics3D } from './AdaptiveDiagnostics3D';
+import { SystemicGamification } from './SystemicGamification';
+import { PredictiveAnalysis } from './PredictiveAnalysis';
+import { HolographicDashboard } from './HolographicDashboard';
 
 export const IntelligentDashboard: React.FC = () => {
-  const { user } = useAuth();
   const {
     studentProfile,
     skillNodes,
@@ -27,297 +28,256 @@ export const IntelligentDashboard: React.FC = () => {
     isInitializing,
     initializeSystem,
     generateIntelligentRecommendations,
-    analyzePerformancePatterns,
-    getPersonalizedInsights
+    analyzePerformancePatterns
   } = useEducationSystem();
 
-  const [activeView, setActiveView] = useState<'overview' | 'skills' | 'analytics' | 'content'>('overview');
-  const [showVisualization3D, setShowVisualization3D] = useState(false);
+  const [activePhase, setActivePhase] = useState<'analytics' | 'adaptive' | 'immersive' | 'gamification'>('analytics');
 
-  // Inicializar sistema
   useEffect(() => {
-    if (user?.id && !studentProfile && !isInitializing) {
-      initializeSystem(user.id);
+    if (!studentProfile) {
+      // Simular un ID de usuario para el demo
+      initializeSystem('demo-user-id');
     }
-  }, [user?.id, studentProfile, isInitializing, initializeSystem]);
-
-  // Obtener insights personalizados
-  const personalizedInsights = getPersonalizedInsights();
-  const performancePatterns = analyzePerformancePatterns();
+  }, [studentProfile, initializeSystem]);
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center space-y-6"
         >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mx-auto"
-          >
-            <Brain className="w-10 h-10 text-white" />
-          </motion.div>
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Inicializando Sistema Educativo</h2>
-            <p className="text-cyan-400">Analizando tu perfil y generando recomendaciones inteligentes...</p>
+          <div className="relative">
+            <Brain className="w-20 h-20 mx-auto text-cyan-400 animate-pulse" />
+            <div className="absolute inset-0 w-20 h-20 mx-auto border-4 border-cyan-400/30 rounded-full animate-spin border-t-cyan-400"></div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-white">Inicializando Sistema Educativo Avanzado</h2>
+            <p className="text-cyan-300">Activando IA, diagnósticos 3D y gamificación...</p>
           </div>
         </motion.div>
       </div>
     );
   }
 
-  if (!studentProfile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <Card className="w-full max-w-md bg-black/40 backdrop-blur-xl border-cyan-500/30">
-          <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-bold text-white mb-4">Error de Inicialización</h2>
-            <p className="text-gray-400 mb-6">No se pudo cargar tu perfil educativo</p>
-            <Button onClick={() => user?.id && initializeSystem(user.id)} className="w-full">
-              Reintentar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const patterns = analyzePerformancePatterns();
 
-  const skillNodesArray = Object.values(skillNodes);
-  const averageMastery = skillNodesArray.length > 0 
-    ? skillNodesArray.reduce((sum, node) => sum + node.masteryLevel, 0) / skillNodesArray.length 
-    : 0;
-  
-  const completedNodes = skillNodesArray.filter(node => node.masteryLevel >= 80).length;
-  const totalNodes = skillNodesArray.length;
+  const phaseData = {
+    analytics: {
+      icon: TrendingUp,
+      title: 'Fase 1: Análisis Inteligente',
+      description: 'Dashboard neural con métricas en tiempo real',
+      color: 'from-blue-600 to-cyan-600'
+    },
+    adaptive: {
+      icon: Rocket,
+      title: 'Fase 2: Contenido Adaptativo IA',
+      description: 'Generación inteligente y recomendaciones predictivas',
+      color: 'from-purple-600 to-pink-600'
+    },
+    immersive: {
+      icon: Eye,
+      title: 'Fase 3: Experiencia Inmersiva 3D',
+      description: 'Diagnósticos adaptativos y visualización holográfica',
+      color: 'from-green-600 to-emerald-600'
+    },
+    gamification: {
+      icon: Trophy,
+      title: 'Fase 4: Gamificación Sistémica',
+      description: 'Logros dinámicos y validación integral',
+      color: 'from-orange-600 to-red-600'
+    }
+  };
+
+  const currentPhase = phaseData[activePhase];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Header Inteligente */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
-        >
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center"
-            >
-              <Brain className="w-8 h-8 text-white" />
-            </motion.div>
-            <div>
-              <h1 className="text-4xl font-bold text-white">
-                Hola, {studentProfile.name}
-              </h1>
-              <p className="text-cyan-400">Sistema Educativo Inteligente PAES</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 p-6">
+      {/* Header Revolucionario */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <Card className="bg-gradient-to-r from-black/50 to-slate-900/50 backdrop-blur-xl border-cyan-500/30">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Brain className="w-12 h-12 text-cyan-400" />
+                  <Sparkles className="w-6 h-6 text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl text-white">
+                    Sistema Educativo Revolucionario PAES
+                  </CardTitle>
+                  <p className="text-cyan-300">
+                    IA Avanzada • Experiencia 3D • Gamificación Sistémica
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Badge className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                  <Cpu className="w-4 h-4 mr-1" />
+                  IA 100% Activa
+                </Badge>
+                <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white">
+                  Nivel {studentProfile?.currentLevel}
+                </Badge>
+              </div>
             </div>
-          </div>
+          </CardHeader>
+        </Card>
+      </motion.div>
 
-          <div className="flex justify-center space-x-2">
-            <Badge className="bg-gradient-to-r from-green-600 to-emerald-600">
-              <Star className="w-4 h-4 mr-2" />
-              Nivel {studentProfile.currentLevel}
-            </Badge>
-            <Badge className="bg-gradient-to-r from-blue-600 to-purple-600">
-              <Target className="w-4 h-4 mr-2" />
-              Meta: {studentProfile.academicGoals.targetScore} pts
-            </Badge>
-            <Badge className="bg-gradient-to-r from-orange-600 to-red-600">
-              <Trophy className="w-4 h-4 mr-2" />
-              {completedNodes}/{totalNodes} Nodos
-            </Badge>
-          </div>
-        </motion.div>
+      {/* Navegación de Fases */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mb-8"
+      >
+        <Tabs value={activePhase} onValueChange={(value) => setActivePhase(value as any)}>
+          <TabsList className="grid w-full grid-cols-4 bg-black/20 backdrop-blur-lg">
+            {Object.entries(phaseData).map(([key, phase]) => {
+              const Icon = phase.icon;
+              return (
+                <TabsTrigger 
+                  key={key} 
+                  value={key}
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  Fase {Object.keys(phaseData).indexOf(key) + 1}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-        {/* Navegación de Vistas */}
-        <div className="flex justify-center space-x-2">
-          {[
-            { id: 'overview', label: 'Resumen', icon: Eye },
-            { id: 'skills', label: 'Habilidades 3D', icon: Sparkles },
-            { id: 'analytics', label: 'Análisis IA', icon: BarChart3 },
-            { id: 'content', label: 'Contenido Adaptativo', icon: Rocket }
-          ].map(view => {
-            const Icon = view.icon;
-            return (
-              <Button
-                key={view.id}
-                variant={activeView === view.id ? "default" : "ghost"}
-                onClick={() => setActiveView(view.id as any)}
-                className={`${activeView === view.id 
-                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600' 
-                  : 'text-white hover:bg-white/10'
-                }`}
-              >
-                <Icon className="w-4 h-4 mr-2" />
-                {view.label}
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Contenido Principal */}
-        <AnimatePresence mode="wait">
-          {activeView === 'overview' && (
+          {/* Fase 1: Análisis Inteligente */}
+          <TabsContent value="analytics" className="space-y-6 mt-6">
             <motion.div
-              key="overview"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+              className="space-y-6"
             >
-              {/* Panel Principal de Progreso */}
-              <div className="lg:col-span-2 space-y-6">
-                <Card className="bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-cyan-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-3">
-                      <TrendingUp className="w-6 h-6 text-cyan-400" />
-                      Progreso General
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-white font-medium">Dominio Promedio</span>
-                        <span className="text-cyan-400 font-bold">{Math.round(averageMastery)}%</span>
-                      </div>
-                      <Progress value={averageMastery} className="h-3" />
-                    </div>
+              <Card className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 backdrop-blur-xl border-blue-500/30">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-3">
+                    <TrendingUp className="w-6 h-6 text-blue-400" />
+                    {currentPhase.title}
+                  </CardTitle>
+                  <p className="text-blue-200">{currentPhase.description}</p>
+                </CardHeader>
+              </Card>
 
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400">
-                          {systemMetrics.totalStudyTime.toFixed(0)}h
-                        </div>
-                        <div className="text-sm text-gray-400">Tiempo Total</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-400">
-                          {Math.round(systemMetrics.averagePerformance)}%
-                        </div>
-                        <div className="text-sm text-gray-400">Rendimiento</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-400">
-                          {Math.round(systemMetrics.learningVelocity * 100)}%
-                        </div>
-                        <div className="text-sm text-gray-400">Velocidad</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Insights Personalizados */}
-                <Card className="bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-purple-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-3">
-                      <Lightbulb className="w-6 h-6 text-purple-400" />
-                      Insights Personalizados
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {personalizedInsights.map((insight, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="p-3 bg-purple-600/20 rounded-lg border-l-4 border-purple-400"
-                        >
-                          <p className="text-white text-sm">{insight}</p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Panel de Recomendaciones */}
-              <div className="space-y-6">
-                <IntelligentRecommendations recommendations={currentRecommendations} />
-                
-                <Card className="bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-orange-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-3">
-                      <Zap className="w-6 h-6 text-orange-400" />
-                      Acción Rápida
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button 
-                      onClick={() => setShowVisualization3D(true)}
-                      className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-                    >
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Diagnóstico Inteligente
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="w-full border-purple-500/50 text-white hover:bg-purple-500/20"
-                    >
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Generar Contenido IA
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="w-full border-green-500/50 text-white hover:bg-green-500/20"
-                    >
-                      <Award className="w-4 h-4 mr-2" />
-                      Ver Análisis 3D
-                    </Button>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <LearningAnalytics 
+                  patterns={patterns}
+                  metrics={systemMetrics}
+                  skillNodes={Object.values(skillNodes)}
+                />
+                <IntelligentRecommendations 
+                  recommendations={currentRecommendations}
+                />
               </div>
             </motion.div>
-          )}
+          </TabsContent>
 
-          {activeView === 'skills' && (
+          {/* Fase 2: Contenido Adaptativo */}
+          <TabsContent value="adaptive" className="space-y-6 mt-6">
             <motion.div
-              key="skills"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
             >
-              <SkillVisualization3D skillNodes={skillNodesArray} />
+              <Card className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 backdrop-blur-xl border-purple-500/30">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-3">
+                    <Rocket className="w-6 h-6 text-purple-400" />
+                    {currentPhase.title}
+                  </CardTitle>
+                  <p className="text-purple-200">{currentPhase.description}</p>
+                </CardHeader>
+              </Card>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <AdaptiveContentGeneration
+                  studentProfile={studentProfile!}
+                  recommendations={currentRecommendations}
+                />
+                <PredictiveAnalysis
+                  skillNodes={Object.values(skillNodes)}
+                  patterns={patterns}
+                />
+              </div>
             </motion.div>
-          )}
+          </TabsContent>
 
-          {activeView === 'analytics' && (
+          {/* Fase 3: Experiencia Inmersiva 3D */}
+          <TabsContent value="immersive" className="space-y-6 mt-6">
             <motion.div
-              key="analytics"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
             >
-              <LearningAnalytics 
-                patterns={performancePatterns}
-                metrics={systemMetrics}
-                skillNodes={skillNodesArray}
+              <Card className="bg-gradient-to-r from-green-900/40 to-emerald-900/40 backdrop-blur-xl border-green-500/30">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-3">
+                    <Eye className="w-6 h-6 text-green-400" />
+                    {currentPhase.title}
+                  </CardTitle>
+                  <p className="text-green-200">{currentPhase.description}</p>
+                </CardHeader>
+              </Card>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <ImmersiveVisualization3D
+                  skillNodes={Object.values(skillNodes)}
+                  studentProfile={studentProfile!}
+                />
+                <div className="space-y-6">
+                  <AdaptiveDiagnostics3D
+                    recommendations={currentRecommendations}
+                    studentProfile={studentProfile!}
+                  />
+                  <HolographicDashboard
+                    metrics={systemMetrics}
+                    patterns={patterns}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </TabsContent>
+
+          {/* Fase 4: Gamificación Sistémica */}
+          <TabsContent value="gamification" className="space-y-6 mt-6">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
+            >
+              <Card className="bg-gradient-to-r from-orange-900/40 to-red-900/40 backdrop-blur-xl border-orange-500/30">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-3">
+                    <Trophy className="w-6 h-6 text-orange-400" />
+                    {currentPhase.title}
+                  </CardTitle>
+                  <p className="text-orange-200">{currentPhase.description}</p>
+                </CardHeader>
+              </Card>
+
+              <SystemicGamification
+                studentProfile={studentProfile!}
+                skillNodes={Object.values(skillNodes)}
+                systemMetrics={systemMetrics}
               />
             </motion.div>
-          )}
-
-          {activeView === 'content' && (
-            <motion.div
-              key="content"
-              initial={{ opacity: 0, rotateY: -10 }}
-              animate={{ opacity: 1, rotateY: 0 }}
-              exit={{ opacity: 0, rotateY: 10 }}
-            >
-              <AdaptiveContentGeneration 
-                studentProfile={studentProfile}
-                recommendations={currentRecommendations}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </TabsContent>
+        </Tabs>
+      </motion.div>
     </div>
   );
 };
