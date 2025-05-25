@@ -118,7 +118,9 @@ export const useRealNeuralInsights = () => {
         // 3. Diagnostic-based insights
         if (diagnostics.length > 0) {
           const latestDiagnostic = diagnostics[0];
-          const overallScore = latestDiagnostic.results?.overall_score || 0;
+          // Safely handle Json type from Supabase
+          const results = latestDiagnostic.results as any;
+          const overallScore = results?.overall_score || 0;
           
           if (overallScore > 600) {
             realInsights.push({
