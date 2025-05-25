@@ -1,3 +1,4 @@
+
 /**
  * NEXUS INTERSECCIONAL - Sistema Nervioso Digital Estabilizado
  * Arquitectura quirúrgica sin bucles infinitos
@@ -8,6 +9,14 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { universalHub } from '@/core/universal-hub/UniversalDataHub';
 import { EmergencyCircuitBreaker } from '@/utils/circuit-breaker';
+
+// Circuit Breaker Global de Emergencia
+const globalCircuitBreaker = new EmergencyCircuitBreaker({
+  maxSignalsPerSecond: 2,
+  cooldownPeriod: 5000,
+  emergencyThreshold: 3,
+  autoRecoveryTime: 30000
+});
 
 // Tipos neurológicos del sistema
 interface NeuralSignal {
@@ -56,6 +65,41 @@ type SignalType =
   | 'EMERGENCY_COORDINATION';
 
 type SignalPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'BACKGROUND';
+
+// Queue de señales con batching quirúrgico
+let signalQueue: NeuralSignal[] = [];
+let batchTimeout: NodeJS.Timeout | null = null;
+
+const processBatchedSignals = (setState: any) => {
+  if (signalQueue.length === 0) return;
+  
+  const signalsToProcess = [...signalQueue];
+  signalQueue = [];
+  
+  setState((state: IntersectionalState) => {
+    const newPathways = new Map(state.neural_pathways);
+    
+    signalsToProcess.forEach(signal => {
+      const pathwayKey = `${signal.origin.id}_${signal.type}`;
+      
+      if (!newPathways.has(pathwayKey)) {
+        newPathways.set(pathwayKey, []);
+      }
+      
+      const pathway = newPathways.get(pathwayKey)!;
+      pathway.push(signal);
+      
+      // Limitar historial agresivamente
+      if (pathway.length > 2) {
+        pathway.splice(0, pathway.length - 2);
+      }
+    });
+    
+    return { neural_pathways: newPathways };
+  });
+  
+  console.log(`🧠 Procesadas ${signalsToProcess.length} señales neurológicas en batch`);
+};
 
 export const useIntersectionalNexus = create<IntersectionalState & {
   // API Neurológica
@@ -113,7 +157,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
       });
     },
 
-    // Broadcasting con control de emergencia
+    // Broadcasting con control de emergencia y batching
     broadcastSignal: (signal) => {
       if (!globalCircuitBreaker.canProcess()) {
         console.warn('🚫 Señal neuronal bloqueada por circuit breaker');
@@ -126,34 +170,21 @@ export const useIntersectionalNexus = create<IntersectionalState & {
         correlation_id: `signal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
 
-      // Batch updates para evitar renders excesivos
-      const batchUpdate = () => {
-        set(state => {
-          const newPathways = new Map(state.neural_pathways);
-          const pathwayKey = `${signal.origin.id}_${signal.type}`;
-          
-          if (!newPathways.has(pathwayKey)) {
-            newPathways.set(pathwayKey, []);
-          }
-          
-          const pathway = newPathways.get(pathwayKey)!;
-          pathway.push(fullSignal);
-          
-          // Limitar agresivamente el historial
-          if (pathway.length > 3) {
-            pathway.splice(0, pathway.length - 3);
-          }
+      // Agregar a queue para batching
+      signalQueue.push(fullSignal);
+      globalCircuitBreaker.recordSignal();
 
-          globalCircuitBreaker.recordSignal();
-          
-          return { neural_pathways: newPathways };
-        });
-      };
+      // Procesar batch después de un delay
+      if (batchTimeout) {
+        clearTimeout(batchTimeout);
+      }
+      
+      batchTimeout = setTimeout(() => {
+        processBatchedSignals(set);
+        batchTimeout = null;
+      }, 1000);
 
-      // Debounce para batching
-      setTimeout(batchUpdate, 100);
-
-      // Propagar solo señales críticas
+      // Propagar solo señales críticas inmediatamente
       if (signal.priority === 'CRITICAL' || signal.type === 'EMERGENCY_COORDINATION') {
         universalHub.notifySubscribers(`neural_signal_${signal.type}`, fullSignal);
       }
@@ -164,7 +195,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
       return universalHub.subscribe(`neural_signal_MODULE_${moduleId}`, callback);
     },
 
-    // Síntesis con control de frecuencia
+    // Síntesis con control de frecuencia agresivo
     synthesizeInsights: async () => {
       if (!globalCircuitBreaker.canProcess()) {
         console.warn('🚫 Síntesis de insights bloqueada');
@@ -172,36 +203,34 @@ export const useIntersectionalNexus = create<IntersectionalState & {
       }
 
       const state = get();
-      const modules = Array.from(state.active_modules.values());
+      const modules = Array.from(state.active_modules.values()).slice(0, 3); // Limitar a 3 módulos
       
-      // Síntesis básica sin complejidad excesiva
-      const insights = modules.slice(0, 5).map(module => ({
+      // Síntesis mínima para evitar sobrecarga
+      const insights = modules.map(module => ({
         module_id: module.id,
         module_type: module.type,
         capabilities_utilization: Math.min(module.capabilities.length / 5, 1),
-        state_complexity: Math.min(Object.keys(module.current_state || {}).length, 10),
-        neural_connections: Math.min(state.neural_pathways.size, 20)
+        state_complexity: Math.min(Object.keys(module.current_state || {}).length, 5),
+        neural_connections: Math.min(state.neural_pathways.size, 10)
       }));
 
-      // Cross patterns limitados
+      // Cross patterns muy limitados
       const crossPatterns = [];
-      for (let i = 0; i < Math.min(modules.length, 3); i++) {
-        for (let j = i + 1; j < Math.min(modules.length, 3); j++) {
-          const moduleA = modules[i];
-          const moduleB = modules[j];
-          
-          const sharedCapabilities = moduleA.capabilities.filter(cap => 
-            moduleB.capabilities.includes(cap)
-          ).slice(0, 3);
-          
-          if (sharedCapabilities.length > 0) {
-            crossPatterns.push({
-              modules: [moduleA.id, moduleB.id],
-              shared_capabilities: sharedCapabilities,
-              synergy_potential: Math.min(sharedCapabilities.length * 25, 100),
-              recommended_integration: `Bridge ${moduleA.type} ↔ ${moduleB.type}`
-            });
-          }
+      if (modules.length >= 2) {
+        const moduleA = modules[0];
+        const moduleB = modules[1];
+        
+        const sharedCapabilities = moduleA.capabilities.filter(cap => 
+          moduleB.capabilities.includes(cap)
+        ).slice(0, 2);
+        
+        if (sharedCapabilities.length > 0) {
+          crossPatterns.push({
+            modules: [moduleA.id, moduleB.id],
+            shared_capabilities: sharedCapabilities,
+            synergy_potential: Math.min(sharedCapabilities.length * 30, 100),
+            recommended_integration: `Bridge ${moduleA.type} ↔ ${moduleB.type}`
+          });
         }
       }
 
@@ -210,23 +239,23 @@ export const useIntersectionalNexus = create<IntersectionalState & {
         cross_module_patterns: crossPatterns,
         system_health: {
           ...state.system_health,
-          cross_pollination_rate: Math.min(100, crossPatterns.length * 20),
-          adaptive_learning_score: Math.min(100, insights.length * 15)
+          cross_pollination_rate: Math.min(100, crossPatterns.length * 25),
+          adaptive_learning_score: Math.min(100, insights.length * 20)
         }
       });
 
       globalCircuitBreaker.recordSignal();
-      console.log(`🧠 Síntesis neurológica estabilizada: ${insights.length} insights`);
+      console.log(`🧠 Síntesis neurológica optimizada: ${insights.length} insights`);
     },
 
-    // Adaptación comportamental
+    // Adaptación comportamental minimalista
     adaptToUserBehavior: (behavior) => {
       set(state => {
         const adaptations = {
-          navigation_preference: behavior.navigation_pattern,
-          interaction_style: behavior.interaction_frequency,
-          learning_velocity: behavior.completion_rate,
-          focus_areas: behavior.time_distribution
+          navigation_preference: behavior.navigation_pattern || 'default',
+          interaction_style: behavior.interaction_frequency || 'normal',
+          learning_velocity: behavior.completion_rate || 0.5,
+          focus_areas: behavior.time_distribution || {}
         };
 
         return {
@@ -237,58 +266,59 @@ export const useIntersectionalNexus = create<IntersectionalState & {
           },
           system_health: {
             ...state.system_health,
-            user_experience_harmony: Math.min(100, state.system_health.user_experience_harmony + 3)
+            user_experience_harmony: Math.min(100, state.system_health.user_experience_harmony + 2)
           }
         };
       });
     },
 
-    // Armonización experiencial
+    // Armonización experiencial simplificada
     harmonizeExperience: () => {
       const state = get();
-      const modules = Array.from(state.active_modules.values());
+      const modules = Array.from(state.active_modules.values()).slice(0, 2); // Solo 2 módulos
       
-      // Sincronización de estados entre módulos
       modules.forEach(module => {
-        get().broadcastSignal({
-          origin: { id: 'nexus', type: 'intersectional', capabilities: ['harmonization'], current_state: {} },
-          type: 'ADAPTIVE_ADJUSTMENT',
-          payload: {
-            target_module: module.id,
-            harmonization_directive: 'align_user_experience',
-            unified_context: state.unified_user_journey
-          },
-          priority: 'HIGH'
-        });
+        // Signal minimalista sin payload complejo
+        if (globalCircuitBreaker.canProcess()) {
+          setTimeout(() => {
+            get().broadcastSignal({
+              origin: { 
+                id: 'nexus', 
+                type: 'intersectional', 
+                capabilities: ['harmonization'], 
+                current_state: {} 
+              },
+              type: 'ADAPTIVE_ADJUSTMENT',
+              payload: {
+                target_module: module.id,
+                harmonization_directive: 'align_user_experience'
+              },
+              priority: 'LOW'
+            });
+          }, 2000 * modules.indexOf(module)); // Stagger signals
+        }
       });
 
-      console.log(`🎵 Armonización experiencial activada para ${modules.length} módulos`);
+      console.log(`🎵 Armonización simplificada para ${modules.length} módulos`);
     },
 
-    // Sistema inmunológico - Detección de anomalías
+    // Sistema inmunológico simplificado
     detectAnomalies: () => {
       const state = get();
       const anomalies: string[] = [];
 
-      // Verificar coherencia neurológica
       if (state.global_coherence < 70) {
         anomalies.push(`Coherencia global baja: ${state.global_coherence}%`);
       }
 
-      // Verificar eficiencia neural
       if (state.system_health.neural_efficiency < 80) {
         anomalies.push(`Eficiencia neural reducida: ${state.system_health.neural_efficiency}%`);
-      }
-
-      // Verificar módulos inactivos
-      if (state.active_modules.size < 3) {
-        anomalies.push(`Módulos insuficientes activos: ${state.active_modules.size}/5`);
       }
 
       return anomalies;
     },
 
-    // Auto-sanación del sistema
+    // Auto-sanación minimalista
     healSystem: async () => {
       const anomalies = get().detectAnomalies();
       
@@ -297,43 +327,28 @@ export const useIntersectionalNexus = create<IntersectionalState & {
         return;
       }
 
-      console.log(`🔧 Iniciando auto-sanación para ${anomalies.length} anomalías`);
+      console.log(`🔧 Auto-sanación activada para ${anomalies.length} anomalías`);
 
-      // Activar protocolos de recuperación
       set(state => ({
         global_coherence: Math.min(100, state.global_coherence + 10),
         system_health: {
-          neural_efficiency: Math.min(100, state.system_health.neural_efficiency + 15),
+          neural_efficiency: Math.min(100, state.system_health.neural_efficiency + 10),
           cross_pollination_rate: Math.min(100, state.system_health.cross_pollination_rate + 5),
           adaptive_learning_score: Math.min(100, state.system_health.adaptive_learning_score + 5),
-          user_experience_harmony: Math.min(100, state.system_health.user_experience_harmony + 8)
+          user_experience_harmony: Math.min(100, state.system_health.user_experience_harmony + 5)
         }
       }));
-
-      // Broadcast señal de recuperación
-      get().broadcastSignal({
-        origin: { id: 'immune_system', type: 'intersectional', capabilities: ['healing'], current_state: {} },
-        type: 'EMERGENCY_COORDINATION',
-        payload: { 
-          action: 'system_healing',
-          anomalies_detected: anomalies,
-          recovery_protocol: 'auto_optimization'
-        },
-        priority: 'CRITICAL'
-      });
     },
 
-    // Optimización de pathways neurológicos
+    // Optimización quirúrgica de pathways
     optimizePathways: () => {
       set(state => {
         const optimizedPathways = new Map();
         
-        // Consolidar pathways por eficiencia
         state.neural_pathways.forEach((signals, pathway) => {
-          // Mantener solo señales recientes y relevantes
           const recentSignals = signals.filter(signal => 
-            Date.now() - signal.timestamp < 300000 // 5 minutos
-          );
+            Date.now() - signal.timestamp < 120000 // Solo 2 minutos
+          ).slice(0, 2); // Máximo 2 señales por pathway
           
           if (recentSignals.length > 0) {
             optimizedPathways.set(pathway, recentSignals);
@@ -346,15 +361,22 @@ export const useIntersectionalNexus = create<IntersectionalState & {
           neural_pathways: optimizedPathways,
           system_health: {
             ...state.system_health,
-            neural_efficiency: Math.min(100, state.system_health.neural_efficiency + 5)
+            neural_efficiency: Math.min(100, state.system_health.neural_efficiency + 3)
           }
         };
       });
     },
 
-    // Sistema de emergencia
+    // Sistema de emergencia quirúrgico
     emergencyReset: () => {
       globalCircuitBreaker.forceRecovery();
+      
+      // Limpiar queue de señales
+      signalQueue = [];
+      if (batchTimeout) {
+        clearTimeout(batchTimeout);
+        batchTimeout = null;
+      }
       
       set({
         neural_pathways: new Map(),
@@ -369,14 +391,15 @@ export const useIntersectionalNexus = create<IntersectionalState & {
         }
       });
       
-      console.log('🚨 EMERGENCY RESET: Sistema neurológico reiniciado');
+      console.log('🚨 EMERGENCY RESET: Sistema neurológico reiniciado quirúrgicamente');
     },
 
     getSystemStatus: () => ({
       circuitBreakerState: globalCircuitBreaker.getState(),
       activeModules: get().active_modules.size,
       globalCoherence: get().global_coherence,
-      pathways: get().neural_pathways.size
+      pathways: get().neural_pathways.size,
+      queuedSignals: signalQueue.length
     })
   }))
 );
@@ -405,7 +428,7 @@ export const useNeuralModule = (moduleConfig: Omit<ModuleIdentity, 'current_stat
   };
 };
 
-// Sistema inmunológico automático
+// Sistema inmunológico automático con intervalos largos
 export const useNeuralImmunity = () => {
   const nexus = useIntersectionalNexus();
   
@@ -413,12 +436,12 @@ export const useNeuralImmunity = () => {
     const immuneSystem = setInterval(() => {
       const anomalies = nexus.detectAnomalies();
       
-      if (anomalies.length > 0) {
+      if (anomalies.length > 2) {
         nexus.healSystem();
-      } else {
+      } else if (Math.random() > 0.7) { // Solo optimizar 30% de las veces
         nexus.optimizePathways();
       }
-    }, 180000); // Cada 3 minutos
+    }, 300000); // Cada 5 minutos
 
     return () => clearInterval(immuneSystem);
   }, []);
