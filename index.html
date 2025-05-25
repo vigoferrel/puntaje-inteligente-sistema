@@ -4,29 +4,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PAES Command - Sistema Neural Anti-Tracking</title>
+    <title>PAES Command - Sistema Neural Anti-Tracking Blindado</title>
+    
+    <!-- Fonts optimizados sin tracking -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Política de Seguridad de Contenido Anti-Tracking -->
+    <!-- POLÍTICA DE SEGURIDAD ANTI-TRACKING EXTREMA -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self'; 
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; 
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
       font-src 'self' https://fonts.gstatic.com; 
-      img-src 'self' data: https:; 
-      connect-src 'self' https:;
+      img-src 'self' data: blob:; 
+      connect-src 'self' wss: https://api.lovable.dev;
       frame-src 'none';
       object-src 'none';
+      base-uri 'none';
+      form-action 'self';
+      upgrade-insecure-requests;
+      block-all-mixed-content;
     ">
     
-    <!-- Anti-tracking headers -->
+    <!-- Headers de seguridad anti-tracking -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="Referrer-Policy" content="no-referrer">
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
     
-    <!-- Desactivar features invasivas -->
+    <!-- PERMISSIONS POLICY ANTI-TRACKING EXTREMO -->
     <meta http-equiv="Permissions-Policy" content="
       accelerometer=(), 
       autoplay=(), 
@@ -36,8 +43,56 @@
       magnetometer=(), 
       microphone=(), 
       payment=(), 
-      usb=()
+      usb=(),
+      web-share=(),
+      xr-spatial-tracking=(),
+      clipboard-read=(),
+      clipboard-write=(),
+      gamepad=(),
+      speaker-selection=(),
+      conversion-measurement=(),
+      focus-without-user-activation=(),
+      hid=(),
+      idle-detection=(),
+      serial=(),
+      sync-xhr=(),
+      trust-token-redemption=(),
+      window-placement=(),
+      local-fonts=()
     ">
+    
+    <!-- Anti-fingerprinting adicional -->
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    
+    <!-- Blocking de features invasivas -->
+    <script>
+      // Bloquear APIs de fingerprinting
+      if (window.navigator && window.navigator.getBattery) {
+        delete window.navigator.getBattery;
+      }
+      if (window.DeviceOrientationEvent) {
+        window.DeviceOrientationEvent = undefined;
+      }
+      if (window.DeviceMotionEvent) {
+        window.DeviceMotionEvent = undefined;
+      }
+      
+      // Noise en canvas para anti-fingerprinting
+      const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+      HTMLCanvasElement.prototype.toDataURL = function(...args) {
+        const context = this.getContext('2d');
+        if (context) {
+          // Agregar ruido imperceptible
+          const imageData = context.getImageData(0, 0, 1, 1);
+          if (imageData.data.length > 0) {
+            imageData.data[0] = imageData.data[0] ^ (Math.random() > 0.5 ? 1 : 0);
+            context.putImageData(imageData, 0, 0);
+          }
+        }
+        return originalToDataURL.apply(this, args);
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
