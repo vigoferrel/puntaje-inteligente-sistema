@@ -41,15 +41,12 @@ export const usePlanInitialization = () => {
     
     try {
       // Cargar en paralelo para optimizar el tiempo de inicialización
-      const [nodesExist] = await Promise.all([
+      await Promise.all([
         ensureLearningNodesExist(),
         fetchLearningPlans(profile.id)
       ]);
       
       console.log('Datos iniciales cargados correctamente');
-      
-      // Wait for plans to be loaded before proceeding
-      // The plans will be available in the next render through the hook's state
       
     } catch (error) {
       console.error("Error en la carga inicial:", error);
