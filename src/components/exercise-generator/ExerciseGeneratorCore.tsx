@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Play, RefreshCw, Settings, AlertCircle } from 'lucide-react';
+import { NodeDescriptor } from './components/NodeDescriptor';
 
 interface ExerciseGeneratorCoreProps {
   selectedSubject: string;
@@ -30,7 +31,7 @@ export const ExerciseGeneratorCore: React.FC<ExerciseGeneratorCoreProps> = ({
   const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
   const [apiKey, setApiKey] = useState('');
 
-  // Nodos mock por tier y materia
+  // Nodos mock por tier y materia con nomenclatura mejorada
   const getNodesForTier = (subject: string, tier: string) => {
     const nodeMaps = {
       'competencia-lectora': {
@@ -170,23 +171,21 @@ export const ExerciseGeneratorCore: React.FC<ExerciseGeneratorCoreProps> = ({
           />
         </div>
 
-        {/* Node Selection */}
+        {/* Node Selection with improved UI */}
         <div>
           <Label>Nodos Disponibles ({availableNodes.length})</Label>
-          <div className="max-h-40 overflow-y-auto border rounded-lg p-3 space-y-2">
+          <div className="max-h-60 overflow-y-auto border rounded-lg p-3 space-y-3">
             {availableNodes.map(nodeId => (
-              <div key={nodeId} className="flex items-center space-x-2">
+              <div key={nodeId} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted/50">
                 <Checkbox
                   id={nodeId}
                   checked={selectedNodes.includes(nodeId)}
                   onCheckedChange={() => handleNodeToggle(nodeId)}
+                  className="mt-1"
                 />
-                <Label
-                  htmlFor={nodeId}
-                  className="text-sm font-mono cursor-pointer flex-1"
-                >
-                  {nodeId}
-                </Label>
+                <div className="flex-1">
+                  <NodeDescriptor nodeCode={nodeId} showFullInfo={true} />
+                </div>
               </div>
             ))}
           </div>
