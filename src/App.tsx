@@ -1,32 +1,25 @@
 
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { IntersectionalProvider } from '@/contexts/IntersectionalProvider';
-import { NeuralRouter } from '@/router/NeuralRouter';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import { CinematicLayout } from '@/components/layout/CinematicLayout';
+import { CinematicDashboard } from '@/components/dashboard/CinematicDashboard';
+import { SubjectPage } from '@/components/subjects/SubjectPage';
+import { HelpCenter } from '@/components/help/HelpCenter';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <IntersectionalProvider>
-          <div className="min-h-screen">
-            <NeuralRouter />
-            <Toaster />
-          </div>
-        </IntersectionalProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<CinematicLayout />}>
+            <Route index element={<CinematicDashboard />} />
+            <Route path="materias/:subject" element={<SubjectPage />} />
+            <Route path="ayuda" element={<HelpCenter />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
