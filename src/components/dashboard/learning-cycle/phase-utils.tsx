@@ -1,7 +1,7 @@
 
 import { TLearningCyclePhase } from "@/types/system-types";
 import { BookOpen, BrainCircuit, CheckCheck, FileSpreadsheet, BarChart2, 
-  ClipboardCheck, Hammer, Timer, BookIcon, LightbulbIcon, PenToolIcon, GlobeIcon } from "lucide-react";
+  ClipboardCheck, Hammer, Timer, BookIcon, LightbulbIcon, PenToolIcon, GlobeIcon, Eye, Brain, Zap, Target } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 /**
@@ -17,6 +17,11 @@ export const getPhaseIcon = (phase: TLearningCyclePhase): LucideIcon => {
     FEEDBACK_ANALYSIS: BarChart2,
     REINFORCEMENT: Hammer,
     FINAL_SIMULATIONS: Timer,
+    // Fases del Ciclo de Kolb
+    EXPERIENCIA_CONCRETA: Target,
+    OBSERVACION_REFLEXIVA: Eye,
+    CONCEPTUALIZACION_ABSTRACTA: Brain,
+    EXPERIMENTACION_ACTIVA: Zap,
     // Older phase types
     diagnostic: ClipboardCheck,
     exploration: LightbulbIcon,
@@ -40,6 +45,11 @@ export const getPhaseTimeEstimate = (phase: TLearningCyclePhase): number => {
     FEEDBACK_ANALYSIS: 2,
     REINFORCEMENT: 14,
     FINAL_SIMULATIONS: 7,
+    // Fases del Ciclo de Kolb
+    EXPERIENCIA_CONCRETA: 3,
+    OBSERVACION_REFLEXIVA: 5,
+    CONCEPTUALIZACION_ABSTRACTA: 7,
+    EXPERIMENTACION_ACTIVA: 4,
     // Older phase types
     diagnostic: 1,
     exploration: 3,

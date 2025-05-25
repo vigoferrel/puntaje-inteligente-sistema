@@ -67,6 +67,40 @@ export const PHASE_CONFIG: Record<TLearningCyclePhase, PhaseConfig> = {
     estimatedDuration: 120,
     icon: '🎯'
   },
+  // Fases del Ciclo de Kolb
+  'EXPERIENCIA_CONCRETA': {
+    name: 'Experiencia Concreta',
+    description: 'Práctica inicial con ejercicios básicos',
+    recommendedMaterials: ['exercises', 'practice_guides'],
+    defaultCount: 5,
+    estimatedDuration: 25,
+    icon: '🎯'
+  },
+  'OBSERVACION_REFLEXIVA': {
+    name: 'Observación Reflexiva',
+    description: 'Análisis de patrones y estrategias',
+    recommendedMaterials: ['study_content', 'exercises'],
+    defaultCount: 4,
+    estimatedDuration: 35,
+    icon: '👁️'
+  },
+  'CONCEPTUALIZACION_ABSTRACTA': {
+    name: 'Conceptualización Abstracta',
+    description: 'Teoría profunda y conceptos avanzados',
+    recommendedMaterials: ['study_content', 'practice_guides'],
+    defaultCount: 6,
+    estimatedDuration: 50,
+    icon: '🧠'
+  },
+  'EXPERIMENTACION_ACTIVA': {
+    name: 'Experimentación Activa',
+    description: 'Aplicación práctica y simulacros',
+    recommendedMaterials: ['simulations', 'exercises'],
+    defaultCount: 8,
+    estimatedDuration: 45,
+    icon: '⚡'
+  },
+  // Fases tradicionales
   'diagnostic': {
     name: 'Diagnóstico Básico',
     description: 'Evaluación inicial de conocimientos',

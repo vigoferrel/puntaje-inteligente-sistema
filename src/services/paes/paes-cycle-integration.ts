@@ -57,6 +57,28 @@ export class PAESCycleIntegrationService {
       difficultyRange: { min: 1, max: 65 },
       priority: 'PAES'
     },
+    // Fases del Ciclo de Kolb
+    'EXPERIENCIA_CONCRETA': {
+      questionCount: 5,
+      difficultyRange: { min: 1, max: 30 },
+      priority: 'MIXED'
+    },
+    'OBSERVACION_REFLEXIVA': {
+      questionCount: 4,
+      difficultyRange: { min: 10, max: 40 },
+      priority: 'AI'
+    },
+    'CONCEPTUALIZACION_ABSTRACTA': {
+      questionCount: 6,
+      difficultyRange: { min: 25, max: 55 },
+      priority: 'AI'
+    },
+    'EXPERIMENTACION_ACTIVA': {
+      questionCount: 8,
+      difficultyRange: { min: 30, max: 65 },
+      priority: 'PAES'
+    },
+    // Fases tradicionales
     'diagnostic': {
       questionCount: 10,
       difficultyRange: { min: 1, max: 35 },
