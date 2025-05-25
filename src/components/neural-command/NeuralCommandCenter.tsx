@@ -4,15 +4,14 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSimplifiedIntersectional } from '@/hooks/useSimplifiedIntersectional';
 
 // Configuración y tipos actualizados
 import { NEURAL_DIMENSIONS, getDimensionsByPhase } from './config/neuralDimensions';
 import { NeuralCommandCenterProps } from './config/neuralTypes';
 
-// Hooks modulares
+// Hooks modulares - AHORA CON DATOS REALES
 import { useNeuralNavigation } from './hooks/useNeuralNavigation';
-import { useNeuralMetrics } from './hooks/useNeuralMetrics';
+import { useRealNeuralMetrics } from '@/hooks/useRealNeuralMetrics';
 
 // Componentes modulares
 import { NeuralLayout } from './layouts/NeuralLayout';
@@ -22,15 +21,15 @@ import { NeuralMetrics } from './components/NeuralMetrics';
 import { NeuralPhases } from './components/NeuralPhases';
 import { NeuralInsights } from './components/NeuralInsights';
 import { DimensionContentRenderer } from './renderers/DimensionContentRenderer';
+import { CinematicSkeletonOptimized } from '@/components/unified-dashboard/CinematicSkeletonOptimized';
 
 export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
   initialDimension = 'neural_command',
   onNavigateToTool
 }) => {
   const { user } = useAuth();
-  const { isIntersectionalReady, generateIntersectionalInsights } = useSimplifiedIntersectional();
   
-  // Hooks modulares
+  // Hooks modulares CON DATOS REALES
   const { 
     activeDimension, 
     showDimensionContent, 
@@ -38,12 +37,16 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
     handleBackToCenter 
   } = useNeuralNavigation(initialDimension);
   
-  const { metrics, getMetricForDimension } = useNeuralMetrics();
+  const { 
+    metrics, 
+    isLoading, 
+    error, 
+    getMetricForDimension 
+  } = useRealNeuralMetrics();
 
   // Configuración actualizada
   const activeDimensionData = NEURAL_DIMENSIONS.find(d => d.id === activeDimension);
   const dimensionsByPhase = getDimensionsByPhase();
-  const insights = generateIntersectionalInsights();
 
   // Manejar navegación externa
   const handleExternalNavigation = (tool: string, context?: any) => {
@@ -71,6 +74,32 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
       handleDimensionActivation(dimensionId as any);
     }
   };
+
+  // Loading state con datos reales
+  if (isLoading || !metrics) {
+    return (
+      <CinematicSkeletonOptimized 
+        message="Cargando Métricas Neurales Reales"
+        progress={85}
+        variant="full"
+      />
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">Error al Cargar Datos</h2>
+          <p className="text-gray-300 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Vista de contenido de dimensión
   if (showDimensionContent) {
@@ -102,7 +131,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
     );
   }
 
-  // Vista principal del centro neural reorganizado
+  // Vista principal del centro neural con DATOS REALES
   return (
     <NeuralLayout>
       <NeuralBreadcrumb 
@@ -112,7 +141,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
         showDimensionContent={showDimensionContent}
       />
 
-      <NeuralHeader isIntersectionalReady={isIntersectionalReady} />
+      <NeuralHeader isIntersectionalReady={true} />
 
       <NeuralMetrics metrics={metrics} />
 
@@ -123,9 +152,36 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
         getMetricForDimension={getMetricForDimension}
       />
 
-      <NeuralInsights insights={insights} />
+      {/* Real Data Insights */}
+      <motion.div 
+        className="mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.6 }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+            <h3 className="text-sm font-semibold text-cyan-400 mb-2">Datos Conectados</h3>
+            <p className="text-xs text-white/70">
+              Métricas calculadas desde Supabase en tiempo real
+            </p>
+          </div>
+          <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+            <h3 className="text-sm font-semibold text-green-400 mb-2">Usuario: {user?.email}</h3>
+            <p className="text-xs text-white/70">
+              Progreso personal actualizado automáticamente
+            </p>
+          </div>
+          <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+            <h3 className="text-sm font-semibold text-purple-400 mb-2">Sistema Neural</h3>
+            <p className="text-xs text-white/70">
+              {metrics.neural_efficiency}% de eficiencia neural activa
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
-      {/* Neural Command Footer Actualizado */}
+      {/* Neural Command Footer Actualizado con DATOS REALES */}
       <motion.div 
         className="text-center mt-8"
         initial={{ opacity: 0 }}
@@ -133,10 +189,10 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
         transition={{ duration: 0.8, delay: 0.8 }}
       >
         <p className="text-blue-200 text-sm mb-4 font-poppins">
-          Ecosistema Neural PAES Unificado • {NEURAL_DIMENSIONS.length} Dimensiones Activas • Universe 3D + SuperPAES + Gamificación Integrados
+          Ecosistema Neural PAES Conectado • {NEURAL_DIMENSIONS.length} Dimensiones con Datos Reales • Universe 3D + SuperPAES + Gamificación Integrados
         </p>
         <div className="text-xs text-white/50 font-poppins">
-          🧠 Arquitectura Neural Optimizada • 🌌 Universe 3D Inmersivo • ⚡ SuperPAES Coordinador • 🎮 Gamificación Real • 📊 Datos Reales Supabase
+          🧠 Datos Reales de Supabase • 🌌 Métricas Personalizadas • ⚡ SuperPAES Conectado • 🎮 Progreso Real • 📊 {user?.email}
         </div>
         
         {/* Quick Access Buttons */}
@@ -145,19 +201,19 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
             onClick={() => handleExternalNavigation('universe')}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
           >
-            🌌 Universe 3D
+            🌌 Universe 3D ({metrics.universe_exploration_depth}%)
           </Button>
           <Button
             onClick={() => handleExternalNavigation('simulation')}
             className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500"
           >
-            🎯 PAES Real
+            🎯 PAES Real ({metrics.paes_simulation_accuracy}%)
           </Button>
           <Button
             onClick={() => handleExternalNavigation('battle')}
             className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500"
           >
-            ⚔️ Modo Batalla
+            ⚔️ Modo Batalla ({metrics.gamification_engagement}%)
           </Button>
         </div>
       </motion.div>
