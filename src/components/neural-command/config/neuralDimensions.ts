@@ -1,197 +1,212 @@
 
-import { 
-  Brain, Zap, Target, Sparkles, Globe, Eye, Network, Command, 
-  Cpu, Activity, BookOpen, BarChart3, Calendar, Settings, 
-  DollarSign, Shield, Gamepad2, TrendingUp, Star, Compass
-} from 'lucide-react';
-import { NeuralDimensionConfig, NeuralDimension } from './neuralTypes';
+export interface NeuralDimension {
+  id: string;
+  title: string;
+  description: string;
+  phase: 'foundation' | 'intelligence' | 'evolution';
+  color: string;
+  glowColor: string;
+  icon: string;
+  status: 'active' | 'developing' | 'conceptual';
+  complexity: number;
+  dependencies: string[];
+  features: string[];
+}
 
-/**
- * Configuración reorganizada del ecosistema neural PAES
- * Flujo unificado que potencia Universe 3D, SuperPAES y gamificación
- */
-export const NEURAL_DIMENSIONS: NeuralDimensionConfig[] = [
-  // Fase 1: Centro Neural (Hub Principal)
+export const NEURAL_DIMENSIONS: NeuralDimension[] = [
+  // PHASE 1: FOUNDATION (Base Neural)
   {
     id: 'neural_command',
-    name: 'Centro de Comando Neural',
-    description: 'Hub principal con métricas unificadas y transiciones cinemáticas',
-    icon: Brain,
-    color: '#00FFFF',
-    phase: 'core',
-    order: 1
+    title: 'Centro de Comando Neural',
+    description: 'Hub central del ecosistema neural con métricas en tiempo real',
+    phase: 'foundation',
+    color: 'from-cyan-500 to-blue-600',
+    glowColor: 'cyan',
+    icon: '🧠',
+    status: 'active',
+    complexity: 1,
+    dependencies: [],
+    features: ['Métricas en tiempo real', 'Estado del sistema', 'Navegación neural']
   },
-
-  // Fase 2: Universe 3D (Navegación Principal)
+  
   {
     id: 'educational_universe',
-    name: 'Universo Educativo 3D',
-    description: 'Galaxias temáticas con datos reales y navegación inmersiva',
-    icon: Globe,
-    color: '#8A2BE2',
-    phase: 'navigation',
-    order: 2
+    title: 'Universo Educativo 3D',
+    description: 'Exploración inmersiva del conocimiento en entorno 3D',
+    phase: 'foundation',
+    color: 'from-purple-500 to-pink-600',
+    glowColor: 'purple',
+    icon: '🌌',
+    status: 'active',
+    complexity: 2,
+    dependencies: ['neural_command'],
+    features: ['Navegación 3D', 'Mundos inmersivos', 'Exploración gamificada']
   },
 
-  // Fase 3: SuperPAES Coordinador (Sistema Vocacional)
-  {
-    id: 'superpaes_coordinator',
-    name: 'SuperPAES Coordinador',
-    description: 'Predicción vocacional y análisis de competencias inteligente',
-    icon: Star,
-    color: '#FFD700',
-    phase: 'coordination',
-    order: 3
-  },
-
-  // Fase 4: Flujo de Aprendizaje Gamificado
   {
     id: 'neural_training',
-    name: 'Entrenamiento Neural',
-    description: 'Aprendizaje adaptativo con datos reales de Supabase',
-    icon: Target,
-    color: '#00FF88',
-    phase: 'learning',
-    order: 4
+    title: 'Entrenamiento Neural',
+    description: 'LectoGuía con IA adaptativa y ejercicios personalizados',
+    phase: 'foundation',
+    color: 'from-green-500 to-emerald-600',
+    glowColor: 'green',
+    icon: '🎯',
+    status: 'active',
+    complexity: 3,
+    dependencies: ['neural_command'],
+    features: ['IA conversacional', 'Ejercicios adaptativos', 'Análisis de texto']
   },
+
+  // PHASE 2: INTELLIGENCE (IA Avanzada)
   {
     id: 'progress_analysis',
-    name: 'Análisis de Progreso',
-    description: 'Diagnóstico IA integrado con plan personalizado',
-    icon: BarChart3,
-    color: '#FF6B6B',
-    phase: 'learning',
-    order: 5
+    title: 'Análisis de Progreso',
+    description: 'Diagnósticos inteligentes y análisis predictivo',
+    phase: 'intelligence',
+    color: 'from-orange-500 to-red-600',
+    glowColor: 'orange',
+    icon: '📊',
+    status: 'active',
+    complexity: 4,
+    dependencies: ['neural_command', 'neural_training'],
+    features: ['Diagnósticos IA', 'Análisis predictivo', 'Reportes avanzados']
   },
+
   {
     id: 'paes_simulation',
-    name: 'Simulación PAES Real',
-    description: 'Ambiente de examen real con tracking de progreso',
-    icon: Shield,
-    color: '#FF4500',
-    phase: 'learning',
-    order: 6
+    title: 'Simulación PAES',
+    description: 'Simulador avanzado con IA y análisis de rendimiento',
+    phase: 'intelligence',
+    color: 'from-red-500 to-orange-600',
+    glowColor: 'red',
+    icon: '🎭',
+    status: 'active',
+    complexity: 5,
+    dependencies: ['progress_analysis'],
+    features: ['Simulaciones reales', 'IA evaluadora', 'Predicción de puntajes']
   },
+
   {
     id: 'personalized_feedback',
-    name: 'Feedback Personalizado',
-    description: 'Análisis inteligente basado en metas y plan de estudio',
-    icon: Compass,
-    color: '#32CD32',
-    phase: 'learning',
-    order: 7
+    title: 'Feedback Personalizado',
+    description: 'Sistema de retroalimentación inteligente y adaptativo',
+    phase: 'intelligence',
+    color: 'from-blue-500 to-purple-600',
+    glowColor: 'blue',
+    icon: '💬',
+    status: 'developing',
+    complexity: 4,
+    dependencies: ['progress_analysis', 'neural_training'],
+    features: ['Feedback IA', 'Recomendaciones personalizadas', 'Coaching virtual']
   },
 
-  // Fase 5: Gamificación Sistémica
+  // PHASE 3: EVOLUTION (Gamificación y Futuro)
   {
     id: 'battle_mode',
-    name: 'Modo Batalla',
-    description: 'Competencia gamificada con logros reales',
-    icon: Gamepad2,
-    color: '#FF1493',
-    phase: 'gamification',
-    order: 8
-  },
-  {
-    id: 'achievement_system',
-    name: 'Sistema de Logros',
-    description: 'Progresión visible conectada al Universe 3D',
-    icon: TrendingUp,
-    color: '#9370DB',
-    phase: 'gamification',
-    order: 9
+    title: 'Modo Batalla',
+    description: 'Competencias épicas y desafíos en tiempo real',
+    phase: 'evolution',
+    color: 'from-pink-500 to-purple-600',
+    glowColor: 'pink',
+    icon: '⚔️',
+    status: 'developing',
+    complexity: 6,
+    dependencies: ['paes_simulation', 'achievement_system'],
+    features: ['PvP educativo', 'Torneos épicos', 'Rankings globales']
   },
 
-  // Fase 6: Inteligencia Cross-Module
+  {
+    id: 'achievement_system',
+    title: 'Sistema de Logros',
+    description: 'Gamificación avanzada con logros y recompensas',
+    phase: 'evolution',
+    color: 'from-yellow-500 to-orange-600',
+    glowColor: 'yellow',
+    icon: '🏆',
+    status: 'developing',
+    complexity: 3,
+    dependencies: ['neural_training'],
+    features: ['Logros dinámicos', 'Sistema de XP', 'Recompensas virtuales']
+  },
+
   {
     id: 'vocational_prediction',
-    name: 'Predicción Vocacional',
-    description: 'Análisis predictivo integrado con centro financiero',
-    icon: Eye,
-    color: '#4169E1',
-    phase: 'intelligence',
-    order: 10
+    title: 'Predicción Vocacional',
+    description: 'IA predictiva para orientación vocacional y futuro académico',
+    phase: 'evolution',
+    color: 'from-indigo-500 to-blue-600',
+    glowColor: 'indigo',
+    icon: '🔮',
+    status: 'conceptual',
+    complexity: 7,
+    dependencies: ['progress_analysis', 'paes_simulation'],
+    features: ['IA predictiva', 'Análisis vocacional', 'Proyección académica']
   },
+
   {
     id: 'financial_center',
-    name: 'Centro Financiero',
-    description: 'Simulaciones económicas conectadas con predicción vocacional',
-    icon: DollarSign,
-    color: '#228B22',
-    phase: 'intelligence',
-    order: 11
+    title: 'Centro Financiero',
+    description: 'Calculadora PAES y planificación financiera universitaria',
+    phase: 'foundation',
+    color: 'from-emerald-500 to-green-600',
+    glowColor: 'emerald',
+    icon: '💰',
+    status: 'active',
+    complexity: 2,
+    dependencies: ['neural_command'],
+    features: ['Calculadora PAES', 'Costos universitarios', 'Planificación financiera']
   },
+
   {
     id: 'calendar_management',
-    name: 'Gestión de Calendario',
-    description: 'Planificación sincronizada con plan de estudio inteligente',
-    icon: Calendar,
-    color: '#FF8C00',
+    title: 'Gestión de Calendario',
+    description: 'Calendario inteligente con IA para optimización de estudio',
     phase: 'intelligence',
-    order: 12
+    color: 'from-teal-500 to-blue-600',
+    glowColor: 'teal',
+    icon: '📅',
+    status: 'active',
+    complexity: 3,
+    dependencies: ['neural_command'],
+    features: ['Calendario IA', 'Optimización horarios', 'Recordatorios inteligentes']
   },
+
   {
     id: 'settings_control',
-    name: 'Control de Sistema',
-    description: 'Configuración avanzada del ecosistema neural',
-    icon: Settings,
-    color: '#708090',
-    phase: 'intelligence',
-    order: 13
+    title: 'Control de Configuración',
+    description: 'Centro de configuración avanzado y personalización',
+    phase: 'foundation',
+    color: 'from-gray-500 to-slate-600',
+    glowColor: 'gray',
+    icon: '⚙️',
+    status: 'active',
+    complexity: 1,
+    dependencies: ['neural_command'],
+    features: ['Configuración avanzada', 'Personalización', 'Gestión de datos']
   }
 ];
 
-/**
- * Agrupación por fases del ecosistema neural
- */
+// Organizar dimensiones por fases
 export const getDimensionsByPhase = () => {
-  const phases = {
-    core: NEURAL_DIMENSIONS.filter(d => d.phase === 'core'),
-    navigation: NEURAL_DIMENSIONS.filter(d => d.phase === 'navigation'),
-    coordination: NEURAL_DIMENSIONS.filter(d => d.phase === 'coordination'),
-    learning: NEURAL_DIMENSIONS.filter(d => d.phase === 'learning'),
-    gamification: NEURAL_DIMENSIONS.filter(d => d.phase === 'gamification'),
-    intelligence: NEURAL_DIMENSIONS.filter(d => d.phase === 'intelligence')
+  return {
+    foundation: NEURAL_DIMENSIONS.filter(d => d.phase === 'foundation'),
+    intelligence: NEURAL_DIMENSIONS.filter(d => d.phase === 'intelligence'),
+    evolution: NEURAL_DIMENSIONS.filter(d => d.phase === 'evolution')
   };
-
-  return phases;
 };
 
-/**
- * Obtener dimensión por ID
- */
-export const getDimensionById = (id: NeuralDimension): NeuralDimensionConfig | undefined => {
+// Obtener dimensión por ID
+export const getDimensionById = (id: string): NeuralDimension | undefined => {
   return NEURAL_DIMENSIONS.find(d => d.id === id);
 };
 
-/**
- * Obtener siguientes dimensiones recomendadas basadas en el flujo
- */
-export const getNextRecommendedDimensions = (currentId: NeuralDimension): NeuralDimensionConfig[] => {
-  const current = getDimensionById(currentId);
-  if (!current) return [];
-
-  const recommendations: Record<NeuralDimension, NeuralDimension[]> = {
-    'neural_command': ['educational_universe', 'superpaes_coordinator'],
-    'educational_universe': ['neural_training', 'progress_analysis'],
-    'superpaes_coordinator': ['vocational_prediction', 'financial_center'],
-    'neural_training': ['paes_simulation', 'progress_analysis'],
-    'progress_analysis': ['personalized_feedback', 'neural_training'],
-    'paes_simulation': ['personalized_feedback', 'battle_mode'],
-    'personalized_feedback': ['neural_training', 'achievement_system'],
-    'battle_mode': ['achievement_system', 'paes_simulation'],
-    'achievement_system': ['educational_universe', 'vocational_prediction'],
-    'vocational_prediction': ['financial_center', 'calendar_management'],
-    'financial_center': ['vocational_prediction', 'settings_control'],
-    'calendar_management': ['neural_training', 'settings_control'],
-    'settings_control': ['neural_command', 'educational_universe'],
-    'universe_exploration': ['educational_universe'], // Backwards compatibility
-    'matrix_diagnostics': ['progress_analysis'], // Backwards compatibility
-    'intelligence_hub': ['superpaes_coordinator'], // Backwards compatibility
-    'holographic_analytics': ['personalized_feedback'], // Backwards compatibility
-    'paes_universe': ['educational_universe'] // Backwards compatibility
-  };
-
-  const nextIds = recommendations[currentId] || [];
-  return nextIds.map(id => getDimensionById(id)).filter(Boolean) as NeuralDimensionConfig[];
+// Validar dependencias
+export const validateDependencies = (dimensionId: string): boolean => {
+  const dimension = getDimensionById(dimensionId);
+  if (!dimension) return false;
+  
+  return dimension.dependencies.every(depId => {
+    const dep = getDimensionById(depId);
+    return dep?.status === 'active';
+  });
 };

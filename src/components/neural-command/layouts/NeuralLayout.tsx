@@ -1,36 +1,70 @@
 
 import React from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
-import { AppHeader } from '@/components/app-header';
+import { motion } from 'framer-motion';
 
 interface NeuralLayoutProps {
   children: React.ReactNode;
+  className?: string;
 }
 
-export const NeuralLayout: React.FC<NeuralLayoutProps> = ({ children }) => {
+export const NeuralLayout: React.FC<NeuralLayoutProps> = ({ 
+  children, 
+  className = '' 
+}) => {
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white w-full flex font-poppins">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          <AppHeader />
-          
-          <main className="flex-1 relative overflow-hidden">
-            {/* Cosmic Background Animation */}
-            <div className="absolute inset-0 opacity-30">
-              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500 rounded-full blur-3xl animate-pulse delay-1000" />
-              <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500 rounded-full blur-3xl animate-pulse delay-500" />
-            </div>
-
-            <div className="relative z-10 container mx-auto py-8 px-6">
-              {children}
-            </div>
-          </main>
-        </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className={`min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden ${className}`}
+    >
+      {/* Neural Grid Background */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_30%,rgba(59,130,246,0.05)_50%,transparent_70%)]" />
       </div>
-    </SidebarProvider>
+
+      {/* Neural Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-cyan-400 rounded-full opacity-30"
+            initial={{
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+            }}
+            animate={{
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+            }}
+            transition={{
+              duration: 10 + Math.random() * 20,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Content Container */}
+      <div className="relative z-10 p-6 max-w-7xl mx-auto">
+        {children}
+      </div>
+
+      {/* Neural Pulse Effect */}
+      <motion.div
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full border border-cyan-500/20"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.2, 0.1, 0.2],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+    </motion.div>
   );
 };
