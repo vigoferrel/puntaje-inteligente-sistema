@@ -7,13 +7,25 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Brain, Zap, Target, Settings, Users, Calendar,
   DollarSign, BookOpen, BarChart3, Gamepad2, Play,
-  Grid3x3, Sparkles, Globe, TrendingUp, Eye, Layers
+  Grid3x3, Sparkles, Globe, TrendingUp, Eye, Layers,
+  ArrowLeft, Home, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSimplifiedIntersectional } from '@/hooks/useSimplifiedIntersectional';
 import { DiagnosticIntelligenceCenter } from '@/components/diagnostic/DiagnosticIntelligenceCenter';
 import { CinematicFinancialCenter } from '@/components/financial-center/CinematicFinancialCenter';
 import { PAESUniverseDashboard } from '@/components/paes-universe/PAESUniverseDashboard';
+import { AppSidebar } from '@/components/app-sidebar';
+import { AppHeader } from '@/components/app-header';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { 
+  Breadcrumb, 
+  BreadcrumbList, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbPage, 
+  BreadcrumbSeparator 
+} from '@/components/ui/breadcrumb';
 
 type NeuralDimension = 
   | 'neural_training' 
@@ -33,6 +45,57 @@ type NeuralDimension =
 interface NeuralCommandCenterProps {
   initialDimension?: NeuralDimension;
 }
+
+// Neural Breadcrumb Component
+const NeuralBreadcrumb: React.FC<{ 
+  activeDimension: NeuralDimension;
+  activeDimensionData: any;
+  onBackToCenter: () => void;
+  showDimensionContent: boolean;
+}> = ({ activeDimension, activeDimensionData, onBackToCenter, showDimensionContent }) => (
+  <div className="mb-6">
+    <Breadcrumb>
+      <BreadcrumbList className="text-white font-poppins">
+        <BreadcrumbItem>
+          <BreadcrumbLink 
+            href="/" 
+            className="text-cyan-400 hover:text-cyan-300 flex items-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            Dashboard
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator className="text-white/40">
+          <ChevronRight className="w-4 h-4" />
+        </BreadcrumbSeparator>
+        <BreadcrumbItem>
+          {showDimensionContent ? (
+            <BreadcrumbLink 
+              onClick={onBackToCenter}
+              className="text-cyan-400 hover:text-cyan-300 cursor-pointer"
+            >
+              Centro Neural
+            </BreadcrumbLink>
+          ) : (
+            <BreadcrumbPage className="text-white">Centro Neural</BreadcrumbPage>
+          )}
+        </BreadcrumbItem>
+        {showDimensionContent && (
+          <>
+            <BreadcrumbSeparator className="text-white/40">
+              <ChevronRight className="w-4 h-4" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbPage className="text-white font-medium">
+                {activeDimensionData?.name || 'Dimensión Neural'}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        )}
+      </BreadcrumbList>
+    </Breadcrumb>
+  </div>
+);
 
 export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
   initialDimension = 'universe_exploration'
@@ -202,6 +265,11 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
     console.log(`🚀 Activando dimensión neural: ${dimensionId}`);
   };
 
+  // Handle back to center
+  const handleBackToCenter = () => {
+    setShowDimensionContent(false);
+  };
+
   // Render dimension content
   const renderDimensionContent = () => {
     switch (activeDimension) {
@@ -222,7 +290,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
       
       case 'matrix_diagnostics':
         return (
-          <div className="p-6">
+          <div className="p-6 font-poppins">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -230,31 +298,31 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
             >
               <div className="flex items-center justify-center space-x-3 mb-6">
                 <Grid3x3 className="w-8 h-8 text-green-400" />
-                <h2 className="text-3xl font-bold text-green-400">Matrix Diagnóstico Neural</h2>
+                <h2 className="text-3xl font-bold text-green-400 font-poppins">Matrix Diagnóstico Neural</h2>
               </div>
-              <p className="text-white/70 max-w-2xl mx-auto">
+              <p className="text-white/70 max-w-2xl mx-auto font-poppins">
                 Sistema avanzado de evaluación neural que analiza patrones de aprendizaje 
                 y genera diagnósticos precisos de habilidades cognitivas.
               </p>
               <div className="bg-black/60 backdrop-blur-sm border border-green-500/30 rounded-xl p-8 max-w-4xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-green-400 mb-2">
+                    <div className="text-4xl font-bold text-green-400 mb-2 font-poppins">
                       {Math.round(neuralHealth.neural_efficiency)}%
                     </div>
-                    <div className="text-green-300">Eficiencia Neural</div>
+                    <div className="text-green-300 font-poppins">Eficiencia Neural</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-blue-400 mb-2">
+                    <div className="text-4xl font-bold text-blue-400 mb-2 font-poppins">
                       {Math.round(neuralHealth.adaptive_learning_score)}
                     </div>
-                    <div className="text-blue-300">Aprendizaje Adaptativo</div>
+                    <div className="text-blue-300 font-poppins">Aprendizaje Adaptativo</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-purple-400 mb-2">
+                    <div className="text-4xl font-bold text-purple-400 mb-2 font-poppins">
                       {Math.round(neuralHealth.cross_pollination_rate)}%
                     </div>
-                    <div className="text-purple-300">Cross-Pollination</div>
+                    <div className="text-purple-300 font-poppins">Cross-Pollination</div>
                   </div>
                 </div>
               </div>
@@ -264,7 +332,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
       
       default:
         return (
-          <div className="p-6">
+          <div className="p-6 font-poppins">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -272,15 +340,15 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
             >
               <div className="flex items-center justify-center space-x-3 mb-6">
                 {activeDimensionData && <activeDimensionData.icon className="w-8 h-8 text-white" />}
-                <h2 className="text-3xl font-bold text-white">
+                <h2 className="text-3xl font-bold text-white font-poppins">
                   {activeDimensionData?.name || 'Dimensión Neural'}
                 </h2>
               </div>
-              <p className="text-white/70 max-w-2xl mx-auto">
+              <p className="text-white/70 max-w-2xl mx-auto font-poppins">
                 {activeDimensionData?.description || 'Dimensión neural en desarrollo'}
               </p>
               <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8 max-w-4xl mx-auto">
-                <p className="text-white/60">
+                <p className="text-white/60 font-poppins">
                   Dimensión neural lista para integración completa
                 </p>
               </div>
@@ -290,218 +358,253 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
     }
   };
 
-  // If dimension content is active, show it
+  // If dimension content is active, show it with integrated layout
   if (showDimensionContent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-        {/* Back button */}
-        <div className="absolute top-4 left-4 z-50">
-          <Button
-            onClick={() => setShowDimensionContent(false)}
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-          >
-            ← Volver al Centro Neural
-          </Button>
+      <SidebarProvider>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white w-full flex font-poppins">
+          <AppSidebar />
+          
+          <div className="flex-1 flex flex-col">
+            <AppHeader />
+            
+            <main className="flex-1 p-6">
+              <NeuralBreadcrumb 
+                activeDimension={activeDimension}
+                activeDimensionData={activeDimensionData}
+                onBackToCenter={handleBackToCenter}
+                showDimensionContent={showDimensionContent}
+              />
+              
+              {/* Back to Center Button */}
+              <div className="mb-6">
+                <Button
+                  onClick={handleBackToCenter}
+                  variant="ghost"
+                  className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 font-poppins"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver al Centro Neural
+                </Button>
+              </div>
+              
+              {renderDimensionContent()}
+            </main>
+          </div>
         </div>
-        
-        {renderDimensionContent()}
-      </div>
+      </SidebarProvider>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-      {/* Cosmic Background Animation */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500 rounded-full blur-3xl animate-pulse delay-500" />
-      </div>
-
-      <div className="relative z-10 container mx-auto py-8 px-4">
-        {/* Neural Command Header */}
-        <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <Brain className="w-10 h-10 text-blue-400" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Centro de Comando Neural PAES
-            </h1>
-            <Zap className="w-8 h-8 text-yellow-400" />
-          </div>
-          <p className="text-xl text-blue-200 mb-4">
-            Ecosistema Neural Unificado • {user?.email || 'Comandante Neural'}
-          </p>
-          <Badge className="bg-green-600 text-white">
-            {isIntersectionalReady ? 'Todas las Dimensiones Conectadas' : 'Activando Neural...'}
-          </Badge>
-        </motion.div>
-
-        {/* System Health Metrics */}
-        <motion.div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardContent className="p-4 text-center">
-              <Brain className="w-8 h-8 mx-auto mb-2 text-purple-400" />
-              <div className="text-2xl font-bold text-white">{Math.round(neuralHealth.neural_efficiency)}%</div>
-              <div className="text-xs text-white/70">Eficiencia Neural</div>
-            </CardContent>
-          </Card>
+    <SidebarProvider>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white w-full flex font-poppins">
+        <AppSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          <AppHeader />
           
-          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardContent className="p-4 text-center">
-              <Target className="w-8 h-8 mx-auto mb-2 text-green-400" />
-              <div className="text-2xl font-bold text-white">{Math.round(neuralHealth.adaptive_learning_score)}</div>
-              <div className="text-xs text-white/70">Aprendizaje Adaptativo</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardContent className="p-4 text-center">
-              <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
-              <div className="text-2xl font-bold text-white">{Math.round(neuralHealth.cross_pollination_rate)}</div>
-              <div className="text-xs text-white/70">Cross-Pollination</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardContent className="p-4 text-center">
-              <Users className="w-8 h-8 mx-auto mb-2 text-blue-400" />
-              <div className="text-2xl font-bold text-white">{Math.round(neuralHealth.user_experience_harmony)}</div>
-              <div className="text-xs text-white/70">Armonía UX</div>
-            </CardContent>
-          </Card>
-        </motion.div>
+          <main className="flex-1 relative overflow-hidden">
+            {/* Cosmic Background Animation */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500 rounded-full blur-3xl animate-pulse delay-1000" />
+              <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500 rounded-full blur-3xl animate-pulse delay-500" />
+            </div>
 
-        {/* Educational Flow Phases */}
-        <div className="space-y-8">
-          {Object.entries(dimensionsByPhase).map(([phase, dimensions], phaseIndex) => (
-            <motion.div
-              key={phase}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: phaseIndex * 0.1 }}
-            >
-              <div className="mb-4">
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  {phase} Neural
-                </h3>
-                <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full w-full opacity-30" />
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                {dimensions.map((dimension, index) => {
-                  const Icon = dimension.icon;
-                  const isActive = activeDimension === dimension.id;
-                  
-                  return (
-                    <motion.div
-                      key={dimension.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Card 
-                        className={`cursor-pointer transition-all duration-300 border-2 ${
-                          isActive 
-                            ? 'bg-white/20 border-white/40 shadow-xl scale-105' 
-                            : 'bg-white/10 border-white/20 hover:bg-white/15 hover:border-white/30'
-                        } backdrop-blur-sm`}
-                        onClick={() => handleDimensionActivation(dimension.id)}
-                      >
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className={`p-3 rounded-xl bg-gradient-to-r ${dimension.color} group-hover:scale-110 transition-transform`}>
-                              <Icon className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg font-bold text-white">{dimension.metrics}%</div>
-                              <div className="text-xs text-white/60">Neural</div>
-                            </div>
-                          </div>
-                          
-                          <h4 className="text-lg font-bold text-white mb-2">{dimension.name}</h4>
-                          <p className="text-white/70 text-sm mb-4">{dimension.description}</p>
-                          
-                          <Button 
-                            className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDimensionActivation(dimension.id);
-                            }}
-                          >
-                            <Play className="w-4 h-4 mr-2" />
-                            Activar Dimensión
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+            <div className="relative z-10 container mx-auto py-8 px-6">
+              <NeuralBreadcrumb 
+                activeDimension={activeDimension}
+                activeDimensionData={activeDimensionData}
+                onBackToCenter={handleBackToCenter}
+                showDimensionContent={showDimensionContent}
+              />
 
-        {/* Neural Insights */}
-        <motion.div
-          className="mt-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-400" />
-                Insights del Ecosistema Neural
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
-                {insights.slice(0, 3).map((insight, index) => (
-                  <div key={index} className="bg-white/5 rounded-lg p-4">
-                    <div className="text-sm font-medium text-white mb-1">{insight.title}</div>
-                    <div className="text-xs text-white/70">{insight.description}</div>
-                    <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium mt-2 ${
-                      insight.level === 'excellent' ? 'bg-green-500/20 text-green-400' :
-                      insight.level === 'good' ? 'bg-blue-500/20 text-blue-400' :
-                      'bg-orange-500/20 text-orange-400'
-                    }`}>
-                      {insight.level === 'excellent' ? 'Excelente' :
-                       insight.level === 'good' ? 'Bien' : 'Mejorable'}
+              {/* Neural Command Header */}
+              <motion.div 
+                className="text-center mb-8"
+                initial={{ opacity: 0, y: -30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                <div className="flex items-center justify-center space-x-3 mb-4">
+                  <Brain className="w-10 h-10 text-blue-400" />
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent font-poppins">
+                    Centro de Comando Neural PAES
+                  </h1>
+                  <Zap className="w-8 h-8 text-yellow-400" />
+                </div>
+                <p className="text-xl text-blue-200 mb-4 font-poppins">
+                  Ecosistema Neural Unificado • {user?.email || 'Comandante Neural'}
+                </p>
+                <Badge className="bg-green-600 text-white font-poppins">
+                  {isIntersectionalReady ? 'Todas las Dimensiones Conectadas' : 'Activando Neural...'}
+                </Badge>
+              </motion.div>
+
+              {/* System Health Metrics */}
+              <motion.div 
+                className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                  <CardContent className="p-4 text-center">
+                    <Brain className="w-8 h-8 mx-auto mb-2 text-purple-400" />
+                    <div className="text-2xl font-bold text-white font-poppins">{Math.round(neuralHealth.neural_efficiency)}%</div>
+                    <div className="text-xs text-white/70 font-poppins">Eficiencia Neural</div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                  <CardContent className="p-4 text-center">
+                    <Target className="w-8 h-8 mx-auto mb-2 text-green-400" />
+                    <div className="text-2xl font-bold text-white font-poppins">{Math.round(neuralHealth.adaptive_learning_score)}</div>
+                    <div className="text-xs text-white/70 font-poppins">Aprendizaje Adaptativo</div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                  <CardContent className="p-4 text-center">
+                    <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
+                    <div className="text-2xl font-bold text-white font-poppins">{Math.round(neuralHealth.cross_pollination_rate)}</div>
+                    <div className="text-xs text-white/70 font-poppins">Cross-Pollination</div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                  <CardContent className="p-4 text-center">
+                    <Users className="w-8 h-8 mx-auto mb-2 text-blue-400" />
+                    <div className="text-2xl font-bold text-white font-poppins">{Math.round(neuralHealth.user_experience_harmony)}</div>
+                    <div className="text-xs text-white/70 font-poppins">Armonía UX</div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Educational Flow Phases */}
+              <div className="space-y-8">
+                {Object.entries(dimensionsByPhase).map(([phase, dimensions], phaseIndex) => (
+                  <motion.div
+                    key={phase}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: phaseIndex * 0.1 }}
+                  >
+                    <div className="mb-4">
+                      <h3 className="text-2xl font-bold text-white mb-2 font-poppins">
+                        {phase} Neural
+                      </h3>
+                      <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full w-full opacity-30" />
                     </div>
-                  </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {dimensions.map((dimension, index) => {
+                        const Icon = dimension.icon;
+                        const isActive = activeDimension === dimension.id;
+                        
+                        return (
+                          <motion.div
+                            key={dimension.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: index * 0.1 }}
+                          >
+                            <Card 
+                              className={`cursor-pointer transition-all duration-300 border-2 ${
+                                isActive 
+                                  ? 'bg-white/20 border-white/40 shadow-xl scale-105' 
+                                  : 'bg-white/10 border-white/20 hover:bg-white/15 hover:border-white/30'
+                              } backdrop-blur-sm`}
+                              onClick={() => handleDimensionActivation(dimension.id)}
+                            >
+                              <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div className={`p-3 rounded-xl bg-gradient-to-r ${dimension.color} group-hover:scale-110 transition-transform`}>
+                                    <Icon className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-white font-poppins">{dimension.metrics}%</div>
+                                    <div className="text-xs text-white/60 font-poppins">Neural</div>
+                                  </div>
+                                </div>
+                                
+                                <h4 className="text-lg font-bold text-white mb-2 font-poppins">{dimension.name}</h4>
+                                <p className="text-white/70 text-sm mb-4 font-poppins">{dimension.description}</p>
+                                
+                                <Button 
+                                  className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20 font-poppins"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDimensionActivation(dimension.id);
+                                  }}
+                                >
+                                  <Play className="w-4 h-4 mr-2" />
+                                  Activar Dimensión
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        {/* Neural Command Footer */}
-        <motion.div 
-          className="text-center mt-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-        >
-          <p className="text-blue-200 text-sm mb-4">
-            Ecosistema Neural PAES Unificado • {neuralDimensions.length} Dimensiones Activas • Sincronización Neural: Tiempo Real
-          </p>
-          <div className="text-xs text-white/50">
-            🧠 Arquitectura Neural Optimizada • 🚀 Flujo Educativo Integrado • ⚡ Cero Duplicación de Trabajo
-          </div>
-        </motion.div>
+              {/* Neural Insights */}
+              <motion.div
+                className="mt-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+              >
+                <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2 font-poppins">
+                      <Brain className="w-5 h-5 text-purple-400" />
+                      Insights del Ecosistema Neural
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      {insights.slice(0, 3).map((insight, index) => (
+                        <div key={index} className="bg-white/5 rounded-lg p-4">
+                          <div className="text-sm font-medium text-white mb-1 font-poppins">{insight.title}</div>
+                          <div className="text-xs text-white/70 font-poppins">{insight.description}</div>
+                          <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium mt-2 font-poppins ${
+                            insight.level === 'excellent' ? 'bg-green-500/20 text-green-400' :
+                            insight.level === 'good' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-orange-500/20 text-orange-400'
+                          }`}>
+                            {insight.level === 'excellent' ? 'Excelente' :
+                             insight.level === 'good' ? 'Bien' : 'Mejorable'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Neural Command Footer */}
+              <motion.div 
+                className="text-center mt-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+              >
+                <p className="text-blue-200 text-sm mb-4 font-poppins">
+                  Ecosistema Neural PAES Unificado • {neuralDimensions.length} Dimensiones Activas • Sincronización Neural: Tiempo Real
+                </p>
+                <div className="text-xs text-white/50 font-poppins">
+                  🧠 Arquitectura Neural Optimizada • 🚀 Flujo Educativo Integrado • ⚡ Cero Duplicación de Trabajo
+                </div>
+              </motion.div>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
