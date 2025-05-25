@@ -54,7 +54,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   };
   return <div className="min-h-screen bg-background">
       {!hideNavigation && <header className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 bg-zinc-950">
             <div className="flex h-16 items-center justify-between bg-zinc-950">
               <div className="flex items-center space-x-8">
                 <Link to="/" className="flex items-center space-x-2">
