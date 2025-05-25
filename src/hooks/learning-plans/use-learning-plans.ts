@@ -108,7 +108,7 @@ export const useLearningPlans = () => {
     title: string, 
     description?: string, 
     targetDate?: string,
-    skillPriorities?: Record<any, number>
+    skillPriorities?: Record<string, number>
   ): Promise<LearningPlan | null> => {
     setLoading(true);
     setError(null);
