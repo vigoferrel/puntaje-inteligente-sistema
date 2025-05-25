@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { CinematicUnifiedDashboard } from '@/components/dashboard/CinematicUnifiedDashboard';
+import { IntelligentDashboard } from '@/components/intelligent-dashboard/IntelligentDashboard';
 
 const Index: React.FC = () => {
-  return <CinematicUnifiedDashboard />;
+  return <IntelligentDashboard />;
 };
 
 export default Index;
