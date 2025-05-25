@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,8 +53,8 @@ export const LearningCycleOrchestrator: React.FC<LearningCycleOrchestratorProps>
   const loadInitialData = async () => {
     try {
       await Promise.all([
-        loadPhaseProgress(selectedSubject), // Pasar selectedSubject como parámetro
-        refreshPlans(),
+        loadPhaseProgress(), // Sin parámetros según la definición del hook
+        refreshPlans(), // Sin parámetros según la definición del contexto
         generateLearningInsights()
       ]);
     } catch (error) {
