@@ -1,10 +1,11 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useNeuralModule } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useAuth } from '@/contexts/AuthContext';
+import { EmergencyCircuitBreaker } from '@/utils/circuit-breaker';
 
 /**
- * Hook quirúrgico para integración neurológica de cualquier módulo
+ * Hook neurológico quirúrgico - Sin bucles infinitos
  */
 export const useNeuralIntegration = (
   moduleType: 'diagnostic' | 'lectoguia' | 'plans' | 'paes_universe' | 'dashboard',
@@ -13,6 +14,9 @@ export const useNeuralIntegration = (
 ) => {
   const { user } = useAuth();
   const moduleId = useRef(`${moduleType}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`);
+  const circuitBreaker = useRef(new EmergencyCircuitBreaker());
+  const lastBroadcastRef = useRef<string>('');
+  const stateHashRef = useRef<string>('');
   
   const neural = useNeuralModule({
     id: moduleId.current,
@@ -25,10 +29,14 @@ export const useNeuralIntegration = (
     ]
   });
 
-  // Auto-broadcast de cambios de estado
-  const lastStateRef = useRef(currentState);
-  useEffect(() => {
-    if (JSON.stringify(currentState) !== JSON.stringify(lastStateRef.current)) {
+  // Función de broadcast con circuit breaker
+  const safeBroadcast = useCallback((signalType: string, payload: any) => {
+    if (!circuitBreaker.current.canProcess()) {
+      console.warn(`🚫 Signal blocked by circuit breaker: ${signalType}`);
+      return;
+    }
+
+    try {
       neural.broadcastSignal({
         origin: {
           id: moduleId.current,
@@ -36,98 +44,99 @@ export const useNeuralIntegration = (
           capabilities: capabilities,
           current_state: currentState
         },
-        type: 'DATA_MUTATION',
-        payload: {
-          previous_state: lastStateRef.current,
-          new_state: currentState,
-          user_id: user?.id,
-          timestamp: Date.now()
-        },
-        priority: 'MEDIUM'
+        type: signalType as any,
+        payload,
+        priority: 'MEDIUM' as any
       });
       
-      lastStateRef.current = currentState;
+      circuitBreaker.current.recordSignal();
+    } catch (error) {
+      console.error('❌ Error en broadcast neurológico:', error);
     }
-  }, [currentState, neural, moduleType, capabilities, user?.id]);
+  }, [neural, moduleType, capabilities, currentState]);
 
-  // Broadcast de acciones del usuario
-  const broadcastUserAction = (action: string, payload: any = {}) => {
-    neural.broadcastSignal({
-      origin: {
-        id: moduleId.current,
-        type: moduleType,
-        capabilities: capabilities,
-        current_state: currentState
-      },
-      type: 'USER_ACTION',
-      payload: {
-        action,
-        user_id: user?.id,
-        module_context: currentState,
-        ...payload
-      },
-      priority: 'HIGH'
-    });
-  };
+  // Broadcast de estado con debouncing agresivo (solo cambios significativos)
+  useEffect(() => {
+    const currentHash = JSON.stringify(currentState);
+    
+    // Solo broadcast si hay cambio real y han pasado al menos 5 segundos
+    if (currentHash !== stateHashRef.current) {
+      const timeoutId = setTimeout(() => {
+        if (circuitBreaker.current.canProcess()) {
+          safeBroadcast('DATA_MUTATION', {
+            previous_state: stateHashRef.current,
+            new_state: currentState,
+            user_id: user?.id,
+            timestamp: Date.now()
+          });
+          
+          stateHashRef.current = currentHash;
+        }
+      }, 5000); // 5 segundos de debouncing
 
-  // Suscribirse a recomendaciones interseccionales
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentState, safeBroadcast, user?.id]);
+
+  // Suscripción sin bucles
   useEffect(() => {
     const unsubscribe = neural.subscribeToSignals(moduleId.current, (signal) => {
-      if (signal.type === 'RECOMMENDATION_SYNTHESIS') {
-        console.log(`🎯 ${moduleType} recibió recomendación:`, signal.payload);
-        // Aquí cada módulo puede decidir cómo usar la recomendación
-      }
-      
-      if (signal.type === 'ADAPTIVE_ADJUSTMENT') {
-        console.log(`⚡ ${moduleType} adaptándose:`, signal.payload);
-        // Aquí cada módulo puede ajustar su comportamiento
+      // Solo procesar señales críticas
+      if (signal.type === 'EMERGENCY_COORDINATION') {
+        console.log(`🚨 ${moduleType} - Coordinación de emergencia:`, signal.payload);
       }
     });
 
     return unsubscribe;
   }, [neural, moduleType]);
 
+  // Funciones de acción controladas
+  const broadcastUserAction = useCallback((action: string, payload: any = {}) => {
+    const actionKey = `${action}_${JSON.stringify(payload)}`;
+    
+    // Evitar acciones duplicadas
+    if (lastBroadcastRef.current === actionKey) {
+      return;
+    }
+    
+    lastBroadcastRef.current = actionKey;
+    
+    safeBroadcast('USER_ACTION', {
+      action,
+      user_id: user?.id,
+      module_context: currentState,
+      ...payload
+    });
+  }, [safeBroadcast, user?.id, currentState]);
+
   return {
     moduleId: moduleId.current,
     broadcastUserAction,
     systemHealth: neural.systemHealth,
+    circuitBreakerState: circuitBreaker.current.getState(),
     
-    // Helpers especializados
-    notifyProgress: (progress: any) => broadcastUserAction('PROGRESS_UPDATE', progress),
-    notifyCompletion: (completion: any) => broadcastUserAction('TASK_COMPLETION', completion),
-    notifyEngagement: (engagement: any) => broadcastUserAction('USER_ENGAGEMENT', engagement),
-    requestRecommendation: (context: any) => broadcastUserAction('REQUEST_RECOMMENDATION', context)
-  };
-};
+    // Helpers especializados con throttling
+    notifyProgress: useCallback((progress: any) => {
+      setTimeout(() => broadcastUserAction('PROGRESS_UPDATE', progress), 1000);
+    }, [broadcastUserAction]),
+    
+    notifyCompletion: useCallback((completion: any) => {
+      broadcastUserAction('TASK_COMPLETION', completion);
+    }, [broadcastUserAction]),
+    
+    notifyEngagement: useCallback((engagement: any) => {
+      setTimeout(() => broadcastUserAction('USER_ENGAGEMENT', engagement), 2000);
+    }, [broadcastUserAction]),
+    
+    requestRecommendation: useCallback((context: any) => {
+      broadcastUserAction('REQUEST_RECOMMENDATION', context);
+    }, [broadcastUserAction]),
 
-/**
- * Hook para módulos que generan insights interseccionales
- */
-export const useInsightGenerator = (moduleType: string) => {
-  const neural = useNeuralIntegration(moduleType as any, ['insight_generation', 'pattern_recognition']);
-
-  const generateInsight = (type: string, data: any, confidence: number = 0.8) => {
-    neural.broadcastUserAction('GENERATE_INSIGHT', {
-      insight_type: type,
-      data,
-      confidence,
-      source_module: moduleType,
-      timestamp: Date.now()
-    });
-  };
-
-  const sharePattern = (pattern: any, relevance: string[] = []) => {
-    neural.broadcastUserAction('SHARE_PATTERN', {
-      pattern,
-      relevant_to_modules: relevance,
-      source_module: moduleType,
-      timestamp: Date.now()
-    });
-  };
-
-  return {
-    generateInsight,
-    sharePattern,
-    systemHealth: neural.systemHealth
+    // Función de emergencia
+    emergencyReset: useCallback(() => {
+      circuitBreaker.current.forceRecovery();
+      lastBroadcastRef.current = '';
+      stateHashRef.current = '';
+    }, [])
   };
 };

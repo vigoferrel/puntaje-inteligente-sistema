@@ -1,12 +1,13 @@
 /**
- * NEXUS INTERSECCIONAL - El Sistema Nervioso Digital
- * Arquitectura quirúrgica que elimina fronteras entre módulos
+ * NEXUS INTERSECCIONAL - Sistema Nervioso Digital Estabilizado
+ * Arquitectura quirúrgica sin bucles infinitos
  */
 
 import React from 'react';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { universalHub } from '@/core/universal-hub/UniversalDataHub';
+import { EmergencyCircuitBreaker } from '@/utils/circuit-breaker';
 
 // Tipos neurológicos del sistema
 interface NeuralSignal {
@@ -71,6 +72,10 @@ export const useIntersectionalNexus = create<IntersectionalState & {
   detectAnomalies: () => string[];
   healSystem: () => Promise<void>;
   optimizePathways: () => void;
+  
+  // Sistema de Emergencia
+  emergencyReset: () => void;
+  getSystemStatus: () => any;
 }>()(
   subscribeWithSelector((set, get) => ({
     // Estado inicial
@@ -87,51 +92,71 @@ export const useIntersectionalNexus = create<IntersectionalState & {
       user_experience_harmony: 90
     },
 
-    // Registro neurológico de módulos
+    // Registro neurológico controlado
     registerModule: (module: ModuleIdentity) => {
+      if (!globalCircuitBreaker.canProcess()) {
+        console.warn('🚫 Registro de módulo bloqueado por circuit breaker');
+        return;
+      }
+
       set(state => {
         const newModules = new Map(state.active_modules);
         newModules.set(module.id, module);
         
+        globalCircuitBreaker.recordSignal();
         console.log(`🧠 Módulo neuronal registrado: ${module.type}[${module.id}]`);
         
         return {
           active_modules: newModules,
-          global_coherence: Math.min(100, state.global_coherence + 2)
+          global_coherence: Math.min(100, state.global_coherence + 1)
         };
       });
     },
 
-    // Broadcasting neurológico
+    // Broadcasting con control de emergencia
     broadcastSignal: (signal) => {
+      if (!globalCircuitBreaker.canProcess()) {
+        console.warn('🚫 Señal neuronal bloqueada por circuit breaker');
+        return;
+      }
+
       const fullSignal: NeuralSignal = {
         ...signal,
         timestamp: Date.now(),
         correlation_id: `signal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
 
-      set(state => {
-        const newPathways = new Map(state.neural_pathways);
-        const pathwayKey = `${signal.origin.id}_${signal.type}`;
-        
-        if (!newPathways.has(pathwayKey)) {
-          newPathways.set(pathwayKey, []);
-        }
-        
-        newPathways.get(pathwayKey)!.push(fullSignal);
-        
-        // Limitar historial a últimas 10 señales por pathway
-        if (newPathways.get(pathwayKey)!.length > 10) {
-          newPathways.get(pathwayKey)!.shift();
-        }
+      // Batch updates para evitar renders excesivos
+      const batchUpdate = () => {
+        set(state => {
+          const newPathways = new Map(state.neural_pathways);
+          const pathwayKey = `${signal.origin.id}_${signal.type}`;
+          
+          if (!newPathways.has(pathwayKey)) {
+            newPathways.set(pathwayKey, []);
+          }
+          
+          const pathway = newPathways.get(pathwayKey)!;
+          pathway.push(fullSignal);
+          
+          // Limitar agresivamente el historial
+          if (pathway.length > 3) {
+            pathway.splice(0, pathway.length - 3);
+          }
 
-        console.log(`🚀 Señal neuronal: ${signal.type} desde ${signal.origin.type}`);
-        
-        return { neural_pathways: newPathways };
-      });
+          globalCircuitBreaker.recordSignal();
+          
+          return { neural_pathways: newPathways };
+        });
+      };
 
-      // Propagar a Universal Hub para persistencia
-      universalHub.notifySubscribers(`neural_signal_${signal.type}`, fullSignal);
+      // Debounce para batching
+      setTimeout(batchUpdate, 100);
+
+      // Propagar solo señales críticas
+      if (signal.priority === 'CRITICAL' || signal.type === 'EMERGENCY_COORDINATION') {
+        universalHub.notifySubscribers(`neural_signal_${signal.type}`, fullSignal);
+      }
     },
 
     // Suscripción neurológica
@@ -139,37 +164,41 @@ export const useIntersectionalNexus = create<IntersectionalState & {
       return universalHub.subscribe(`neural_signal_MODULE_${moduleId}`, callback);
     },
 
-    // Síntesis de inteligencia colectiva
+    // Síntesis con control de frecuencia
     synthesizeInsights: async () => {
+      if (!globalCircuitBreaker.canProcess()) {
+        console.warn('🚫 Síntesis de insights bloqueada');
+        return;
+      }
+
       const state = get();
       const modules = Array.from(state.active_modules.values());
       
-      // Análisis quirúrgico de patrones inter-modulares
-      const insights = modules.map(module => ({
+      // Síntesis básica sin complejidad excesiva
+      const insights = modules.slice(0, 5).map(module => ({
         module_id: module.id,
         module_type: module.type,
-        capabilities_utilization: module.capabilities.length / 5, // Normalizado
-        state_complexity: Object.keys(module.current_state || {}).length,
-        neural_connections: state.neural_pathways.size
+        capabilities_utilization: Math.min(module.capabilities.length / 5, 1),
+        state_complexity: Math.min(Object.keys(module.current_state || {}).length, 10),
+        neural_connections: Math.min(state.neural_pathways.size, 20)
       }));
 
-      // Detección de oportunidades de cross-pollination
+      // Cross patterns limitados
       const crossPatterns = [];
-      for (let i = 0; i < modules.length; i++) {
-        for (let j = i + 1; j < modules.length; j++) {
+      for (let i = 0; i < Math.min(modules.length, 3); i++) {
+        for (let j = i + 1; j < Math.min(modules.length, 3); j++) {
           const moduleA = modules[i];
           const moduleB = modules[j];
           
-          // Detectar capacidades complementarias
           const sharedCapabilities = moduleA.capabilities.filter(cap => 
             moduleB.capabilities.includes(cap)
-          );
+          ).slice(0, 3);
           
           if (sharedCapabilities.length > 0) {
             crossPatterns.push({
               modules: [moduleA.id, moduleB.id],
               shared_capabilities: sharedCapabilities,
-              synergy_potential: sharedCapabilities.length * 20,
+              synergy_potential: Math.min(sharedCapabilities.length * 25, 100),
               recommended_integration: `Bridge ${moduleA.type} ↔ ${moduleB.type}`
             });
           }
@@ -181,12 +210,13 @@ export const useIntersectionalNexus = create<IntersectionalState & {
         cross_module_patterns: crossPatterns,
         system_health: {
           ...state.system_health,
-          cross_pollination_rate: Math.min(100, crossPatterns.length * 15),
-          adaptive_learning_score: Math.min(100, insights.length * 12)
+          cross_pollination_rate: Math.min(100, crossPatterns.length * 20),
+          adaptive_learning_score: Math.min(100, insights.length * 15)
         }
       });
 
-      console.log(`🧠 Síntesis neurológica completada: ${insights.length} insights, ${crossPatterns.length} patrones`);
+      globalCircuitBreaker.recordSignal();
+      console.log(`🧠 Síntesis neurológica estabilizada: ${insights.length} insights`);
     },
 
     // Adaptación comportamental
@@ -320,7 +350,34 @@ export const useIntersectionalNexus = create<IntersectionalState & {
           }
         };
       });
-    }
+    },
+
+    // Sistema de emergencia
+    emergencyReset: () => {
+      globalCircuitBreaker.forceRecovery();
+      
+      set({
+        neural_pathways: new Map(),
+        collective_insights: [],
+        cross_module_patterns: [],
+        global_coherence: 100,
+        system_health: {
+          neural_efficiency: 95,
+          cross_pollination_rate: 88,
+          adaptive_learning_score: 92,
+          user_experience_harmony: 90
+        }
+      });
+      
+      console.log('🚨 EMERGENCY RESET: Sistema neurológico reiniciado');
+    },
+
+    getSystemStatus: () => ({
+      circuitBreakerState: globalCircuitBreaker.getState(),
+      activeModules: get().active_modules.size,
+      globalCoherence: get().global_coherence,
+      pathways: get().neural_pathways.size
+    })
   }))
 );
 

@@ -1,115 +1,113 @@
 
 /**
- * Circuit Breaker más permisivo para evitar bloqueos indefinidos
+ * Circuit Breaker Neurológico de Emergencia
+ * Previene bucles infinitos con límites estrictos
  */
-interface CircuitBreakerOptions {
-  failureThreshold: number;
-  resetTimeout: number;
-  maxConsecutiveFailures: number; // Nuevo: máximo de fallos consecutivos
-  onOpen?: () => void;
-  onClose?: () => void;
+interface EmergencyCircuitBreakerOptions {
+  maxSignalsPerSecond: number;
+  cooldownPeriod: number;
+  emergencyThreshold: number;
+  autoRecoveryTime: number;
 }
 
-enum CircuitState {
-  CLOSED,
-  OPEN,
-  HALF_OPEN
+enum EmergencyState {
+  STABLE,
+  DEGRADED,
+  EMERGENCY_LOCKDOWN
 }
 
-export class CircuitBreaker {
-  private state: CircuitState = CircuitState.CLOSED;
-  private failureCount: number = 0;
-  private consecutiveFailures: number = 0;
-  private nextAttemptTime: number = 0;
-  private readonly options: CircuitBreakerOptions;
+export class EmergencyCircuitBreaker {
+  private state: EmergencyState = EmergencyState.STABLE;
+  private signalHistory: number[] = [];
+  private lastSignalTime: number = 0;
+  private consecutiveViolations: number = 0;
+  private lockdownStartTime: number = 0;
+  private readonly options: EmergencyCircuitBreakerOptions;
 
-  constructor(options: CircuitBreakerOptions) {
+  constructor(options: Partial<EmergencyCircuitBreakerOptions> = {}) {
     this.options = {
-      failureThreshold: 5,        // Más permisivo
-      resetTimeout: 10000,        // Timeout más corto
-      maxConsecutiveFailures: 3,  // Límite de fallos consecutivos
+      maxSignalsPerSecond: 3,        // Límite estricto
+      cooldownPeriod: 5000,          // 5 segundos cooldown
+      emergencyThreshold: 5,         // 5 violaciones = lockdown
+      autoRecoveryTime: 30000,       // 30 segundos recovery
       ...options
     };
   }
 
-  public success(): void {
-    this.failureCount = 0;
-    this.consecutiveFailures = 0;
+  public canProcess(): boolean {
+    const now = Date.now();
     
-    if (this.state === CircuitState.HALF_OPEN) {
-      this.state = CircuitState.CLOSED;
-      if (this.options.onClose) {
-        this.options.onClose();
+    // Auto-recovery desde lockdown
+    if (this.state === EmergencyState.EMERGENCY_LOCKDOWN) {
+      if (now - this.lockdownStartTime > this.options.autoRecoveryTime) {
+        this.emergencyRecovery();
+        return true;
       }
-    }
-  }
-
-  public failure(): void {
-    this.failureCount++;
-    this.consecutiveFailures++;
-
-    // Abrir circuito solo si excedemos ambos límites
-    if (this.failureCount >= this.options.failureThreshold && 
-        this.consecutiveFailures >= this.options.maxConsecutiveFailures) {
-      this.open();
-    }
-  }
-
-  public isOpen(): boolean {
-    if (this.state === CircuitState.HALF_OPEN) {
       return false;
     }
-    
-    if (this.state === CircuitState.OPEN) {
-      const now = Date.now();
+
+    // Limpiar historial antiguo (últimos 1000ms)
+    this.signalHistory = this.signalHistory.filter(time => now - time < 1000);
+
+    // Verificar límite de señales por segundo
+    if (this.signalHistory.length >= this.options.maxSignalsPerSecond) {
+      this.consecutiveViolations++;
       
-      if (now >= this.nextAttemptTime) {
-        this.state = CircuitState.HALF_OPEN;
+      if (this.consecutiveViolations >= this.options.emergencyThreshold) {
+        this.enterEmergencyLockdown();
         return false;
       }
       
-      return true;
+      this.state = EmergencyState.DEGRADED;
+      return false;
     }
-    
-    return false;
+
+    // Verificar cooldown mínimo entre señales
+    if (now - this.lastSignalTime < (1000 / this.options.maxSignalsPerSecond)) {
+      return false;
+    }
+
+    return true;
   }
 
-  private open(): void {
-    if (this.state !== CircuitState.OPEN) {
-      this.state = CircuitState.OPEN;
-      this.nextAttemptTime = Date.now() + this.options.resetTimeout;
-      
-      if (this.options.onOpen) {
-        this.options.onOpen();
+  public recordSignal(): void {
+    const now = Date.now();
+    this.signalHistory.push(now);
+    this.lastSignalTime = now;
+    
+    if (this.state === EmergencyState.DEGRADED) {
+      this.consecutiveViolations = Math.max(0, this.consecutiveViolations - 1);
+      if (this.consecutiveViolations === 0) {
+        this.state = EmergencyState.STABLE;
       }
     }
   }
 
-  public reset(): void {
-    this.state = CircuitState.CLOSED;
-    this.failureCount = 0;
-    this.consecutiveFailures = 0;
-    
-    if (this.options.onClose) {
-      this.options.onClose();
-    }
+  private enterEmergencyLockdown(): void {
+    this.state = EmergencyState.EMERGENCY_LOCKDOWN;
+    this.lockdownStartTime = Date.now();
+    console.error('🚨 EMERGENCY LOCKDOWN: Sistema neurológico en lockdown por bucles infinitos');
   }
-  
+
+  private emergencyRecovery(): void {
+    this.state = EmergencyState.STABLE;
+    this.consecutiveViolations = 0;
+    this.signalHistory = [];
+    console.log('🔄 RECOVERY: Sistema neurológico recuperado del lockdown');
+  }
+
   public getState(): string {
     switch (this.state) {
-      case CircuitState.CLOSED:
-        return 'closed';
-      case CircuitState.OPEN:
-        return 'open';
-      case CircuitState.HALF_OPEN:
-        return 'half-open';
+      case EmergencyState.STABLE:
+        return 'stable';
+      case EmergencyState.DEGRADED:
+        return 'degraded';
+      case EmergencyState.EMERGENCY_LOCKDOWN:
+        return 'emergency_lockdown';
     }
   }
 
-  // Método para forzar el cierre en emergencias
-  public forceClose(): void {
-    this.state = CircuitState.CLOSED;
-    this.failureCount = 0;
-    this.consecutiveFailures = 0;
+  public forceRecovery(): void {
+    this.emergencyRecovery();
   }
 }
