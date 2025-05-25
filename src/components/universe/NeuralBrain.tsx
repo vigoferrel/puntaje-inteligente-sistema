@@ -1,18 +1,9 @@
-
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Sphere, Html } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import * as THREE from 'three';
-
-interface NeuralBrainProps {
-  position: [number, number, number];
-  scale: number;
-  isActive: boolean;
-  onClick: () => void;
-  userLevel: number;
-  cosmicEnergy: number;
-}
+import { NeuralBrainProps } from '@/types/universe-types';
 
 export const NeuralBrain: React.FC<NeuralBrainProps> = ({
   position,

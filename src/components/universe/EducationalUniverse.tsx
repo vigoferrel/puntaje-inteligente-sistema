@@ -13,6 +13,7 @@ import { VocationalPredictor } from './VocationalPredictor';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Zap, Target, Sparkles, Globe } from 'lucide-react';
+import { UniverseMode, Galaxy, UniverseMetrics, UniverseConfig } from '@/types/universe-types';
 
 type UniverseMode = 'overview' | 'subject' | 'neural' | 'prediction' | 'progress';
 
@@ -34,52 +35,57 @@ export const EducationalUniverse: React.FC<EducationalUniverseProps> = ({
   const [userLevel, setUserLevel] = useState(15);
   const [cosmicEnergy, setCosmicEnergy] = useState(2847);
 
-  // Configuración de galaxias temáticas
-  const galaxies = useMemo(() => [
+  // Configuración de galaxias temáticas con tipos unificados
+  const galaxies = useMemo<Galaxy[]>(() => [
     {
       id: 'competencia-lectora',
       name: 'Galaxia Verbal',
       color: '#3B82F6',
-      position: [8, 0, 0] as [number, number, number],
+      position: [8, 0, 0],
       nodes: 45,
       completed: 32,
-      description: 'Universo de comprensión y expresión'
+      description: 'Universo de comprensión y expresión',
+      testCode: 'COMPETENCIA_LECTORA'
     },
     {
       id: 'matematica-1',
       name: 'Dimensión Lógica',
       color: '#10B981', 
-      position: [0, 0, 8] as [number, number, number],
+      position: [0, 0, 8],
       nodes: 38,
       completed: 25,
-      description: 'Realidad matemática fundamental'
+      description: 'Realidad matemática fundamental',
+      testCode: 'MATEMATICA_1'
     },
     {
       id: 'matematica-2',
       name: 'Cosmos Avanzado',
       color: '#8B5CF6',
-      position: [-8, 0, 0] as [number, number, number],
+      position: [-8, 0, 0],
       nodes: 42,
       completed: 18,
-      description: 'Matemáticas del infinito'
+      description: 'Matemáticas del infinito',
+      testCode: 'MATEMATICA_2'
     },
     {
       id: 'ciencias',
       name: 'Laboratorio Cuántico',
       color: '#F59E0B',
-      position: [0, 8, 0] as [number, number, number],
+      position: [0, 8, 0],
       nodes: 55,
       completed: 31,
-      description: 'Secretos del universo físico'
+      description: 'Secretos del universo físico',
+      testCode: 'CIENCIAS'
     },
     {
       id: 'historia',
       name: 'Línea Temporal',
       color: '#EF4444',
-      position: [0, 0, -8] as [number, number, number],
+      position: [0, 0, -8],
       nodes: 35,
       completed: 28,
-      description: 'Tejido de la humanidad'
+      description: 'Tejido de la humanidad',
+      testCode: 'HISTORIA'
     }
   ], []);
 
@@ -96,7 +102,7 @@ export const EducationalUniverse: React.FC<EducationalUniverseProps> = ({
   }, [user?.id, isIntersectionalReady, universeMode, selectedGalaxy, adaptToUser]);
 
   // Métricas del universo en tiempo real
-  const universeMetrics = useMemo(() => {
+  const universeMetrics = useMemo<UniverseMetrics>(() => {
     const totalNodes = galaxies.reduce((sum, g) => sum + g.nodes, 0);
     const totalCompleted = galaxies.reduce((sum, g) => sum + g.completed, 0);
     const overallProgress = Math.round((totalCompleted / totalNodes) * 100);

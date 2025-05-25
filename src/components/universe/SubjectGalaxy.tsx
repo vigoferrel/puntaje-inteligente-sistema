@@ -1,27 +1,9 @@
-
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Sphere, Ring, Html } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import * as THREE from 'three';
-
-interface Galaxy {
-  id: string;
-  name: string;
-  color: string;
-  position: [number, number, number];
-  nodes: number;
-  completed: number;
-  description: string;
-}
-
-interface SubjectGalaxyProps {
-  galaxy: Galaxy;
-  isSelected: boolean;
-  isVisible: boolean;
-  onClick: () => void;
-  scale: number;
-}
+import { Galaxy, SubjectGalaxyProps } from '@/types/universe-types';
 
 export const SubjectGalaxy: React.FC<SubjectGalaxyProps> = ({
   galaxy,

@@ -8,7 +8,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   Target, 
   Brain, 
-  Zap, 
   Trophy
 } from 'lucide-react';
 import { usePAESData } from '@/hooks/use-paes-data';
@@ -19,13 +18,22 @@ import { UniverseControls } from './UniverseControls';
 import { LearningPathway } from './LearningPathway';
 import { OptimalPathSidebar } from './OptimalPathSidebar';
 import { TPAESPrueba } from '@/types/system-types';
+import { Position3D } from '@/types/universe-types';
 
 interface ViewMode {
   mode: 'galaxy' | 'constellation' | 'node' | 'pathway';
   focus?: TPAESPrueba | string;
 }
 
-export const PAESLearningUniverse: React.FC = () => {
+interface ConstellationData {
+  test: any;
+  position: Position3D;
+  nodes: any[];
+  color: string;
+  completionRate: number;
+}
+
+export const PAESLearningUniverse: React.FC = React.memo(() => {
   const { user } = useAuth();
   const { tests, skills, loading } = usePAESData();
   const { nodes, nodeProgress, fetchLearningNodes } = useLearningNodes();
@@ -39,11 +47,11 @@ export const PAESLearningUniverse: React.FC = () => {
     status: 'all'
   });
 
-  // Calcular distribución de nodos en el universo 3D
+  // Optimized universe layout calculation
   const universeLayout = useMemo(() => {
-    if (!tests.length || !nodes.length) return { constellations: [], totalNodes: 0 };
+    if (!tests.length || !nodes.length) return { constellations: [], totalNodes: 0, completedNodes: 0 };
 
-    const constellations = tests.map((test, testIndex) => {
+    const constellations: ConstellationData[] = tests.map((test, testIndex) => {
       const testNodes = nodes.filter(node => 
         node.testId === test.id ||
         (test.code === 'COMPETENCIA_LECTORA' && node.prueba === 'COMPETENCIA_LECTORA') ||
@@ -53,13 +61,12 @@ export const PAESLearningUniverse: React.FC = () => {
         (test.code === 'HISTORIA' && node.prueba === 'HISTORIA')
       );
 
-      // Posición orbital de la constelación
+      // Optimized orbital positioning
       const angle = (testIndex / tests.length) * Math.PI * 2;
       const radius = 15;
       const centerX = Math.cos(angle) * radius;
       const centerZ = Math.sin(angle) * radius;
 
-      // Distribuir nodos en espiral dentro de la constelación
       const nodesWithPositions = testNodes.map((node, nodeIndex) => {
         const spiralAngle = (nodeIndex / testNodes.length) * Math.PI * 4;
         const spiralRadius = 2 + (nodeIndex / testNodes.length) * 3;
@@ -70,7 +77,7 @@ export const PAESLearningUniverse: React.FC = () => {
             centerX + Math.cos(spiralAngle) * spiralRadius,
             Math.sin(nodeIndex * 0.5) * 2,
             centerZ + Math.sin(spiralAngle) * spiralRadius
-          ] as [number, number, number],
+          ] as Position3D,
           progress: nodeProgress[node.id]?.progress || 0,
           status: nodeProgress[node.id]?.status || 'not_started'
         };
@@ -78,7 +85,7 @@ export const PAESLearningUniverse: React.FC = () => {
 
       return {
         test,
-        position: [centerX, 0, centerZ] as [number, number, number],
+        position: [centerX, 0, centerZ] as Position3D,
         nodes: nodesWithPositions,
         color: getTestColor(test.code),
         completionRate: nodesWithPositions.length > 0 
@@ -94,7 +101,7 @@ export const PAESLearningUniverse: React.FC = () => {
     };
   }, [tests, nodes, nodeProgress]);
 
-  const getTestColor = (testCode: string): string => {
+  const getTestColor = useCallback((testCode: string): string => {
     const colors = {
       'COMPETENCIA_LECTORA': '#3B82F6',
       'MATEMATICA_1': '#10B981',
@@ -103,7 +110,7 @@ export const PAESLearningUniverse: React.FC = () => {
       'HISTORIA': '#EF4444'
     };
     return colors[testCode as keyof typeof colors] || '#6B7280';
-  };
+  }, []);
 
   const handleNodeClick = useCallback((nodeId: string) => {
     setSelectedNode(nodeId);
@@ -213,7 +220,6 @@ export const PAESLearningUniverse: React.FC = () => {
             autoRotateSpeed={0.5}
           />
 
-          {/* Renderizar Constelaciones */}
           {universeLayout.constellations.map((constellation, index) => (
             <InteractiveNodeGroup
               key={constellation.test.id}
@@ -225,7 +231,6 @@ export const PAESLearningUniverse: React.FC = () => {
             />
           ))}
 
-          {/* Pathways de Aprendizaje */}
           {showPathways && (
             <LearningPathway
               constellations={universeLayout.constellations}
@@ -233,7 +238,6 @@ export const PAESLearningUniverse: React.FC = () => {
             />
           )}
 
-          {/* Texto Central del Universo */}
           {viewMode.mode === 'galaxy' && (
             <Text
               position={[0, 8, 0]}
@@ -338,4 +342,6 @@ export const PAESLearningUniverse: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+
+PAESLearningUniverse.displayName = 'PAESLearningUniverse';
