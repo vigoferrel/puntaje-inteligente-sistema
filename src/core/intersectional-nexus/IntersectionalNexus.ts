@@ -1,9 +1,9 @@
-
 /**
  * NEXUS INTERSECCIONAL - El Sistema Nervioso Digital
  * Arquitectura quirúrgica que elimina fronteras entre módulos
  */
 
+import React from 'react';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { universalHub } from '@/core/universal-hub/UniversalDataHub';
