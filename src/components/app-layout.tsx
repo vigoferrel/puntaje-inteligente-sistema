@@ -12,7 +12,7 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNavigation = false }) => {
   const location = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   const navigationItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -66,10 +66,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNavigation = false 
               </div>
 
               <div className="flex items-center space-x-4">
-                {isAuthenticated ? (
+                {user ? (
                   <div className="flex items-center space-x-2">
                     <button className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-primary text-primary-foreground">
-                      <span className="text-sm">Hola, Usuario</span>
+                      <span className="text-sm">Hola, {user.name || 'Usuario'}</span>
                     </button>
                     <button className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-primary text-primary-foreground">
                       <span className="text-sm">Cerrar Sesión</span>

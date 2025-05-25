@@ -1,7 +1,29 @@
-
-import { EventEmitter } from 'events';
 import { supabase } from '@/integrations/supabase/client';
 import { universalHub } from '@/core/universal-hub/UniversalDataHub';
+
+// Simple EventEmitter implementation for browser compatibility
+class SimpleEventEmitter {
+  private events: { [key: string]: Function[] } = {};
+
+  on(event: string, listener: Function) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event].push(listener);
+  }
+
+  emit(event: string, data?: any) {
+    if (this.events[event]) {
+      this.events[event].forEach(listener => listener(data));
+    }
+  }
+
+  off(event: string, listener: Function) {
+    if (this.events[event]) {
+      this.events[event] = this.events[event].filter(l => l !== listener);
+    }
+  }
+}
 
 export interface PerfilEstudiante {
   id: string;
@@ -174,7 +196,7 @@ export interface RecomendacionAccion {
  * AGENTE VOCACIONAL PAES MASTER
  * Sistema completo de orientación vocacional basado en resultados PAES
  */
-export class PAESVocationalAgent extends EventEmitter {
+export class PAESVocationalAgent extends SimpleEventEmitter {
   private analizador: AnalizadorVocacional;
   private motorRecomendaciones: MotorRecomendacionesVocacionales;
   
