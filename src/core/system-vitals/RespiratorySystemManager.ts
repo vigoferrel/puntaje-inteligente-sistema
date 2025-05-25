@@ -1,7 +1,7 @@
 
 /**
- * ADMINISTRADOR QUIRÚRGICO SINGLETON v6.0
- * Control absoluto post-cirugía de emergencia
+ * ADMINISTRADOR QUIRÚRGICO SINGLETON v6.1
+ * Control absoluto post-cirugía de emergencia - REPARADO
  */
 
 import { RespiratorySystem } from './RespiratorySystem';
@@ -82,7 +82,7 @@ class RespiratorySystemManager {
     await new Promise(resolve => setTimeout(resolve, 200));
     
     const instance = new RespiratorySystem(surgicalConfig);
-    console.log('🫁 SISTEMA RESPIRATORIO POST-CIRUGÍA v6.0: Instancia estabilizada');
+    console.log('🫁 SISTEMA RESPIRATORIO POST-CIRUGÍA v6.1: Instancia estabilizada');
     
     return instance;
   }
@@ -100,7 +100,7 @@ class RespiratorySystemManager {
     RespiratorySystemManager.surgicalMode = true;
     RespiratorySystemManager.lastSurgery = now;
 
-    console.log('🚨 MODO QUIRÚRGICO v6.0 ACTIVADO');
+    console.log('🚨 MODO QUIRÚRGICO v6.1 ACTIVADO');
     
     // Recrear instancia en modo quirúrgico
     setTimeout(async () => {
@@ -119,13 +119,13 @@ class RespiratorySystemManager {
     return true;
   }
 
-  // Activación de emergencia
+  // REPARACIÓN v6.1: Activación de emergencia correcta
   public static activateEmergencyMode(): boolean {
     const now = Date.now();
     RespiratorySystemManager.emergencyActivationCount++;
     RespiratorySystemManager.lastEmergencyActivation = now;
     
-    console.log('🚨 MODO DE EMERGENCIA ACTIVADO v6.0');
+    console.log('🚨 MODO DE EMERGENCIA ACTIVADO v6.1');
     
     // Activar modo quirúrgico inmediatamente
     return RespiratorySystemManager.activateSurgicalMode();
@@ -146,7 +146,7 @@ class RespiratorySystemManager {
       (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ = null;
     }
 
-    console.log('🫁 LIMPIEZA QUIRÚRGICA COMPLETADA');
+    console.log('🫁 LIMPIEZA QUIRÚRGICA COMPLETADA v6.1');
   }
 
   // Estado post-quirúrgico
@@ -160,7 +160,7 @@ class RespiratorySystemManager {
     };
   }
 
-  // Alias para compatibilidad
+  // REPARACIÓN v6.1: Método getSystemStatus correctamente exportado
   public static getSystemStatus(): SystemStatus {
     const surgical = RespiratorySystemManager.getSurgicalStatus();
     return {

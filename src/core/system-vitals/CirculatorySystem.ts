@@ -1,4 +1,3 @@
-
 /**
  * SISTEMA CIRCULATORIO - Conexión Cardiovascular-Respiratoria v1.0
  * Responsabilidad única: Comunicación fluida entre corazón y pulmón
@@ -176,7 +175,7 @@ export class CirculatorySystem {
     console.log('🚨 INTERVENCIÓN DE EMERGENCIA: Reiniciando sistemas cardiovascular-respiratorio');
     
     this.heart.emergencyReset();
-    this.lungs.emergencyPurge(); // Usar método disponible
+    this.lungs.surgicalPurge(); // REPARACIÓN v6.1: Usar método correcto
     this.bloodFlow.clear();
     this.isHealthy = true;
   }
