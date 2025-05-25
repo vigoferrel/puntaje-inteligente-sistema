@@ -2,24 +2,20 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from "@/types/diagnostic";
 
-// Simplified interface to avoid type recursion
-interface SimpleExerciseData {
+// Ultra-simplified interface to prevent type recursion
+interface BasicExerciseData {
   id: string;
   question?: string;
   enunciado?: string;
-  options?: any;
-  alternativas?: any;
-  alternatives?: any;
+  options?: unknown;
+  alternativas?: unknown;
+  alternatives?: unknown;
   correct_answer?: string;
   respuesta_correcta?: string;
   correctAnswer?: string;
   explanation?: string;
   explicacion?: string;
-  skill?: any;
-  competencia_especifica?: any;
-  prueba?: string;
-  nodo_code?: string;
-  year?: number;
+  [key: string]: unknown; // Allow any other properties
 }
 
 export class ExamQuestionExtractor {
@@ -57,11 +53,12 @@ export class ExamQuestionExtractor {
         return this.generateFallbackQuestions(prueba, limit);
       }
 
-      // Use explicit for loop instead of map to avoid type recursion
+      // Use explicit for loop to avoid type recursion
       const mappedQuestions: DiagnosticQuestion[] = [];
       for (let i = 0; i < exercises.length; i++) {
-        const exercise = exercises[i] as SimpleExerciseData;
-        const mappedQuestion = this.createSimpleQuestion(exercise);
+        const rawExercise = exercises[i] as unknown;
+        const basicExercise = rawExercise as BasicExerciseData;
+        const mappedQuestion = this.createBasicQuestion(basicExercise);
         mappedQuestions.push(mappedQuestion);
       }
 
@@ -73,36 +70,34 @@ export class ExamQuestionExtractor {
     }
   }
 
-  // Isolated mapping function with explicit types
-  private createSimpleQuestion(exercise: SimpleExerciseData): DiagnosticQuestion {
+  // Ultra-simplified mapping function with explicit types
+  private createBasicQuestion(exercise: BasicExerciseData): DiagnosticQuestion {
     const question: DiagnosticQuestion = {
       id: exercise.id || `extracted-${Date.now()}-${Math.random()}`,
       question: exercise.question || exercise.enunciado || 'Pregunta no disponible',
-      options: this.extractOptions(exercise),
-      correctAnswer: this.extractCorrectAnswer(exercise),
+      options: this.extractBasicOptions(exercise),
+      correctAnswer: this.extractBasicCorrectAnswer(exercise),
       explanation: exercise.explanation || exercise.explicacion || 'Explicación no disponible',
       difficulty: 'INTERMEDIO' as const,
-      skill: this.getSkillString(exercise.skill || exercise.competencia_especifica),
-      prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
+      skill: 'INTERPRET_RELATE',
+      prueba: 'COMPETENCIA_LECTORA',
       metadata: {
         source: 'oficial_extracted' as const,
-        originalId: exercise.id,
-        nodoCode: exercise.nodo_code,
-        year: exercise.year
+        originalId: exercise.id
       }
     };
     return question;
   }
 
-  private extractOptions(exercise: SimpleExerciseData): string[] {
+  private extractBasicOptions(exercise: BasicExerciseData): string[] {
     const optionsFields = ['options', 'alternativas', 'alternatives'];
     
     for (const field of optionsFields) {
-      const fieldValue = (exercise as any)[field];
+      const fieldValue = exercise[field];
       if (fieldValue) {
         if (Array.isArray(fieldValue)) {
-          return fieldValue.map((opt: any) => 
-            typeof opt === 'string' ? opt : opt.contenido || opt.text || String(opt)
+          return fieldValue.map((opt: unknown) => 
+            typeof opt === 'string' ? opt : String(opt)
           );
         }
         
@@ -110,9 +105,7 @@ export class ExamQuestionExtractor {
           try {
             const parsed = JSON.parse(fieldValue);
             if (Array.isArray(parsed)) {
-              return parsed.map((opt: any) => 
-                typeof opt === 'string' ? opt : opt.contenido || opt.text || String(opt)
-              );
+              return parsed.map((opt: unknown) => String(opt));
             }
           } catch {
             return [fieldValue];
@@ -124,44 +117,20 @@ export class ExamQuestionExtractor {
     return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
   }
 
-  private extractCorrectAnswer(exercise: SimpleExerciseData): string {
+  private extractBasicCorrectAnswer(exercise: BasicExerciseData): string {
     const answerFields = ['correct_answer', 'respuesta_correcta', 'correctAnswer'];
     
     for (const field of answerFields) {
-      const fieldValue = (exercise as any)[field];
+      const fieldValue = exercise[field];
       if (fieldValue) {
         return String(fieldValue);
-      }
-    }
-
-    if (exercise.alternativas && Array.isArray(exercise.alternativas)) {
-      const correctOption = exercise.alternativas.find((alt: any) => alt.es_correcta || alt.isCorrect);
-      if (correctOption) {
-        return correctOption.contenido || correctOption.text || 'Opción A';
       }
     }
 
     return 'Opción A';
   }
 
-  private getSkillString(skill: any): string {
-    if (!skill) return 'INTERPRET_RELATE';
-
-    const skillString = String(skill).toLowerCase();
-    
-    if (skillString.includes('localizar')) return 'TRACK_LOCATE';
-    if (skillString.includes('interpretar')) return 'INTERPRET_RELATE';
-    if (skillString.includes('evaluar')) return 'EVALUATE_REFLECT';
-    if (skillString.includes('resolver')) return 'SOLVE_PROBLEMS';
-    if (skillString.includes('representar')) return 'REPRESENT';
-    if (skillString.includes('modelar')) return 'MODEL';
-    if (skillString.includes('argumentar')) return 'ARGUE_COMMUNICATE';
-
-    return 'INTERPRET_RELATE';
-  }
-
   private generateFallbackQuestions(prueba: string, count: number): DiagnosticQuestion[] {
-    // Use explicit for loop instead of Array.from().map()
     const questions: DiagnosticQuestion[] = [];
     for (let i = 0; i < count; i++) {
       const question: DiagnosticQuestion = {

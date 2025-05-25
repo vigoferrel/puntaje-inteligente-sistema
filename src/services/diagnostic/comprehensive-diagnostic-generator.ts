@@ -2,23 +2,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
 
-// Define types explicitly to avoid recursion
-type TPAESPrueba = 'COMPETENCIA_LECTORA' | 'MATEMATICA_1' | 'MATEMATICA_2' | 'CIENCIAS' | 'HISTORIA';
-
-// Simplified interfaces to avoid type recursion
-interface SimpleExerciseData {
+// Ultra-simplified interface to avoid any type recursion
+interface BasicExerciseData {
   id: string;
-  question: string;
-  options: any;
-  correct_answer: string;
-  explanation: string;
-  skill: any;
-  competencia_especifica: any;
-  prueba: string;
-  metadata?: any;
-  originalId?: string;
-  nodo_code?: string;
-  year?: number;
+  question?: string;
+  options?: string;
+  correct_answer?: string;
+  explanation?: string;
+  [key: string]: unknown; // Allow any other properties
 }
 
 export class ComprehensiveDiagnosticGenerator {
@@ -37,7 +28,7 @@ export class ComprehensiveDiagnosticGenerator {
     try {
       console.log(`🎯 Generando todos los diagnósticos para usuario: ${userId}`);
       
-      const allPruebas: TPAESPrueba[] = [
+      const allPruebas = [
         'COMPETENCIA_LECTORA',
         'MATEMATICA_1', 
         'MATEMATICA_2',
@@ -53,7 +44,6 @@ export class ComprehensiveDiagnosticGenerator {
           diagnostics.push(diagnostic);
         } catch (error) {
           console.warn(`⚠️ Error generando diagnóstico para ${prueba}:`, error);
-          // Continue with other diagnostics even if one fails
         }
       }
       
@@ -67,14 +57,13 @@ export class ComprehensiveDiagnosticGenerator {
   }
 
   async generateComprehensiveDiagnostic(
-    prueba: TPAESPrueba,
-    targetLevel: 'basic' | 'intermediate' | 'advanced' = 'intermediate',
+    prueba: string,
+    targetLevel: string = 'intermediate',
     questionCount: number = 20
   ): Promise<DiagnosticTest> {
     console.log(`🎯 Generando diagnóstico comprehensivo para ${prueba}`);
 
     try {
-      // Fetch questions from database
       const questions = await this.fetchDatabaseQuestions(prueba, questionCount);
       
       if (questions.length === 0) {
@@ -82,7 +71,6 @@ export class ComprehensiveDiagnosticGenerator {
         return this.generateFallbackDiagnostic(prueba, targetLevel, questionCount);
       }
 
-      // Create comprehensive diagnostic
       const diagnostic: DiagnosticTest = {
         id: `comprehensive-${prueba.toLowerCase()}-${Date.now()}`,
         title: `Diagnóstico Comprehensivo - ${this.getPruebaDisplayName(prueba)}`,
@@ -109,7 +97,7 @@ export class ComprehensiveDiagnosticGenerator {
   }
 
   private async fetchDatabaseQuestions(
-    prueba: TPAESPrueba,
+    prueba: string,
     limit: number
   ): Promise<DiagnosticQuestion[]> {
     try {
@@ -124,11 +112,12 @@ export class ComprehensiveDiagnosticGenerator {
         return [];
       }
 
-      // Use explicit for loop instead of map to avoid type recursion
+      // Use explicit for loop with ultra-simple mapping
       const mappedQuestions: DiagnosticQuestion[] = [];
       for (let i = 0; i < exercises.length; i++) {
-        const exercise = exercises[i] as SimpleExerciseData;
-        const mappedQuestion = this.createSimpleQuestion(exercise);
+        const rawExercise = exercises[i] as unknown;
+        const basicExercise = rawExercise as BasicExerciseData;
+        const mappedQuestion = this.createBasicQuestion(basicExercise);
         mappedQuestions.push(mappedQuestion);
       }
 
@@ -139,75 +128,50 @@ export class ComprehensiveDiagnosticGenerator {
     }
   }
 
-  // Isolated mapping function with explicit types
-  private createSimpleQuestion(exercise: SimpleExerciseData): DiagnosticQuestion {
+  // Ultra-simplified mapping function with explicit types
+  private createBasicQuestion(exercise: BasicExerciseData): DiagnosticQuestion {
     const question: DiagnosticQuestion = {
       id: exercise.id || `q-${Date.now()}-${Math.random()}`,
       question: exercise.question || 'Pregunta no disponible',
-      options: this.parseOptions(exercise.options),
+      options: this.parseBasicOptions(exercise.options),
       correctAnswer: exercise.correct_answer || 'Opción A',
       explanation: exercise.explanation || '',
       difficulty: 'INTERMEDIO' as const,
-      skill: this.getSkillString(exercise.skill || exercise.competencia_especifica),
-      prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
+      skill: 'INTERPRET_RELATE',
+      prueba: 'COMPETENCIA_LECTORA',
       metadata: {
         source: 'database' as const,
-        originalId: exercise.id,
-        nodoCode: exercise.nodo_code,
-        year: exercise.year
+        originalId: exercise.id
       }
     };
     return question;
   }
 
-  private parseOptions(options: any): string[] {
-    if (Array.isArray(options)) {
-      return options.map(String);
-    }
+  private parseBasicOptions(options: unknown): string[] {
     if (typeof options === 'string') {
       try {
         const parsed = JSON.parse(options);
-        return Array.isArray(parsed) ? parsed.map(String) : ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
+        if (Array.isArray(parsed)) {
+          return parsed.map(String);
+        }
+        return [options];
       } catch {
         return [options];
       }
     }
+    if (Array.isArray(options)) {
+      return options.map(String);
+    }
     return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
   }
 
-  private getSkillString(skill: any): string {
-    if (!skill) return 'INTERPRET_RELATE';
-    
-    const skillStr = String(skill).toLowerCase();
-    
-    if (skillStr.includes('localizar')) return 'TRACK_LOCATE';
-    if (skillStr.includes('interpretar')) return 'INTERPRET_RELATE';
-    if (skillStr.includes('evaluar')) return 'EVALUATE_REFLECT';
-    if (skillStr.includes('resolver')) return 'SOLVE_PROBLEMS';
-    if (skillStr.includes('representar')) return 'REPRESENT';
-    if (skillStr.includes('modelar')) return 'MODEL';
-    if (skillStr.includes('argumentar')) return 'ARGUE_COMMUNICATE';
-    if (skillStr.includes('identificar')) return 'IDENTIFY_THEORIES';
-    if (skillStr.includes('procesar')) return 'PROCESS_ANALYZE';
-    if (skillStr.includes('aplicar')) return 'APPLY_PRINCIPLES';
-    if (skillStr.includes('cientifico')) return 'SCIENTIFIC_ARGUMENT';
-    if (skillStr.includes('temporal')) return 'TEMPORAL_THINKING';
-    if (skillStr.includes('fuentes')) return 'SOURCE_ANALYSIS';
-    if (skillStr.includes('multicausal')) return 'MULTICAUSAL_ANALYSIS';
-    if (skillStr.includes('critico')) return 'CRITICAL_THINKING';
-    if (skillStr.includes('reflexion')) return 'REFLECTION';
-    
-    return 'INTERPRET_RELATE';
-  }
-
   private generateFallbackDiagnostic(
-    prueba: TPAESPrueba,
+    prueba: string,
     targetLevel: string,
     questionCount: number
   ): DiagnosticTest {
     console.log('🔄 Creando diagnóstico fallback locales...');
     
-    // Use explicit for loop instead of Array.from().map()
     const questions: DiagnosticQuestion[] = [];
     for (let i = 0; i < questionCount; i++) {
       const question: DiagnosticQuestion = {
@@ -248,8 +212,8 @@ export class ComprehensiveDiagnosticGenerator {
     };
   }
 
-  private getPruebaDisplayName(prueba: TPAESPrueba): string {
-    const names: Record<TPAESPrueba, string> = {
+  private getPruebaDisplayName(prueba: string): string {
+    const names: Record<string, string> = {
       'COMPETENCIA_LECTORA': 'Comprensión Lectora',
       'MATEMATICA_1': 'Matemática M1',
       'MATEMATICA_2': 'Matemática M2',
@@ -259,8 +223,8 @@ export class ComprehensiveDiagnosticGenerator {
     return names[prueba] || prueba;
   }
 
-  private getTestIdForPrueba(prueba: TPAESPrueba): number {
-    const testIds: Record<TPAESPrueba, number> = {
+  private getTestIdForPrueba(prueba: string): number {
+    const testIds: Record<string, number> = {
       'COMPETENCIA_LECTORA': 1,
       'MATEMATICA_1': 2,
       'MATEMATICA_2': 3,
@@ -270,8 +234,8 @@ export class ComprehensiveDiagnosticGenerator {
     return testIds[prueba] || 1;
   }
 
-  private getDefaultSkillForPrueba(prueba: TPAESPrueba): string {
-    const skills: Record<TPAESPrueba, string> = {
+  private getDefaultSkillForPrueba(prueba: string): string {
+    const skills: Record<string, string> = {
       'COMPETENCIA_LECTORA': 'INTERPRET_RELATE',
       'MATEMATICA_1': 'SOLVE_PROBLEMS',
       'MATEMATICA_2': 'REPRESENT',
