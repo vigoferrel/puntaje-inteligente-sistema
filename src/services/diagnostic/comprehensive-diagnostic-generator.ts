@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
@@ -122,7 +121,7 @@ export class ComprehensiveDiagnosticGenerator {
       correctAnswer: exercise.correct_answer || 'Opción A',
       explanation: exercise.explanation || '',
       difficulty: mapDifficultyToSpanish(exercise.difficulty || 'intermediate'),
-      skill: this.mapSkill(exercise.skill || exercise.competencia_especifica),
+      skill: this.mapSkillSafe(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {
         source: exercise.metadata?.source || 'database',
@@ -148,34 +147,30 @@ export class ComprehensiveDiagnosticGenerator {
     return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
   }
 
-  private mapSkill(skill: any): string {
-    if (typeof skill === 'string') {
-      const skillMapping: Record<string, TPAESHabilidad> = {
-        'localizar': 'TRACK_LOCATE',
-        'interpretar': 'INTERPRET_RELATE',
-        'evaluar': 'EVALUATE_REFLECT',
-        'resolver': 'SOLVE_PROBLEMS',
-        'representar': 'REPRESENT',
-        'modelar': 'MODEL',
-        'argumentar': 'ARGUE_COMMUNICATE',
-        'identificar': 'IDENTIFY_THEORIES',
-        'procesar': 'PROCESS_ANALYZE',
-        'aplicar': 'APPLY_PRINCIPLES',
-        'cientifico': 'SCIENTIFIC_ARGUMENT',
-        'temporal': 'TEMPORAL_THINKING',
-        'fuentes': 'SOURCE_ANALYSIS',
-        'multicausal': 'MULTICAUSAL_ANALYSIS',
-        'critico': 'CRITICAL_THINKING',
-        'reflexion': 'REFLECTION'
-      };
-
-      const lowerSkill = skill.toLowerCase();
-      for (const [key, value] of Object.entries(skillMapping)) {
-        if (lowerSkill.includes(key)) {
-          return value;
-        }
-      }
-    }
+  private mapSkillSafe(skill: any): string {
+    // Simplified skill mapping to avoid type recursion
+    if (!skill) return 'INTERPRET_RELATE';
+    
+    const skillStr = String(skill).toLowerCase();
+    
+    // Direct mapping without complex type inference
+    if (skillStr.includes('localizar')) return 'TRACK_LOCATE';
+    if (skillStr.includes('interpretar')) return 'INTERPRET_RELATE';
+    if (skillStr.includes('evaluar')) return 'EVALUATE_REFLECT';
+    if (skillStr.includes('resolver')) return 'SOLVE_PROBLEMS';
+    if (skillStr.includes('representar')) return 'REPRESENT';
+    if (skillStr.includes('modelar')) return 'MODEL';
+    if (skillStr.includes('argumentar')) return 'ARGUE_COMMUNICATE';
+    if (skillStr.includes('identificar')) return 'IDENTIFY_THEORIES';
+    if (skillStr.includes('procesar')) return 'PROCESS_ANALYZE';
+    if (skillStr.includes('aplicar')) return 'APPLY_PRINCIPLES';
+    if (skillStr.includes('cientifico')) return 'SCIENTIFIC_ARGUMENT';
+    if (skillStr.includes('temporal')) return 'TEMPORAL_THINKING';
+    if (skillStr.includes('fuentes')) return 'SOURCE_ANALYSIS';
+    if (skillStr.includes('multicausal')) return 'MULTICAUSAL_ANALYSIS';
+    if (skillStr.includes('critico')) return 'CRITICAL_THINKING';
+    if (skillStr.includes('reflexion')) return 'REFLECTION';
+    
     return 'INTERPRET_RELATE';
   }
 

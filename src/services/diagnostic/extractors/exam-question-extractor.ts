@@ -57,7 +57,7 @@ export class ExamQuestionExtractor {
       correctAnswer: this.extractCorrectAnswer(exercise),
       explanation: exercise.explanation || exercise.explicacion || 'Explicación no disponible',
       difficulty: mapDifficultyToSpanish('INTERMEDIO'),
-      skill: this.mapSkillToEnum(exercise.skill || exercise.competencia_especifica),
+      skill: this.mapSkillToEnumSafe(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {
         source: 'oficial_extracted',
@@ -121,47 +121,28 @@ export class ExamQuestionExtractor {
     return 'Opción A';
   }
 
-  private mapSkillToEnum(skill: any): TPAESHabilidad {
+  private mapSkillToEnumSafe(skill: any): string {
     if (!skill) return 'INTERPRET_RELATE';
 
     const skillString = String(skill).toLowerCase();
     
-    const skillMapping: Record<string, TPAESHabilidad> = {
-      'localizar': 'TRACK_LOCATE',
-      'ubicar': 'TRACK_LOCATE',
-      'interpretar': 'INTERPRET_RELATE',
-      'relacionar': 'INTERPRET_RELATE',
-      'evaluar': 'EVALUATE_REFLECT',
-      'reflexionar': 'EVALUATE_REFLECT',
-      'resolver': 'SOLVE_PROBLEMS',
-      'solucionar': 'SOLVE_PROBLEMS',
-      'representar': 'REPRESENT',
-      'modelar': 'MODEL',
-      'argumentar': 'ARGUE_COMMUNICATE',
-      'comunicar': 'ARGUE_COMMUNICATE',
-      'identificar': 'IDENTIFY_THEORIES',
-      'teorias': 'IDENTIFY_THEORIES',
-      'procesar': 'PROCESS_ANALYZE',
-      'analizar': 'PROCESS_ANALYZE',
-      'aplicar': 'APPLY_PRINCIPLES',
-      'principios': 'APPLY_PRINCIPLES',
-      'cientifico': 'SCIENTIFIC_ARGUMENT',
-      'argumento': 'SCIENTIFIC_ARGUMENT',
-      'temporal': 'TEMPORAL_THINKING',
-      'tiempo': 'TEMPORAL_THINKING',
-      'fuentes': 'SOURCE_ANALYSIS',
-      'multicausal': 'MULTICAUSAL_ANALYSIS',
-      'causas': 'MULTICAUSAL_ANALYSIS',
-      'critico': 'CRITICAL_THINKING',
-      'pensamiento': 'CRITICAL_THINKING',
-      'reflexion': 'REFLECTION'
-    };
-
-    for (const [key, value] of Object.entries(skillMapping)) {
-      if (skillString.includes(key)) {
-        return value;
-      }
-    }
+    // Simplified mapping to avoid type recursion
+    if (skillString.includes('localizar') || skillString.includes('ubicar')) return 'TRACK_LOCATE';
+    if (skillString.includes('interpretar') || skillString.includes('relacionar')) return 'INTERPRET_RELATE';
+    if (skillString.includes('evaluar') || skillString.includes('reflexionar')) return 'EVALUATE_REFLECT';
+    if (skillString.includes('resolver') || skillString.includes('solucionar')) return 'SOLVE_PROBLEMS';
+    if (skillString.includes('representar')) return 'REPRESENT';
+    if (skillString.includes('modelar')) return 'MODEL';
+    if (skillString.includes('argumentar') || skillString.includes('comunicar')) return 'ARGUE_COMMUNICATE';
+    if (skillString.includes('identificar') || skillString.includes('teorias')) return 'IDENTIFY_THEORIES';
+    if (skillString.includes('procesar') || skillString.includes('analizar')) return 'PROCESS_ANALYZE';
+    if (skillString.includes('aplicar') || skillString.includes('principios')) return 'APPLY_PRINCIPLES';
+    if (skillString.includes('cientifico') || skillString.includes('argumento')) return 'SCIENTIFIC_ARGUMENT';
+    if (skillString.includes('temporal') || skillString.includes('tiempo')) return 'TEMPORAL_THINKING';
+    if (skillString.includes('fuentes')) return 'SOURCE_ANALYSIS';
+    if (skillString.includes('multicausal') || skillString.includes('causas')) return 'MULTICAUSAL_ANALYSIS';
+    if (skillString.includes('critico') || skillString.includes('pensamiento')) return 'CRITICAL_THINKING';
+    if (skillString.includes('reflexion')) return 'REFLECTION';
 
     return 'INTERPRET_RELATE';
   }
