@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +25,7 @@ interface Message {
   timestamp: Date;
 }
 
-interface ChatMessage {
+interface ChatMessageForConversion {
   id: string;
   type: 'user' | 'ai';
   content: string;
@@ -62,17 +63,17 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
 
   const currentSubject = SUBJECTS.find(s => s.code === initialSubject) || SUBJECTS[0];
   
-  // Convertir ChatMessage[] a Message[]
-  const convertedMessages: Message[] = (messages || []).map((msg: ChatMessage) => ({
-    id: msg.id,
+  // Convertir ChatMessage[] a Message[] con verificación de tipos
+  const convertedMessages: Message[] = (messages || []).map((msg: ChatMessageForConversion) => ({
+    id: msg.id || `msg-${Date.now()}`,
     text: msg.content,
-    sender: msg.type,
+    sender: msg.type === 'user' ? 'user' : 'ai',
     timestamp: msg.timestamp
   }));
 
-  // Obtener stats directamente del hook - ya incluye todas las propiedades
+  // Obtener stats con fallback
   const stats = getStats ? getStats() : {
-    totalMessages: 0,
+    totalMessages: convertedMessages.length,
     exercisesCompleted: 0,
     currentSubject: initialSubject,
     isConnected: true,
@@ -153,7 +154,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.totalMessages}</div>
+            <div className="text-2xl font-bold text-blue-600">{convertedMessages.length}</div>
             <div className="text-sm text-gray-600">Conversaciones</div>
           </CardContent>
         </Card>

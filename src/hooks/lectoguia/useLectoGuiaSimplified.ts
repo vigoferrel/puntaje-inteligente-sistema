@@ -3,15 +3,18 @@ import { useState, useCallback } from 'react';
 import { useUnifiedState } from '@/hooks/useUnifiedState';
 
 interface ChatMessage {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  type: 'user' | 'ai';
 }
 
 interface ExerciseStats {
   exercisesCompleted: number;
   averageScore: number;
   streak: number;
+  totalMessages: number;
 }
 
 export const useLectoGuiaSimplified = () => {
@@ -23,12 +26,15 @@ export const useLectoGuiaSimplified = () => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected');
 
   const { userProgress, updateUserProgress } = useUnifiedState();
 
   const handleSendMessage = useCallback(async (message: string) => {
     const userMessage: ChatMessage = {
+      id: `msg-${Date.now()}`,
       role: 'user',
+      type: 'user',
       content: message,
       timestamp: new Date()
     };
@@ -39,7 +45,9 @@ export const useLectoGuiaSimplified = () => {
     // Simular respuesta del asistente
     setTimeout(() => {
       const assistantMessage: ChatMessage = {
+        id: `msg-${Date.now()}-ai`,
         role: 'assistant',
+        type: 'ai',
         content: `He recibido tu mensaje: "${message}". ¿En qué más puedo ayudarte con LectoGuía?`,
         timestamp: new Date()
       };
@@ -93,9 +101,10 @@ export const useLectoGuiaSimplified = () => {
     return {
       exercisesCompleted: userProgress.completedExercises,
       averageScore: Math.round((userProgress.overallScore / Math.max(userProgress.completedExercises, 1)) * 100),
-      streak: userProgress.streak
+      streak: userProgress.streak,
+      totalMessages: messages.length
     };
-  }, [userProgress]);
+  }, [userProgress, messages.length]);
 
   // Alias para chatHistory
   const chatHistory = messages;
@@ -104,7 +113,7 @@ export const useLectoGuiaSimplified = () => {
     activeTab,
     setActiveTab,
     messages,
-    chatHistory, // Añadir alias para compatibilidad
+    chatHistory,
     isTyping,
     handleSendMessage,
     activeSubject,
@@ -114,8 +123,9 @@ export const useLectoGuiaSimplified = () => {
     showFeedback,
     handleOptionSelect,
     handleNewExercise,
-    generateExercise, // Añadir método generateExercise
+    generateExercise,
     isLoading,
-    getStats
+    getStats,
+    connectionStatus
   };
 };

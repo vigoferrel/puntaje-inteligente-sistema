@@ -140,12 +140,12 @@ export const useUnifiedState = create<UnifiedState>()(
             if (parsed.state?.cache?.timestamp) {
               parsed.state.cache.timestamp = new Date(parsed.state.cache.timestamp);
             }
-            return JSON.stringify(parsed); // Retornar como string
+            return parsed;
           } catch {
             return null;
           }
         },
-        setItem: (name, value) => localStorage.setItem(name, value),
+        setItem: (name, value) => localStorage.setItem(name, JSON.stringify(value)),
         removeItem: (name) => localStorage.removeItem(name)
       }
     }

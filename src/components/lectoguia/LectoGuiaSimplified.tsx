@@ -283,18 +283,12 @@ export const LectoGuiaSimplified: React.FC = () => {
                   {/* Exercise Header */}
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-semibold">{currentExercise.nodeName}</h3>
-                      <Badge variant="outline">{currentExercise.prueba}</Badge>
+                      <h3 className="text-lg font-semibold">{currentExercise.question}</h3>
+                      <Badge variant="outline">Ejercicio</Badge>
                     </div>
                     <Button onClick={handleNewExercise} variant="outline" size="sm">
                       Nuevo Ejercicio
                     </Button>
-                  </div>
-
-                  {/* Question */}
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <p className="font-medium mb-2">Pregunta:</p>
-                    <p>{currentExercise.question}</p>
                   </div>
 
                   {/* Options */}
@@ -307,7 +301,7 @@ export const LectoGuiaSimplified: React.FC = () => {
                         className={`w-full text-left p-3 rounded-lg border transition-colors ${
                           selectedOption === index
                             ? showFeedback
-                              ? option === currentExercise.correctAnswer
+                              ? index === currentExercise.correctAnswer
                                 ? 'bg-green-100 border-green-500 text-green-800'
                                 : 'bg-red-100 border-red-500 text-red-800'
                               : 'bg-blue-100 border-blue-500'
@@ -318,7 +312,7 @@ export const LectoGuiaSimplified: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{String.fromCharCode(65 + index)})</span>
                           <span>{option}</span>
-                          {showFeedback && option === currentExercise.correctAnswer && (
+                          {showFeedback && index === currentExercise.correctAnswer && (
                             <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
                           )}
                         </div>
