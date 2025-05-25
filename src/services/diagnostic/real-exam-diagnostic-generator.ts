@@ -12,6 +12,31 @@ interface RealExamDiagnostic {
   questionCount: number;
 }
 
+interface ExamRPCResponse {
+  examen: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    tipo: string;
+    año: number;
+    duracion_minutos: number;
+    total_preguntas: number;
+    preguntas_validas: number;
+    instrucciones?: string;
+  };
+  preguntas: Array<{
+    numero: number;
+    enunciado: string;
+    contexto?: string;
+    imagen_url?: string;
+    opciones: Array<{
+      letra: string;
+      contenido: string;
+      es_correcta: boolean;
+    }>;
+  }>;
+}
+
 const REAL_EXAM_DIAGNOSTICS: RealExamDiagnostic[] = [
   {
     examCode: 'PAES-2024-FORM-103',
@@ -118,7 +143,9 @@ export class RealExamDiagnosticGenerator {
       
       if (error) throw error;
       
-      return data?.preguntas || [];
+      // Properly cast the JSON response to our expected type
+      const examResponse = data as ExamRPCResponse;
+      return examResponse?.preguntas || [];
     } catch (error) {
       console.warn(`No se pudo obtener examen ${examCode}, usando consulta directa`);
       
