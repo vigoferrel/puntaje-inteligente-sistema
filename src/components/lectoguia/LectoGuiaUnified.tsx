@@ -19,6 +19,20 @@ interface LectoGuiaUnifiedProps {
   onNavigateToTool: (tool: string, context?: any) => void;
 }
 
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+}
+
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+}
+
 const SUBJECTS = [
   { code: 'COMPETENCIA_LECTORA', name: 'Competencia Lectora', color: 'bg-blue-500' },
   { code: 'MATEMATICA_1', name: 'Matemática M1', color: 'bg-green-500' },
@@ -50,15 +64,31 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
 
   const currentSubject = SUBJECTS.find(s => s.code === initialSubject) || SUBJECTS[0];
   
-  // Stats con valores por defecto para evitar errores
-  const stats = getStats ? getStats() : {
+  // Convertir ChatMessage[] a Message[] y asegurar que stats siempre tenga todas las propiedades
+  const convertedMessages: Message[] = (messages || []).map((msg: ChatMessage) => ({
+    id: msg.id,
+    text: msg.content,
+    sender: msg.type,
+    timestamp: msg.timestamp
+  }));
+
+  // Asegurar que stats siempre tenga todas las propiedades requeridas
+  const rawStats = getStats ? getStats() : {
     totalMessages: 0,
     exercisesCompleted: 0,
     currentSubject: initialSubject,
     isConnected: true,
-    lastSync: new Date(),
-    averageScore: 0,
-    streak: 0
+    lastSync: new Date()
+  };
+
+  const stats = {
+    totalMessages: rawStats.totalMessages || 0,
+    exercisesCompleted: rawStats.exercisesCompleted || 0,
+    currentSubject: rawStats.currentSubject || initialSubject,
+    isConnected: rawStats.isConnected !== undefined ? rawStats.isConnected : true,
+    lastSync: rawStats.lastSync || new Date(),
+    averageScore: 'averageScore' in rawStats ? rawStats.averageScore : 0,
+    streak: 'streak' in rawStats ? rawStats.streak : 0
   };
 
   const handleSubjectSelect = (subjectCode: string) => {
@@ -133,28 +163,28 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.totalMessages || 0}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.totalMessages}</div>
             <div className="text-sm text-gray-600">Conversaciones</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.exercisesCompleted || 0}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.exercisesCompleted}</div>
             <div className="text-sm text-gray-600">Ejercicios</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.averageScore || 0}%</div>
+            <div className="text-2xl font-bold text-purple-600">{stats.averageScore}%</div>
             <div className="text-sm text-gray-600">Precisión</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.streak || 0}</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.streak}</div>
             <div className="text-sm text-gray-600">Racha</div>
           </CardContent>
         </Card>
@@ -181,7 +211,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
             
             <TabsContent value="chat" className="p-6">
               <LectoGuiaChat
-                messages={messages || []}
+                messages={convertedMessages}
                 isTyping={isTyping || false}
                 onSendMessage={handleSendMessage || (() => {})}
                 isLoading={isLoading || false}
