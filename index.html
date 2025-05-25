@@ -1,158 +1,21 @@
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PAES Command - Sistema Neural Anti-Tracking Blindado</title>
+    <title>PAES Pro - Sistema Educativo Avanzado</title>
     
-    <!-- Fonts optimizados sin tracking -->
+    <!-- Poppins Font - Optimizado con preload -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- CIRUGÍA DE EMERGENCIA CSP v6.0 - REPARACIÓN VASCULAR QUIRÚRGICA -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' wss: ws: https: https://api.lovable.dev https://settifboilityelprvjd.supabase.co https://*.supabase.co https://supabase.co https://o4506071217143808.ingest.sentry.io wss://settifboilityelprvjd.supabase.co wss://*.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content;">
-    
-    <!-- Headers de seguridad vascular optimizados -->
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="Referrer-Policy" content="no-referrer">
-    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
-    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
-    
-    <!-- PERMISSIONS POLICY QUIRÚRGICO - V8.3 SILENCIOSO -->
-    <meta http-equiv="Permissions-Policy" content="accelerometer=(), autoplay=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), web-share=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(), gamepad=(), speaker-selection=(), conversion-measurement=(), focus-without-user-activation=(), hid=(), idle-detection=(), serial=(), sync-xhr=(), trust-token-redemption=(), window-placement=(), local-fonts=()">
-    
-    <!-- Anti-fingerprinting quirúrgico -->
-    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-    
-    <!-- SISTEMA DE MONITOREO VASCULAR v8.3 - MODO SILENCIOSO MANTENIMIENTO -->
-    <script>
-      console.log('🩸 SISTEMA VASCULAR v8.3 INICIADO - Modo Mantenimiento Silencioso:', Date.now());
-      
-      // Monitor vascular v8.3 ultra-silencioso
-      window.paesVascularMonitor = {
-        supabaseConnections: 0,
-        lastConnection: null,
-        errors: [],
-        status: 'MAINTENANCE_MODE',
-        surgeryPhase: 'SILENT_OPERATION',
-        lastLogTime: 0,
-        logThrottle: 600000, // 10 minutos entre logs
-        isInitialized: false
-      };
-      
-      // Interceptor vascular v8.3 - solo logs críticos
-      const originalFetch = window.fetch;
-      window.fetch = function(...args) {
-        const url = args[0];
-        const now = Date.now();
-        
-        if (typeof url === 'string' && url.includes('supabase.co')) {
-          window.paesVascularMonitor.supabaseConnections++;
-          window.paesVascularMonitor.lastConnection = new Date().toISOString();
-          window.paesVascularMonitor.status = 'VASCULAR_FLOW_ACTIVE';
-          
-          // Log solo en inicialización o cada 10 minutos
-          if (!window.paesVascularMonitor.isInitialized || 
-              now - window.paesVascularMonitor.lastLogTime > window.paesVascularMonitor.logThrottle) {
-            console.log('🩸 Flujo vascular v8.3 activo (silencioso)');
-            window.paesVascularMonitor.lastLogTime = now;
-          }
-        }
-        
-        return originalFetch.apply(this, args)
-          .then(response => {
-            if (typeof url === 'string' && url.includes('supabase.co')) {
-              if (response.ok) {
-                window.paesVascularMonitor.status = 'VASCULAR_FLOW_HEALTHY';
-                // Solo log de éxito en inicialización
-                if (!window.paesVascularMonitor.isInitialized) {
-                  console.log('✅ Circulación Supabase establecida v8.3');
-                  window.paesVascularMonitor.isInitialized = true;
-                }
-              } else {
-                window.paesVascularMonitor.status = 'VASCULAR_OBSTRUCTION';
-                window.paesVascularMonitor.errors.push({
-                  url: url,
-                  status: response.status,
-                  timestamp: new Date().toISOString()
-                });
-                // Logs de error SIEMPRE se muestran
-                console.error('❌ OBSTRUCCIÓN VASCULAR v8.3:', response.status, url);
-              }
-            }
-            return response;
-          })
-          .catch(error => {
-            if (typeof url === 'string' && url.includes('supabase.co')) {
-              window.paesVascularMonitor.status = 'VASCULAR_RUPTURE';
-              window.paesVascularMonitor.errors.push({
-                url: url,
-                error: error.message,
-                timestamp: new Date().toISOString()
-              });
-              // Logs de error SIEMPRE se muestran
-              console.error('🚨 RUPTURA VASCULAR CRÍTICA v8.3:', error, url);
-            }
-            throw error;
-          });
-      };
-      
-      // Anti-fingerprinting quirúrgico v8.3 optimizado
-      if (window.navigator && window.navigator.getBattery) {
-        delete window.navigator.getBattery;
-      }
-      
-      // Canvas noise v8.3 silencioso
-      const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
-      HTMLCanvasElement.prototype.toDataURL = function(...args) {
-        const context = this.getContext('2d');
-        if (context) {
-          const imageData = context.getImageData(0, 0, 1, 1);
-          if (imageData.data.length > 0) {
-            imageData.data[0] = imageData.data[0] ^ 1;
-            context.putImageData(imageData, 0, 0);
-          }
-        }
-        return originalToDataURL.apply(this, args);
-      };
-      
-      // Monitoreo vascular v8.3 - MODO MANTENIMIENTO (cada 10 minutos)
-      setInterval(() => {
-        const now = Date.now();
-        
-        // Solo log cada 10 minutos y si hay actividad significativa
-        if (now - window.paesVascularMonitor.lastLogTime > window.paesVascularMonitor.logThrottle) {
-          if (window.paesVascularMonitor.errors.length > 0 || 
-              window.paesVascularMonitor.supabaseConnections > 20) {
-            console.log('🩸 Reporte Vascular v8.3:', {
-              status: window.paesVascularMonitor.status,
-              connections: window.paesVascularMonitor.supabaseConnections,
-              errors: window.paesVascularMonitor.errors.length,
-              timestamp: new Date().toISOString()
-            });
-            window.paesVascularMonitor.lastLogTime = now;
-          }
-        }
-      }, 600000); // 10 minutos
-      
-      // Verificación post-quirúrgica v8.3 (una sola vez)
-      setTimeout(() => {
-        if (window.paesVascularMonitor.supabaseConnections === 0) {
-          console.warn('⚠️ Sistema vascular v8.3 sin actividad - Monitoreo pasivo activado');
-          window.paesVascularMonitor.status = 'PASSIVE_MONITORING';
-        } else {
-          console.log('✅ Sistema vascular v8.3 operativo - Modo silencioso activado');
-          window.paesVascularMonitor.surgeryPhase = 'SILENT_OPERATION';
-        }
-      }, 3000);
-    </script>
+    <script src="https://cdn.gpteng.co/gptengineer.js" defer></script>
   </head>
-  <body>
+  <body class="font-poppins">
     <div id="root"></div>
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
