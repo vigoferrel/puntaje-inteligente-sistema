@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Stars, Text, Html } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { useIntersectionalGuard } from '@/hooks/useIntersectionalGuard';
+import { useSimplifiedIntersectional } from '@/hooks/useSimplifiedIntersectional';
+import { OptimizedLoadingScreen } from '@/components/loading/OptimizedLoadingScreen';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,6 @@ import { SubjectGalaxy } from '../universe/SubjectGalaxy';
 import { ProgressNebula } from '../universe/ProgressNebula';
 import { CinematicAudioProvider, CinematicControls } from '../cinematic/UniversalCinematicSystem';
 import { NeuralDimensionRenderer } from './NeuralDimensionRenderer';
-import { NeuralLoadingScreen } from './NeuralLoadingScreen';
 import { UniverseMode, Galaxy, UniverseMetrics } from '@/types/universe-types';
 
 type NeuralDimension = 
@@ -41,19 +40,25 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
   initialDimension = 'universe_exploration' 
 }) => {
   const { user, profile } = useAuth();
-  const intersectional = useIntersectionalGuard();
-  
-  // Si el contexto no está listo, mostrar loading
-  if (!intersectional.isContextReady || !intersectional.isIntersectionalReady) {
-    return <NeuralLoadingScreen />;
-  }
-  
+  const intersectional = useSimplifiedIntersectional();
+  const [showLoading, setShowLoading] = useState(true);
   const [activeDimension, setActiveDimension] = useState<NeuralDimension>(initialDimension);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedGalaxy, setSelectedGalaxy] = useState<string | null>(null);
   const [neuralLevel, setNeuralLevel] = useState(42);
   const [cosmicEnergy, setCosmicEnergy] = useState(8947);
   const [battlePoints, setBattlePoints] = useState(2456);
+
+  // Controlar la pantalla de carga
+  const handleLoadingComplete = useCallback(() => {
+    setShowLoading(false);
+    console.log('✅ Carga completada, mostrando dashboard');
+  }, []);
+
+  // Si está cargando, mostrar pantalla optimizada
+  if (showLoading || !intersectional.isIntersectionalReady) {
+    return <OptimizedLoadingScreen onComplete={handleLoadingComplete} />;
+  }
 
   // Configuración de galaxias unificada
   const galaxies = useMemo<Galaxy[]>(() => [
@@ -202,8 +207,6 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
   const handleDimensionTransition = useCallback((dimension: NeuralDimension) => {
     setIsTransitioning(true);
     setActiveDimension(dimension);
-    
-    // Efectos sonoros y visuales de transición
     setTimeout(() => setIsTransitioning(false), 1500);
   }, []);
 
@@ -274,7 +277,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
                 </Badge>
                 <Badge className="bg-gradient-to-r from-emerald-600 to-teal-600">
                   <PieChart className="w-3 h-3 mr-1" />
-                  Sistema Unificado
+                  Sistema Optimizado
                 </Badge>
               </div>
             </div>
@@ -292,7 +295,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
             <CardContent className="p-6 space-y-4">
               <div className="text-center">
                 <h3 className="text-xl font-bold text-white mb-2">Control Dimensional</h3>
-                <div className="text-sm text-cyan-400">Todas las funcionalidades unificadas</div>
+                <div className="text-sm text-cyan-400">Sistema optimizado y funcional</div>
               </div>
 
               <div className="space-y-3">
@@ -351,10 +354,10 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>Sistema Neural Operacional</span>
+                  <span>Sistema Neural Optimizado</span>
                 </div>
-                <div>Contexto: ✅ Activado</div>
-                <div>Singleton: ✅ Estable</div>
+                <div>Contexto: ✅ Activo</div>
+                <div>Carga: ✅ Rápida</div>
               </div>
               
               <div className="flex items-center space-x-2">
