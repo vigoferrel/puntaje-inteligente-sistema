@@ -1,97 +1,186 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { CinematicAudioProvider } from '@/components/cinematic/UniversalCinematicSystem';
-import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCenter';
+import { NeuralLoadingScreen } from '@/components/neural-command/NeuralLoadingScreen';
 import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
+
+// Lazy loading del NeuralCommandCenter para evitar renders prematuros
+const NeuralCommandCenter = React.lazy(() => import('@/components/neural-command/NeuralCommandCenter').then(module => ({
+  default: module.NeuralCommandCenter
+})));
 
 // Router completamente unificado - SOLO CENTRO NEURAL
 const neuralRouter = createBrowserRouter([
   {
     path: '/',
-    element: <NeuralCommandCenter />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter />
+      </Suspense>
+    )
   },
   {
     path: '/neural-command',
-    element: <NeuralCommandCenter />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter />
+      </Suspense>
+    )
   },
   // Todas las rutas redirigen al centro neural con diferentes dimensiones
   {
     path: '/lectoguia',
-    element: <NeuralCommandCenter initialDimension="neural_training" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="neural_training" />
+      </Suspense>
+    )
   },
   {
     path: '/diagnostico',
-    element: <NeuralCommandCenter initialDimension="progress_analysis" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="progress_analysis" />
+      </Suspense>
+    )
   },
   {
     path: '/plan',
-    element: <NeuralCommandCenter initialDimension="vocational_prediction" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="vocational_prediction" />
+      </Suspense>
+    )
   },
   {
     path: '/dashboard',
-    element: <NeuralCommandCenter initialDimension="universe_exploration" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="universe_exploration" />
+      </Suspense>
+    )
   },
   {
     path: '/paes',
-    element: <NeuralCommandCenter initialDimension="battle_mode" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="battle_mode" />
+      </Suspense>
+    )
   },
   {
     path: '/paes-dashboard',
-    element: <NeuralCommandCenter initialDimension="battle_mode" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="battle_mode" />
+      </Suspense>
+    )
   },
   {
     path: '/paes-universe',
-    element: <NeuralCommandCenter initialDimension="universe_exploration" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="universe_exploration" />
+      </Suspense>
+    )
   },
   {
     path: '/superpaes',
-    element: <NeuralCommandCenter initialDimension="neural_training" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="neural_training" />
+      </Suspense>
+    )
   },
   {
     path: '/ejercicios',
-    element: <NeuralCommandCenter initialDimension="neural_training" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="neural_training" />
+      </Suspense>
+    )
   },
   {
     path: '/ejercicios/:subject',
-    element: <NeuralCommandCenter initialDimension="neural_training" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="neural_training" />
+      </Suspense>
+    )
   },
   {
     path: '/entrenamiento',
-    element: <NeuralCommandCenter initialDimension="neural_training" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="neural_training" />
+      </Suspense>
+    )
   },
   {
     path: '/analisis',
-    element: <NeuralCommandCenter initialDimension="progress_analysis" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="progress_analysis" />
+      </Suspense>
+    )
   },
   {
     path: '/evaluaciones',
-    element: <NeuralCommandCenter initialDimension="battle_mode" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="battle_mode" />
+      </Suspense>
+    )
   },
   {
     path: '/progreso',
-    element: <NeuralCommandCenter initialDimension="progress_analysis" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="progress_analysis" />
+      </Suspense>
+    )
   },
   {
     path: '/calendario',
-    element: <NeuralCommandCenter initialDimension="calendar_management" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="calendar_management" />
+      </Suspense>
+    )
   },
   {
     path: '/settings',
-    element: <NeuralCommandCenter initialDimension="settings_control" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="settings_control" />
+      </Suspense>
+    )
   },
   {
     path: '/configuracion',
-    element: <NeuralCommandCenter initialDimension="settings_control" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="settings_control" />
+      </Suspense>
+    )
   },
   {
     path: '/finanzas',
-    element: <NeuralCommandCenter initialDimension="financial_center" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="financial_center" />
+      </Suspense>
+    )
   },
   {
     path: '/centro-financiero',
-    element: <NeuralCommandCenter initialDimension="financial_center" />
+    element: (
+      <Suspense fallback={<NeuralLoadingScreen />}>
+        <NeuralCommandCenter initialDimension="financial_center" />
+      </Suspense>
+    )
   },
   // Rutas especiales
   {

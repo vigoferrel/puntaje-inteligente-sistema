@@ -1,16 +1,15 @@
 
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { IntersectionalProvider } from '@/contexts/IntersectionalProvider';
 import { NeuralRouter } from '@/router/NeuralRouter';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
       refetchOnWindowFocus: false,
     },
   },
@@ -21,9 +20,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <IntersectionalProvider>
-          <NeuralRouter />
-          <Toaster />
-          <SonnerToaster />
+          <div className="min-h-screen">
+            <NeuralRouter />
+            <Toaster />
+          </div>
         </IntersectionalProvider>
       </AuthProvider>
     </QueryClientProvider>

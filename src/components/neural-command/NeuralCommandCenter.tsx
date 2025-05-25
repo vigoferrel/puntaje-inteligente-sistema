@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Stars, Text, Html } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { useIntersectional } from '@/contexts/IntersectionalProvider';
+import { useIntersectionalGuard } from '@/hooks/useIntersectionalGuard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import { SubjectGalaxy } from '../universe/SubjectGalaxy';
 import { ProgressNebula } from '../universe/ProgressNebula';
 import { CinematicAudioProvider, CinematicControls } from '../cinematic/UniversalCinematicSystem';
 import { NeuralDimensionRenderer } from './NeuralDimensionRenderer';
+import { NeuralLoadingScreen } from './NeuralLoadingScreen';
 import { UniverseMode, Galaxy, UniverseMetrics } from '@/types/universe-types';
 
 type NeuralDimension = 
@@ -39,7 +41,12 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
   initialDimension = 'universe_exploration' 
 }) => {
   const { user, profile } = useAuth();
-  const { isIntersectionalReady, adaptToUser } = useIntersectional();
+  const intersectional = useIntersectionalGuard();
+  
+  // Si el contexto no está listo, mostrar loading
+  if (!intersectional.isContextReady || !intersectional.isIntersectionalReady) {
+    return <NeuralLoadingScreen />;
+  }
   
   const [activeDimension, setActiveDimension] = useState<NeuralDimension>(initialDimension);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -178,10 +185,10 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     }
   ], []);
 
-  // Activación neural al inicializar
+  // Activación neural al inicializar - solo si el contexto está listo
   useEffect(() => {
-    if (user?.id && isIntersectionalReady) {
-      adaptToUser({
+    if (user?.id && intersectional.isIntersectionalReady && intersectional.adaptToUser) {
+      intersectional.adaptToUser({
         neural_command_center_active: true,
         active_dimension: activeDimension,
         selected_galaxy: selectedGalaxy,
@@ -190,7 +197,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
         user_action: 'entering_neural_command_center'
       });
     }
-  }, [user?.id, isIntersectionalReady, activeDimension, selectedGalaxy, neuralLevel, cosmicEnergy, adaptToUser]);
+  }, [user?.id, intersectional.isIntersectionalReady, activeDimension, selectedGalaxy, neuralLevel, cosmicEnergy, intersectional.adaptToUser]);
 
   const handleDimensionTransition = useCallback((dimension: NeuralDimension) => {
     setIsTransitioning(true);
@@ -213,26 +220,6 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
   const handleNavigateToTraining = useCallback(() => {
     handleDimensionTransition('entrenamiento_adaptativo');
   }, [handleDimensionTransition]);
-
-  if (!isIntersectionalReady) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-indigo-900 flex items-center justify-center">
-        <motion.div
-          className="text-center text-white space-y-6"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <motion.div
-            className="w-32 h-32 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
-          <div className="text-4xl font-bold">Centro de Comando Neural Optimizado</div>
-          <div className="text-cyan-300">Todas las funcionalidades integradas...</div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <CinematicAudioProvider>
@@ -325,55 +312,12 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
                       }`}
                       disabled={isTransitioning}
                     >
-                      <Icon className="w-5 h-5 mr-3" style={{ color: dimension.color }} />
+                      <Icon className="w-6 h-6 mr-3 flex-shrink-0" style={{ color: dimension.color }} />
                       <div className="text-left">
-                        <div className="font-medium">{dimension.name}</div>
+                        <div className="font-bold text-sm">{dimension.name}</div>
                         <div className="text-xs opacity-80">{dimension.description}</div>
                       </div>
                     </Button>
-                  );
-                })}
-              </div>
-
-              {/* Estado de Galaxias */}
-              <div className="pt-4 border-t border-white/20">
-                <h4 className="text-sm font-medium text-white/80 mb-3">Estado Galáctico</h4>
-                {galaxies.map((galaxy) => {
-                  const progress = (galaxy.completed / galaxy.nodes) * 100;
-                  const isSelected = selectedGalaxy === galaxy.id;
-                  
-                  return (
-                    <div
-                      key={galaxy.id}
-                      className={`p-3 rounded border mb-2 cursor-pointer transition-all ${
-                        isSelected 
-                          ? 'border-cyan-400 bg-cyan-500/20' 
-                          : 'border-white/20 bg-white/5 hover:bg-white/10'
-                      }`}
-                      onClick={() => handleGalaxyInteraction(galaxy.id)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-white text-sm font-medium">
-                          {galaxy.name}
-                        </span>
-                        <Badge 
-                          variant="outline" 
-                          className="text-xs"
-                          style={{ borderColor: galaxy.color, color: galaxy.color }}
-                        >
-                          {Math.round(progress)}%
-                        </Badge>
-                      </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="h-2 rounded-full transition-all duration-500"
-                          style={{ 
-                            width: `${progress}%`,
-                            backgroundColor: galaxy.color 
-                          }}
-                        />
-                      </div>
-                    </div>
                   );
                 })}
               </div>
@@ -381,162 +325,43 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
           </Card>
         </motion.div>
 
-        {/* Canvas 3D - El Universo Neural Principal */}
-        <div className="absolute inset-0 pt-20">
-          <Canvas
-            camera={{ position: [0, 5, 30], fov: 60 }}
-            className="absolute inset-0"
-          >
-            <Environment preset="night" />
-            <Stars 
-              radius={150} 
-              depth={80} 
-              count={8000} 
-              factor={6} 
-              saturation={0} 
-              fade 
-              speed={1.5} 
-            />
-            
-            <ambientLight intensity={0.3} />
-            <pointLight position={[15, 15, 15]} intensity={2} color="#00FFFF" />
-            <pointLight position={[-15, -15, -15]} intensity={1.5} color="#FF00FF" />
-            <spotLight 
-              position={[0, 25, 0]} 
-              angle={0.4} 
-              intensity={3} 
-              color="#FFFFFF"
-              castShadow
-            />
-
-            <OrbitControls
-              enableZoom={true}
-              enablePan={true}
-              enableRotate={true}
-              minDistance={15}
-              maxDistance={120}
-              autoRotate={activeDimension === 'universe_exploration'}
-              autoRotateSpeed={0.4}
-            />
-
-            {/* Cerebro Neural Central - Comando Supremo */}
-            <NeuralBrain 
-              position={[0, 0, 0]}
-              scale={activeDimension === 'neural_training' ? 2.5 : 1.5}
-              isActive={activeDimension === 'neural_training'}
-              onClick={() => handleDimensionTransition('neural_training')}
-              userLevel={neuralLevel}
-              cosmicEnergy={cosmicEnergy}
-            />
-
-            {/* Galaxias de Conocimiento */}
-            <AnimatePresence>
-              {galaxies.map((galaxy) => (
-                <SubjectGalaxy
-                  key={galaxy.id}
-                  galaxy={galaxy}
-                  isSelected={selectedGalaxy === galaxy.id}
-                  isVisible={activeDimension === 'universe_exploration' || selectedGalaxy === galaxy.id}
-                  onClick={() => handleGalaxyInteraction(galaxy.id)}
-                  scale={selectedGalaxy === galaxy.id ? 2 : 1.2}
-                />
-              ))}
-            </AnimatePresence>
-
-            {/* Nebulosa de Progreso */}
-            <ProgressNebula 
-              position={[0, -8, 0]}
-              progress={neuralMetrics.overallProgress}
-              isVisible={activeDimension === 'progress_analysis'}
-            />
-
-            {/* Texto del Universo */}
-            {activeDimension === 'universe_exploration' && (
-              <Text
-                position={[0, 15, 0]}
-                fontSize={4}
-                color="#FFFFFF"
-                anchorX="center"
-                anchorY="middle"
-                font="/fonts/orbitron-bold.woff"
-              >
-                CENTRO DE COMANDO NEURAL UNIFICADO
-              </Text>
-            )}
-          </Canvas>
+        {/* Contenido Principal - Renderizador de Dimensiones */}
+        <div className="flex-1 pt-24">
+          <NeuralDimensionRenderer
+            activeDimension={activeDimension}
+            selectedGalaxy={selectedGalaxy}
+            galaxies={galaxies}
+            neuralMetrics={neuralMetrics}
+            onGalaxyInteraction={handleGalaxyInteraction}
+            onNavigateToAnalysis={handleNavigateToAnalysis}
+            onNavigateToTraining={handleNavigateToTraining}
+            isTransitioning={isTransitioning}
+          />
         </div>
 
-        {/* RENDERER DE DIMENSIONES EXPANDIDO */}
-        <NeuralDimensionRenderer
-          activeDimension={activeDimension}
-          selectedGalaxy={selectedGalaxy}
-          neuralMetrics={neuralMetrics}
-          onStartTraining={() => handleDimensionTransition('neural_training')}
-          onViewAnalysis={handleNavigateToAnalysis}
-          onEnterBattle={() => handleDimensionTransition('battle_mode')}
-          onNavigateToAnalysis={handleNavigateToAnalysis}
-          onNavigateToTraining={handleNavigateToTraining}
-        />
-
-        {/* Controles Cinematográficos */}
-        <CinematicControls />
-
-        {/* Efectos de Transición Dimensional */}
-        <AnimatePresence>
-          {isTransitioning && (
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-purple-500/30 to-pink-500/30 backdrop-blur-lg z-30"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="flex items-center justify-center h-full">
-                <motion.div
-                  className="text-center text-white"
-                  animate={{ 
-                    scale: [1, 1.3, 1],
-                    rotateY: [0, 360, 0]
-                  }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  <Sparkles className="w-24 h-24 mx-auto mb-4" />
-                  <div className="text-3xl font-bold">Transitando Dimensiones</div>
-                  <div className="text-lg text-cyan-300">Reconfigurando realidad neural...</div>
-                </motion.div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Asistente Neural Omnipresente */}
-        <motion.div
-          className="absolute bottom-4 right-4 z-40 pointer-events-auto"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 2 }}
+        {/* Footer Neural */}
+        <motion.div 
+          className="absolute bottom-0 left-0 right-0 z-40 pointer-events-auto"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1 }}
         >
-          <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30 w-80">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center">
-                  <Brain className="w-4 h-4" />
+          <div className="bg-black/30 backdrop-blur-xl border-t border-cyan-500/20 p-3">
+            <div className="flex items-center justify-between text-white text-sm">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span>Sistema Neural Operacional</span>
                 </div>
-                <div>
-                  <div className="text-white font-medium">Asistente Neural</div>
-                  <div className="text-xs text-cyan-400">Sistema Completamente Unificado</div>
-                </div>
+                <div>Contexto: ✅ Activado</div>
+                <div>Singleton: ✅ Estable</div>
               </div>
-              <div className="text-white text-sm">
-                Todas las funcionalidades han sido quirúrgicamente integradas en una experiencia 
-                neural unificada. Análisis, entrenamiento y más, todo centralizado.
+              
+              <div className="flex items-center space-x-2">
+                <CinematicControls />
               </div>
-              <Button className="w-full mt-3 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700">
-                <Play className="w-4 h-4 mr-2" />
-                Explorar Sistema Unificado
-              </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </motion.div>
       </div>
     </CinematicAudioProvider>
