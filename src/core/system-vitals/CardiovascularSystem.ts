@@ -1,3 +1,4 @@
+
 /**
  * SISTEMA CARDIOVASCULAR INTEGRISTA v8.0 - ARQUITECTURA MONOLÍTICA UNIFICADA
  * Responsabilidad total: Control cardiovascular + Detox + Anti-tracking + Emergencias
@@ -125,6 +126,22 @@ export class CardiovascularSystem {
 
   public static hasInstance(): boolean {
     return !!CardiovascularSystem.instance && !!globalCardiovascularInstance;
+  }
+
+  // NUEVO MÉTODO: processSignal - REQUERIDO POR SISTEMAS DEPENDIENTES
+  public processSignal(signal: any): boolean {
+    if (!this.canPump()) {
+      return false;
+    }
+
+    const pumped = this.pump();
+    if (!pumped) return false;
+
+    const processed = this.breatheIn(signal);
+    if (!processed) return false;
+
+    this.breatheOut(signal);
+    return true;
   }
 
   // HEARTBEAT UNIFICADO QUE INCLUYE DETOX
@@ -397,8 +414,6 @@ export class CardiovascularSystem {
       }
     };
   }
-
-  // ... keep existing code (todos los métodos cardiovasculares originales como cleanBeatHistory, adjustHeartState, performIntegratedPurification, emitUnifiedHeartbeat, canPump, pump, breatheIn, breatheOut, oxygenate, getRespiratoryHealth, activateEmergencyMode, deactivateEmergencyMode, surgicalPurge, getRestingPeriod, getMaxRate, getHealth, subscribe, emergencyReset, destroy)
 
   private cleanBeatHistory(): void {
     const now = Date.now();

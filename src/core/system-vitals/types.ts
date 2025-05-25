@@ -1,10 +1,10 @@
 
 /**
- * Tipos del Sistema Cardiovascular Unificado v7.0
- * Arquitectura simplificada post-cirugía radical
+ * Tipos del Sistema Cardiovascular Unificado v8.0
+ * Arquitectura simplificada post-cirugía radical + soporte detox
  */
 
-// Contexto de seguridad modular
+// Contexto de seguridad modular con soporte detox integrado
 export interface ModuleSecurityContext {
   security_mode?: 'anti_tracking_active' | 'normal' | 'stealth';
   tracking_protected?: boolean;
@@ -15,6 +15,8 @@ export interface ModuleSecurityContext {
   purification_level?: string;
   emergency_mode?: boolean;
   surgical_recovery?: boolean;
+  detox_level?: 'minimal' | 'moderate' | 'aggressive' | 'surgical';
+  integrista_version?: string;
 }
 
 // Identidad de módulo extendida
