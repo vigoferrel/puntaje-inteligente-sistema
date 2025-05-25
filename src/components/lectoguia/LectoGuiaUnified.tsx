@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,23 +70,15 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
     timestamp: msg.timestamp
   }));
 
-  // Asegurar que stats siempre tenga tipos correctos
-  const rawStats = getStats ? getStats() : {
+  // Obtener stats directamente del hook - ya incluye todas las propiedades
+  const stats = getStats ? getStats() : {
     totalMessages: 0,
     exercisesCompleted: 0,
     currentSubject: initialSubject,
     isConnected: true,
-    lastSync: new Date()
-  };
-
-  const stats = {
-    totalMessages: Number(rawStats.totalMessages) || 0,
-    exercisesCompleted: Number(rawStats.exercisesCompleted) || 0,
-    currentSubject: rawStats.currentSubject || initialSubject,
-    isConnected: rawStats.isConnected !== undefined ? rawStats.isConnected : true,
-    lastSync: rawStats.lastSync || new Date(),
-    averageScore: Number(rawStats.averageScore) || 0,
-    streak: Number(rawStats.streak) || 0
+    lastSync: new Date(),
+    averageScore: 0,
+    streak: 0
   };
 
   const handleSubjectSelect = (subjectCode: string) => {

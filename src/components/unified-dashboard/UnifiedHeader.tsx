@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,8 +49,8 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   ];
 
   const externalTools = [
-    { id: 'calendar', name: 'Calendario', icon: Calendar, url: '/calendario' },
-    { id: 'financial', name: 'Centro Financiero', icon: Calculator, url: '/financial' }
+    { id: 'calendar', name: 'Calendario', icon: Calendar, route: '/calendario' },
+    { id: 'financial', name: 'Centro Financiero', icon: Calculator, route: '/financial' }
   ];
 
   const subjects = [
@@ -62,8 +61,9 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     { code: 'HISTORIA', name: 'Historia', short: 'HI' }
   ];
 
-  const handleExternalTool = (url: string) => {
-    window.open(url, '_blank');
+  const handleExternalTool = (route: string) => {
+    // Navegación real a las rutas del sistema
+    window.location.href = route;
   };
 
   const getToolDisplayName = (toolId: string) => {
@@ -163,7 +163,7 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                     key={tool.id}
                     variant="outline"
                     size="sm"
-                    onClick={() => handleExternalTool(tool.url)}
+                    onClick={() => handleExternalTool(tool.route)}
                     className="flex items-center gap-2"
                   >
                     <Icon className="w-4 h-4" />

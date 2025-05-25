@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Exercise } from '@/types/ai-types';
@@ -30,6 +29,11 @@ interface LectoGuiaState {
   // System
   isConnected: boolean;
   lastSync: Date | null;
+  
+  // Stats
+  exercisesCompleted: number;
+  totalCorrectAnswers: number;
+  streakDays: number;
 }
 
 const INITIAL_STATE: LectoGuiaState = {
@@ -49,7 +53,10 @@ const INITIAL_STATE: LectoGuiaState = {
   activeTab: 'chat',
   activeSubject: 'general',
   isConnected: true,
-  lastSync: new Date()
+  lastSync: new Date(),
+  exercisesCompleted: 0,
+  totalCorrectAnswers: 0,
+  streakDays: 1
 };
 
 // Ejercicios de ejemplo para fallback
@@ -217,11 +224,18 @@ export const useLectoGuiaSimplified = () => {
 
   // Seleccionar opción en ejercicio
   const handleOptionSelect = useCallback((option: number) => {
-    setState(prev => ({
-      ...prev,
-      selectedOption: option,
-      showFeedback: true
-    }));
+    setState(prev => {
+      const isCorrect = prev.currentExercise && 
+        prev.currentExercise.options[option] === prev.currentExercise.correctAnswer;
+      
+      return {
+        ...prev,
+        selectedOption: option,
+        showFeedback: true,
+        totalCorrectAnswers: isCorrect ? prev.totalCorrectAnswers + 1 : prev.totalCorrectAnswers,
+        exercisesCompleted: prev.exercisesCompleted + 1
+      };
+    });
   }, []);
 
   // Cambiar materia activa
@@ -254,14 +268,23 @@ export const useLectoGuiaSimplified = () => {
     setState(prev => ({ ...prev, activeTab: tab }));
   }, []);
 
-  // Stats para el dashboard
-  const getStats = useCallback(() => ({
-    totalMessages: state.messages.filter(m => m.type === 'user').length,
-    exercisesCompleted: state.currentExercise && state.showFeedback ? 1 : 0,
-    currentSubject: state.activeSubject,
-    isConnected: state.isConnected,
-    lastSync: state.lastSync
-  }), [state]);
+  // Stats mejorados para el dashboard
+  const getStats = useCallback(() => {
+    const totalMessages = state.messages.filter(m => m.type === 'user').length;
+    const averageScore = state.exercisesCompleted > 0 
+      ? Math.round((state.totalCorrectAnswers / state.exercisesCompleted) * 100)
+      : 0;
+
+    return {
+      totalMessages,
+      exercisesCompleted: state.exercisesCompleted,
+      currentSubject: state.activeSubject,
+      isConnected: state.isConnected,
+      lastSync: state.lastSync,
+      averageScore,
+      streak: state.streakDays
+    };
+  }, [state]);
 
   return {
     // Estado
