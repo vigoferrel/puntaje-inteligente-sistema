@@ -1,6 +1,4 @@
-
 import React, { useEffect, useState } from "react";
-import { AppLayout } from "@/components/app-layout";
 import { DiagnosticBrowser } from "@/components/diagnostic/DiagnosticBrowser";
 import { DiagnosticExecution } from "@/components/diagnostic/DiagnosticExecution";
 import { DiagnosticResults } from "@/components/diagnostic/DiagnosticResults";
@@ -18,7 +16,6 @@ export default function Diagnostico() {
   const [viewMode, setViewMode] = useState<'command_center' | 'browser' | 'execution' | 'results'>('command_center');
   
   const {
-    // Estado
     availableTests,
     selectedTestId,
     currentTest,
@@ -29,8 +26,6 @@ export default function Diagnostico() {
     results,
     systemReady,
     isLoading,
-    
-    // Acciones
     selectTest,
     startDiagnostic,
     answerQuestion,
@@ -111,100 +106,100 @@ export default function Diagnostico() {
   // Estados de error y loading
   if (isLoading && viewMode === 'command_center') {
     return (
-      <AppLayout>
-        <div className="container py-6 max-w-5xl mx-auto">
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <div className="text-center space-y-4">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-lg font-medium">Inicializando sistema diagnóstico...</p>
-            </div>
+      <div className="container py-6 max-w-5xl mx-auto">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-lg font-medium">Inicializando sistema diagnóstico...</p>
           </div>
         </div>
-      </AppLayout>
+      </div>
     );
   }
 
   return (
-    <AppLayout>
-      <LectoGuiaProvider>
-        <div className="container py-6 max-w-5xl mx-auto">
-          {/* Back button - only show when not in command center */}
-          {viewMode !== 'command_center' && (
-            <div className="mb-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleBackToCommandCenter}
-                className="gap-1"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Volver al Centro de Comando
-              </Button>
-            </div>
-          )}
-          
-          {/* System Status Banner */}
-          {systemReady && viewMode !== 'command_center' && (
-            <Alert className="mb-6 bg-green-50 border-green-200">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-700">
-                <div className="flex items-center justify-between">
-                  <span>
-                    Sistema PAES activo: {availableTests.length} diagnósticos disponibles
-                  </span>
-                  <Badge variant="default" className="text-xs">
-                    Sistema: OPERACIONAL
-                  </Badge>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {/* Progress bar during test */}
-          {viewMode === 'execution' && currentTest && (
-            <DiagnosticProgressBar 
-              currentQuestion={currentQuestionIndex + 1}
-              totalQuestions={currentTest.questions.length}
-              onPause={handleRestart}
-            />
-          )}
-          
-          {/* Main content based on view mode */}
-          {viewMode === 'command_center' && (
-            <CinematicIntelligenceCenter onStartAssessment={handleStartAssessment} />
-          )}
-          
-          {viewMode === 'browser' && (
-            <DiagnosticBrowser
-              tests={availableTests}
-              loading={isLoading}
-              selectedTestId={selectedTestId}
-              onTestSelect={handleTestSelect}
-              onStartTest={handleStartTest}
-              total={availableTests.length}
-            />
-          )}
-          
-          {viewMode === 'execution' && currentTest && (
-            <DiagnosticExecution
-              test={currentTest}
-              currentQuestionIndex={currentQuestionIndex}
-              answers={answers}
-              showHint={showHint}
-              onAnswerSelect={handleAnswerSelect}
-              onRequestHint={toggleHint}
-              onPreviousQuestion={handlePreviousQuestion}
-              onNextQuestion={handleNextQuestion}
-              onFinishTest={handleFinishTest}
-            />
-          )}
-          
-          {viewMode === 'results' && results && (
-            <DiagnosticResults
-              results={results}
-              onRestart={handleRestart}
-            />
-          )}
+    <LectoGuiaProvider>
+      <div className="container py-6 max-w-5xl mx-auto">
+        {/* Back button - only show when not in command center */}
+        {viewMode !== 'command_center' && (
+          <div className="mb-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setViewMode('command_center')}
+              className="gap-1"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Volver al Centro de Comando
+            </Button>
+          </div>
+        )}
+        
+        {/* System Status Banner */}
+        {systemReady && viewMode !== 'command_center' && (
+          <Alert className="mb-6 bg-green-50 border-green-200">
+            <TrendingUp className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700">
+              <div className="flex items-center justify-between">
+                <span>
+                  Sistema PAES activo: {availableTests.length} diagnósticos disponibles
+                </span>
+                <Badge variant="default" className="text-xs">
+                  Sistema: OPERACIONAL
+                </Badge>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {/* Progress bar during test */}
+        {viewMode === 'execution' && currentTest && (
+          <DiagnosticProgressBar 
+            currentQuestion={currentQuestionIndex + 1}
+            totalQuestions={currentTest.questions.length}
+            onPause={() => resetFlow()}
+          />
+        )}
+        
+        {/* Main content based on view mode */}
+        {viewMode === 'command_center' && (
+          <CinematicIntelligenceCenter onStartAssessment={() => setViewMode('browser')} />
+        )}
+        
+        {viewMode === 'browser' && (
+          <DiagnosticBrowser
+            tests={availableTests}
+            loading={isLoading}
+            selectedTestId={selectedTestId}
+            onTestSelect={selectTest}
+            onStartTest={() => {
+              const success = startDiagnostic();
+              if (success) setViewMode('execution');
+            }}
+            total={availableTests.length}
+          />
+        )}
+        
+        {viewMode === 'execution' && currentTest && (
+          <DiagnosticExecution
+            test={currentTest}
+            currentQuestionIndex={currentQuestionIndex}
+            answers={answers}
+            showHint={showHint}
+            onAnswerSelect={handleAnswerSelect}
+            onRequestHint={toggleHint}
+            onPreviousQuestion={handlePreviousQuestion}
+            onNextQuestion={handleNextQuestion}
+            onFinishTest={handleFinishTest}
+          />
+        )}
+        
+        {viewMode === 'results' && results && (
+          <DiagnosticResults
+            results={results}
+            onRestart={handleRestart}
+          />
+        )}
           
           {/* Debug info */}
           {process.env.NODE_ENV === 'development' && (
@@ -229,8 +224,7 @@ export default function Diagnostico() {
               </div>
             </div>
           )}
-        </div>
-      </LectoGuiaProvider>
-    </AppLayout>
+      </div>
+    </LectoGuiaProvider>
   );
 }
