@@ -1,15 +1,15 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, BookOpen, TestTube, Map, Target } from 'lucide-react';
-import { TLearningCyclePhase, MaterialType } from '@/types/system-types';
+import { Sparkles, BookOpen, TestTube, FileText, Play, CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { TLearningCyclePhase } from '@/types/system-types';
 import { ExerciseGenerator } from './ExerciseGenerator';
 import { StudyContentGenerator } from './StudyContentGenerator';
 import { AssessmentGenerator } from './AssessmentGenerator';
-import { SmartRecommendationEngine } from './SmartRecommendationEngine';
 
 interface MaterialGenerationHubProps {
   selectedSubject: string;
@@ -26,162 +26,231 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
   onGenerate,
   isGenerating
 }) => {
-  const [selectedMaterialType, setSelectedMaterialType] = useState<MaterialType>('exercises');
+  const [activeGenerator, setActiveGenerator] = useState<'exercises' | 'content' | 'assessment'>('exercises');
+  const [generationMode, setGenerationMode] = useState<'official' | 'ai' | 'hybrid'>('official');
 
-  const materialTypes = [
-    {
-      type: 'exercises' as MaterialType,
-      name: 'Ejercicios',
-      icon: BookOpen,
-      description: 'Preguntas tipo PAES para practicar'
-    },
-    {
-      type: 'study_content' as MaterialType,
-      name: 'Contenido de Estudio',
-      icon: TestTube,
-      description: 'Material teórico y explicaciones'
-    },
-    {
-      type: 'diagnostic_tests' as MaterialType,
-      name: 'Evaluaciones',
-      icon: Target,
-      description: 'Tests para medir progreso'
-    },
-    {
-      type: 'practice_guides' as MaterialType,
-      name: 'Guías de Práctica',
-      icon: Map,
-      description: 'Ejercicios paso a paso'
-    }
-  ];
-
-  const getRecommendedMaterials = () => {
-    const phaseRecommendations: Record<TLearningCyclePhase, MaterialType[]> = {
-      'DIAGNOSIS': ['diagnostic_tests', 'exercises'],
-      'SKILL_TRAINING': ['exercises', 'practice_guides'],
-      'CONTENT_STUDY': ['study_content', 'practice_guides'],
-      'PERIODIC_TESTS': ['diagnostic_tests', 'exercises'],
-      'FINAL_SIMULATIONS': ['simulations', 'exercises'],
-      'PERSONALIZED_PLAN': ['study_content'],
-      'FEEDBACK_ANALYSIS': ['diagnostic_tests'],
-      'REINFORCEMENT': ['exercises', 'practice_guides'],
-      'diagnostic': ['diagnostic_tests'],
-      'exploration': ['study_content'],
-      'practice': ['exercises'],
-      'application': ['simulations']
+  const handleQuickGeneration = (type: string) => {
+    const config = {
+      materialType: type,
+      subject: selectedSubject,
+      phase: currentPhase,
+      count: type === 'exercises' ? 5 : 3,
+      mode: generationMode,
+      useOfficialContent: generationMode !== 'ai'
     };
-    return phaseRecommendations[currentPhase] || ['exercises'];
+    
+    onGenerate(config);
   };
 
-  const recommendedMaterials = getRecommendedMaterials();
+  const getModeDescription = (mode: string) => {
+    switch (mode) {
+      case 'official':
+        return 'Usa exclusivamente preguntas oficiales de exámenes PAES reales';
+      case 'ai':
+        return 'Genera contenido nuevo usando IA basado en patrones PAES';
+      case 'hybrid':
+        return 'Combina preguntas oficiales con contenido generado por IA';
+      default:
+        return 'Modo de generación';
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header con Recomendaciones de Fase */}
-      <Card className="bg-gradient-to-r from-primary/5 to-transparent border-primary/20">
-        <CardContent className="p-4">
+      {/* Header */}
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg">Generación Inteligente de Material</h3>
-              <p className="text-muted-foreground">
-                Optimizado para la fase: <span className="font-medium">{currentPhase}</span>
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary text-primary-foreground">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle>Hub de Generación de Material</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Contenido oficial PAES y generación inteligente
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2">
-              {recommendedMaterials.map(material => (
-                <Badge key={material} variant="outline" className="text-xs">
-                  Recomendado: {material}
-                </Badge>
+            
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              Fase: {currentPhase}
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          {/* Selector de Modo de Generación */}
+          <div className="mb-6">
+            <h4 className="text-sm font-medium mb-3">Modo de Generación</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {(['official', 'ai', 'hybrid'] as const).map((mode) => (
+                <Button
+                  key={mode}
+                  variant={generationMode === mode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setGenerationMode(mode)}
+                  className="flex flex-col h-auto py-3"
+                >
+                  <div className="flex items-center gap-2">
+                    {mode === 'official' && <CheckCircle className="h-4 w-4" />}
+                    {mode === 'ai' && <Sparkles className="h-4 w-4" />}
+                    {mode === 'hybrid' && <FileText className="h-4 w-4" />}
+                    <span className="font-medium">
+                      {mode === 'official' ? 'Oficial' : mode === 'ai' ? 'IA' : 'Híbrido'}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground mt-1 text-center">
+                    {getModeDescription(mode)}
+                  </span>
+                </Button>
               ))}
             </div>
+          </div>
+
+          {/* Acciones Rápidas */}
+          <div className="grid grid-cols-3 gap-4">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button
+                onClick={() => handleQuickGeneration('exercises')}
+                disabled={isGenerating}
+                className="w-full h-auto py-4 flex flex-col gap-2"
+                variant="outline"
+              >
+                <TestTube className="h-5 w-5" />
+                <span>Ejercicios</span>
+                <span className="text-xs text-muted-foreground">5 preguntas</span>
+              </Button>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button
+                onClick={() => handleQuickGeneration('study_content')}
+                disabled={isGenerating}
+                className="w-full h-auto py-4 flex flex-col gap-2"
+                variant="outline"
+              >
+                <BookOpen className="h-5 w-5" />
+                <span>Contenido</span>
+                <span className="text-xs text-muted-foreground">Material teórico</span>
+              </Button>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button
+                onClick={() => handleQuickGeneration('assessment')}
+                disabled={isGenerating}
+                className="w-full h-auto py-4 flex flex-col gap-2"
+                variant="outline"
+              >
+                <FileText className="h-5 w-5" />
+                <span>Evaluación</span>
+                <span className="text-xs text-muted-foreground">Test diagnóstico</span>
+              </Button>
+            </motion.div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Selector de Tipo de Material */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {materialTypes.map(materialType => {
-          const Icon = materialType.icon;
-          const isRecommended = recommendedMaterials.includes(materialType.type);
-          const isSelected = selectedMaterialType === materialType.type;
+      {/* Generadores Especializados */}
+      <Tabs value={activeGenerator} onValueChange={(value) => setActiveGenerator(value as any)}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="exercises" className="flex items-center gap-2">
+            <TestTube className="h-4 w-4" />
+            Ejercicios
+          </TabsTrigger>
+          <TabsTrigger value="content" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Contenido
+          </TabsTrigger>
+          <TabsTrigger value="assessment" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Evaluación
+          </TabsTrigger>
+        </TabsList>
 
-          return (
-            <Button
-              key={materialType.type}
-              onClick={() => setSelectedMaterialType(materialType.type)}
-              variant={isSelected ? "default" : "outline"}
-              className={`h-auto p-4 flex flex-col gap-2 ${
-                isRecommended ? 'ring-2 ring-primary/20' : ''
-              }`}
-            >
-              <Icon className="h-6 w-6" />
-              <div className="text-center">
-                <div className="font-medium text-sm">{materialType.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {materialType.description}
-                </div>
-              </div>
-              {isRecommended && (
-                <Badge variant="secondary" className="text-xs">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  Recomendado
-                </Badge>
-              )}
-            </Button>
-          );
-        })}
-      </div>
-
-      {/* Generadores Específicos */}
-      <Tabs value={selectedMaterialType} onValueChange={(value) => setSelectedMaterialType(value as MaterialType)}>
-        <TabsContent value="exercises">
+        <TabsContent value="exercises" className="mt-6">
           <ExerciseGenerator
             selectedSubject={selectedSubject}
             currentPhase={currentPhase}
-            onGenerate={onGenerate}
+            onGenerate={(config) => onGenerate({ ...config, mode: generationMode })}
             isGenerating={isGenerating}
+            generationMode={generationMode}
           />
         </TabsContent>
 
-        <TabsContent value="study_content">
+        <TabsContent value="content" className="mt-6">
           <StudyContentGenerator
             selectedSubject={selectedSubject}
             currentPhase={currentPhase}
-            onGenerate={onGenerate}
+            onGenerate={(config) => onGenerate({ ...config, mode: generationMode })}
             isGenerating={isGenerating}
           />
         </TabsContent>
 
-        <TabsContent value="diagnostic_tests">
+        <TabsContent value="assessment" className="mt-6">
           <AssessmentGenerator
             selectedSubject={selectedSubject}
             currentPhase={currentPhase}
-            onGenerate={onGenerate}
+            onGenerate={(config) => onGenerate({ ...config, mode: generationMode })}
             isGenerating={isGenerating}
           />
         </TabsContent>
-
-        <TabsContent value="practice_guides">
-          <Card>
-            <CardHeader>
-              <CardTitle>Guías de Práctica</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Las guías de práctica paso a paso estarán disponibles pronto.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
-      {/* Motor de Recomendaciones Inteligentes */}
-      <SmartRecommendationEngine
-        currentPhase={currentPhase}
-        selectedMaterialType={selectedMaterialType}
-        recommendations={recommendations}
-        onApplyRecommendation={onGenerate}
-      />
+      {/* Recomendaciones Contextuales */}
+      {recommendations.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Recomendaciones para {selectedSubject}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recommendations.slice(0, 3).map((rec, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <span className="text-sm">{rec.title || 'Recomendación de material'}</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleQuickGeneration(rec.type || 'exercises')}
+                    disabled={isGenerating}
+                  >
+                    <Play className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Indicador de Contenido Oficial */}
+      {generationMode === 'official' && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-green-800">
+                  Usando Contenido Oficial PAES 2024
+                </p>
+                <p className="text-xs text-green-700">
+                  Material validado y extraído de exámenes oficiales reales
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
