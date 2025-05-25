@@ -10,7 +10,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
 import { 
   Home, 
   BarChart3, 
@@ -20,7 +23,8 @@ import {
   Calculator,
   Microscope,
   History,
-  FileText
+  FileText,
+  GraduationCap
 } from "lucide-react";
 
 const menuItems = [
@@ -86,10 +90,24 @@ const paesItems = [
 
 export function AppSidebar() {
   return (
-    <Sidebar>
-      <SidebarContent>
+    <Sidebar className="border-r">
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <GraduationCap className="h-4 w-4" />
+          </div>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">StudyPlatform</span>
+            <span className="truncate text-xs text-muted-foreground">PAES 2024</span>
+          </div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="px-2">
         <SidebarGroup>
-          <SidebarGroupLabel>Navegación Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-medium text-muted-foreground px-2 py-2">
+            Navegación Principal
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -98,7 +116,9 @@ export function AppSidebar() {
                     <NavLink 
                       to={item.url}
                       className={({ isActive }) =>
-                        isActive ? "bg-primary text-primary-foreground" : ""
+                        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent ${
+                          isActive ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                        }`
                       }
                     >
                       <item.icon className="h-4 w-4" />
@@ -112,15 +132,25 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Pruebas PAES</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-medium text-muted-foreground px-2 py-2">
+            <div className="flex items-center justify-between w-full">
+              Pruebas PAES
+              <Badge variant="secondary" className="text-xs">
+                5
+              </Badge>
+            </div>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {paesItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url}>
+                    <NavLink 
+                      to={item.url}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent text-muted-foreground hover:text-foreground"
+                    >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span className="text-xs">{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -129,6 +159,14 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="p-4">
+        <div className="rounded-lg bg-muted/50 p-3">
+          <div className="text-xs font-medium">Progreso General</div>
+          <div className="text-2xl font-bold text-primary">64%</div>
+          <div className="text-xs text-muted-foreground">140 de 277 nodos</div>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -184,14 +184,14 @@ const NewIndex = () => {
     animate: { 
       opacity: 1,
       transition: { 
-        staggerChildren: 0.2,
+        staggerChildren: 0.1,
         delayChildren: 0.1
       } 
     }
   };
   
   const sectionVariants = {
-    initial: { opacity: 0, y: 30 },
+    initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 }
   };
 
@@ -199,7 +199,7 @@ const NewIndex = () => {
     return (
       <AppInitializer>
         <AppLayout>
-          <div className="flex items-center justify-center min-h-screen">
+          <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
               <p className="text-muted-foreground">Cargando tu dashboard personalizado...</p>
@@ -214,13 +214,13 @@ const NewIndex = () => {
     <AppInitializer>
       <AppLayout>
         <motion.div 
-          className="container mx-auto px-6 py-8 space-y-12"
+          className="space-y-8"
           variants={pageVariants}
           initial="initial"
           animate="animate"
         >
           {/* Hero Section */}
-          <motion.div variants={sectionVariants}>
+          <motion.section variants={sectionVariants}>
             <HeroSection
               userName={profile?.name || 'Estudiante'}
               globalProgress={globalProgress}
@@ -229,22 +229,22 @@ const NewIndex = () => {
               completedNodes={completedNodes}
               projectedScore={projectedScore}
             />
-          </motion.div>
+          </motion.section>
 
           {/* Tier Progress */}
-          <motion.div variants={sectionVariants}>
+          <motion.section variants={sectionVariants}>
             <TierProgressVisualizer tierData={mockTierData} />
-          </motion.div>
+          </motion.section>
 
           {/* Subject Progress */}
-          <motion.div variants={sectionVariants}>
+          <motion.section variants={sectionVariants}>
             <SubjectProgressGrid subjects={mockSubjects} />
-          </motion.div>
+          </motion.section>
 
           {/* Smart Recommendations */}
-          <motion.div variants={sectionVariants}>
+          <motion.section variants={sectionVariants}>
             <SmartRecommendations recommendations={mockRecommendations} />
-          </motion.div>
+          </motion.section>
         </motion.div>
       </AppLayout>
     </AppInitializer>
