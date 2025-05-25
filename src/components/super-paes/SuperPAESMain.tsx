@@ -32,6 +32,18 @@ export const SuperPAESMain: React.FC = () => {
 
   const estadisticas = obtenerEstadisticas();
 
+  // Convert competencias to skills format for the 3D map
+  const skillsForMap = mapaCompetencias.map(competencia => ({
+    name: competencia.nombre,
+    level: competencia.nivel / 100, // Convert to 0-1 range
+    color: competencia.colorVisualizacion || '#3B82F6'
+  }));
+
+  const handleSkillClick = (skillName: string) => {
+    console.log('Skill clicked:', skillName);
+    // Could implement skill detail view here
+  };
+
   if (loading && !analisisVocacional) {
     return (
       <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
@@ -189,8 +201,8 @@ export const SuperPAESMain: React.FC = () => {
             
             {activeView === 'mapa3d' && (
               <SuperPAESSkillMap3D 
-                competencias={mapaCompetencias}
-                analisis={analisisVocacional}
+                skills={skillsForMap}
+                onSkillClick={handleSkillClick}
               />
             )}
             
