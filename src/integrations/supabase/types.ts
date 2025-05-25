@@ -114,6 +114,13 @@ export type Database = {
             foreignKeyName: "exercises_node_id_fkey"
             columns: ["node_id"]
             isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "exercises_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
             referencedRelation: "learning_nodes"
             referencedColumns: ["id"]
           },
@@ -288,6 +295,54 @@ export type Database = {
           },
         ]
       }
+      learning_sequences_biologia: {
+        Row: {
+          created_at: string | null
+          id: string
+          mastery_threshold: number | null
+          node_id: string
+          prerequisite_nodes: string[] | null
+          sequence_name: string
+          sequence_order: number
+          time_estimate_minutes: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mastery_threshold?: number | null
+          node_id: string
+          prerequisite_nodes?: string[] | null
+          sequence_name: string
+          sequence_order: number
+          time_estimate_minutes?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mastery_threshold?: number | null
+          node_id?: string
+          prerequisite_nodes?: string[] | null
+          sequence_name?: string
+          sequence_order?: number
+          time_estimate_minutes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_sequences_biologia_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "learning_sequences_biologia_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       node_weights: {
         Row: {
           calculated_weight: number
@@ -317,6 +372,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "node_weights_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
           {
             foreignKeyName: "node_weights_node_id_fkey"
             columns: ["node_id"]
@@ -463,6 +525,57 @@ export type Database = {
         }
         Relationships: []
       }
+      question_node_mapping: {
+        Row: {
+          cognitive_demand: string
+          content_area: string
+          created_at: string | null
+          difficulty_weight: number | null
+          exam_code: string
+          id: string
+          node_id: string
+          question_number: number
+          skill_type: string
+        }
+        Insert: {
+          cognitive_demand: string
+          content_area: string
+          created_at?: string | null
+          difficulty_weight?: number | null
+          exam_code: string
+          id?: string
+          node_id: string
+          question_number: number
+          skill_type: string
+        }
+        Update: {
+          cognitive_demand?: string
+          content_area?: string
+          created_at?: string | null
+          difficulty_weight?: number | null
+          exam_code?: string
+          id?: string
+          node_id?: string
+          question_number?: number
+          skill_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_node_mapping_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "question_node_mapping_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_plan_nodes: {
         Row: {
           completed_at: string | null
@@ -498,6 +611,13 @@ export type Database = {
           week_number?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "study_plan_nodes_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
           {
             foreignKeyName: "study_plan_nodes_node_id_fkey"
             columns: ["node_id"]
@@ -616,6 +736,13 @@ export type Database = {
             foreignKeyName: "user_exercise_attempts_node_id_fkey"
             columns: ["node_id"]
             isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "user_exercise_attempts_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
             referencedRelation: "learning_nodes"
             referencedColumns: ["id"]
           },
@@ -717,6 +844,13 @@ export type Database = {
             foreignKeyName: "user_node_progress_node_id_fkey"
             columns: ["node_id"]
             isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "user_node_progress_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
             referencedRelation: "learning_nodes"
             referencedColumns: ["id"]
           },
@@ -760,9 +894,83 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      cognitive_distribution_m2_2024: {
+        Row: {
+          cognitive_demand: string | null
+          dificultad_promedio: number | null
+          porcentaje: number | null
+          preguntas_por_habilidad: number | null
+          skill_type: string | null
+          total_preguntas: number | null
+        }
+        Relationships: []
+      }
+      content_distribution_m2_2024: {
+        Row: {
+          dificultad_promedio: number | null
+          eje_tematico: string | null
+          habilidades_principales: string | null
+          niveles_cognitivos: string | null
+          porcentaje: number | null
+          total_preguntas: number | null
+        }
+        Relationships: []
+      }
+      critical_nodes_analysis_ciencias_2024: {
+        Row: {
+          cognitive_level: Database["public"]["Enums"]["bloom_level"] | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"] | null
+          dificultad_promedio: number | null
+          node_id: string | null
+          node_name: string | null
+          preguntas: number[] | null
+          total_preguntas: number | null
+        }
+        Relationships: []
+      }
+      skill_distribution_ciencias_2024: {
+        Row: {
+          content_area: string | null
+          count_por_area: number | null
+          dificultad_promedio: number | null
+          porcentaje: number | null
+          skill_type: string | null
+          total_preguntas: number | null
+        }
+        Relationships: []
+      }
+      skill_distribution_matematica_m2_2024: {
+        Row: {
+          areas_contenido: string | null
+          dificultad_promedio: number | null
+          porcentaje_total: number | null
+          porcentaje_valido: number | null
+          preguntas: number[] | null
+          skill_type: string | null
+          total_preguntas: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      calculate_weighted_score_ciencias: {
+        Args: { exam_code_param: string; user_responses: Json }
+        Returns: {
+          total_score: number
+          skill_breakdown: Json
+          node_performance: Json
+          difficulty_analysis: Json
+        }[]
+      }
+      calculate_weighted_score_matematica_m2: {
+        Args: { exam_code_param: string; user_responses: Json }
+        Returns: {
+          total_score: number
+          skill_breakdown: Json
+          node_performance: Json
+          eje_performance: Json
+        }[]
+      }
       exec_sql: {
         Args: { sql: string }
         Returns: undefined
