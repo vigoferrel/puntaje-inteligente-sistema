@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_generated_plans: {
+        Row: {
+          adaptation_rules: Json | null
+          created_at: string | null
+          duration_weeks: number
+          id: string
+          plan_name: string
+          schedule: Json
+          status: string | null
+          target_tests: string[]
+          total_hours: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          adaptation_rules?: Json | null
+          created_at?: string | null
+          duration_weeks: number
+          id?: string
+          plan_name: string
+          schedule: Json
+          status?: string | null
+          target_tests: string[]
+          total_hours: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          adaptation_rules?: Json | null
+          created_at?: string | null
+          duration_weeks?: number
+          id?: string
+          plan_name?: string
+          schedule?: Json
+          status?: string | null
+          target_tests?: string[]
+          total_hours?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       alternativas_respuesta: {
         Row: {
           concepto_erroneo_asociado: string | null
@@ -557,6 +599,75 @@ export type Database = {
           },
         ]
       }
+      becas_financiamiento: {
+        Row: {
+          carreras_elegibles: string[] | null
+          contacto: Json | null
+          created_at: string | null
+          documentos_requeridos: string[] | null
+          estado: string | null
+          fechas_postulacion: Json | null
+          id: string
+          institucion: string
+          monto_maximo: number | null
+          nombre: string
+          porcentaje_cobertura: number | null
+          puntaje_minimo_competencia_lectora: number | null
+          puntaje_minimo_matematica: number | null
+          puntaje_minimo_nem: number | null
+          puntaje_minimo_ranking: number | null
+          renta_maxima_familiar: number | null
+          requisitos: Json | null
+          tipo_beca: string
+          updated_at: string | null
+          url_postulacion: string | null
+        }
+        Insert: {
+          carreras_elegibles?: string[] | null
+          contacto?: Json | null
+          created_at?: string | null
+          documentos_requeridos?: string[] | null
+          estado?: string | null
+          fechas_postulacion?: Json | null
+          id?: string
+          institucion: string
+          monto_maximo?: number | null
+          nombre: string
+          porcentaje_cobertura?: number | null
+          puntaje_minimo_competencia_lectora?: number | null
+          puntaje_minimo_matematica?: number | null
+          puntaje_minimo_nem?: number | null
+          puntaje_minimo_ranking?: number | null
+          renta_maxima_familiar?: number | null
+          requisitos?: Json | null
+          tipo_beca: string
+          updated_at?: string | null
+          url_postulacion?: string | null
+        }
+        Update: {
+          carreras_elegibles?: string[] | null
+          contacto?: Json | null
+          created_at?: string | null
+          documentos_requeridos?: string[] | null
+          estado?: string | null
+          fechas_postulacion?: Json | null
+          id?: string
+          institucion?: string
+          monto_maximo?: number | null
+          nombre?: string
+          porcentaje_cobertura?: number | null
+          puntaje_minimo_competencia_lectora?: number | null
+          puntaje_minimo_matematica?: number | null
+          puntaje_minimo_nem?: number | null
+          puntaje_minimo_ranking?: number | null
+          renta_maxima_familiar?: number | null
+          requisitos?: Json | null
+          tipo_beca?: string
+          updated_at?: string | null
+          url_postulacion?: string | null
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           all_day: boolean
@@ -1032,6 +1143,99 @@ export type Database = {
           },
         ]
       }
+      financial_simulations: {
+        Row: {
+          available_funding: number | null
+          created_at: string | null
+          estimated_cost: number | null
+          funding_sources: Json | null
+          id: string
+          projected_income: number | null
+          risk_assessment: Json | null
+          roi_analysis: Json | null
+          simulation_name: string | null
+          target_career: string | null
+          user_id: string | null
+        }
+        Insert: {
+          available_funding?: number | null
+          created_at?: string | null
+          estimated_cost?: number | null
+          funding_sources?: Json | null
+          id?: string
+          projected_income?: number | null
+          risk_assessment?: Json | null
+          roi_analysis?: Json | null
+          simulation_name?: string | null
+          target_career?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          available_funding?: number | null
+          created_at?: string | null
+          estimated_cost?: number | null
+          funding_sources?: Json | null
+          id?: string
+          projected_income?: number | null
+          risk_assessment?: Json | null
+          roi_analysis?: Json | null
+          simulation_name?: string | null
+          target_career?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      generated_exercises: {
+        Row: {
+          correct_answer: string
+          created_at: string | null
+          difficulty_level: string | null
+          explanation: string | null
+          id: string
+          metadata: Json | null
+          options: Json
+          prueba_paes: string
+          question: string
+          skill_code: string | null
+          source: string | null
+          success_rate: number | null
+          times_used: number | null
+          user_id: string | null
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string | null
+          difficulty_level?: string | null
+          explanation?: string | null
+          id?: string
+          metadata?: Json | null
+          options: Json
+          prueba_paes: string
+          question: string
+          skill_code?: string | null
+          source?: string | null
+          success_rate?: number | null
+          times_used?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string | null
+          difficulty_level?: string | null
+          explanation?: string | null
+          id?: string
+          metadata?: Json | null
+          options?: Json
+          prueba_paes?: string
+          question?: string
+          skill_code?: string | null
+          source?: string | null
+          success_rate?: number | null
+          times_used?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       generated_study_plans: {
         Row: {
           created_at: string
@@ -1234,6 +1438,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lectoguia_conversations: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string
+          metadata: Json | null
+          session_id: string
+          subject_context: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type: string
+          metadata?: Json | null
+          session_id: string
+          subject_context?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          session_id?: string
+          subject_context?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       node_weights: {
         Row: {
@@ -2013,6 +2250,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_metrics: {
+        Row: {
+          context: Json | null
+          id: string
+          metric_type: string
+          metric_value: number
+          recorded_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          id?: string
+          metric_type: string
+          metric_value: number
+          recorded_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          id?: string
+          metric_type?: string
+          metric_value?: number
+          recorded_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_diagnostic_results: {
         Row: {
