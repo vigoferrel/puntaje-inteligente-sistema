@@ -1,17 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { X, Calendar, Clock, MapPin, AlertTriangle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, AlertTriangle, Trash2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
-// Definir tipos localmente para evitar conflictos
 interface CalendarEvent {
   id: string;
   title: string;
@@ -43,12 +40,12 @@ export const EventModal: React.FC<EventModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    event_type: 'study_session' as 'study_session' | 'paes_date' | 'deadline' | 'reminder',
+    event_type: 'study_session' as const,
     start_date: '',
     end_date: '',
     all_day: false,
     color: '#4F46E5',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
+    priority: 'medium' as const,
     location: ''
   });
 
@@ -58,22 +55,20 @@ export const EventModal: React.FC<EventModalProps> = ({
         title: event.title,
         description: event.description || '',
         event_type: event.event_type,
-        start_date: event.start_date,
-        end_date: event.end_date || '',
+        start_date: event.start_date.slice(0, 16),
+        end_date: event.end_date ? event.end_date.slice(0, 16) : '',
         all_day: event.all_day,
         color: event.color,
         priority: event.priority,
         location: event.location || ''
       });
     } else {
-      // Reset form for new event
-      const now = new Date();
       setFormData({
         title: '',
         description: '',
         event_type: 'study_session',
-        start_date: now.toISOString().slice(0, 16),
-        end_date: new Date(now.getTime() + 60 * 60 * 1000).toISOString().slice(0, 16),
+        start_date: new Date().toISOString().slice(0, 16),
+        end_date: '',
         all_day: false,
         color: '#4F46E5',
         priority: 'medium',
@@ -84,183 +79,173 @@ export const EventModal: React.FC<EventModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({
+      ...formData,
+      start_date: new Date(formData.start_date).toISOString(),
+      end_date: formData.end_date ? new Date(formData.end_date).toISOString() : undefined
+    });
   };
 
-  const eventTypeOptions = [
-    { value: 'study_session', label: 'Sesión de Estudio', color: 'bg-blue-500' },
-    { value: 'paes_date', label: 'Fecha PAES', color: 'bg-green-500' },
-    { value: 'deadline', label: 'Fecha Límite', color: 'bg-orange-500' },
-    { value: 'reminder', label: 'Recordatorio', color: 'bg-purple-500' }
-  ];
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-  const priorityOptions = [
-    { value: 'low', label: 'Baja', color: 'bg-gray-500' },
-    { value: 'medium', label: 'Media', color: 'bg-blue-500' },
-    { value: 'high', label: 'Alta', color: 'bg-orange-500' },
-    { value: 'critical', label: 'Crítica', color: 'bg-red-500' }
-  ];
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl cinematic-card border-cyan-500/30">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2 font-luxury text-white">
-            <Calendar className="h-5 w-5 text-cyan-400" />
-            <span>{event ? 'Editar Evento' : 'Nuevo Evento'}</span>
-          </DialogTitle>
-        </DialogHeader>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative bg-gray-900 border border-cyan-500/30 rounded-xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-white">
+            {event ? 'Editar Evento' : 'Nuevo Evento'}
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="text-gray-400 hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Título */}
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-gray-300 font-medium">
-              Título del Evento
-            </Label>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <Label htmlFor="title" className="text-white">Título</Label>
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Ej: Sesión de Matemáticas"
+              onChange={(e) => handleInputChange('title', e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
               required
             />
           </div>
 
-          {/* Descripción */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-gray-300 font-medium">
-              Descripción
-            </Label>
+          <div>
+            <Label htmlFor="description" className="text-white">Descripción</Label>
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Descripción opcional del evento"
+              onChange={(e) => handleInputChange('description', e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
               rows={3}
             />
           </div>
 
-          {/* Tipo y Prioridad */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-gray-300 font-medium">Tipo de Evento</Label>
-              <Select value={formData.event_type} onValueChange={(value: 'study_session' | 'paes_date' | 'deadline' | 'reminder') => setFormData({ ...formData, event_type: value })}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {eventTypeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-3 h-3 rounded-full ${option.color}`} />
-                        <span>{option.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-gray-300 font-medium">Prioridad</Label>
-              <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high' | 'critical') => setFormData({ ...formData, priority: value })}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorityOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-3 h-3 rounded-full ${option.color}`} />
-                        <span>{option.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="event_type" className="text-white">Tipo de Evento</Label>
+            <Select value={formData.event_type} onValueChange={(value) => handleInputChange('event_type', value)}>
+              <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="study_session">Sesión de Estudio</SelectItem>
+                <SelectItem value="paes_date">Fecha PAES</SelectItem>
+                <SelectItem value="deadline">Fecha Límite</SelectItem>
+                <SelectItem value="reminder">Recordatorio</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Todo el día */}
-          <div className="flex items-center space-x-3">
+          <div>
+            <Label htmlFor="priority" className="text-white">Prioridad</Label>
+            <Select value={formData.priority} onValueChange={(value) => handleInputChange('priority', value)}>
+              <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="low">Baja</SelectItem>
+                <SelectItem value="medium">Media</SelectItem>
+                <SelectItem value="high">Alta</SelectItem>
+                <SelectItem value="critical">Crítica</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-2">
             <Switch
+              id="all_day"
               checked={formData.all_day}
-              onCheckedChange={(checked) => setFormData({ ...formData, all_day: checked })}
+              onCheckedChange={(checked) => handleInputChange('all_day', checked)}
             />
-            <Label className="text-gray-300 font-medium">Todo el día</Label>
+            <Label htmlFor="all_day" className="text-white">Todo el día</Label>
           </div>
 
-          {/* Fechas */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-gray-300 font-medium">
-                {formData.all_day ? 'Fecha' : 'Fecha y hora de inicio'}
-              </Label>
+          <div>
+            <Label htmlFor="start_date" className="text-white">Fecha de Inicio</Label>
+            <Input
+              id="start_date"
+              type="datetime-local"
+              value={formData.start_date}
+              onChange={(e) => handleInputChange('start_date', e.target.value)}
+              className="bg-gray-800 border-gray-600 text-white"
+              required
+            />
+          </div>
+
+          {!formData.all_day && (
+            <div>
+              <Label htmlFor="end_date" className="text-white">Fecha de Fin</Label>
               <Input
-                type={formData.all_day ? 'date' : 'datetime-local'}
-                value={formData.all_day ? formData.start_date.split('T')[0] : formData.start_date}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                id="end_date"
+                type="datetime-local"
+                value={formData.end_date}
+                onChange={(e) => handleInputChange('end_date', e.target.value)}
                 className="bg-gray-800 border-gray-600 text-white"
-                required
               />
             </div>
+          )}
 
-            {!formData.all_day && (
-              <div className="space-y-2">
-                <Label className="text-gray-300 font-medium">Fecha y hora de fin</Label>
-                <Input
-                  type="datetime-local"
-                  value={formData.end_date}
-                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                  className="bg-gray-800 border-gray-600 text-white"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Ubicación */}
-          <div className="space-y-2">
-            <Label htmlFor="location" className="text-gray-300 font-medium">
-              Ubicación
-            </Label>
+          <div>
+            <Label htmlFor="location" className="text-white">Ubicación</Label>
             <Input
               id="location"
               value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Ej: Biblioteca, Casa, Online"
+              onChange={(e) => handleInputChange('location', e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
+              placeholder="Opcional"
             />
           </div>
 
-          {/* Botones */}
-          <div className="flex items-center justify-between pt-4">
-            <div>
-              {event && onDelete && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={onDelete}
-                  className="flex items-center space-x-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Eliminar</span>
-                </Button>
-              )}
-            </div>
+          <div className="flex justify-between pt-4">
+            {event && onDelete && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={onDelete}
+                className="flex items-center space-x-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Eliminar</span>
+              </Button>
+            )}
             
-            <div className="flex space-x-3">
-              <Button type="button" variant="outline" onClick={onClose}>
+            <div className="flex space-x-2 ml-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
                 Cancelar
               </Button>
-              <Button type="submit" className="cinematic-button">
-                {event ? 'Actualizar' : 'Crear'} Evento
+              <Button
+                type="submit"
+                className="bg-cyan-500 hover:bg-cyan-600 text-white"
+              >
+                {event ? 'Actualizar' : 'Crear'}
               </Button>
             </div>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </motion.div>
+    </div>
   );
 };

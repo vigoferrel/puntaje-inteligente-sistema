@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { motion } from 'framer-motion';
+import { X, Bell, Mail, Phone, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNotificationPreferences } from '@/hooks/calendar/useNotificationPreferences';
 import { usePushNotifications } from '@/hooks/calendar/usePushNotifications';
-import { Bell, Mail, Smartphone, Settings, Clock, Moon } from 'lucide-react';
 
 interface NotificationSettingsProps {
   isOpen: boolean;
@@ -20,245 +19,202 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   onClose
 }) => {
   const { preferences, updatePreferences, getPreferenceForEventType } = useNotificationPreferences();
-  const { isSupported, isSubscribed, permission, subscribe, unsubscribe } = usePushNotifications();
+  const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushNotifications();
+  
+  const [selectedEventType, setSelectedEventType] = useState<string>('study_session');
+  const [localSettings, setLocalSettings] = useState({
+    email_enabled: true,
+    push_enabled: true,
+    sms_enabled: false,
+    email_timing: ['15m', '1h'],
+    push_timing: ['15m'],
+    sms_timing: ['15m']
+  });
 
-  const eventTypes = [
-    { value: 'study_session', label: 'Sesiones de Estudio', icon: Clock },
-    { value: 'paes_date', label: 'Fechas PAES', icon: Bell },
-    { value: 'deadline', label: 'Fechas Límite', icon: Bell },
-    { value: 'reminder', label: 'Recordatorios', icon: Bell }
-  ];
+  useEffect(() => {
+    const preference = getPreferenceForEventType(selectedEventType);
+    if (preference) {
+      setLocalSettings({
+        email_enabled: preference.email_enabled,
+        push_enabled: preference.push_enabled,
+        sms_enabled: preference.sms_enabled,
+        email_timing: preference.email_timing,
+        push_timing: preference.push_timing,
+        sms_timing: preference.sms_timing
+      });
+    }
+  }, [selectedEventType, preferences, getPreferenceForEventType]);
 
-  const timingOptions = [
-    { value: '5m', label: '5 minutos antes' },
-    { value: '15m', label: '15 minutos antes' },
-    { value: '30m', label: '30 minutos antes' },
-    { value: '1h', label: '1 hora antes' },
-    { value: '2h', label: '2 horas antes' },
-    { value: '1d', label: '1 día antes' },
-    { value: '1w', label: '1 semana antes' }
-  ];
-
-  const handleNotificationToggle = async (eventType: string, notificationType: 'email' | 'push', enabled: boolean) => {
-    const currentPrefs = getPreferenceForEventType(eventType);
-    const updateData = {
-      [`${notificationType}_enabled`]: enabled,
-      email_timing: currentPrefs?.email_timing || ['15m', '1h'],
-      push_timing: currentPrefs?.push_timing || ['15m'],
-      sms_timing: currentPrefs?.sms_timing || ['15m'],
-      quiet_hours: currentPrefs?.quiet_hours || { start: '22:00', end: '08:00' },
-      timezone: currentPrefs?.timezone || 'America/Santiago'
-    };
-
-    await updatePreferences(eventType, updateData);
+  const handleSave = async () => {
+    await updatePreferences(selectedEventType, localSettings);
+    onClose();
   };
 
-  const handlePushSubscription = async () => {
-    try {
-      if (isSubscribed) {
-        await unsubscribe();
-      } else {
-        await subscribe();
-      }
-    } catch (error) {
-      console.error('Error managing push subscription:', error);
+  const handlePushToggle = async () => {
+    if (isSubscribed) {
+      await unsubscribe();
+    } else {
+      await subscribe();
     }
   };
 
+  const updateSetting = (key: string, value: any) => {
+    setLocalSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl cinematic-card border-cyan-500/30 max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2 font-luxury text-white">
-            <Settings className="h-5 w-5 text-cyan-400" />
-            <span>Configuración de Notificaciones</span>
-          </DialogTitle>
-        </DialogHeader>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative bg-gray-900 border border-cyan-500/30 rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <div className="flex items-center space-x-2">
+            <Settings className="w-5 h-5 text-cyan-400" />
+            <h2 className="text-xl font-semibold text-white">Configuración de Notificaciones</h2>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="text-gray-400 hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
 
-        <div className="space-y-6">
-          {/* Estado de Push Notifications */}
-          <Card className="cinematic-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 font-luxury">
-                <Smartphone className="h-5 w-5 text-purple-400" />
-                <span className="text-white">Notificaciones Push</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {!isSupported && (
-                  <Badge variant="destructive">
-                    Tu navegador no soporta notificaciones push
-                  </Badge>
-                )}
-                
-                {isSupported && (
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-gray-300 font-medium">
-                        Estado de las notificaciones push
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        {permission === 'granted' ? 'Permisos otorgados' : 
-                         permission === 'denied' ? 'Permisos denegados' : 
-                         'Permisos pendientes'}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge variant={isSubscribed ? 'default' : 'outline'}>
-                        {isSubscribed ? 'Activo' : 'Inactivo'}
-                      </Badge>
-                      <Button
-                        onClick={handlePushSubscription}
-                        variant={isSubscribed ? 'destructive' : 'default'}
-                        className="cinematic-button"
-                      >
-                        {isSubscribed ? 'Desactivar' : 'Activar'}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Configuración por tipo de evento */}
-          <div className="grid gap-6">
-            {eventTypes.map((eventType) => {
-              const prefs = getPreferenceForEventType(eventType.value);
-              const IconComponent = eventType.icon;
-
-              return (
-                <Card key={eventType.value} className="cinematic-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2 font-luxury">
-                      <IconComponent className="h-5 w-5 text-cyan-400" />
-                      <span className="text-white">{eventType.label}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Email Notifications */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Mail className="w-4 h-4 text-blue-400" />
-                            <Label className="text-gray-300 font-medium">
-                              Notificaciones por Email
-                            </Label>
-                          </div>
-                          <Switch
-                            checked={prefs?.email_enabled || false}
-                            onCheckedChange={(checked) => 
-                              handleNotificationToggle(eventType.value, 'email', checked)
-                            }
-                          />
-                        </div>
-                        
-                        {prefs?.email_enabled && (
-                          <div className="space-y-2">
-                            <Label className="text-gray-400 text-sm">
-                              Enviar recordatorios:
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {timingOptions.map((timing) => (
-                                <Badge 
-                                  key={timing.value}
-                                  variant={
-                                    (prefs.email_timing as string[])?.includes(timing.value) ? 
-                                    'default' : 'outline'
-                                  }
-                                  className="cursor-pointer text-xs"
-                                >
-                                  {timing.label}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Push Notifications */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Bell className="w-4 h-4 text-purple-400" />
-                            <Label className="text-gray-300 font-medium">
-                              Notificaciones Push
-                            </Label>
-                          </div>
-                          <Switch
-                            checked={prefs?.push_enabled || false}
-                            onCheckedChange={(checked) => 
-                              handleNotificationToggle(eventType.value, 'push', checked)
-                            }
-                          />
-                        </div>
-                        
-                        {prefs?.push_enabled && (
-                          <div className="space-y-2">
-                            <Label className="text-gray-400 text-sm">
-                              Enviar recordatorios:
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {timingOptions.map((timing) => (
-                                <Badge 
-                                  key={timing.value}
-                                  variant={
-                                    (prefs.push_timing as string[])?.includes(timing.value) ? 
-                                    'default' : 'outline'
-                                  }
-                                  className="cursor-pointer text-xs"
-                                >
-                                  {timing.label}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+        <div className="p-6 space-y-6">
+          <div>
+            <Label htmlFor="event-type" className="text-white text-sm font-medium">
+              Tipo de Evento
+            </Label>
+            <Select value={selectedEventType} onValueChange={setSelectedEventType}>
+              <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="study_session">Sesiones de Estudio</SelectItem>
+                <SelectItem value="paes_date">Fechas PAES</SelectItem>
+                <SelectItem value="deadline">Fechas Límite</SelectItem>
+                <SelectItem value="reminder">Recordatorios</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Horario de silencio */}
-          <Card className="cinematic-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 font-luxury">
-                <Moon className="h-5 w-5 text-indigo-400" />
-                <span className="text-white">Horario de Silencio</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-gray-300 text-sm">
-                  Las notificaciones no se enviarán durante este horario
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-400 text-sm">Desde</Label>
-                    <div className="text-gray-300 font-medium">22:00</div>
-                  </div>
-                  <div>
-                    <Label className="text-gray-400 text-sm">Hasta</Label>
-                    <div className="text-gray-300 font-medium">08:00</div>
-                  </div>
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-white flex items-center space-x-2">
+              <Bell className="w-4 h-4 text-purple-400" />
+              <span>Métodos de Notificación</span>
+            </h3>
+
+            {/* Email Notifications */}
+            <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4 text-blue-400" />
+                  <Label className="text-white">Email</Label>
+                </div>
+                <Switch
+                  checked={localSettings.email_enabled}
+                  onCheckedChange={(checked) => updateSetting('email_enabled', checked)}
+                />
+              </div>
+              
+              {localSettings.email_enabled && (
+                <div className="text-sm text-gray-300">
+                  Recibirás notificaciones por email 15 minutos y 1 hora antes del evento.
+                </div>
+              )}
+            </div>
+
+            {/* Push Notifications */}
+            <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Bell className="w-4 h-4 text-purple-400" />
+                  <Label className="text-white">Notificaciones Push</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {isSupported && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePushToggle}
+                      className="text-xs border-gray-600 text-gray-300"
+                    >
+                      {isSubscribed ? 'Desactivar' : 'Activar'}
+                    </Button>
+                  )}
+                  <Switch
+                    checked={localSettings.push_enabled && isSubscribed}
+                    onCheckedChange={(checked) => updateSetting('push_enabled', checked)}
+                    disabled={!isSubscribed}
+                  />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              
+              {!isSupported && (
+                <div className="text-sm text-orange-300">
+                  Las notificaciones push no son compatibles con este navegador.
+                </div>
+              )}
+              
+              {isSupported && !isSubscribed && (
+                <div className="text-sm text-yellow-300">
+                  Haz clic en "Activar" para habilitar las notificaciones push.
+                </div>
+              )}
+              
+              {localSettings.push_enabled && isSubscribed && (
+                <div className="text-sm text-gray-300">
+                  Recibirás notificaciones push 15 minutos antes del evento.
+                </div>
+              )}
+            </div>
 
-          {/* Botones de acción */}
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button variant="outline" onClick={onClose}>
-              Cerrar
+            {/* SMS Notifications */}
+            <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4 text-orange-400" />
+                  <Label className="text-white">SMS</Label>
+                </div>
+                <Switch
+                  checked={localSettings.sms_enabled}
+                  onCheckedChange={(checked) => updateSetting('sms_enabled', checked)}
+                  disabled
+                />
+              </div>
+              
+              <div className="text-sm text-gray-400">
+                Las notificaciones SMS estarán disponibles próximamente.
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4 border-t border-gray-700">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white"
+            >
+              Guardar Configuración
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </motion.div>
+    </div>
   );
 };
