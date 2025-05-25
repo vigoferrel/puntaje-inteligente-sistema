@@ -19,11 +19,11 @@ export const useIntersectionalGuard = () => {
         cross_pollination_rate: 0,
         adaptive_learning_score: 0,
         user_experience_harmony: 0,
-        respiratory: {
-          breathingRate: 0,
-          oxygenLevel: 50,
-          airQuality: 'pure' as const,
-          antiTrackingActive: false
+        cardiovascular: {
+          heartRate: 60,
+          bloodPressure: 'optimal' as const,
+          circulation: 85,
+          oxygenation: 95
         },
         singleton: {
           hasInstance: false,
@@ -47,8 +47,8 @@ export const useIntersectionalGuard = () => {
           oxygenation: 95
         },
         respiratory: {
-          breathingRate: 0,
-          oxygenLevel: 50,
+          breathingRate: 15,
+          oxygenLevel: 85,
           airQuality: 'pure' as const,
           antiTrackingActive: false
         },

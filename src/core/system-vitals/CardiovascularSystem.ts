@@ -1,7 +1,7 @@
 
 /**
- * SISTEMA CARDIOVASCULAR UNIFICADO v7.0 - POST-CIRUGÍA RADICAL
- * Responsabilidad ampliada: Control de flujo, purificación y oxigenación
+ * SISTEMA CARDIOVASCULAR UNIFICADO v7.1 - POST-CIRUGÍA COMPLETA
+ * Responsabilidad ampliada: Control de flujo, purificación, oxigenación y monitoreo completo
  */
 
 import { CardiovascularHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
@@ -34,6 +34,8 @@ export class CardiovascularSystem {
   private readonly options: HeartbeatOptions;
   private eventListeners: ((event: CirculatoryEvent) => void)[] = [];
   private secureStorage = new Map<string, any>();
+  private systemStatus: 'active' | 'degraded' | 'emergency' | 'offline' = 'active';
+  private emergencyMode: boolean = false;
 
   constructor(options: Partial<HeartbeatOptions> = {}) {
     this.options = {
@@ -77,12 +79,16 @@ export class CardiovascularSystem {
     if (this.heartRate >= this.options.emergencyThreshold) {
       this.state = HeartState.EMERGENCY;
       this.emergencyStartTime = now;
+      this.systemStatus = 'emergency';
     } else if (this.heartRate >= this.options.maxBeatsPerSecond) {
       this.state = HeartState.ELEVATED;
+      this.systemStatus = 'degraded';
     } else if (this.heartRate === 0) {
       this.state = HeartState.RESTING;
+      this.systemStatus = 'active';
     } else {
       this.state = HeartState.NORMAL;
+      this.systemStatus = 'active';
     }
   }
 
@@ -138,13 +144,12 @@ export class CardiovascularSystem {
     return true;
   }
 
-  // NUEVA FUNCIONALIDAD RESPIRATORIA INTEGRADA
+  // FUNCIONALIDAD RESPIRATORIA INTEGRADA
   public breatheIn(data: any): boolean {
     if (this.state === HeartState.EMERGENCY) {
       return false;
     }
 
-    // Procesar datos de entrada y mejorar oxigenación
     this.oxygenLevel = Math.min(100, this.oxygenLevel + 1);
     this.purificationActive = true;
     
@@ -152,7 +157,6 @@ export class CardiovascularSystem {
   }
 
   public breatheOut(signal: any): any {
-    // Retornar señal purificada
     return {
       ...signal,
       cardiovascular_processed: true,
@@ -172,7 +176,7 @@ export class CardiovascularSystem {
         firewall_active: false,
         storage_protected: false,
         purification_level: this.options.purificationLevel,
-        emergency_mode: this.state === HeartState.EMERGENCY,
+        emergency_mode: this.emergencyMode,
         ...module.security_context
       }
     };
@@ -187,6 +191,45 @@ export class CardiovascularSystem {
     };
   }
 
+  // NUEVOS MÉTODOS REQUERIDOS v7.1
+  public getSystemStatus(): {
+    status: 'active' | 'degraded' | 'emergency' | 'offline';
+    heartRate: number;
+    oxygenLevel: number;
+    emergencyMode: boolean;
+    purificationActive: boolean;
+    timestamp: number;
+  } {
+    return {
+      status: this.systemStatus,
+      heartRate: this.heartRate,
+      oxygenLevel: this.oxygenLevel,
+      emergencyMode: this.emergencyMode,
+      purificationActive: this.purificationActive,
+      timestamp: Date.now()
+    };
+  }
+
+  public activateEmergencyMode(): void {
+    this.emergencyMode = true;
+    this.systemStatus = 'emergency';
+    this.state = HeartState.EMERGENCY;
+    this.emergencyStartTime = Date.now();
+    
+    console.log('🚨 MODO DE EMERGENCIA CARDIOVASCULAR ACTIVADO v7.1');
+    
+    // Purificar inmediatamente
+    this.surgicalPurge();
+  }
+
+  public deactivateEmergencyMode(): void {
+    this.emergencyMode = false;
+    this.systemStatus = 'active';
+    this.state = HeartState.NORMAL;
+    
+    console.log('✅ Modo de emergencia cardiovascular desactivado v7.1');
+  }
+
   public surgicalPurge(): void {
     this.secureStorage.clear();
     this.oxygenLevel = 100;
@@ -194,7 +237,7 @@ export class CardiovascularSystem {
     this.state = HeartState.NORMAL;
     this.purificationActive = false;
     
-    console.log('🚨 PURGA CARDIOVASCULAR COMPLETADA v7.0');
+    console.log('🚨 PURGA CARDIOVASCULAR COMPLETADA v7.1');
   }
 
   private getRestingPeriod(): number {
@@ -244,6 +287,8 @@ export class CardiovascularSystem {
     this.emergencyStartTime = 0;
     this.oxygenLevel = 100;
     this.purificationActive = false;
+    this.emergencyMode = false;
+    this.systemStatus = 'active';
   }
 
   public destroy(): void {

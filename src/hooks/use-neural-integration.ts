@@ -3,10 +3,9 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useNeuralModule } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useAuth } from '@/contexts/AuthContext';
 import { CirculatorySystem } from '@/core/system-vitals/CirculatorySystem';
-import { EnhancedModuleIdentity } from '@/core/system-vitals/types';
 
 /**
- * Hook neurológico CARDIOVASCULAR-RESPIRATORIO v1.0 - Arquitectura limpia
+ * Hook neurológico CARDIOVASCULAR UNIFICADO v7.1 - Post-cirugía completa
  */
 export const useNeuralIntegration = (
   moduleType: 'diagnostic' | 'lectoguia' | 'plans' | 'paes_universe' | 'dashboard',
@@ -26,12 +25,12 @@ export const useNeuralIntegration = (
     capabilities: [
       ...capabilities,
       'cardiovascular_integration',
-      'respiratory_purification',
-      'circulatory_optimization'
+      'unified_circulation',
+      'emergency_response'
     ]
   });
 
-  // Broadcast cardiovascular con sistema circulatorio
+  // Broadcast cardiovascular unificado
   const cardiovascularBroadcast = useCallback((signalType: string, payload: any) => {
     if (isDestroyedRef.current) {
       return;
@@ -44,7 +43,6 @@ export const useNeuralIntegration = (
     });
 
     if (processed) {
-      // Crear módulo oxigenado para el broadcast
       const oxygenatedModule = circulatorySystem.current.oxygenateModule({
         id: moduleId.current,
         type: moduleType,
@@ -65,7 +63,7 @@ export const useNeuralIntegration = (
     }
   }, [neural, moduleType, capabilities, currentState]);
 
-  // Broadcast controlado con sistema respiratorio
+  // Broadcast controlado
   useEffect(() => {
     if (isDestroyedRef.current) return;
     
@@ -81,24 +79,23 @@ export const useNeuralIntegration = (
             system_health: 'optimized'
           });
         }
-      }, 20000); // Respiración más lenta y profunda
+      }, 20000);
 
       return () => clearTimeout(timeoutId);
     }
   }, [currentState, cardiovascularBroadcast, user?.id]);
 
-  // Suscripción cardiovascular-respiratoria
+  // Suscripción cardiovascular
   useEffect(() => {
     if (isDestroyedRef.current) return;
     
     const unsubscribe = neural.subscribeToSignals(moduleId.current, (signal) => {
       if (isDestroyedRef.current) return;
       
-      // Solo procesar señales críticas con sistema circulatorio
       if (signal.type === 'EMERGENCY_COORDINATION') {
         const now = Date.now();
-        if (now - lastLogTime.current > 600000) { // 10 minutos
-          console.log('🫀 Sistema cardiovascular procesando emergencia');
+        if (now - lastLogTime.current > 600000) {
+          console.log('🫀 Sistema cardiovascular procesando emergencia v7.1');
           lastLogTime.current = now;
         }
       }
@@ -107,7 +104,7 @@ export const useNeuralIntegration = (
     return unsubscribe;
   }, [neural, moduleType]);
 
-  // Acciones cardiovasculares optimizadas
+  // Acciones cardiovasculares
   const broadcastUserAction = useCallback((action: string, payload: any = {}) => {
     if (isDestroyedRef.current) return;
     
@@ -129,7 +126,7 @@ export const useNeuralIntegration = (
           ...payload
         });
       }
-    }, 2000); // Latido optimizado
+    }, 2000);
   }, [cardiovascularBroadcast, user?.id, currentState]);
 
   // Cleanup cardiovascular
@@ -174,7 +171,7 @@ export const useNeuralIntegration = (
       circulatorySystem.current.emergencyReset();
       lastBroadcastRef.current = '';
       isDestroyedRef.current = false;
-      console.log('🫀 Sistema cardiovascular-respiratorio reiniciado');
+      console.log('🫀 Sistema cardiovascular unificado reiniciado v7.1');
     }, [])
   };
 };
