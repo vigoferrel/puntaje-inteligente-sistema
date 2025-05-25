@@ -10,36 +10,51 @@ export interface NavigationContext {
   fromTool?: string;
   data?: any;
   systemMode?: 'neural' | 'unified';
+  userIntent?: string;
+  timestamp?: string;
+  neuralMetrics?: {
+    efficiency: number;
+    adaptiveScore: number;
+  };
 }
 
 export function useUnifiedNavigation() {
   const { user } = useAuth();
-  const { currentTool, context: routingContext, navigateToTool: routingNavigate, updateContext: routingUpdateContext } = useUnifiedRouting();
+  const { 
+    currentTool, 
+    context: routingContext, 
+    navigateToTool: routingNavigate, 
+    updateContext: routingUpdateContext 
+  } = useUnifiedRouting();
   
   const [navigationHistory, setNavigationHistory] = useState<string[]>(() => {
-    const saved = localStorage.getItem('navigation-history');
+    const saved = localStorage.getItem('unified-navigation-history');
     return saved ? JSON.parse(saved) : ['dashboard'];
   });
   
   const [context, setContext] = useState<NavigationContext>(() => {
-    const saved = localStorage.getItem('navigation-context');
+    const saved = localStorage.getItem('unified-navigation-context');
     return saved ? JSON.parse(saved) : {};
   });
 
-  // Sync with routing context
+  // Sincronización optimizada con routing context
   useEffect(() => {
     if (routingContext && Object.keys(routingContext).length > 0) {
-      setContext(prev => ({ ...prev, ...routingContext }));
+      setContext(prev => ({ 
+        ...prev, 
+        ...routingContext,
+        timestamp: new Date().toISOString()
+      }));
     }
   }, [routingContext]);
 
-  // Persist state
+  // Persistencia optimizada
   useEffect(() => {
-    localStorage.setItem('navigation-history', JSON.stringify(navigationHistory));
+    localStorage.setItem('unified-navigation-history', JSON.stringify(navigationHistory));
   }, [navigationHistory]);
 
   useEffect(() => {
-    localStorage.setItem('navigation-context', JSON.stringify(context));
+    localStorage.setItem('unified-navigation-context', JSON.stringify(context));
   }, [context]);
 
   const navigateToTool = useCallback((
@@ -47,63 +62,109 @@ export function useUnifiedNavigation() {
     newContext?: NavigationContext,
     updateHistory = true
   ) => {
-    console.log(`🧭 Navegación unificada: ${currentTool} → ${tool}`, { 
+    console.log(`🧭 Navegación unificada optimizada: ${currentTool} → ${tool}`, { 
       context: newContext, 
-      user: user?.id 
+      user: user?.id,
+      timestamp: new Date().toISOString()
     });
     
-    // Update context
-    if (newContext) {
+    // Contexto enriquecido
+    const enrichedContext = {
+      ...newContext,
+      fromTool: currentTool,
+      timestamp: new Date().toISOString(),
+      userId: user?.id
+    };
+    
+    // Actualizar contexto local
+    if (enrichedContext) {
       setContext(prev => ({ 
         ...prev, 
-        ...newContext, 
-        fromTool: currentTool 
+        ...enrichedContext
       }));
     }
     
-    // Update history
+    // Actualizar historial con límite inteligente
     if (updateHistory) {
       setNavigationHistory(prev => {
-        const newHistory = [...prev, tool];
-        return newHistory.slice(-10); // Keep last 10
+        const newHistory = [...prev.filter(t => t !== tool), tool];
+        return newHistory.slice(-15); // Mantener últimos 15
       });
     }
     
-    // Delegate to routing
-    routingNavigate(tool, newContext);
+    // Delegar a routing con contexto enriquecido
+    routingNavigate(tool, enrichedContext);
     
-    console.log(`✅ Navegación completada a ${tool}`);
+    console.log(`✅ Navegación optimizada completada a ${tool}`);
   }, [currentTool, user?.id, routingNavigate]);
 
   const goBack = useCallback(() => {
     if (navigationHistory.length > 1) {
       const newHistory = [...navigationHistory];
-      newHistory.pop(); // Remove current
-      const previousTool = newHistory[newHistory.length - 1];
+      const currentIndex = newHistory.findIndex(t => t === currentTool);
+      const previousTool = currentIndex > 0 ? newHistory[currentIndex - 1] : newHistory[newHistory.length - 2];
       
-      setNavigationHistory(newHistory);
-      navigateToTool(previousTool, undefined, false);
-      
-      console.log(`⬅️ Regresando a: ${previousTool}`);
+      if (previousTool) {
+        // Remover herramienta actual del historial
+        const filteredHistory = newHistory.filter((_, index) => index !== currentIndex);
+        setNavigationHistory(filteredHistory);
+        
+        // Navegar sin actualizar historial
+        navigateToTool(previousTool, { 
+          navigationAction: 'back',
+          fromTool: currentTool 
+        }, false);
+        
+        console.log(`⬅️ Navegación hacia atrás: ${currentTool} → ${previousTool}`);
+      }
     }
-  }, [navigationHistory, navigateToTool]);
+  }, [navigationHistory, currentTool, navigateToTool]);
 
   const resetNavigation = useCallback(() => {
     setNavigationHistory(['dashboard']);
     setContext({});
     
-    localStorage.removeItem('navigation-history');
-    localStorage.removeItem('navigation-context');
+    localStorage.removeItem('unified-navigation-history');
+    localStorage.removeItem('unified-navigation-context');
     
     routingNavigate('dashboard');
     
-    console.log('🔄 Navegación reiniciada');
+    console.log('🔄 Navegación reiniciada completamente');
   }, [routingNavigate]);
 
   const updateContext = useCallback((newContext: Partial<NavigationContext>) => {
-    setContext(prev => ({ ...prev, ...newContext }));
-    routingUpdateContext(newContext);
-  }, [routingUpdateContext]);
+    const enrichedUpdate = {
+      ...newContext,
+      timestamp: new Date().toISOString(),
+      lastUpdatedBy: currentTool
+    };
+    
+    setContext(prev => ({ ...prev, ...enrichedUpdate }));
+    routingUpdateContext(enrichedUpdate);
+    
+    console.log('🔧 Contexto actualizado:', enrichedUpdate);
+  }, [routingUpdateContext, currentTool]);
+
+  // Función de análisis de navegación
+  const getNavigationAnalytics = useCallback(() => {
+    const uniqueTools = new Set(navigationHistory);
+    const mostVisited = navigationHistory.reduce((acc, tool) => {
+      acc[tool] = (acc[tool] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const sortedTools = Object.entries(mostVisited)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5);
+    
+    return {
+      totalNavigations: navigationHistory.length,
+      uniqueToolsVisited: uniqueTools.size,
+      mostVisitedTools: sortedTools,
+      currentSession: navigationHistory.slice(-10),
+      averageSessionLength: Math.round(navigationHistory.length / (uniqueTools.size || 1))
+    };
+  }, [navigationHistory]);
 
   return {
     currentTool,
@@ -113,6 +174,7 @@ export function useUnifiedNavigation() {
     goBack,
     resetNavigation,
     updateContext,
-    canGoBack: navigationHistory.length > 1
+    canGoBack: navigationHistory.length > 1,
+    getNavigationAnalytics
   };
 }
