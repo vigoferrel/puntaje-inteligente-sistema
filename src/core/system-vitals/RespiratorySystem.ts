@@ -1,16 +1,15 @@
 /**
- * SISTEMA RESPIRATORIO ANTI-TRACKING v2.0 - Pulmón Digital Blindado
- * Purificación extrema y protección cardiovascular-respiratoria
+ * SISTEMA RESPIRATORIO ANTI-TRACKING v3.0 - Pulmón Digital con Detoxificación
+ * Purificación extrema con protección contra auto-destrucción
  */
 
 import { RespiratoryHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
-import { trackingFirewall } from '@/core/anti-tracking/TrackingFirewall';
-import { storageProtection } from '@/core/anti-tracking/StorageProtectionLayer';
+import { emergencyDetox } from '@/core/anti-tracking/EmergencyDetox';
 
 interface BreathingOptions {
   breathsPerMinute: number;
   oxygenThreshold: number;
-  purificationLevel: 'basic' | 'advanced' | 'maximum' | 'anti_tracking_extreme';
+  purificationLevel: 'basic' | 'advanced' | 'maximum' | 'safe_mode';
   antiTrackingMode: boolean;
   emergencyMode: boolean;
 }
@@ -20,11 +19,13 @@ enum LungState {
   EXHALING = 'exhaling', 
   HOLDING = 'holding',
   PURIFYING = 'purifying',
-  ANTI_TRACKING = 'anti_tracking_mode',
-  EMERGENCY_CLEANING = 'emergency_cleaning'
+  SAFE_MODE = 'safe_mode',
+  DETOXING = 'detoxing'
 }
 
 export class RespiratorySystem {
+  private static instanceCount = 0;
+  private instanceId: string;
   private state: LungState = LungState.HOLDING;
   private oxygenLevel: number = 100;
   private breathingRate: number = 0;
@@ -36,136 +37,155 @@ export class RespiratorySystem {
   private trackingAttackCount: number = 0;
   private readonly options: BreathingOptions;
   private eventListeners: ((event: CirculatoryEvent) => void)[] = [];
+  private breathingInterval: number | null = null;
+  private antiTrackingInterval: number | null = null;
 
   constructor(options: Partial<BreathingOptions> = {}) {
+    RespiratorySystem.instanceCount++;
+    this.instanceId = `respiratory-${RespiratorySystem.instanceCount}-${Date.now()}`;
+    
+    // Prevenir múltiples instancias
+    if (RespiratorySystem.instanceCount > 1) {
+      console.warn(`⚠️ Múltiples instancias del sistema respiratorio detectadas (${RespiratorySystem.instanceCount})`);
+      
+      // Activar detox si hay demasiadas instancias
+      if (RespiratorySystem.instanceCount > 3) {
+        emergencyDetox.activateEmergencyMode();
+        return;
+      }
+    }
+
     this.options = {
       breathsPerMinute: 20,
       oxygenThreshold: 80,
-      purificationLevel: 'anti_tracking_extreme',
-      antiTrackingMode: true,
+      purificationLevel: emergencyDetox.isSafeMode() ? 'safe_mode' : 'advanced',
+      antiTrackingMode: !emergencyDetox.isSafeMode(),
       emergencyMode: false,
       ...options
     };
 
-    this.initializeAntiTrackingBreathing();
+    this.initializeRespiratory();
   }
 
-  private initializeAntiTrackingBreathing(): void {
-    // Monitoreo de ataques de tracking
-    this.monitorTrackingAttacks();
-    
-    // Respiración anti-tracking cada 2 segundos
-    setInterval(() => {
-      this.performAntiTrackingBreath();
-    }, 2000);
+  private initializeRespiratory(): void {
+    // Verificar si estamos en modo de emergencia
+    if (emergencyDetox.isSafeMode()) {
+      this.state = LungState.SAFE_MODE;
+      this.initializeSafeMode();
+    } else {
+      this.initializeNormalMode();
+    }
 
-    // Respiración normal cada 3 segundos
-    setInterval(() => {
-      this.cleanBreathHistory();
-      this.adjustBreathingState();
-      this.purifyAir();
-      this.emitBreath();
+    console.log(`🫁 SISTEMA RESPIRATORIO v3.0 ACTIVADO [${this.instanceId}] - Modo: ${this.state}`);
+  }
+
+  private initializeSafeMode(): void {
+    // Modo seguro sin anti-tracking agresivo
+    this.breathingInterval = window.setInterval(() => {
+      this.safeBreath();
+    }, 5000);
+  }
+
+  private initializeNormalMode(): void {
+    // Monitoreo de auto-destrucción
+    this.monitorSelfDestruction();
+    
+    // Respiración anti-tracking controlada
+    this.antiTrackingInterval = window.setInterval(() => {
+      this.performControlledAntiTrackingBreath();
     }, 3000);
 
-    console.log('🫁 SISTEMA RESPIRATORIO ANTI-TRACKING V2.0 ACTIVADO');
+    // Respiración normal
+    this.breathingInterval = window.setInterval(() => {
+      this.performNormalBreath();
+    }, 4000);
   }
 
-  private monitorTrackingAttacks(): void {
-    // Detectar intentos masivos de tracking en storage
-    const originalStorageAccess = localStorage.setItem;
-    localStorage.setItem = (...args) => {
-      if (this.isTrackingAttempt(args[0])) {
-        this.trackingAttackCount++;
-        if (this.trackingAttackCount > 10) {
-          this.activateEmergencyMode();
+  private monitorSelfDestruction(): void {
+    let errorCount = 0;
+    const maxErrors = 5;
+    
+    window.addEventListener('error', (event) => {
+      if (event.message.includes('Illegal invocation') || 
+          event.message.includes('RespiratorySystem')) {
+        errorCount++;
+        
+        if (errorCount >= maxErrors) {
+          console.log('🚨 Auto-destrucción detectada, activando emergencia');
+          emergencyDetox.activateEmergencyMode();
         }
-        return; // Bloquear completamente
       }
-      return originalStorageAccess.apply(localStorage, args);
-    };
-  }
-
-  private isTrackingAttempt(key: string): boolean {
-    const trackingPatterns = [
-      '_ga', '_gid', '_gat', 'utm_', 'fbp', 'fbc',
-      'analytics', 'tracking', 'pixel', 'beacon',
-      'fingerprint', 'session_id', 'user_id'
-    ];
-    
-    return trackingPatterns.some(pattern => 
-      key.toLowerCase().includes(pattern)
-    );
-  }
-
-  private activateEmergencyMode(): void {
-    this.state = LungState.EMERGENCY_CLEANING;
-    this.options.emergencyMode = true;
-    
-    // Purga de emergencia
-    trackingFirewall.emergencyPurge();
-    storageProtection.emergencyWipe();
-    
-    // Reset contador
-    this.trackingAttackCount = 0;
-    
-    console.log('🚨 MODO DE EMERGENCIA RESPIRATORIO ACTIVADO - Purga total');
-    
-    // Volver a estado normal después de 10 segundos
-    setTimeout(() => {
-      this.state = LungState.HOLDING;
-      this.options.emergencyMode = false;
-      console.log('✅ Modo de emergencia respiratorio desactivado');
-    }, 10000);
-  }
-
-  private performAntiTrackingBreath(): void {
-    if (!this.antiTrackingActive) return;
-
-    this.state = LungState.ANTI_TRACKING;
-    
-    // Verificar y limpiar storage de tracking
-    this.cleanTrackingData();
-    
-    // Incrementar oxigenación después de limpieza
-    this.oxygenLevel = Math.min(100, this.oxygenLevel + 3);
-    
-    // Emitir evento de limpieza
-    this.emitAntiTrackingEvent();
-  }
-
-  private cleanTrackingData(): void {
-    const trackingKeys: string[] = [];
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && this.isTrackingAttempt(key)) {
-        trackingKeys.push(key);
-      }
-    }
-    
-    trackingKeys.forEach(key => {
-      localStorage.removeItem(key);
     });
+  }
+
+  private safeBreath(): void {
+    this.state = LungState.SAFE_MODE;
+    this.oxygenLevel = Math.min(100, this.oxygenLevel + 1);
     
-    if (trackingKeys.length > 0) {
-      console.log(`🧹 Respiración anti-tracking: ${trackingKeys.length} elementos purificados`);
+    // Solo limpiar tracking obvio y externo
+    this.cleanObviousTracking();
+    
+    this.emitSafeBreath();
+  }
+
+  private cleanObviousTracking(): void {
+    try {
+      const keysToRemove: string[] = [];
+      
+      // Solo remover tracking obvio, no tocar storage interno
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && this.isObviousTracking(key) && !emergencyDetox.isInternalKey(key)) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          // Silencioso
+        }
+      });
+      
+      if (keysToRemove.length > 0) {
+        console.log(`🧹 Limpieza segura: ${keysToRemove.length} elementos obvios de tracking removidos`);
+      }
+    } catch (error) {
+      // Respiración silenciosa si hay problemas
     }
   }
 
-  private emitAntiTrackingEvent(): void {
-    const event: CirculatoryEvent = {
-      type: 'toxin_removal',
-      source: 'lungs',
-      data: {
-        trackingElementsRemoved: this.trackingAttackCount,
-        oxygenLevel: this.oxygenLevel,
-        purificationLevel: this.options.purificationLevel,
-        antiTrackingActive: this.antiTrackingActive
-      },
-      timestamp: Date.now()
-    };
+  private isObviousTracking(key: string): boolean {
+    const obviousTrackers = ['_ga', '_gid', '_gat', 'fbp', 'fbc'];
+    return obviousTrackers.some(tracker => key.includes(tracker));
+  }
 
-    this.eventListeners.forEach(listener => listener(event));
+  private performControlledAntiTrackingBreath(): void {
+    // Solo si no estamos en modo seguro
+    if (emergencyDetox.isSafeMode()) {
+      return;
+    }
+
+    try {
+      this.state = LungState.PURIFYING;
+      this.cleanObviousTracking();
+      this.oxygenLevel = Math.min(100, this.oxygenLevel + 2);
+    } catch (error) {
+      // Activar modo seguro si hay problemas
+      emergencyDetox.activateEmergencyMode();
+    }
+  }
+
+  private performNormalBreath(): void {
+    try {
+      this.cleanBreathHistory();
+      this.adjustBreathingState();
+      this.emitBreath();
+    } catch (error) {
+      console.error('Error en respiración normal:', error);
+      emergencyDetox.activateEmergencyMode();
+    }
   }
 
   private cleanBreathHistory(): void {
@@ -235,28 +255,62 @@ export class RespiratorySystem {
     console.log('🦠 PURIFICACIÓN ANTI-TRACKING EXTREMA EJECUTADA');
   }
 
+  private emitSafeBreath(): void {
+    const event: CirculatoryEvent = {
+      type: 'breath',
+      source: 'lungs',
+      data: {
+        state: this.state,
+        instanceId: this.instanceId,
+        safeMode: true,
+        oxygenLevel: this.oxygenLevel,
+        detoxStatus: emergencyDetox.getDetoxStatus()
+      },
+      timestamp: Date.now()
+    };
+
+    this.eventListeners.forEach(listener => {
+      try {
+        listener(event);
+      } catch (error) {
+        // Listener silencioso
+      }
+    });
+  }
+
   private emitBreath(): void {
     const event: CirculatoryEvent = {
       type: 'breath',
       source: 'lungs',
       data: {
         state: this.state,
+        instanceId: this.instanceId,
         rate: this.breathingRate,
         health: this.getHealth(),
         storageSize: this.secureStorage.size,
-        antiTrackingStats: {
-          attacksBlocked: this.trackingAttackCount,
-          firewallStats: trackingFirewall.getFirewallStats(),
-          protectionStats: storageProtection.getProtectionStats()
-        }
+        detoxStatus: emergencyDetox.getDetoxStatus()
       },
       timestamp: Date.now()
     };
 
-    this.eventListeners.forEach(listener => listener(event));
+    this.eventListeners.forEach(listener => {
+      try {
+        listener(event);
+      } catch (error) {
+        // Listener silencioso para evitar cascadas
+      }
+    });
   }
 
   public breatheIn(data: any): boolean {
+    if (emergencyDetox.isSafeMode()) {
+      // En modo seguro, solo aceptar datos internos
+      if (this.containsTrackingData(data)) {
+        return false;
+      }
+      return true;
+    }
+
     if (this.state === LungState.PURIFYING || this.state === LungState.EMERGENCY_CLEANING) {
       return false; // No aceptar datos durante purificación
     }
@@ -289,13 +343,13 @@ export class RespiratorySystem {
   }
 
   private containsTrackingData(data: any): boolean {
-    const dataStr = JSON.stringify(data).toLowerCase();
-    const trackingIndicators = [
-      'analytics', 'tracking', 'pixel', 'beacon', 'fingerprint',
-      '_ga', '_gid', 'utm_', 'fbp', 'google', 'facebook'
-    ];
-    
-    return trackingIndicators.some(indicator => dataStr.includes(indicator));
+    try {
+      const dataStr = JSON.stringify(data).toLowerCase();
+      const trackingIndicators = ['analytics', 'tracking', 'pixel', 'beacon'];
+      return trackingIndicators.some(indicator => dataStr.includes(indicator));
+    } catch {
+      return false;
+    }
   }
 
   public breatheOut(signal: any): any {
@@ -388,8 +442,10 @@ export class RespiratorySystem {
     return {
       breathingRate: this.breathingRate,
       oxygenLevel: this.oxygenLevel,
-      airQuality: this.oxygenLevel > 90 ? 'pure' : this.oxygenLevel > 70 ? 'filtered' : 'contaminated',
-      antiTrackingActive: this.antiTrackingActive && this.purificationActive
+      airQuality: emergencyDetox.isSafeMode() ? 'filtered' : 
+                  this.oxygenLevel > 90 ? 'pure' : 
+                  this.oxygenLevel > 70 ? 'filtered' : 'contaminated',
+      antiTrackingActive: this.antiTrackingActive && !emergencyDetox.isSafeMode()
     };
   }
 
@@ -404,20 +460,32 @@ export class RespiratorySystem {
   }
 
   public emergencyPurge(): void {
-    this.activateEmergencyMode();
+    // Activar detox de emergencia
+    emergencyDetox.activateEmergencyMode();
+    
     this.secureStorage.clear();
     this.oxygenLevel = 100;
     this.breathHistory = [];
-    this.state = LungState.HOLDING;
+    this.state = LungState.SAFE_MODE;
     this.purificationActive = false;
     this.trackingAttackCount = 0;
     
-    console.log('🚨 PURGA DE EMERGENCIA RESPIRATORIA COMPLETADA');
+    console.log(`🚨 PURGA DE EMERGENCIA RESPIRATORIA COMPLETADA [${this.instanceId}]`);
   }
 
   public destroy(): void {
+    RespiratorySystem.instanceCount = Math.max(0, RespiratorySystem.instanceCount - 1);
+    
+    if (this.breathingInterval) {
+      clearInterval(this.breathingInterval);
+    }
+    if (this.antiTrackingInterval) {
+      clearInterval(this.antiTrackingInterval);
+    }
+    
     this.eventListeners = [];
     this.secureStorage.clear();
-    storageProtection.destroy();
+    
+    console.log(`🫁 Sistema respiratorio destruido [${this.instanceId}]`);
   }
 }
