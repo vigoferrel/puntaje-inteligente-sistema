@@ -20,7 +20,7 @@ export interface TLearningNode {
   prueba: TPAESPrueba;
   bloomLevel?: string;
   estimatedTime?: number;
-  estimatedTimeMinutes?: number;
+  estimatedTimeMinutes: number;
   difficulty: string;
   prerequisites?: string[];
   dependsOn?: string[];
@@ -30,10 +30,22 @@ export interface TLearningNode {
   createdAt?: string;
   updatedAt?: string;
   position?: number;
-  // Propiedades ahora requeridas para coherencia
+  // Propiedades unificadas y consistentes
   cognitive_level: string;
+  cognitiveLevel: string;
   subject_area: string;
+  subjectArea: string;
   code: string;
   skillId: number;
   testId: number;
+  // Propiedades para compatibilidad con el sistema diagnóstico
+  tierPriority?: 'tier1_critico' | 'tier2_importante' | 'tier3_complementario';
+  domainCategory?: string;
+  baseWeight?: number;
+  difficultyMultiplier?: number;
+  frequencyBonus?: number;
+  prerequisiteWeight?: number;
+  adaptiveAdjustment?: number;
+  bloomComplexityScore?: number;
+  paesFrequency?: number;
 }

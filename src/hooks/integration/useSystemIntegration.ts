@@ -15,6 +15,15 @@ interface SystemStatus {
   overall: { coherence: number; synchronized: boolean };
 }
 
+interface SmartRecommendation {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'urgent' | 'high' | 'medium' | 'low';
+  action: string;
+  estimatedTime?: number;
+}
+
 export const useSystemIntegration = () => {
   const { user } = useAuth();
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -137,18 +146,19 @@ export const useSystemIntegration = () => {
     console.log('📅 Sesión de estudio creada automáticamente');
   }, [diagnosticSystem.tier1Nodes, createEvent]);
 
-  // Obtener recomendaciones inteligentes
-  const getSmartRecommendations = useCallback(() => {
-    const recommendations = [];
+  // Obtener recomendaciones inteligentes mejoradas
+  const getSmartRecommendations = useCallback((): SmartRecommendation[] => {
+    const recommendations: SmartRecommendation[] = [];
 
     // Recomendaciones basadas en estado del sistema
     if (!systemStatus.diagnostic.ready) {
       recommendations.push({
         id: 'run-diagnostic',
         title: 'Ejecutar Diagnóstico',
-        description: 'Mejora la precisión del sistema',
+        description: 'Mejora la precisión del sistema ejecutando un diagnóstico completo',
         priority: 'high',
-        action: 'diagnostic'
+        action: 'diagnostic',
+        estimatedTime: 15
       });
     }
 
@@ -156,9 +166,10 @@ export const useSystemIntegration = () => {
       recommendations.push({
         id: 'create-plan',
         title: 'Crear Plan de Estudio',
-        description: 'Organiza tu aprendizaje',
+        description: 'Organiza tu aprendizaje con un plan personalizado',
         priority: 'medium',
-        action: 'plan'
+        action: 'plan',
+        estimatedTime: 5
       });
     }
 
@@ -166,9 +177,10 @@ export const useSystemIntegration = () => {
       recommendations.push({
         id: 'schedule-sessions',
         title: 'Programar Sesiones',
-        description: 'Establece una rutina de estudio',
+        description: 'Establece una rutina de estudio consistente',
         priority: 'medium',
-        action: 'calendar'
+        action: 'calendar',
+        estimatedTime: 10
       });
     }
 
@@ -176,9 +188,33 @@ export const useSystemIntegration = () => {
       recommendations.push({
         id: 'continue-study',
         title: 'Continuar Estudio',
-        description: `${systemStatus.diagnostic.tier1} nodos prioritarios disponibles`,
+        description: `${systemStatus.diagnostic.tier1} nodos críticos requieren atención inmediata`,
         priority: 'urgent',
-        action: 'study'
+        action: 'study',
+        estimatedTime: 30
+      });
+    }
+
+    // Recomendaciones avanzadas basadas en progreso
+    if (systemStatus.plan.progress > 50 && systemStatus.plan.progress < 80) {
+      recommendations.push({
+        id: 'intensive-review',
+        title: 'Revisión Intensiva',
+        description: 'Refuerza conceptos clave antes del examen final',
+        priority: 'high',
+        action: 'review',
+        estimatedTime: 45
+      });
+    }
+
+    if (systemStatus.overall.coherence < 50) {
+      recommendations.push({
+        id: 'system-repair',
+        title: 'Reparar Sistema',
+        description: 'Algunos módulos requieren atención para funcionar correctamente',
+        priority: 'high',
+        action: 'repair',
+        estimatedTime: 10
       });
     }
 
@@ -189,7 +225,7 @@ export const useSystemIntegration = () => {
     });
   }, [systemStatus]);
 
-  // Sincronización automática
+  // Sincronización automática mejorada
   useEffect(() => {
     const interval = setInterval(() => {
       if (user && systemStatus.overall.synchronized) {
@@ -214,6 +250,17 @@ export const useSystemIntegration = () => {
     createSmartStudySession,
     getSmartRecommendations: getSmartRecommendations(),
     isSystemHealthy: systemStatus.overall.coherence >= 75,
-    needsAttention: systemStatus.overall.coherence < 50
+    needsAttention: systemStatus.overall.coherence < 50,
+    // Nuevas funciones útiles
+    getSystemHealthMessage: () => {
+      if (systemStatus.overall.coherence >= 90) return 'Sistema funcionando óptimamente';
+      if (systemStatus.overall.coherence >= 75) return 'Sistema funcionando correctamente';
+      if (systemStatus.overall.coherence >= 50) return 'Sistema requiere atención';
+      return 'Sistema requiere reparación urgente';
+    },
+    getNextRecommendedAction: () => {
+      const recs = getSmartRecommendations();
+      return recs.length > 0 ? recs[0] : null;
+    }
   };
 };

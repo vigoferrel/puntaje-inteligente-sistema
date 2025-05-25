@@ -7,7 +7,7 @@ import { autoCorrectNodeIssues } from "@/utils/node-validation";
 
 /**
  * Maps database nodes to frontend type with improved consistency and auto-correction
- * ACTUALIZADO POST-MIGRACIÓN
+ * ACTUALIZADO POST-MIGRACIÓN con propiedades duales para compatibilidad
  */
 export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
   console.log('Mapeando nodo desde DB con auto-corrección POST-MIGRACIÓN:', {
@@ -65,7 +65,11 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
     console.error(`Error mapeando test_id ${node.test_id}:`, e);
   }
 
-  // Crear nodo base
+  // Valores seguros para propiedades requeridas
+  const subjectArea = node.subject_area || prueba;
+  const cognitiveLevel = node.cognitive_level || 'COMPRENDER';
+
+  // Crear nodo base con propiedades duales para compatibilidad
   const baseNode: TLearningNode = {
     id: node.id,
     title: node.title,
@@ -81,12 +85,24 @@ export const mapDatabaseNodeToLearningNode = (node: any): TLearningNode => {
       examples: node.content?.examples || [],
       exerciseCount: node.content?.exerciseCount || 15
     } as any,
-    // Propiedades ahora requeridas con valores seguros
-    cognitive_level: node.cognitive_level || 'COMPRENDER',
-    subject_area: node.subject_area || prueba,
+    // Propiedades duales para compatibilidad total
+    cognitive_level: cognitiveLevel,
+    cognitiveLevel: cognitiveLevel,
+    subject_area: subjectArea,
+    subjectArea: subjectArea,
     code: node.code || `${node.id.slice(0, 8)}`,
     skillId: node.skill_id || 1,
     testId: node.test_id || 1,
+    // Propiedades adicionales para el sistema diagnóstico
+    tierPriority: node.tier_priority || 'tier2_importante',
+    domainCategory: node.domain_category || 'general',
+    baseWeight: node.base_weight || 1.0,
+    difficultyMultiplier: node.difficulty_multiplier || 1.0,
+    frequencyBonus: node.frequency_bonus || 0.0,
+    prerequisiteWeight: node.prerequisite_weight || 0.0,
+    adaptiveAdjustment: node.adaptive_adjustment || 1.0,
+    bloomComplexityScore: node.bloom_complexity_score || 3.0,
+    paesFrequency: node.paes_frequency || 0,
     createdAt: node.created_at,
     updatedAt: node.updated_at
   };

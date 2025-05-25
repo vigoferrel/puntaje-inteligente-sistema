@@ -1,120 +1,96 @@
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useDiagnosticSystem } from '@/hooks/diagnostic/useDiagnosticSystem';
+import { useLearningPlans } from '@/hooks/learning-plans/use-learning-plans';
 
 interface ValidationStatus {
   isValid: boolean;
-  issuesCount: number;
-  lastValidation?: Date;
-  issuesByType?: Record<string, number>;
+  errors: string[];
+  warnings: string[];
+  lastValidated: Date | null;
+  systemHealth: 'excellent' | 'good' | 'fair' | 'poor';
 }
 
-/**
- * Hook para validación inteligente del sistema educativo
- */
 export const useValidationSystem = () => {
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>({
     isValid: true,
-    issuesCount: 0,
-    lastValidation: undefined,
-    issuesByType: {}
+    errors: [],
+    warnings: [],
+    lastValidated: null,
+    systemHealth: 'good'
   });
 
-  // Validar coherencia general del sistema
+  const diagnosticSystem = useDiagnosticSystem();
+  const { plans, currentPlan } = useLearningPlans();
+
   const validateSystemCoherence = useCallback(async () => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
     try {
-      console.log('🔍 Validando coherencia del sistema...');
-
-      const { data: validationResults, error } = await supabase
-        .rpc('validate_nodes_coherence');
-
-      if (error) {
-        console.error('Error en validación:', error);
-        return;
+      // Validar sistema diagnóstico
+      if (!diagnosticSystem.isSystemReady) {
+        errors.push('Sistema diagnóstico no está listo');
       }
 
-      // Procesar resultados de validación
-      const issuesByType: Record<string, number> = {};
-      let totalIssues = 0;
+      if (diagnosticSystem.learningNodes.length === 0) {
+        warnings.push('No se encontraron nodos de aprendizaje');
+      }
 
-      validationResults?.forEach((result: any) => {
-        if (result.node_count > 0) {
-          issuesByType[result.issue_type] = result.node_count;
-          totalIssues += result.node_count;
-        }
-      });
+      // Validar planes de aprendizaje
+      if (plans.length === 0) {
+        warnings.push('No se encontraron planes de aprendizaje');
+      }
 
-      const isValid = totalIssues === 0;
+      // Validar coherencia de datos
+      const nodesWithoutSubject = diagnosticSystem.learningNodes.filter(node => 
+        !node.subjectArea && !node.subject_area
+      );
+      
+      if (nodesWithoutSubject.length > 0) {
+        warnings.push(`${nodesWithoutSubject.length} nodos sin área de materia definida`);
+      }
+
+      // Calcular salud del sistema
+      let systemHealth: ValidationStatus['systemHealth'] = 'excellent';
+      
+      if (errors.length > 0) {
+        systemHealth = 'poor';
+      } else if (warnings.length > 2) {
+        systemHealth = 'fair';
+      } else if (warnings.length > 0) {
+        systemHealth = 'good';
+      }
 
       setValidationStatus({
-        isValid,
-        issuesCount: totalIssues,
-        lastValidation: new Date(),
-        issuesByType
+        isValid: errors.length === 0,
+        errors,
+        warnings,
+        lastValidated: new Date(),
+        systemHealth
       });
 
-      console.log(`✅ Validación completada: ${isValid ? 'Sistema coherente' : `${totalIssues} problemas detectados`}`);
+      console.log('🔍 Validación del sistema completada:', {
+        isValid: errors.length === 0,
+        errors: errors.length,
+        warnings: warnings.length,
+        systemHealth
+      });
 
     } catch (error) {
-      console.error('❌ Error validando sistema:', error);
+      console.error('❌ Error durante validación:', error);
+      setValidationStatus(prev => ({
+        ...prev,
+        errors: [...prev.errors, 'Error durante la validación del sistema'],
+        isValid: false,
+        systemHealth: 'poor',
+        lastValidated: new Date()
+      }));
     }
-  }, []);
-
-  // Validar mapeo de nodos específico
-  const validateNodeMapping = useCallback(async () => {
-    try {
-      const { data: mappingIssues } = await supabase
-        .from('learning_nodes')
-        .select('id, test_id, skill_id, code')
-        .or('test_id.is.null,skill_id.is.null');
-
-      const issues = mappingIssues?.length || 0;
-      
-      if (issues > 0) {
-        console.warn(`⚠️ ${issues} nodos con mapeo incompleto detectados`);
-      }
-
-      return issues === 0;
-    } catch (error) {
-      console.error('❌ Error validando mapeo de nodos:', error);
-      return false;
-    }
-  }, []);
-
-  // Validar integridad de diagnósticos
-  const validateDiagnosticIntegrity = useCallback(async () => {
-    try {
-      const { data: diagnosticTests } = await supabase
-        .from('diagnostic_tests')
-        .select('id, test_id, total_questions, questions_per_skill');
-
-      const { data: exercises } = await supabase
-        .from('exercises')
-        .select('id, diagnostic_id, test_id')
-        .not('diagnostic_id', 'is', null);
-
-      // Validar que cada diagnóstico tenga ejercicios asociados
-      const diagnosticsWithoutExercises = diagnosticTests?.filter(diag => 
-        !exercises?.some(ex => ex.diagnostic_id === diag.id)
-      );
-
-      const issues = diagnosticsWithoutExercises?.length || 0;
-      
-      if (issues > 0) {
-        console.warn(`⚠️ ${issues} diagnósticos sin ejercicios asociados`);
-      }
-
-      return issues === 0;
-    } catch (error) {
-      console.error('❌ Error validando integridad diagnóstica:', error);
-      return false;
-    }
-  }, []);
+  }, [diagnosticSystem, plans]);
 
   return {
     validationStatus,
-    validateSystemCoherence,
-    validateNodeMapping,
-    validateDiagnosticIntegrity
+    validateSystemCoherence
   };
 };
