@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
+// Definir tipo local para eventos del calendario
 interface CalendarEvent {
   id: string;
   title: string;
@@ -31,6 +32,7 @@ export const useCalendarEvents = () => {
     if (!profile) return;
 
     try {
+      // Usar el cliente de Supabase directamente con el tipo correcto
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
@@ -39,7 +41,26 @@ export const useCalendarEvents = () => {
 
       if (error) throw error;
 
-      setEvents(data || []);
+      // Mapear los datos de la base de datos al tipo local
+      const mappedEvents: CalendarEvent[] = (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        event_type: item.event_type as 'study_session' | 'paes_date' | 'deadline' | 'reminder',
+        start_date: item.start_date,
+        end_date: item.end_date,
+        all_day: item.all_day,
+        color: item.color || '#4F46E5',
+        priority: item.priority as 'low' | 'medium' | 'high' | 'critical',
+        location: item.location,
+        is_recurring: item.is_recurring || false,
+        recurrence_pattern: item.recurrence_pattern,
+        related_node_id: item.related_node_id,
+        related_plan_id: item.related_plan_id,
+        metadata: item.metadata
+      }));
+
+      setEvents(mappedEvents);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
       toast({
@@ -67,15 +88,34 @@ export const useCalendarEvents = () => {
 
       if (error) throw error;
 
-      setEvents(prev => [...prev, data]);
-      await scheduleNotifications(data);
+      // Mapear el resultado al tipo local
+      const newEvent: CalendarEvent = {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        event_type: data.event_type as 'study_session' | 'paes_date' | 'deadline' | 'reminder',
+        start_date: data.start_date,
+        end_date: data.end_date,
+        all_day: data.all_day,
+        color: data.color || '#4F46E5',
+        priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
+        location: data.location,
+        is_recurring: data.is_recurring || false,
+        recurrence_pattern: data.recurrence_pattern,
+        related_node_id: data.related_node_id,
+        related_plan_id: data.related_plan_id,
+        metadata: data.metadata
+      };
+
+      setEvents(prev => [...prev, newEvent]);
+      await scheduleNotifications(newEvent);
       
       toast({
         title: "Evento creado",
         description: "El evento se ha creado correctamente"
       });
 
-      return data;
+      return newEvent;
     } catch (error) {
       console.error('Error creating event:', error);
       toast({
@@ -97,20 +137,39 @@ export const useCalendarEvents = () => {
 
       if (error) throw error;
 
+      // Mapear el resultado al tipo local
+      const updatedEvent: CalendarEvent = {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        event_type: data.event_type as 'study_session' | 'paes_date' | 'deadline' | 'reminder',
+        start_date: data.start_date,
+        end_date: data.end_date,
+        all_day: data.all_day,
+        color: data.color || '#4F46E5',
+        priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
+        location: data.location,
+        is_recurring: data.is_recurring || false,
+        recurrence_pattern: data.recurrence_pattern,
+        related_node_id: data.related_node_id,
+        related_plan_id: data.related_plan_id,
+        metadata: data.metadata
+      };
+
       setEvents(prev => prev.map(event => 
-        event.id === eventId ? data : event
+        event.id === eventId ? updatedEvent : event
       ));
 
       // Cancelar notificaciones existentes y crear nuevas
       await cancelScheduledNotifications(eventId);
-      await scheduleNotifications(data);
+      await scheduleNotifications(updatedEvent);
 
       toast({
         title: "Evento actualizado",
         description: "El evento se ha actualizado correctamente"
       });
 
-      return data;
+      return updatedEvent;
     } catch (error) {
       console.error('Error updating event:', error);
       toast({
@@ -171,7 +230,7 @@ export const useCalendarEvents = () => {
 
       // Programar notificaciones de email
       if (preferences.email_enabled) {
-        for (const timing of preferences.email_timing) {
+        for (const timing of preferences.email_timing as string[]) {
           const sendTime = calculateSendTime(eventTime, timing);
           if (sendTime > new Date()) {
             notifications.push({
@@ -191,7 +250,7 @@ export const useCalendarEvents = () => {
 
       // Programar notificaciones push
       if (preferences.push_enabled) {
-        for (const timing of preferences.push_timing) {
+        for (const timing of preferences.push_timing as string[]) {
           const sendTime = calculateSendTime(eventTime, timing);
           if (sendTime > new Date()) {
             notifications.push({

@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, MapPin, AlertTriangle, Trash2 } from 'lucide-react';
 
+// Definir tipos localmente para evitar conflictos
 interface CalendarEvent {
   id: string;
   title: string;
@@ -42,12 +43,12 @@ export const EventModal: React.FC<EventModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    event_type: 'study_session' as const,
+    event_type: 'study_session' as 'study_session' | 'paes_date' | 'deadline' | 'reminder',
     start_date: '',
     end_date: '',
     all_day: false,
     color: '#4F46E5',
-    priority: 'medium' as const,
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
     location: ''
   });
 
@@ -145,7 +146,7 @@ export const EventModal: React.FC<EventModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-gray-300 font-medium">Tipo de Evento</Label>
-              <Select value={formData.event_type} onValueChange={(value: any) => setFormData({ ...formData, event_type: value })}>
+              <Select value={formData.event_type} onValueChange={(value: 'study_session' | 'paes_date' | 'deadline' | 'reminder') => setFormData({ ...formData, event_type: value })}>
                 <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -164,7 +165,7 @@ export const EventModal: React.FC<EventModalProps> = ({
 
             <div className="space-y-2">
               <Label className="text-gray-300 font-medium">Prioridad</Label>
-              <Select value={formData.priority} onValueChange={(value: any) => setFormData({ ...formData, priority: value })}>
+              <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high' | 'critical') => setFormData({ ...formData, priority: value })}>
                 <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
