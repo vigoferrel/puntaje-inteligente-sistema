@@ -3,6 +3,7 @@ import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { mapSkillIdToEnum, mapTestIdToEnum } from "@/utils/supabase-mappers";
 import { DiagnosticQuestion } from "@/types/diagnostic";
 import { RawExerciseData, JsonValue } from "./types";
+import { mapDifficultyToSpanish } from "@/utils/difficulty-mapper";
 
 /**
  * Maps a skill value to the corresponding TPAESHabilidad enum
@@ -95,6 +96,7 @@ export function mapExerciseToQuestion(exercise: RawExerciseData, testId?: number
     correctAnswer: exercise.correct_answer || '',
     skill: safeMapSkill(skillId),
     prueba: safeMapPrueba(actualTestId),
-    explanation: exercise.explanation || undefined
+    explanation: exercise.explanation || undefined,
+    difficulty: mapDifficultyToSpanish(exercise.difficulty || 'intermediate')
   };
 }

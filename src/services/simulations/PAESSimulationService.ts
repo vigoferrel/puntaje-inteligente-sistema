@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { BancoEvaluacionesService } from '@/services/banco-evaluaciones/BancoEvaluacionesService';
 import { PAESSimulation, PAESSimulationResult, DiagnosticQuestion } from '@/types/diagnostic';
@@ -31,7 +30,7 @@ export class PAESSimulationService {
     try {
       // Obtener preguntas oficiales del banco
       const evaluacion = await BancoEvaluacionesService.generarEvaluacionOptimizada({
-        tipo_evaluacion: 'simulacion',
+        tipo_evaluacion: 'diagnostica', // Usar tipo válido en lugar de 'simulacion'
         prueba_paes: prueba,
         total_preguntas: simulationConfig.totalQuestions,
         duracion_minutos: simulationConfig.duration,

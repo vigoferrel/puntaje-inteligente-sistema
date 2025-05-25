@@ -1,4 +1,6 @@
-import { DiagnosticResult, TPAESHabilidad } from '@/types/diagnostic';
+
+import { DiagnosticResult } from '@/types/diagnostic';
+import { TPAESHabilidad } from '@/types/system-types';
 
 const createResultRecord = (
   userId: string,

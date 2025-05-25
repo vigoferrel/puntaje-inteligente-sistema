@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { openRouterService } from '@/services/openrouter/core';
 import { BancoEvaluacionesService } from '@/services/banco-evaluaciones/BancoEvaluacionesService';
@@ -155,13 +154,13 @@ export class ContentOrchestrator {
     });
 
     if (evaluacion.preguntas && evaluacion.preguntas.length > 0) {
-      const pregunta = evaluacion.preguntas[0];
-      return {
-        id: `oficial-${pregunta.id}`,
-        question: pregunta.enunciado,
-        context: pregunta.contexto_situacional || '',
-        options: pregunta.alternativas?.map((alt: any) => alt.contenido) || [],
-        correctAnswer: pregunta.alternativas?.find((alt: any) => alt.es_correcta)?.contenido || '',
+      const preguntasFormateadas = evaluacion.preguntas.map((pregunta: any) => ({
+        id: pregunta.id,
+        enunciado: pregunta.enunciado,
+        alternativas: pregunta.alternativas_respuesta || [],
+        nivel_dificultad: pregunta.nivel_dificultad,
+        competencia_especifica: pregunta.competencia_especifica,
+        contexto_situacional: pregunta.contexto_situacional || pregunta.contexto || '', // Usar propiedad alternativa
         explanation: `Pregunta oficial de PAES ${prueba}. Esta pregunta evalúa ${skill} en nivel ${difficulty}.`,
         source: 'oficial',
         metadata: {
@@ -170,7 +169,9 @@ export class ContentOrchestrator {
           prueba,
           costSaving: 0.02
         }
-      };
+      }));
+
+      return preguntasFormateadas[0];
     }
 
     throw new Error('No se encontró contenido oficial');

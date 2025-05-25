@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { 
   DiagnosticTest, 
@@ -108,18 +107,19 @@ export const useDiagnostic = () => {
   const submitResult = async (
     userId: string,
     diagnosticId: string,
-    answers: Record<string, string>,
-    timeSpentMinutes: number
+    answers: Record<string, string>
   ) => {
     try {
       const test = tests.find(t => t.id === diagnosticId);
       if (!test) throw new Error("Test not found");
       
+      // Calculate results from answers
+      const calculatedResults = calculateDiagnosticResults(answers, test.questions);
+      
       const result = await submitDiagnosticResult(
         userId,
         diagnosticId,
-        answers,
-        timeSpentMinutes
+        calculatedResults
       );
       
       if (result) {

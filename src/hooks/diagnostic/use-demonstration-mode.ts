@@ -37,7 +37,8 @@ export function useDemonstrationMode() {
             correctAnswer: "Opción B",
             skill: "TRACK_LOCATE" as TPAESHabilidad,
             prueba: "COMPETENCIA_LECTORA" as TPAESPrueba,
-            explanation: "La idea principal se encuentra en el segundo párrafo."
+            explanation: "La idea principal se encuentra en el segundo párrafo.",
+            difficulty: "INTERMEDIO"
           },
           {
             id: "demo-q2",
@@ -46,7 +47,8 @@ export function useDemonstrationMode() {
             correctAnswer: "Inferencia 3",
             skill: "INTERPRET_RELATE" as TPAESHabilidad,
             prueba: "COMPETENCIA_LECTORA" as TPAESPrueba,
-            explanation: "El último párrafo sugiere esta conclusión."
+            explanation: "El último párrafo sugiere esta conclusión.",
+            difficulty: "AVANZADO"
           }
         ]
       },
@@ -64,7 +66,8 @@ export function useDemonstrationMode() {
             correctAnswer: "x = 5",
             skill: "SOLVE_PROBLEMS" as TPAESHabilidad,
             prueba: "MATEMATICA_1" as TPAESPrueba,
-            explanation: "2x + 5 = 15 → 2x = 10 → x = 5"
+            explanation: "2x + 5 = 15 → 2x = 10 → x = 5",
+            difficulty: "BASICO"
           }
         ]
       }
@@ -77,9 +80,23 @@ export function useDemonstrationMode() {
   const getDemoDiagnosticResult = useCallback((): DiagnosticResult => {
     return {
       id: "demo-result-1",
+      testId: 1,
       userId: "demo-user",
       diagnosticId: "demo-test-1",
+      score: 72.5,
       completedAt: new Date().toISOString(),
+      answers: [
+        {
+          questionId: "demo-q1",
+          selectedAnswer: "Opción B",
+          isCorrect: true
+        },
+        {
+          questionId: "demo-q2", 
+          selectedAnswer: "Inferencia 2",
+          isCorrect: false
+        }
+      ],
       results: {
         "TRACK_LOCATE": 65,
         "INTERPRET_RELATE": 78,

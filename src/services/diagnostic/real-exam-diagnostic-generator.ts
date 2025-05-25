@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
 import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
+import { mapDifficultyToSpanish } from "@/utils/difficulty-mapper";
 
 interface RealExamDiagnostic {
   examCode: string;
@@ -120,10 +120,7 @@ export class RealExamDiagnosticGenerator {
           description: config.description,
           testId: config.testId,
           questions: diagnosticQuestions,
-          isCompleted: false,
-          targetTier: 'tier1_critico',
-          questionsPerSkill: 3,
-          totalQuestions: diagnosticQuestions.length
+          isCompleted: false
         };
       }
       
@@ -231,9 +228,7 @@ export class RealExamDiagnosticGenerator {
       skill: this.mapPruebaToSkill(config.prueba),
       prueba: config.prueba,
       explanation: rawQuestion.contexto || `Pregunta ${rawQuestion.numero} del examen oficial ${config.examCode}`,
-      bloomLevel: 'aplicar',
-      difficulty: 'intermediate',
-      paesFrequencyWeight: 1.5
+      difficulty: mapDifficultyToSpanish('intermediate')
     };
   }
   
@@ -263,9 +258,7 @@ export class RealExamDiagnosticGenerator {
       skill: this.mapPruebaToSkill(config.prueba),
       prueba: config.prueba,
       explanation: `Pregunta generada automáticamente para ${config.title}`,
-      bloomLevel: 'aplicar',
-      difficulty: 'basic',
-      paesFrequencyWeight: 1.0
+      difficulty: mapDifficultyToSpanish('basic')
     }));
     
     return {
@@ -274,10 +267,7 @@ export class RealExamDiagnosticGenerator {
       description: `${config.description} (Versión de demostración)`,
       testId: config.testId,
       questions: sampleQuestions,
-      isCompleted: false,
-      targetTier: 'tier1_critico',
-      questionsPerSkill: 2,
-      totalQuestions: sampleQuestions.length
+      isCompleted: false
     };
   }
 }

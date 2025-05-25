@@ -1,6 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from "@/types/diagnostic";
 import { TPAESHabilidad } from "@/types/system-types";
+import { mapDifficultyToSpanish } from "@/utils/difficulty-mapper";
 
 /**
  * Servicio modular para gestión de preguntas diagnósticas
@@ -46,7 +48,7 @@ export const fetchTestQuestions = async (testId: string): Promise<DiagnosticQues
       skill: 'INTERPRET_RELATE' as TPAESHabilidad,
       prueba: 'COMPETENCIA_LECTORA',
       explanation: exercise.explanation || '',
-      difficulty: 'intermediate'
+      difficulty: mapDifficultyToSpanish('intermediate')
     }));
   } catch (error) {
     console.error('❌ Error cargando preguntas:', error);

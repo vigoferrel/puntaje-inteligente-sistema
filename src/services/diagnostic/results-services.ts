@@ -38,8 +38,11 @@ export const fetchDiagnosticResults = async (userId: string) => {
       
       const mappedResults: DiagnosticResult[] = data.map(result => ({
         id: result.id,
+        testId: 1, // Default test ID
         userId: result.user_id,
         diagnosticId: result.diagnostic_id,
+        score: 0, // Calculate from results
+        answers: [], // Default empty answers
         // Cast database results to our type or use default values
         results: (result.results as unknown as Record<TPAESHabilidad, number>) || defaultResults,
         completedAt: result.completed_at

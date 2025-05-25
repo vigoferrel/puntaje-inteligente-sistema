@@ -141,3 +141,6 @@ export interface PAESSimulationResult {
   completedAt: string;
   predictedPAESScore?: number;
 }
+
+// Export TPAESHabilidad for compatibility
+export type { TPAESHabilidad } from '@/types/system-types';
