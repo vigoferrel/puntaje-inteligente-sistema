@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { usePAESUnifiedDashboard } from '@/hooks/use-paes-unified-dashboard';
+import { usePAESContext } from '@/contexts/PAESContext';
 import { PAESGlobalMetrics } from './PAESGlobalMetrics';
 import { PAESTestNavigation } from './PAESTestNavigation';
 import { PAESCompetenciaLectoraIntegration } from './PAESCompetenciaLectoraIntegration';
@@ -21,9 +21,8 @@ export const PAESUnifiedDashboard: React.FC<PAESUnifiedDashboardProps> = ({ clas
     testPerformances,
     unifiedMetrics,
     comparativeAnalysis,
-    refreshData,
-    simulateScenario
-  } = usePAESUnifiedDashboard();
+    refreshData
+  } = usePAESContext();
 
   const [activeTestView, setActiveTestView] = useState<string>('global');
 
@@ -85,7 +84,6 @@ export const PAESUnifiedDashboard: React.FC<PAESUnifiedDashboardProps> = ({ clas
       );
     }
 
-    // Renderizar contenido específico por test
     const activeTest = testPerformances.find(test => test.testId === activeTestView);
     if (!activeTest) return null;
 
@@ -101,7 +99,6 @@ export const PAESUnifiedDashboard: React.FC<PAESUnifiedDashboardProps> = ({ clas
       return <PAESCienciasIntegration />;
     }
 
-    // Fallback para otros tests
     return (
       <Card className="bg-gray-800 border-gray-700">
         <CardContent className="p-8 text-center">
@@ -134,7 +131,6 @@ export const PAESUnifiedDashboard: React.FC<PAESUnifiedDashboardProps> = ({ clas
       animate={{ opacity: 1 }}
       className={`space-y-6 ${className || ''}`}
     >
-      {/* Header con acciones */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-white">Dashboard PAES Unificado</h1>
@@ -151,14 +147,12 @@ export const PAESUnifiedDashboard: React.FC<PAESUnifiedDashboardProps> = ({ clas
         </Button>
       </div>
 
-      {/* Navegación de tests */}
       <PAESTestNavigation
         testPerformances={testPerformances}
         activeTest={activeTestView}
         onTestSelect={handleTestSelect}
       />
 
-      {/* Contenido principal */}
       <motion.div
         key={activeTestView}
         initial={{ opacity: 0, y: 20 }}
