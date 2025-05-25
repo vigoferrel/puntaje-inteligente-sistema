@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { AppLayout } from '@/components/app-layout';
 import Index from '@/pages/Index';
 import LectoGuia from '@/pages/LectoGuia';
@@ -23,13 +23,13 @@ import PAES from '@/pages/PAES';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <AppLayout />,
+    element: <AppLayout><Outlet /></AppLayout>,
     children: [
       { path: '/', element: <Index /> },
       { path: '/lectoguia', element: <LectoGuia /> },
       { path: '/diagnostico', element: <Diagnostico /> },
       { path: '/plan', element: <Plan /> },
-      { path: '/planes-estudio', element: <Plan /> }, // Unified route
+      { path: '/planes-estudio', element: <Plan /> },
       { path: '/paes-dashboard', element: <PAESDashboard /> },
       { path: '/paes-universe', element: <PAESUniversePage /> },
       { path: '/paes', element: <PAES /> },
