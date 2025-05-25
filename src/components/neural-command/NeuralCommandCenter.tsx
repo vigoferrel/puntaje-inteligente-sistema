@@ -40,8 +40,11 @@ interface NeuralCommandProps {
 export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({ 
   initialDimension = 'universe_exploration' 
 }) => {
+  // ✅ TODOS LOS HOOKS SIEMPRE SE EJECUTAN PRIMERO
   const { user, profile } = useAuth();
   const intersectional = useSimplifiedIntersectional();
+  
+  // ✅ ESTADOS LOCALES SIMPLES
   const [showLoading, setShowLoading] = useState(true);
   const [activeDimension, setActiveDimension] = useState<NeuralDimension>(initialDimension);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -50,31 +53,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
   const [cosmicEnergy, setCosmicEnergy] = useState(8947);
   const [battlePoints, setBattlePoints] = useState(2456);
 
-  // ✅ CONTROLAR LA PANTALLA DE CARGA - INMEDIATO
-  const handleLoadingComplete = useCallback(() => {
-    setShowLoading(false);
-    console.log('⚡ Dashboard cargado inmediatamente');
-  }, []);
-
-  // ✅ CARGA INMEDIATA - NO ESPERAR CONTEXTO
-  useEffect(() => {
-    // Forzar carga inmediata si el sistema tarda
-    const forceLoad = setTimeout(() => {
-      if (showLoading) {
-        console.log('⚡ Forzando carga inmediata del dashboard');
-        setShowLoading(false);
-      }
-    }, 300); // ✅ 300ms máximo
-
-    return () => clearTimeout(forceLoad);
-  }, [showLoading]);
-
-  // ✅ MOSTRAR LOADING SOLO POR MÁXIMO 500MS
-  if (showLoading) {
-    return <OptimizedLoadingScreen onComplete={handleLoadingComplete} maxLoadTime={500} />;
-  }
-
-  // ✅ CONFIGURACIÓN DE GALAXIAS
+  // ✅ CONFIGURACIÓN DE GALAXIAS - SIEMPRE CALCULADO
   const galaxies = useMemo<Galaxy[]>(() => [
     {
       id: 'competencia-lectora',
@@ -128,7 +107,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     }
   ], []);
 
-  // ✅ MÉTRICAS NEURALES SIEMPRE DISPONIBLES
+  // ✅ MÉTRICAS NEURALES - SIEMPRE CALCULADAS
   const neuralMetrics = useMemo<UniverseMetrics>(() => {
     const totalNodes = galaxies.reduce((sum, g) => sum + g.nodes, 0);
     const totalCompleted = galaxies.reduce((sum, g) => sum + g.completed, 0);
@@ -144,7 +123,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     };
   }, [galaxies]);
 
-  // ✅ DIMENSIONES NEURALES
+  // ✅ DIMENSIONES NEURALES - SIEMPRE CALCULADAS
   const neuralDimensions = useMemo(() => [
     {
       id: 'universe_exploration' as NeuralDimension,
@@ -204,7 +183,12 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     }
   ], []);
 
-  // ✅ FUNCIONES DE NAVEGACIÓN
+  // ✅ FUNCIONES DE NAVEGACIÓN - SIEMPRE DEFINIDAS
+  const handleLoadingComplete = useCallback(() => {
+    setShowLoading(false);
+    console.log('⚡ Dashboard cargado inmediatamente');
+  }, []);
+
   const handleDimensionTransition = useCallback((dimension: NeuralDimension) => {
     setIsTransitioning(true);
     setActiveDimension(dimension);
@@ -224,6 +208,24 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
   const handleNavigateToTraining = useCallback(() => {
     handleDimensionTransition('entrenamiento_adaptativo');
   }, [handleDimensionTransition]);
+
+  // ✅ EFECTOS - DESPUÉS DE TODOS LOS HOOKS
+  useEffect(() => {
+    // Forzar carga inmediata si el sistema tarda
+    const forceLoad = setTimeout(() => {
+      if (showLoading) {
+        console.log('⚡ Forzando carga inmediata del dashboard');
+        setShowLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(forceLoad);
+  }, [showLoading]);
+
+  // ✅ CONDICIÓN DE LOADING AL FINAL - DESPUÉS DE TODOS LOS HOOKS
+  if (showLoading) {
+    return <OptimizedLoadingScreen onComplete={handleLoadingComplete} maxLoadTime={500} />;
+  }
 
   return (
     <CinematicAudioProvider>
