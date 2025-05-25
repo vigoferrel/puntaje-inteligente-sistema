@@ -25,9 +25,11 @@ const App = () => (
       <IntersectionalProvider>
         <CinematicProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AppRouter />
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
+              <Toaster />
+              <Sonner />
+              <AppRouter />
+            </div>
           </TooltipProvider>
         </CinematicProvider>
       </IntersectionalProvider>
