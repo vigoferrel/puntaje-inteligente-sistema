@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -26,17 +25,19 @@ import {
   FileText,
   GraduationCap,
   Brain,
-  Play
+  Play,
+  Sparkles
 } from "lucide-react";
 
 const menuItems = [
   {
-    title: "Inicio",
+    title: "Dashboard Moderno",
     url: "/",
-    icon: Home,
+    icon: Sparkles,
+    isNew: true
   },
   {
-    title: "Dashboard",
+    title: "Dashboard Clásico",
     url: "/dashboard",
     icon: BarChart3,
   },
@@ -115,7 +116,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-gray-800 bg-black">
       <SidebarHeader className="p-4 bg-black">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-black">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white">
             <GraduationCap className="h-4 w-4" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
@@ -145,6 +146,11 @@ export function AppSidebar() {
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
+                      {item.isNew && (
+                        <Badge className="ml-auto text-xs bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none">
+                          NUEVO
+                        </Badge>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -204,7 +210,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 bg-black">
-        <div className="rounded-lg bg-gray-900 p-3">
+        <div className="rounded-lg bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 p-3">
           <div className="text-xs font-medium text-gray-300">Sistema PAES Integrado</div>
           <div className="text-2xl font-bold text-white">277</div>
           <div className="text-xs text-gray-400">nodos de aprendizaje</div>
