@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
@@ -18,103 +19,73 @@ import {
   Eye,
   Activity
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useUnifiedDiagnostic } from '@/hooks/diagnostic/use-unified-diagnostic';
-import { useLectoGuia } from '@/contexts/LectoGuiaContext';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useComprehensiveDiagnostic } from '@/hooks/diagnostic/use-comprehensive-diagnostic';
 import { QuantumPortal } from './QuantumPortal';
 import { HolographicMetrics } from './HolographicMetrics';
 import { MatrixCommandCenter } from './MatrixCommandCenter';
 import { IntelligentAssistant } from './IntelligentAssistant';
 import { CombatArena } from './CombatArena';
-import { TPAESPrueba } from '@/types/system-types';
 
 export const CinematicIntelligenceCenter: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const {
     data,
-    isLoading,
-    tests,
-    skills,
-    baselineScores,
-    currentScores,
-    progressTrends,
-    skillAnalysis,
-    personalizedStrategies,
-    predictedScores,
-    needsInitialAssessment,
-    performInitialAssessment,
-    scheduleProgressAssessment,
-    generatePersonalizedExercises
-  } = useUnifiedDiagnostic();
+    isInitializing,
+    isSystemReady,
+    startQuantumDiagnostic,
+    diagnosticTests,
+    systemMetrics
+  } = useComprehensiveDiagnostic();
 
-  const { handleSendMessage } = useLectoGuia();
-  
   const [activeMode, setActiveMode] = useState<'portal' | 'command' | 'combat' | 'matrix'>('portal');
   const [systemPower, setSystemPower] = useState(0);
-  const [scanProgress, setScanProgress] = useState(0);
   const [assistantActive, setAssistantActive] = useState(false);
 
-  // Efectos de inicialización épicos
+  // Epic initialization sequence
   useEffect(() => {
     const initSequence = async () => {
-      // Secuencia de encendido del sistema
+      // System power-up sequence
       for (let i = 0; i <= 100; i += 2) {
         setSystemPower(i);
         await new Promise(resolve => setTimeout(resolve, 30));
       }
       
-      // Escaneo neural simulado
-      for (let i = 0; i <= 100; i += 3) {
-        setScanProgress(i);
-        await new Promise(resolve => setTimeout(resolve, 40));
-      }
-      
-      // Activar asistente IA
+      // Activate AI assistant after system is ready
       setTimeout(() => setAssistantActive(true), 1000);
     };
 
-    if (!isLoading && data) {
+    if (!isInitializing && isSystemReady) {
       initSequence();
     }
-  }, [isLoading, data]);
+  }, [isInitializing, isSystemReady]);
 
-  // Calcular métricas del sistema
-  const systemMetrics = React.useMemo(() => {
-    if (!currentScores || !baselineScores) return null;
+  // Handle quantum diagnostic start
+  const handleStartQuantumDiagnostic = async () => {
+    const success = await startQuantumDiagnostic();
+    if (success) {
+      // Navigate to diagnostic selection/execution
+      setActiveMode('command');
+      
+      // If we have diagnostics available, we can proceed
+      if (diagnosticTests.length > 0) {
+        // For now, let's show the command center
+        // In the future, this could automatically start the first diagnostic
+        console.log('🎯 Diagnóstico cuántico iniciado, mostrando centro de comando');
+      }
+    }
+  };
 
-    const overallProgress = Object.keys(currentScores).reduce((total, prueba) => {
-      const improvement = currentScores[prueba as TPAESPrueba] - baselineScores[prueba as TPAESPrueba];
-      return total + improvement;
-    }, 0) / Object.keys(currentScores).length;
-
-    const strongestArea = Object.entries(currentScores).reduce((max, [prueba, score]) => 
-      score > max.score ? { prueba: prueba as TPAESPrueba, score } : max, 
-      { prueba: 'COMPETENCIA_LECTORA' as TPAESPrueba, score: 0 }
-    );
-
-    const weakestArea = Object.entries(currentScores).reduce((min, [prueba, score]) => 
-      score < min.score ? { prueba: prueba as TPAESPrueba, score } : min, 
-      { prueba: 'COMPETENCIA_LECTORA' as TPAESPrueba, score: 850 }
-    );
-
-    return {
-      overallProgress: Math.round(overallProgress),
-      strongestArea,
-      weakestArea,
-      totalNodes: tests.length * 10, // Simulado
-      completedNodes: Math.round(tests.length * 6), // Simulado
-      aiPrediction: predictedScores ? Math.round(Object.values(predictedScores).reduce((a, b) => a + b, 0) / Object.values(predictedScores).length) : 0
-    };
-  }, [currentScores, baselineScores, tests, predictedScores]);
-
-  if (isLoading || systemPower < 100) {
+  // Loading state with better UX
+  if (isInitializing || systemPower < 100) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-black flex items-center justify-center relative overflow-hidden">
-        {/* Efectos de fondo */}
+        {/* Background effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-purple-900/20 animate-pulse"></div>
-          {Array.from({ length: 20 }).map((_, i) => (
+          {Array.from({ length: 30 }).map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-blue-400 rounded-full"
@@ -135,7 +106,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
           ))}
         </div>
 
-        {/* Secuencia de carga */}
+        {/* Loading sequence */}
         <div className="text-center z-10">
           <motion.div
             initial={{ scale: 0 }}
@@ -165,7 +136,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
             className="space-y-4"
           >
             <div className="text-blue-300 text-lg">
-              Inicializando sistemas neurales...
+              {isInitializing ? 'Cargando sistema integral...' : 'Inicializando sistemas neurales...'}
             </div>
             
             <div className="w-80 mx-auto bg-gray-800 rounded-full h-3 overflow-hidden">
@@ -179,9 +150,9 @@ export const CinematicIntelligenceCenter: React.FC = () => {
 
             <div className="text-sm text-gray-400">
               {systemPower < 30 && "Conectando con base de datos PAES..."}
-              {systemPower >= 30 && systemPower < 60 && "Analizando perfil de estudiante..."}
-              {systemPower >= 60 && systemPower < 90 && "Inicializando IA personalizada..."}
-              {systemPower >= 90 && "Cargando universo de aprendizaje..."}
+              {systemPower >= 30 && systemPower < 60 && "Cargando ejercicios oficiales..."}
+              {systemPower >= 60 && systemPower < 90 && "Inicializando generador IA..."}
+              {systemPower >= 90 && "Activando sistema LectoGuía..."}
             </div>
 
             {systemPower >= 90 && (
@@ -190,7 +161,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-green-400 text-sm"
               >
-                ✓ Sistema listo para combate académico
+                ✓ Sistema listo para diagnóstico cuántico
               </motion.div>
             )}
           </motion.div>
@@ -199,10 +170,11 @@ export const CinematicIntelligenceCenter: React.FC = () => {
     );
   }
 
-  if (needsInitialAssessment) {
+  // Show portal if system is ready but no diagnostic has been started
+  if (activeMode === 'portal') {
     return (
       <QuantumPortal
-        onEnterDiagnostic={performInitialAssessment}
+        onEnterDiagnostic={handleStartQuantumDiagnostic}
         userProfile={user}
         systemMetrics={systemMetrics}
       />
@@ -211,7 +183,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-black relative overflow-hidden">
-      {/* Fondo Matrix animado */}
+      {/* Matrix background */}
       <div className="absolute inset-0 opacity-20">
         <Canvas>
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
@@ -219,7 +191,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
         </Canvas>
       </div>
 
-      {/* Header de estado del sistema */}
+      {/* System status header */}
       <motion.div
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -240,13 +212,13 @@ export const CinematicIntelligenceCenter: React.FC = () => {
               
               <div className="flex items-center space-x-4">
                 <Badge variant="outline" className="border-green-400 text-green-400">
-                  {systemMetrics?.completedNodes}/{systemMetrics?.totalNodes} Nodos
+                  {systemMetrics.completedNodes}/{systemMetrics.totalNodes} Nodos
                 </Badge>
                 <Badge variant="outline" className="border-blue-400 text-blue-400">
-                  IA Predicción: {systemMetrics?.aiPrediction}
+                  {diagnosticTests.length} Diagnósticos
                 </Badge>
                 <Badge variant="outline" className="border-purple-400 text-purple-400">
-                  Progreso: +{systemMetrics?.overallProgress}%
+                  Sistema: {isSystemReady ? 'OPERACIONAL' : 'CARGANDO'}
                 </Badge>
               </div>
             </div>
@@ -254,7 +226,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Selector de modo */}
+      {/* Mode selector */}
       <div className="relative z-10 px-4 mb-6">
         <div className="flex justify-center space-x-4">
           {[
@@ -266,7 +238,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
               key={mode}
               variant={activeMode === mode ? "default" : "outline"}
               onClick={() => setActiveMode(mode as any)}
-              className={`holographic-button ${
+              className={`${
                 activeMode === mode 
                   ? `bg-${color}-600 border-${color}-400` 
                   : `border-${color}-400/50 hover:bg-${color}-600/20`
@@ -279,31 +251,31 @@ export const CinematicIntelligenceCenter: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenido principal basado en el modo */}
+      {/* Main content based on active mode */}
       <AnimatePresence mode="wait">
         {activeMode === 'command' && (
           <MatrixCommandCenter
             key="command"
-            tests={tests}
-            skills={skills}
-            baselineScores={baselineScores}
-            currentScores={currentScores}
-            progressTrends={progressTrends}
-            skillAnalysis={skillAnalysis}
-            personalizedStrategies={personalizedStrategies}
-            predictedScores={predictedScores}
+            tests={diagnosticTests}
+            skills={[]}
+            baselineScores={{}}
+            currentScores={{}}
+            progressTrends={[]}
+            skillAnalysis={{}}
+            personalizedStrategies={[]}
+            predictedScores={{}}
             systemMetrics={systemMetrics}
-            onScheduleAssessment={scheduleProgressAssessment}
-            onGenerateExercises={generatePersonalizedExercises}
+            onScheduleAssessment={() => console.log('Schedule assessment')}
+            onGenerateExercises={(prueba) => console.log('Generate exercises for:', prueba)}
           />
         )}
 
         {activeMode === 'combat' && (
           <CombatArena
             key="combat"
-            tests={tests}
-            currentScores={currentScores}
-            onStartCombat={generatePersonalizedExercises}
+            tests={diagnosticTests}
+            currentScores={{}}
+            onStartCombat={(prueba) => console.log('Start combat for:', prueba)}
             onViewProgress={() => setActiveMode('command')}
           />
         )}
@@ -318,19 +290,19 @@ export const CinematicIntelligenceCenter: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Asistente IA flotante */}
+      {/* AI Assistant */}
       <AnimatePresence>
         {assistantActive && (
           <IntelligentAssistant
-            onAskQuestion={handleSendMessage}
+            onAskQuestion={(question) => console.log('AI Question:', question)}
             systemMetrics={systemMetrics}
-            weakestArea={systemMetrics?.weakestArea}
+            weakestArea={{ prueba: 'COMPETENCIA_LECTORA', score: 400 }}
             onClose={() => setAssistantActive(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* Botón para reactivar asistente */}
+      {/* Assistant reactivation button */}
       {!assistantActive && (
         <motion.div
           className="fixed bottom-6 right-6 z-50"
@@ -347,7 +319,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Botón de salida */}
+      {/* Exit button */}
       <div className="fixed top-4 left-4 z-50">
         <Button variant="ghost" size="sm" asChild className="text-white hover:bg-white/10">
           <Link to="/">
@@ -356,6 +328,25 @@ export const CinematicIntelligenceCenter: React.FC = () => {
           </Link>
         </Button>
       </div>
+
+      {/* Improved debug info with better contrast */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 left-4 z-50 max-w-sm">
+          <Card className="bg-black/80 backdrop-blur-lg border-yellow-500/50">
+            <CardContent className="p-3">
+              <div className="text-yellow-400 text-xs font-mono space-y-1">
+                <div className="text-yellow-300 font-bold mb-2">📊 Sistema Debug</div>
+                <div>Sistema Listo: <span className="text-green-400">{isSystemReady ? 'SÍ' : 'NO'}</span></div>
+                <div>Diagnósticos: <span className="text-blue-400">{diagnosticTests.length}</span></div>
+                <div>Nodos Totales: <span className="text-purple-400">{systemMetrics.totalNodes}</span></div>
+                <div>Ejercicios Oficiales: <span className="text-orange-400">{data?.officialExercises.length || 0}</span></div>
+                <div>Skills PAES: <span className="text-pink-400">{data?.paesSkills.length || 0}</span></div>
+                <div>Modo Activo: <span className="text-cyan-400">{activeMode}</span></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

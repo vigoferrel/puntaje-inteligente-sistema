@@ -6,7 +6,7 @@ import { DiagnosticExecution } from "@/components/diagnostic/DiagnosticExecution
 import { DiagnosticResults } from "@/components/diagnostic/DiagnosticResults";
 import { DiagnosticProgressBar } from "@/components/diagnostic/DiagnosticProgressBar";
 import { HierarchicalMetrics } from "@/components/diagnostic/HierarchicalMetrics";
-import { DiagnosticIntelligenceCenter } from "@/components/diagnostic/DiagnosticIntelligenceCenter";
+import { CinematicIntelligenceCenter } from "@/components/diagnostic/CinematicIntelligenceCenter";
 import { LectoGuiaProvider } from "@/contexts/lectoguia/LectoGuiaProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,12 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, AlertCircle, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDiagnosticManager } from "@/hooks/diagnostic/use-diagnostic-manager";
+import { useComprehensiveDiagnostic } from "@/hooks/diagnostic/use-comprehensive-diagnostic";
 
 export default function Diagnostico() {
   const diagnosticManager = useDiagnosticManager();
+  const comprehensiveSystem = useComprehensiveDiagnostic();
+  
   const {
     // State
     tests,
@@ -49,8 +52,8 @@ export default function Diagnostico() {
     window.scrollTo(0, 0);
   }, []);
   
-  // Verificar si debe mostrar el Centro de Inteligencia Diagnóstica
-  const shouldShowIntelligenceCenter = !testStarted && !resultSubmitted && !loading;
+  // Show Cinematic Intelligence Center if no test is started and system is ready
+  const shouldShowIntelligenceCenter = !testStarted && !resultSubmitted && comprehensiveSystem.isSystemReady;
   
   // Handle question navigation
   const handlePreviousQuestion = () => {
@@ -69,7 +72,7 @@ export default function Diagnostico() {
     <AppLayout>
       <LectoGuiaProvider>
         <div className="container py-6 max-w-5xl mx-auto">
-          {/* Back button - solo mostrar cuando no está en el centro de inteligencia */}
+          {/* Back button - only show when not in intelligence center */}
           {!shouldShowIntelligenceCenter && (
             <div className="mb-4">
               <Button variant="ghost" size="sm" asChild className="gap-1">
@@ -81,21 +84,21 @@ export default function Diagnostico() {
             </div>
           )}
           
-          {/* System Status Banner */}
-          {hierarchicalData.isSystemReady && !testStarted && (
+          {/* System Status Banner - enhanced with comprehensive data */}
+          {comprehensiveSystem.isSystemReady && !testStarted && (
             <Alert className="mb-6 bg-green-50 border-green-200">
               <TrendingUp className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-700">
                 <div className="flex items-center justify-between">
                   <span>
-                    Sistema PAES Pro activo: {hierarchicalData.systemMetrics.totalNodes} nodos jerárquicos cargados
+                    Sistema PAES Pro Integral activo: {comprehensiveSystem.systemMetrics.totalNodes} nodos, {comprehensiveSystem.diagnosticTests.length} diagnósticos, {comprehensiveSystem.officialExercises.length} ejercicios oficiales
                   </span>
                   <div className="flex gap-2">
                     <Badge variant="destructive" className="text-xs">
-                      {hierarchicalData.systemMetrics.tier1Count} Críticos
+                      {comprehensiveSystem.systemMetrics.completedNodes} Completados
                     </Badge>
                     <Badge variant="default" className="text-xs">
-                      Tier 1 Coverage: {hierarchicalData.tier1Coverage.toFixed(1)}%
+                      Sistema: OPERACIONAL
                     </Badge>
                   </div>
                 </div>
@@ -109,7 +112,6 @@ export default function Diagnostico() {
               currentQuestion={currentQuestionIndex + 1}
               totalQuestions={currentTest.questions.length}
               onPause={() => {
-                // Simple pause - just go back to selection
                 restart();
               }}
             />
@@ -140,7 +142,7 @@ export default function Diagnostico() {
           
           {/* Main content */}
           {shouldShowIntelligenceCenter && (
-            <DiagnosticIntelligenceCenter />
+            <CinematicIntelligenceCenter />
           )}
           
           {!testStarted && !resultSubmitted && !shouldShowIntelligenceCenter && (
@@ -175,20 +177,27 @@ export default function Diagnostico() {
             />
           )}
           
-          {/* Debug info in development */}
+          {/* Enhanced debug info */}
           {process.env.NODE_ENV === 'development' && !testStarted && (
-            <div className="mt-8 p-4 bg-gray-100 rounded text-xs">
-              <strong>Debug Info:</strong>
+            <div className="mt-8 p-4 bg-gray-900 text-green-400 rounded border border-gray-700 text-xs font-mono">
+              <strong className="text-yellow-400">🔬 Sistema Integral Debug:</strong>
               <br />
-              System Ready: {hierarchicalData.isSystemReady ? 'Yes' : 'No'}
-              <br />
-              PAES Tests: {hierarchicalData.paesTests.length}
-              <br />
-              Tier 1 Nodes: {hierarchicalData.tier1Nodes.length}
-              <br />
-              Diagnostic Tests: {tests.length}
-              <br />
-              Recommended Path: {hierarchicalData.recommendedPath.length}
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <div className="text-blue-400">Sistema Jerárquico:</div>
+                  <div>• Ready: {hierarchicalData.isSystemReady ? 'Yes' : 'No'}</div>
+                  <div>• PAES Tests: {hierarchicalData.paesTests.length}</div>
+                  <div>• Tier 1 Nodes: {hierarchicalData.tier1Nodes.length}</div>
+                  <div>• Diagnostic Tests: {tests.length}</div>
+                </div>
+                <div>
+                  <div className="text-purple-400">Sistema Integral:</div>
+                  <div>• Diagnósticos: {comprehensiveSystem.diagnosticTests.length}</div>
+                  <div>• Ejercicios Oficiales: {comprehensiveSystem.officialExercises.length}</div>
+                  <div>• Skills PAES: {comprehensiveSystem.paesSkills.length}</div>
+                  <div>• Sistema Listo: {comprehensiveSystem.isSystemReady ? 'Yes' : 'No'}</div>
+                </div>
+              </div>
             </div>
           )}
         </div>
