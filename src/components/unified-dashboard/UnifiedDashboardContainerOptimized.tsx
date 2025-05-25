@@ -5,13 +5,12 @@ import { UnifiedHeader } from './UnifiedHeader';
 import { CinematicDashboard } from './CinematicDashboard';
 import { IntelligentNavigation } from './IntelligentNavigation';
 import { CinematicSkeletonOptimized } from './CinematicSkeletonOptimized';
-import { LectoGuiaUnifiedCinematic } from '@/components/lectoguia/LectoGuiaUnifiedCinematic';
+import { useSystemMetrics } from './SystemMetrics';
+import { LectoGuiaIntersectional } from '@/components/lectoguia/LectoGuiaIntersectional';
 import { StudyCalendarIntegration } from '@/components/calendar/StudyCalendarIntegration';
 import { PAESFinancialCalculator } from '@/components/financial/PAESFinancialCalculator';
-import { DiagnosticControllerCinematic } from '@/components/diagnostic/DiagnosticControllerCinematic';
-import { CinematicThemeProvider } from '@/contexts/CinematicThemeProvider';
+import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUnifiedState } from '@/hooks/useUnifiedState';
 
 interface UnifiedDashboardContainerOptimizedProps {
   initialTool?: string | null;
@@ -21,78 +20,51 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
   initialTool = 'dashboard' 
 }) => {
   const { user } = useAuth();
-  const {
-    currentTool,
-    navigationHistory,
-    systemMetrics,
-    setCurrentTool,
-    updateSystemMetrics
-  } = useUnifiedState();
-  
-  const [activeSubject, setActiveSubject] = useState('COMPETENCIA_LECTORA');
   const [isLoading, setIsLoading] = useState(true);
+  
+  const { 
+    currentTool, 
+    context, 
+    navigationHistory, 
+    navigateToTool, 
+    goBack, 
+    updateContext,
+    canGoBack 
+  } = useUnifiedNavigation();
+  
+  const systemMetrics = useSystemMetrics();
 
-  // Inicialización optimizada
+  // Initialize with provided tool
   useEffect(() => {
-    const initializeSystem = async () => {
-      // Establecer herramienta inicial
-      if (initialTool && initialTool !== currentTool) {
-        setCurrentTool(initialTool);
-      }
-      
-      // Cargar métricas del sistema si es necesario
-      const now = new Date();
-      const lastUpdate = systemMetrics.lastUpdated;
-      const timeDiff = now.getTime() - new Date(lastUpdate).getTime();
-      const isStale = timeDiff > 5 * 60 * 1000; // 5 minutos
-      
-      if (isStale) {
-        const daysSinceStart = Math.floor((now.getTime() - new Date(2024, 0, 1).getTime()) / (1000 * 60 * 60 * 24));
-        const baseProgress = Math.min(85, daysSinceStart * 1.2);
-        
-        updateSystemMetrics({
-          completedNodes: Math.floor(baseProgress * 0.8),
-          todayStudyTime: Math.floor(Math.random() * 90) + 45,
-          streakDays: Math.floor(baseProgress / 12) + 1,
-          totalProgress: Math.round(baseProgress),
-          userLevel: Math.floor(baseProgress / 15) + 1,
-          experience: Math.floor(baseProgress * 3.2) % 100
-        });
-      }
-      
-      // Simular carga mínima para UX
-      setTimeout(() => setIsLoading(false), 800);
-    };
-
-    initializeSystem();
-  }, [initialTool, currentTool, setCurrentTool, systemMetrics.lastUpdated, updateSystemMetrics]);
-
-  const handleToolChange = useCallback((tool: string, context?: any) => {
-    if (tool !== currentTool) {
-      setCurrentTool(tool);
-      
-      if (context?.subject) {
-        setActiveSubject(context.subject);
-      }
-      
-      console.log(`🎯 Navegación optimizada: ${currentTool} → ${tool}`, context);
+    if (initialTool && initialTool !== currentTool) {
+      navigateToTool(initialTool);
     }
-  }, [currentTool, setCurrentTool]);
+  }, [initialTool, currentTool, navigateToTool]);
 
-  const handleSubjectChange = useCallback((subject: string) => {
-    setActiveSubject(subject);
+  // Optimized loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 600);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const handleGoBack = useCallback(() => {
-    if (navigationHistory.length > 1) {
-      const previousTool = navigationHistory[navigationHistory.length - 2];
-      setCurrentTool(previousTool);
-    }
-  }, [navigationHistory, setCurrentTool]);
+  // Tool change handler
+  const handleToolChange = useCallback((tool: string, toolContext?: any) => {
+    navigateToTool(tool, toolContext);
+  }, [navigateToTool]);
 
-  // Renderizado optimizado de herramientas con lazy loading
+  // Subject change handler
+  const handleSubjectChange = useCallback((subject: string) => {
+    updateContext({ subject });
+  }, [updateContext]);
+
+  // Optimized tool rendering
   const renderCurrentTool = useMemo(() => {
-    const commonProps = {
+    const activeSubject = context.subject || 'COMPETENCIA_LECTORA';
+    
+    const toolProps = {
       activeSubject,
       onSubjectChange: handleSubjectChange,
       onNavigateToTool: handleToolChange
@@ -106,17 +78,16 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
             <IntelligentNavigation
               currentTool={currentTool}
               onNavigate={handleToolChange}
-              canGoBack={navigationHistory.length > 1}
-              onGoBack={handleGoBack}
+              canGoBack={canGoBack}
+              onGoBack={goBack}
             />
           </div>
         );
       
       case 'lectoguia':
         return (
-          <LectoGuiaUnifiedCinematic
+          <LectoGuiaIntersectional
             initialSubject={activeSubject}
-            onSubjectChange={handleSubjectChange}
             onNavigateToTool={handleToolChange}
           />
         );
@@ -126,13 +97,6 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
       
       case 'financial':
         return <PAESFinancialCalculator />;
-      
-      case 'diagnostic':
-        return (
-          <DiagnosticControllerCinematic
-            onNavigateToTool={handleToolChange}
-          />
-        );
         
       case 'exercises':
         return (
@@ -143,16 +107,29 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
               className="text-center space-y-4"
             >
               <h2 className="text-2xl font-bold text-white cinematic-text-glow poppins-title">
-                Ejercicios Adaptativos IA
+                Ejercicios Adaptativos
               </h2>
               <p className="text-white/70 poppins-body">
-                Sistema de ejercicios inteligente para {activeSubject}
+                Sistema de ejercicios para {activeSubject}
               </p>
-              <div className="cinematic-card p-8">
-                <p className="text-white/60 poppins-caption">
-                  Módulo en desarrollo - Próximamente disponible
-                </p>
-              </div>
+            </motion.div>
+          </div>
+        );
+        
+      case 'diagnostic':
+        return (
+          <div className="p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center space-y-4"
+            >
+              <h2 className="text-2xl font-bold text-white cinematic-text-glow poppins-title">
+                Evaluación Diagnóstica
+              </h2>
+              <p className="text-white/70 poppins-body">
+                Sistema de diagnóstico para {activeSubject}
+              </p>
             </motion.div>
           </div>
         );
@@ -169,13 +146,8 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
                 Plan de Estudio Personalizado
               </h2>
               <p className="text-white/70 poppins-body">
-                Plan inteligente adaptado a tu progreso en {activeSubject}
+                Plan adaptado a {activeSubject}
               </p>
-              <div className="cinematic-card p-8">
-                <p className="text-white/60 poppins-caption">
-                  Generando plan personalizado basado en tu diagnóstico...
-                </p>
-              </div>
             </motion.div>
           </div>
         );
@@ -187,58 +159,54 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
             <IntelligentNavigation
               currentTool={currentTool}
               onNavigate={handleToolChange}
-              canGoBack={navigationHistory.length > 1}
-              onGoBack={handleGoBack}
+              canGoBack={canGoBack}
+              onGoBack={goBack}
             />
           </div>
         );
     }
-  }, [currentTool, activeSubject, handleSubjectChange, handleToolChange, navigationHistory, handleGoBack]);
+  }, [currentTool, context.subject, handleSubjectChange, handleToolChange, canGoBack, goBack]);
 
   if (isLoading) {
     return (
-      <CinematicThemeProvider>
-        <CinematicSkeletonOptimized 
-          message="Inicializando PAES Pro" 
-          progress={88} 
-          variant="full"
-        />
-      </CinematicThemeProvider>
+      <CinematicSkeletonOptimized 
+        message="Cargando Sistema Unificado" 
+        progress={90} 
+        variant="full"
+      />
     );
   }
 
   return (
-    <CinematicThemeProvider>
-      <div className="min-h-screen font-poppins">
-        <UnifiedHeader
-          currentTool={currentTool}
-          totalProgress={systemMetrics.totalProgress}
-          activeSubject={activeSubject}
-          onToolChange={handleToolChange}
-          onSubjectChange={handleSubjectChange}
-          systemMetrics={systemMetrics}
-          navigationHistory={navigationHistory}
-          onGoBack={navigationHistory.length > 1 ? handleGoBack : undefined}
-        />
-        
-        <main className="relative overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentTool}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ 
-                duration: 0.2, 
-                ease: [0.4, 0, 0.2, 1] 
-              }}
-              className="min-h-[calc(100vh-80px)]"
-            >
-              {renderCurrentTool}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-      </div>
-    </CinematicThemeProvider>
+    <div className="min-h-screen font-poppins bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <UnifiedHeader
+        currentTool={currentTool}
+        totalProgress={systemMetrics.totalProgress}
+        activeSubject={context.subject || 'COMPETENCIA_LECTORA'}
+        onToolChange={handleToolChange}
+        onSubjectChange={handleSubjectChange}
+        systemMetrics={systemMetrics}
+        navigationHistory={navigationHistory}
+        onGoBack={canGoBack ? goBack : undefined}
+      />
+      
+      <main className="relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentTool}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ 
+              duration: 0.3, 
+              ease: [0.4, 0, 0.2, 1] 
+            }}
+            className="min-h-[calc(100vh-80px)]"
+          >
+            {renderCurrentTool}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+    </div>
   );
 };

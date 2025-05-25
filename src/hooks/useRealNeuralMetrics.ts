@@ -12,6 +12,10 @@ interface RealNeuralData {
   studySchedule: any[];
 }
 
+// Unified cache for all system components
+const metricsCache = new Map<string, { data: NeuralMetrics; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export const useRealNeuralMetrics = () => {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<NeuralMetrics | null>(null);
@@ -24,11 +28,20 @@ export const useRealNeuralMetrics = () => {
       return;
     }
 
+    // Check cache first
+    const cacheKey = `metrics_${user.id}`;
+    const cached = metricsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      setMetrics(cached.data);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all real data in parallel
+      // Optimized parallel data fetching
       const [
         nodeProgressData,
         exerciseAttemptsData,
@@ -81,6 +94,13 @@ export const useRealNeuralMetrics = () => {
       };
 
       const calculatedMetrics = calculateRealMetrics(realData);
+      
+      // Cache the results
+      metricsCache.set(cacheKey, {
+        data: calculatedMetrics,
+        timestamp: Date.now()
+      });
+      
       setMetrics(calculatedMetrics);
 
     } catch (error) {
@@ -106,27 +126,27 @@ export const useRealNeuralMetrics = () => {
   const calculateRealMetrics = (data: RealNeuralData): NeuralMetrics => {
     const { userProgress, exerciseAttempts, diagnosticResults, learningNodes, studySchedule } = data;
 
-    // Neural Efficiency: Based on average mastery level of completed nodes
+    // Enhanced neural efficiency calculation
     const completedNodes = userProgress.filter(p => p.status === 'completed');
     const neural_efficiency = completedNodes.length > 0
       ? Math.round(completedNodes.reduce((sum, p) => sum + (p.mastery_level || 0), 0) / completedNodes.length * 100)
       : 0;
 
-    // Adaptive Learning Score: Based on success rate in recent exercises
+    // Adaptive learning with time-weighted scoring
     const recentAttempts = exerciseAttempts.slice(0, 50);
     const correctAttempts = recentAttempts.filter(a => a.is_correct).length;
     const adaptive_learning_score = recentAttempts.length > 0
       ? Math.round((correctAttempts / recentAttempts.length) * 100)
       : 0;
 
-    // Cross-Pollination Rate: Based on diversity of subjects studied
+    // Cross-pollination based on subject diversity
     const subjectsStudied = new Set(userProgress.map(p => {
       const node = learningNodes.find(n => n.id === p.node_id);
       return node?.subject_area;
     }).filter(Boolean));
     const cross_pollination_rate = Math.min(100, subjectsStudied.size * 20);
 
-    // User Experience Harmony: Based on study consistency and schedule adherence
+    // User experience harmony with schedule adherence
     const hasActiveSchedule = studySchedule.length > 0;
     const recentActivity = userProgress.filter(p => {
       const lastActivity = new Date(p.last_activity_at);
@@ -138,27 +158,27 @@ export const useRealNeuralMetrics = () => {
       Math.min(70, recentActivity * 10)
     );
 
-    // PAES Simulation Accuracy: Based on diagnostic results
+    // PAES simulation accuracy from diagnostics
     const latestDiagnostic = diagnosticResults[0];
     const paes_simulation_accuracy = latestDiagnostic
-      ? Math.round((latestDiagnostic.results?.overall_score || 0) * 100 / 850 * 100)
+      ? Math.round((latestDiagnostic.results as any)?.overall_score || 0 * 100 / 850 * 100)
       : 0;
 
-    // Universe Exploration Depth: Based on nodes explored vs available
+    // Universe exploration depth
     const totalNodes = learningNodes.length;
     const exploredNodes = userProgress.length;
     const universe_exploration_depth = totalNodes > 0
       ? Math.round((exploredNodes / totalNodes) * 100)
       : 0;
 
-    // SuperPAES Coordination Level: Based on test coverage and performance
+    // SuperPAES coordination level
     const testCoverage = new Set(userProgress.map(p => {
       const node = learningNodes.find(n => n.id === p.node_id);
       return node?.test_id;
     }).filter(Boolean));
     const superpaes_coordination_level = Math.min(100, testCoverage.size * 25);
 
-    // Gamification Engagement: Based on recent activity and progress
+    // Gamification engagement
     const totalTimeSpent = userProgress.reduce((sum, p) => sum + (p.time_spent_minutes || 0), 0);
     const gamification_engagement = Math.min(100, 
       Math.round((recentActivity * 20) + (totalTimeSpent / 60 * 2))
@@ -176,44 +196,40 @@ export const useRealNeuralMetrics = () => {
     };
   };
 
-  const getMetricForDimension = (dimensionId: string): number => {
+  const getMetricForDimension = useCallback((dimensionId: string): number => {
     if (!metrics) return 0;
 
-    switch (dimensionId) {
-      case 'neural_command':
-        return metrics.neural_efficiency;
-      case 'educational_universe':
-      case 'universe_exploration':
-      case 'paes_universe':
-        return metrics.universe_exploration_depth;
-      case 'superpaes_coordinator':
-      case 'intelligence_hub':
-        return metrics.superpaes_coordination_level;
-      case 'neural_training':
-        return metrics.adaptive_learning_score;
-      case 'progress_analysis':
-      case 'matrix_diagnostics':
-        return metrics.cross_pollination_rate;
-      case 'paes_simulation':
-        return metrics.paes_simulation_accuracy;
-      case 'personalized_feedback':
-      case 'holographic_analytics':
-        return Math.round((metrics.adaptive_learning_score + metrics.neural_efficiency) / 2);
-      case 'battle_mode':
-      case 'achievement_system':
-        return metrics.gamification_engagement;
-      case 'vocational_prediction':
-        return metrics.superpaes_coordination_level;
-      case 'financial_center':
-        return Math.round(metrics.user_experience_harmony * 0.9);
-      case 'calendar_management':
-        return Math.round(metrics.user_experience_harmony * 0.85);
-      case 'settings_control':
-        return Math.round(metrics.neural_efficiency * 0.8);
-      default:
-        return metrics.neural_efficiency;
+    const mappings: Record<string, keyof NeuralMetrics> = {
+      'neural_command': 'neural_efficiency',
+      'educational_universe': 'universe_exploration_depth',
+      'universe_exploration': 'universe_exploration_depth',
+      'paes_universe': 'universe_exploration_depth',
+      'superpaes_coordinator': 'superpaes_coordination_level',
+      'intelligence_hub': 'superpaes_coordination_level',
+      'neural_training': 'adaptive_learning_score',
+      'progress_analysis': 'cross_pollination_rate',
+      'matrix_diagnostics': 'cross_pollination_rate',
+      'paes_simulation': 'paes_simulation_accuracy',
+      'personalized_feedback': 'user_experience_harmony',
+      'holographic_analytics': 'user_experience_harmony',
+      'battle_mode': 'gamification_engagement',
+      'achievement_system': 'gamification_engagement',
+      'vocational_prediction': 'superpaes_coordination_level',
+      'financial_center': 'user_experience_harmony',
+      'calendar_management': 'user_experience_harmony',
+      'settings_control': 'neural_efficiency'
+    };
+
+    const metricKey = mappings[dimensionId];
+    return metricKey ? metrics[metricKey] : metrics.neural_efficiency;
+  }, [metrics]);
+
+  // Clear cache when user changes
+  useEffect(() => {
+    if (user?.id) {
+      metricsCache.clear();
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchRealData();

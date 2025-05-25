@@ -9,7 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LectoGuiaProvider } from "@/contexts/lectoguia";
 import { CinematicThemeProvider } from "@/contexts/CinematicThemeProvider";
 import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
-import { NeuralRouter } from "@/router/NeuralRouter";
+import { UnifiedSystemRouter } from "@/router/UnifiedSystemRouter";
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -31,7 +31,7 @@ const App = () => (
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <NeuralRouter />
+              <UnifiedSystemRouter />
             </TooltipProvider>
           </CinematicThemeProvider>
         </LectoGuiaProvider>
