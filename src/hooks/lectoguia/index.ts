@@ -1,8 +1,7 @@
 
-export * from './use-tab-management';
-export * from './use-subjects';
-export * from './use-exercise-flow';
-export * from './use-node-interaction';
-export * from './use-test-selection';
-export * from './use-exercise-tab-state';
-export * from './use-exercise-progress';
+export { useLectoGuiaSimplified as useLectoGuiaUnified } from './useLectoGuiaSimplified';
+export { useTabManagement } from './use-tab-management';
+export { useSubjects } from './use-subjects';
+export { useExerciseFlow } from './use-exercise-flow';
+export { useNodeInteraction } from './use-node-interaction';
+export { useMessageHandler } from './use-message-handler';

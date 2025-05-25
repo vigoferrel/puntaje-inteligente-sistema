@@ -9,6 +9,20 @@ import { TPAESHabilidad } from "@/types/system-types";
  * Reemplaza todos los servicios anteriores con funciones esenciales
  */
 
+// Función auxiliar para convertir Json[] a string[] de manera segura
+const safeParseOptions = (options: any): string[] => {
+  if (Array.isArray(options)) {
+    return options.map((option: any) => {
+      if (typeof option === 'string') return option;
+      if (typeof option === 'object' && option !== null) {
+        return option.contenido || option.text || 'Opción';
+      }
+      return String(option);
+    });
+  }
+  return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
+};
+
 // Obtener tests diagnósticos con preguntas
 export const fetchDiagnosticTests = async (userId: string): Promise<DiagnosticTest[]> => {
   try {
@@ -60,9 +74,9 @@ export const fetchTestQuestions = async (testId: string): Promise<DiagnosticQues
     return exercises.map(exercise => ({
       id: exercise.id || `q-${Date.now()}`,
       question: exercise.question || 'Pregunta no disponible',
-      options: Array.isArray(exercise.options) ? exercise.options : ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+      options: safeParseOptions(exercise.options), // Usar función segura
       correctAnswer: exercise.correct_answer || 'Opción A',
-      skill: 'INTERPRET_RELATE',
+      skill: 'INTERPRET_RELATE' as TPAESHabilidad,
       prueba: 'COMPETENCIA_LECTORA',
       explanation: exercise.explanation || '',
       difficulty: 'intermediate'

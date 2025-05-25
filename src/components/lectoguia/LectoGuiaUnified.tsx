@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLectoGuiaUnified } from '@/hooks/lectoguia/useLectoGuiaUnified';
+import { useLectoGuiaSimplified } from '@/hooks/lectoguia/useLectoGuiaSimplified';
 import { CinematicHeader } from './components/CinematicHeader';
 import { UnifiedContent } from './components/UnifiedContent';
 import { ValidationOverlay } from './components/ValidationOverlay';
@@ -11,41 +11,41 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 
 /**
- * LectoGuía Unificado Simplificado
- * Arquitectura quirúrgicamente simplificada para máximo rendimiento
+ * LectoGuía Unificado Quirúrgicamente Simplificado
+ * Arquitectura minimalista para máximo rendimiento
  */
 export const LectoGuiaUnified: React.FC = () => {
   const { user } = useAuth();
   
   const {
-    // Estado unificado del sistema
+    // Estado simplificado del sistema
     systemState,
     currentContext,
     
-    // Validaciones en tiempo real
+    // Validaciones básicas
     validationStatus,
-    diagnosticIntegration,
     
-    // Integraciones del sistema
+    // Integraciones minimalistas
+    diagnosticIntegration,
     planIntegration,
     dashboardSync,
     nodeValidation,
     
-    // Acciones del sistema
+    // Acciones esenciales
     handleSystemAction,
     navigateToModule,
     syncWithBackend
-  } = useLectoGuiaUnified(user?.id);
+  } = useLectoGuiaSimplified(user?.id);
 
-  // Inicializar sistema una sola vez
+  // Inicialización única
   useEffect(() => {
     if (user?.id && systemState.phase === 'initializing') {
-      console.log('🚀 Inicializando LectoGuía con arquitectura simplificada...');
+      console.log('🚀 Inicializando LectoGuía simplificado...');
       syncWithBackend();
     }
   }, [user?.id, systemState.phase, syncWithBackend]);
 
-  // Mostrar estado de carga mejorado
+  // Estado de carga
   if (systemState.phase === 'initializing') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
@@ -56,13 +56,13 @@ export const LectoGuiaUnified: React.FC = () => {
         >
           <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
           <h2 className="text-xl font-semibold text-white">Inicializando LectoGuía</h2>
-          <p className="text-gray-300">Sistema diagnóstico simplificado cargando...</p>
+          <p className="text-gray-300">Sistema simplificado cargando...</p>
         </motion.div>
       </div>
     );
   }
 
-  // Mostrar error si el sistema falla
+  // Estado de error
   if (systemState.phase === 'error') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center">
@@ -87,7 +87,7 @@ export const LectoGuiaUnified: React.FC = () => {
 
   return (
     <div className="lectoguia-unified min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Header cinematográfico */}
+      {/* Header simplificado */}
       <CinematicHeader
         user={user}
         systemState={systemState}
@@ -95,7 +95,7 @@ export const LectoGuiaUnified: React.FC = () => {
         onNavigateToModule={navigateToModule}
       />
 
-      {/* Estado de validación simplificado */}
+      {/* Estado del sistema */}
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center gap-2 text-sm">
           {validationStatus.isValid ? (
@@ -148,7 +148,7 @@ export const LectoGuiaUnified: React.FC = () => {
         </AnimatePresence>
       </main>
 
-      {/* Overlay de validación solo cuando es crítico */}
+      {/* Overlay solo para errores críticos */}
       {!validationStatus.isValid && validationStatus.issuesCount > 5 && (
         <ValidationOverlay
           validationStatus={validationStatus}
@@ -156,7 +156,7 @@ export const LectoGuiaUnified: React.FC = () => {
         />
       )}
 
-      {/* Capa de integración simplificada */}
+      {/* Capa de integración minimalista */}
       <SystemIntegrationLayer
         diagnosticIntegration={diagnosticIntegration}
         planIntegration={planIntegration}
