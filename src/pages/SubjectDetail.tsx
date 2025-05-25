@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/app-layout';
@@ -104,7 +103,7 @@ const SubjectDetail: React.FC = () => {
 
   // Filtrar nodos usando subjectArea corregido
   const subjectNodes = diagnosticSystem.learningNodes.filter(node => {
-    const nodeSubject = node.subjectArea || node.subject_area || '';
+    const nodeSubject = node.subjectArea || '';
     return nodeSubject.toLowerCase().includes(currentSubject.subjectArea.toLowerCase());
   });
 
