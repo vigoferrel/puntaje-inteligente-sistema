@@ -1,10 +1,12 @@
+
 import { useEffect, useRef, useCallback } from 'react';
 import { useNeuralModule } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useAuth } from '@/contexts/AuthContext';
-import { EmergencyCircuitBreaker } from '@/utils/circuit-breaker';
+import { CirculatorySystem } from '@/core/system-vitals/CirculatorySystem';
+import { EnhancedModuleIdentity } from '@/core/system-vitals/types';
 
 /**
- * Hook neurológico ANTI-TRACKING v4.0 - Completamente desinfectado
+ * Hook neurológico CARDIOVASCULAR-RESPIRATORIO v1.0 - Arquitectura limpia
  */
 export const useNeuralIntegration = (
   moduleType: 'diagnostic' | 'lectoguia' | 'plans' | 'paes_universe' | 'dashboard',
@@ -13,95 +15,90 @@ export const useNeuralIntegration = (
 ) => {
   const { user } = useAuth();
   const moduleId = useRef(`${moduleType}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`);
-  const circuitBreaker = useRef(new EmergencyCircuitBreaker({ antiTrackingMode: true }));
+  const circulatorySystem = useRef(new CirculatorySystem());
   const lastBroadcastRef = useRef<string>('');
-  const stateHashRef = useRef<string>('');
   const isDestroyedRef = useRef(false);
   const lastLogTime = useRef(0);
-  const trackingShield = useRef(0);
   
   const neural = useNeuralModule({
     id: moduleId.current,
     type: moduleType,
     capabilities: [
       ...capabilities,
-      'data_sync_secure',
-      'user_interaction_protected',
-      'adaptive_learning_anti_tracking'
+      'cardiovascular_integration',
+      'respiratory_purification',
+      'circulatory_optimization'
     ]
   });
 
-  // Función de broadcast ULTRA-SILENCIOSA con escudo anti-tracking
-  const ultraSecureBroadcast = useCallback((signalType: string, payload: any) => {
-    if (isDestroyedRef.current || !circuitBreaker.current.canProcess()) {
+  // Broadcast cardiovascular con sistema circulatorio
+  const cardiovascularBroadcast = useCallback((signalType: string, payload: any) => {
+    if (isDestroyedRef.current) {
       return;
     }
 
-    // Escudo anti-tracking activo
-    trackingShield.current++;
-    
-    try {
+    const processed = circulatorySystem.current.processSignal({
+      type: signalType,
+      payload,
+      timestamp: Date.now()
+    });
+
+    if (processed) {
+      // Crear módulo oxigenado para el broadcast
+      const oxygenatedModule = circulatorySystem.current.oxygenateModule({
+        id: moduleId.current,
+        type: moduleType,
+        capabilities: capabilities,
+        current_state: currentState
+      });
+
       neural.broadcastSignal({
-        origin: {
-          id: moduleId.current,
-          type: moduleType,
-          capabilities: capabilities,
-          current_state: currentState,
-          security_mode: 'anti_tracking_active'
-        },
+        origin: oxygenatedModule,
         type: signalType as any,
         payload: {
           ...payload,
-          tracking_protected: true,
-          shield_level: trackingShield.current
+          cardiovascular_processed: true,
+          vitals: circulatorySystem.current.getSystemVitals()
         },
         priority: 'MEDIUM' as any
       });
-      
-      circuitBreaker.current.recordSignal();
-    } catch (error) {
-      // Ultra-silencioso para evitar tracking
     }
   }, [neural, moduleType, capabilities, currentState]);
 
-  // Broadcast ultra-controlado con debouncing EXTREMO
+  // Broadcast controlado con sistema respiratorio
   useEffect(() => {
     if (isDestroyedRef.current) return;
     
     const currentHash = JSON.stringify(currentState);
     
-    // Solo broadcast si cambio MUY significativo y han pasado 25 segundos
-    if (currentHash !== stateHashRef.current && currentHash.length > 15) {
+    if (currentHash.length > 15) {
       const timeoutId = setTimeout(() => {
-        if (!isDestroyedRef.current && circuitBreaker.current.canProcess()) {
-          ultraSecureBroadcast('DATA_MUTATION_SECURE', {
-            previous_state: stateHashRef.current,
+        if (!isDestroyedRef.current && circulatorySystem.current.canProcessSignal()) {
+          cardiovascularBroadcast('DATA_MUTATION_CARDIOVASCULAR', {
             new_state: currentState,
             user_id: user?.id,
             timestamp: Date.now(),
-            anti_tracking_mode: true
+            system_health: 'optimized'
           });
-          
-          stateHashRef.current = currentHash;
         }
-      }, 25000); // 25 segundos de debouncing EXTREMO
+      }, 20000); // Respiración más lenta y profunda
 
       return () => clearTimeout(timeoutId);
     }
-  }, [currentState, ultraSecureBroadcast, user?.id]);
+  }, [currentState, cardiovascularBroadcast, user?.id]);
 
-  // Suscripción ULTRA-SILENCIOSA y protegida
+  // Suscripción cardiovascular-respiratoria
   useEffect(() => {
     if (isDestroyedRef.current) return;
     
     const unsubscribe = neural.subscribeToSignals(moduleId.current, (signal) => {
       if (isDestroyedRef.current) return;
       
-      // Solo procesar señales de emergencia extrema y NUNCA logear
+      // Solo procesar señales críticas con sistema circulatorio
       if (signal.type === 'EMERGENCY_COORDINATION') {
         const now = Date.now();
-        if (now - lastLogTime.current > 600000) { // Solo log cada 10 minutos
-          // Log completamente silencioso para evitar tracking
+        if (now - lastLogTime.current > 600000) { // 10 minutos
+          console.log('🫀 Sistema cardiovascular procesando emergencia');
           lastLogTime.current = now;
         }
       }
@@ -110,38 +107,36 @@ export const useNeuralIntegration = (
     return unsubscribe;
   }, [neural, moduleType]);
 
-  // Funciones de acción ULTRA-SILENCIOSAS y anti-tracking
+  // Acciones cardiovasculares optimizadas
   const broadcastUserAction = useCallback((action: string, payload: any = {}) => {
     if (isDestroyedRef.current) return;
     
-    const actionKey = `${action}_${JSON.stringify(payload)}_${Date.now()}`;
+    const actionKey = `${action}_${Date.now()}`;
     
-    // Evitar acciones duplicadas en ventana de 15 segundos
     if (lastBroadcastRef.current === actionKey) {
       return;
     }
     
     lastBroadcastRef.current = actionKey;
     
-    // Delay ultra-largo para máxima estabilidad
     setTimeout(() => {
       if (!isDestroyedRef.current) {
-        ultraSecureBroadcast('USER_ACTION_SECURE', {
+        cardiovascularBroadcast('USER_ACTION_CARDIOVASCULAR', {
           action,
           user_id: user?.id,
           module_context: currentState,
-          anti_tracking_shield: trackingShield.current,
+          system_vitals: circulatorySystem.current.getSystemVitals(),
           ...payload
         });
       }
-    }, 3000); // 3 segundos para máxima estabilidad
-  }, [ultraSecureBroadcast, user?.id, currentState]);
+    }, 2000); // Latido optimizado
+  }, [cardiovascularBroadcast, user?.id, currentState]);
 
-  // Cleanup al desmontar
+  // Cleanup cardiovascular
   useEffect(() => {
     return () => {
       isDestroyedRef.current = true;
-      circuitBreaker.current.destroy();
+      circulatorySystem.current.destroy();
     };
   }, []);
 
@@ -150,39 +145,36 @@ export const useNeuralIntegration = (
     broadcastUserAction,
     systemHealth: {
       ...neural.systemHealth,
-      antiTrackingActive: true,
-      shieldLevel: trackingShield.current
+      cardiovascular: circulatorySystem.current.getSystemVitals()
     },
-    circuitBreakerState: circuitBreaker.current.getState(),
     
-    // Helpers ultra-controlados y completamente anti-tracking
+    // Helpers cardiovasculares optimizados
     notifyProgress: useCallback((progress: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('PROGRESS_UPDATE_SECURE', progress), 8000);
+      setTimeout(() => broadcastUserAction('PROGRESS_CARDIOVASCULAR', progress), 6000);
     }, [broadcastUserAction]),
     
     notifyCompletion: useCallback((completion: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('TASK_COMPLETION_SECURE', completion), 2000);
+      setTimeout(() => broadcastUserAction('COMPLETION_CARDIOVASCULAR', completion), 1500);
     }, [broadcastUserAction]),
     
     notifyEngagement: useCallback((engagement: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('USER_ENGAGEMENT_SECURE', engagement), 12000);
+      setTimeout(() => broadcastUserAction('ENGAGEMENT_CARDIOVASCULAR', engagement), 8000);
     }, [broadcastUserAction]),
     
     requestRecommendation: useCallback((context: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('REQUEST_RECOMMENDATION_SECURE', context), 1500);
+      setTimeout(() => broadcastUserAction('RECOMMENDATION_CARDIOVASCULAR', context), 1000);
     }, [broadcastUserAction]),
 
-    // Función de emergencia ultra-mejorada
+    // Sistema de emergencia cardiovascular
     emergencyReset: useCallback(() => {
-      circuitBreaker.current.forceRecovery();
+      circulatorySystem.current.emergencyReset();
       lastBroadcastRef.current = '';
-      stateHashRef.current = '';
-      trackingShield.current = 0;
       isDestroyedRef.current = false;
+      console.log('🫀 Sistema cardiovascular-respiratorio reiniciado');
     }, [])
   };
 };
