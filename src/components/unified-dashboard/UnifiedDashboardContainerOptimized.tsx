@@ -26,7 +26,7 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const { markLoadComplete, optimizedCallback, optimizedMemo } = usePerformanceOptimization('UnifiedDashboardContainer');
+  const { markLoadComplete } = usePerformanceOptimization('UnifiedDashboardContainer');
   
   const { 
     currentTool, 
@@ -63,19 +63,19 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
   }, [markLoadComplete]);
 
   // Manejo unificado de herramientas optimizado
-  const handleToolChange = optimizedCallback((tool: string, toolContext?: any) => {
+  const handleToolChange = useCallback((tool: string, toolContext?: any) => {
     loadValidator.markNavigationStart();
     navigateToTool(tool, toolContext);
     loadValidator.markNavigationEnd();
-  });
+  }, [navigateToTool]);
 
   // Manejo de cambio de materia optimizado
-  const handleSubjectChange = optimizedCallback((subject: string) => {
+  const handleSubjectChange = useCallback((subject: string) => {
     updateContext({ subject });
-  });
+  }, [updateContext]);
 
   // Renderizado optimizado de herramientas con lazy loading
-  const renderCurrentTool = optimizedMemo(() => {
+  const renderCurrentTool = useMemo(() => {
     const activeSubject = context.subject || 'COMPETENCIA_LECTORA';
     
     const toolComponents = {

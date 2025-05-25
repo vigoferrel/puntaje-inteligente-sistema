@@ -46,7 +46,7 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({ childr
       {children}
       
       {/* Styles específicos para móvil */}
-      <style jsx>{`
+      <style>{`
         .mobile-optimized {
           -webkit-overflow-scrolling: touch;
         }
