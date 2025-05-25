@@ -48,25 +48,30 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
   const [activePanel, setActivePanel] = useState<'overview' | 'strategies' | 'analytics'>('overview');
   const [systemStatus, setSystemStatus] = useState('OPERATIONAL');
 
-  // Calculate key metrics
+  // Calculate key metrics with proper type checking
   const overallImprovement = React.useMemo(() => {
     if (!baselineScores || !currentScores) return 0;
-    const baseline = Object.values(baselineScores).reduce((a: number, b: number) => a + b, 0) / Object.values(baselineScores).length;
-    const current = Object.values(currentScores).reduce((a: number, b: number) => a + b, 0) / Object.values(currentScores).length;
+    const baselineValues = Object.values(baselineScores).filter((val): val is number => typeof val === 'number');
+    const currentValues = Object.values(currentScores).filter((val): val is number => typeof val === 'number');
+    
+    if (baselineValues.length === 0 || currentValues.length === 0) return 0;
+    
+    const baseline = baselineValues.reduce((a, b) => a + b, 0) / baselineValues.length;
+    const current = currentValues.reduce((a, b) => a + b, 0) / currentValues.length;
     return Math.round(current - baseline);
   }, [baselineScores, currentScores]);
 
   const criticalAreas = React.useMemo(() => {
     if (!currentScores) return [];
     return Object.entries(currentScores)
-      .filter(([_, score]) => (score as number) < 400)
+      .filter(([_, score]) => typeof score === 'number' && score < 400)
       .sort(([_, a], [__, b]) => (a as number) - (b as number));
   }, [currentScores]);
 
   const strongAreas = React.useMemo(() => {
     if (!currentScores) return [];
     return Object.entries(currentScores)
-      .filter(([_, score]) => (score as number) > 600)
+      .filter(([_, score]) => typeof score === 'number' && score > 600)
       .sort(([_, a], [__, b]) => (b as number) - (a as number));
   }, [currentScores]);
 
@@ -166,11 +171,11 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                 {currentScores && Object.entries(currentScores).map(([prueba, score]) => (
                   <div key={prueba} className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-300">{prueba}</span>
-                      <span className="text-white font-mono">{score}</span>
+                      <span className="text-gray-300">{String(prueba)}</span>
+                      <span className="text-white font-mono">{String(score)}</span>
                     </div>
                     <Progress 
-                      value={(score as number) / 8.5} 
+                      value={typeof score === 'number' ? score / 8.5 : 0} 
                       className="h-2"
                     />
                   </div>
@@ -191,10 +196,10 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                   criticalAreas.map(([prueba, score]) => (
                     <div key={prueba} className="flex items-center justify-between p-3 bg-red-900/20 rounded border border-red-500/30">
                       <div>
-                        <div className="text-red-300 font-semibold">{prueba}</div>
+                        <div className="text-red-300 font-semibold">{String(prueba)}</div>
                         <div className="text-red-200 text-sm">Requiere atención inmediata</div>
                       </div>
-                      <div className="text-red-400 font-mono text-lg">{score}</div>
+                      <div className="text-red-400 font-mono text-lg">{String(score)}</div>
                     </div>
                   ))
                 ) : (
@@ -219,10 +224,10 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                   strongAreas.map(([prueba, score]) => (
                     <div key={prueba} className="flex items-center justify-between p-3 bg-green-900/20 rounded border border-green-500/30">
                       <div>
-                        <div className="text-green-300 font-semibold">{prueba}</div>
+                        <div className="text-green-300 font-semibold">{String(prueba)}</div>
                         <div className="text-green-200 text-sm">Rendimiento sobresaliente</div>
                       </div>
-                      <div className="text-green-400 font-mono text-lg">{score}</div>
+                      <div className="text-green-400 font-mono text-lg">{String(score)}</div>
                     </div>
                   ))
                 ) : (
@@ -244,14 +249,14 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
             exit={{ opacity: 0, x: 20 }}
             className="space-y-6"
           >
-            {personalizedStrategies.length > 0 ? (
+            {personalizedStrategies && personalizedStrategies.length > 0 ? (
               personalizedStrategies.map((strategy, index) => (
                 <Card key={index} className="bg-black/60 backdrop-blur-sm border-purple-500/30">
                   <CardHeader>
                     <CardTitle className="text-purple-400 flex items-center justify-between">
                       <div className="flex items-center">
                         <Brain className="w-5 h-5 mr-2" />
-                        Estrategia: {strategy.area}
+                        Estrategia: {String(strategy.area)}
                       </div>
                       <Badge className={`${
                         strategy.priority === 'high' 
@@ -260,32 +265,32 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                           ? 'bg-yellow-600/20 text-yellow-400 border-yellow-400/50'
                           : 'bg-green-600/20 text-green-400 border-green-400/50'
                       }`}>
-                        {strategy.priority.toUpperCase()}
+                        {String(strategy.priority).toUpperCase()}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-gray-300">{strategy.strategy}</p>
+                    <p className="text-gray-300">{String(strategy.strategy)}</p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <h4 className="text-white font-semibold mb-2">Ejercicios Recomendados</h4>
-                        {strategy.exercises.map((exercise: any, idx: number) => (
+                        {strategy.exercises && Array.isArray(strategy.exercises) && strategy.exercises.map((exercise: any, idx: number) => (
                           <div key={idx} className="text-sm text-gray-400 mb-1">
-                            • {exercise.type} ({exercise.difficulty}) - {exercise.estimated_time}min
+                            • {String(exercise.type)} ({String(exercise.difficulty)}) - {String(exercise.estimated_time)}min
                           </div>
                         ))}
                       </div>
                       <div>
                         <h4 className="text-white font-semibold mb-2">Mejora Estimada</h4>
                         <div className="text-2xl font-bold text-green-400">
-                          +{strategy.estimated_improvement} puntos
+                          +{String(strategy.estimated_improvement)} puntos
                         </div>
                       </div>
                     </div>
                     
                     <Button
-                      onClick={() => onGenerateExercises(strategy.area)}
+                      onClick={() => onGenerateExercises(String(strategy.area))}
                       className="bg-purple-600 hover:bg-purple-700 text-white"
                     >
                       <Zap className="w-4 h-4 mr-2" />
@@ -330,7 +335,7 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {progressTrends.slice(0, 5).map((trend, index) => (
+                  {progressTrends && progressTrends.slice(0, 5).map((trend, index) => (
                     <div key={index} className="border-b border-gray-700 pb-2">
                       <div className="text-sm text-gray-400 mb-1">
                         {new Date(trend.date).toLocaleDateString()}
@@ -338,7 +343,10 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                       <div className="flex justify-between items-center">
                         <span className="text-white">Promedio General</span>
                         <span className="text-blue-400 font-mono">
-                          {Math.round(Object.values(trend.scores).reduce((a: number, b: number) => a + b, 0) / Object.values(trend.scores).length)}
+                          {trend.scores && typeof trend.scores === 'object' 
+                            ? Math.round(Object.values(trend.scores).reduce((a: number, b: any) => a + (typeof b === 'number' ? b : 0), 0) / Object.values(trend.scores).length)
+                            : 0
+                          }
                         </span>
                       </div>
                     </div>
@@ -360,9 +368,11 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                   <div className="space-y-3">
                     {Object.entries(predictedScores).map(([prueba, score]) => (
                       <div key={prueba} className="flex justify-between items-center">
-                        <span className="text-gray-300">{prueba}</span>
+                        <span className="text-gray-300">{String(prueba)}</span>
                         <div className="text-right">
-                          <div className="text-green-400 font-mono">{Math.round(score as number)}</div>
+                          <div className="text-green-400 font-mono">
+                            {typeof score === 'number' ? Math.round(score) : String(score)}
+                          </div>
                           <div className="text-xs text-gray-400">proyectado</div>
                         </div>
                       </div>
