@@ -1,4 +1,3 @@
-
 /**
  * Tipos del Sistema Cardiovascular-Respiratorio
  * Arquitectura limpia para corazón, pulmón y circulación
@@ -14,6 +13,7 @@ export interface ModuleSecurityContext {
   storage_protected?: boolean;
   purification_level?: string;
   emergency_mode?: boolean;
+  surgical_recovery?: boolean; // Agregar propiedad faltante
 }
 
 // Identidad de módulo extendida
