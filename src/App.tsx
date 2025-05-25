@@ -1,34 +1,35 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { CinematicProvider } from '@/components/cinematic/CinematicTransitionSystem';
-import { CinematicAudioProvider } from '@/components/cinematic/UniversalCinematicSystem';
-import { CinematicLayout } from '@/components/layout/CinematicLayout';
-import { CinematicDashboard } from '@/components/dashboard/CinematicDashboard';
-import { CinematicUnifiedDashboard } from '@/components/dashboard/CinematicUnifiedDashboard';
-import { SubjectPage } from '@/components/subjects/SubjectPage';
-import { HelpCenter } from '@/components/help/HelpCenter';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LectoGuiaProvider } from "@/contexts/lectoguia";
+import Index from "./pages/Index";
+import NewIndex from "./pages/NewIndex";
+import UnifiedIndex from "./pages/UnifiedIndex";
 
-function App() {
-  return (
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <CinematicProvider>
-        <CinematicAudioProvider>
-          <Router>
+      <LectoGuiaProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
             <Routes>
-              <Route path="/" element={<CinematicLayout />}>
-                <Route index element={<CinematicUnifiedDashboard />} />
-                <Route path="dashboard" element={<CinematicDashboard />} />
-                <Route path="materias/:subject" element={<SubjectPage />} />
-                <Route path="ayuda" element={<HelpCenter />} />
-              </Route>
+              <Route path="/" element={<UnifiedIndex />} />
+              <Route path="/dashboard" element={<Index />} />
+              <Route path="/home" element={<NewIndex />} />
             </Routes>
-          </Router>
-        </CinematicAudioProvider>
-      </CinematicProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </LectoGuiaProvider>
     </AuthProvider>
-  );
-}
+  </QueryClientProvider>
+);
 
 export default App;
