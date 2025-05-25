@@ -53,8 +53,8 @@ export const LearningCycleOrchestrator: React.FC<LearningCycleOrchestratorProps>
   const loadInitialData = async () => {
     try {
       await Promise.all([
-        loadPhaseProgress(), // Sin parámetros según la definición del hook
-        refreshPlans(), // Sin parámetros según la definición del contexto
+        loadPhaseProgress(),
+        refreshPlans(user?.id), // Pasar user?.id como parámetro requerido
         generateLearningInsights()
       ]);
     } catch (error) {
