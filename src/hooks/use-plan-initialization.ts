@@ -19,6 +19,7 @@ export const usePlanInitialization = () => {
   
   const [recommendedNodeId, setRecommendedNodeId] = useState<string | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   
   // Effect to handle plan progress loading when plans are available
   useEffect(() => {
@@ -26,6 +27,16 @@ export const usePlanInitialization = () => {
       loadPlanProgress(profile.id, currentPlan.id);
     }
   }, [plans, currentPlan, profile, loadPlanProgress]);
+
+  // Effect to manage initializing state
+  useEffect(() => {
+    if (profile?.id) {
+      // Set initializing to false once we have user and plans are loaded or errored
+      if (!loading && (plans.length > 0 || error)) {
+        setInitializing(false);
+      }
+    }
+  }, [profile?.id, loading, plans.length, error]);
   
   // Función para actualizar el progreso del plan actual
   const updateCurrentPlanProgress = useCallback(() => {
@@ -44,6 +55,7 @@ export const usePlanInitialization = () => {
   // Función para reintentar la carga de planes
   const handleRefresh = useCallback(() => {
     if (profile) {
+      setInitializing(true);
       retryFetchPlans(profile.id);
     }
   }, [profile, retryFetchPlans]);
@@ -63,6 +75,7 @@ export const usePlanInitialization = () => {
     plans,
     loading,
     error,
+    initializing,
     currentPlan,
     recommendedNodeId,
     progressLoading,

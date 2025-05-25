@@ -19,7 +19,7 @@ export const useLearningPlans = () => {
   const lastUserIdRef = useRef<string | null>(null);
 
   const { loadFromCache, updateCache } = usePlanCache();
-  const { fetchPlans: originalFetchPlans, retryFetchPlans } = usePlanFetching({
+  const { fetchPlans: originalFetchPlans, retryFetchPlans: originalRetryFetchPlans } = usePlanFetching({
     plans,
     setPlans,
     setCurrentPlan,
@@ -90,6 +90,18 @@ export const useLearningPlans = () => {
       setLoading(false);
     }
   }, [shouldFetchPlans, loadFromCache, originalFetchPlans, setPlanProgress]);
+
+  // Función de retry que acepta userId
+  const retryFetchPlans = useCallback((userId: string) => {
+    if (!userId) {
+      console.warn('Cannot retry fetch: no userId provided');
+      return;
+    }
+    
+    console.log('🔄 Retrying fetch plans for user:', userId);
+    hasLoadedRef.current = false;
+    originalRetryFetchPlans(userId);
+  }, [originalRetryFetchPlans]);
 
   const createPlan = useCallback(async (
     userId: string, 
