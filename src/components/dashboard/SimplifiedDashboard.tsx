@@ -4,10 +4,9 @@ import { useIntersectional } from '@/contexts/IntersectionalProvider';
 import { useNeuralIntegration } from '@/hooks/use-neural-integration';
 import { NeuralDashboardCore } from './NeuralDashboardCore';
 import { Card, CardContent } from '@/components/ui/card';
-import { Brain, Zap, Activity } from 'lucide-react';
+import { Brain, Activity } from 'lucide-react';
 
 export const SimplifiedDashboard: React.FC = () => {
-  // Sistema neurológico puro - SIN MOCK DATA
   const {
     isIntersectionalReady,
     neuralHealth,
@@ -21,7 +20,6 @@ export const SimplifiedDashboard: React.FC = () => {
     'cross_module_synthesis'
   ], {
     systemStatus: 'active',
-    mockDataEliminated: true,
     neuralIntegrationLevel: 100
   });
 
@@ -41,7 +39,6 @@ export const SimplifiedDashboard: React.FC = () => {
     achievements: Math.floor(neuralHealth.user_experience_harmony / 20)
   }), [neuralHealth]);
 
-  // Recomendaciones neurológicas adaptativas
   const adaptiveRecommendations = React.useMemo(() => {
     const insights = generateIntersectionalInsights();
     return insights.map(insight => ({
@@ -51,12 +48,8 @@ export const SimplifiedDashboard: React.FC = () => {
     })).slice(0, 5);
   }, [generateIntersectionalInsights]);
 
-  // Sistema neurológico completamente activo
   React.useEffect(() => {
     if (isIntersectionalReady) {
-      console.log('🧠 SISTEMA NEUROLÓGICO 100% ACTIVO - Mock data completamente eliminado');
-      
-      // Adaptación inteligente basada en comportamiento real
       adaptToUser({
         navigation_pattern: 'neural_optimized',
         interaction_frequency: 'high',
@@ -67,7 +60,6 @@ export const SimplifiedDashboard: React.FC = () => {
       neural.notifyEngagement({
         type: 'neural_system_full_activation',
         level: 'complete',
-        mock_data_status: 'completely_eliminated',
         neural_purity: 100
       });
     }
@@ -80,7 +72,7 @@ export const SimplifiedDashboard: React.FC = () => {
           <CardContent className="p-8 text-center">
             <Brain className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-pulse" />
             <h2 className="text-xl font-bold text-white mb-2">Activando Red Neural</h2>
-            <p className="text-white/70">Eliminando últimas dependencias mock...</p>
+            <p className="text-white/70">Inicializando sistema neurológico...</p>
           </CardContent>
         </Card>
       </div>

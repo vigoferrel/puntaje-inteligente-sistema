@@ -1,13 +1,14 @@
+
 import React from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
-import { AppLayout } from '@/components/app-layout';
-import { UniversalTransition, CinematicAudioProvider, CinematicControls } from '@/components/cinematic/UniversalCinematicSystem';
-import { CinematicTransition } from '@/components/cinematic/CinematicTransitionSystem';
+import { CinematicAudioProvider, CinematicControls } from '@/components/cinematic/UniversalCinematicSystem';
+import { AppHeader } from '@/components/app-header';
 import Index from '@/pages/Index';
 import LectoGuia from '@/pages/LectoGuia';
 import Diagnostico from '@/pages/Diagnostico';
 import Plan from '@/pages/Plan';
 import Progreso from '@/pages/Progreso';
+import Evaluacion from '@/pages/Evaluacion';
 import PAESDashboard from '@/pages/PAESDashboard';
 import PAESUniversePage from '@/pages/PAESUniversePage';
 import SubjectDetail from '@/pages/SubjectDetail';
@@ -21,205 +22,50 @@ import Ejercicios from '@/pages/Ejercicios';
 import Finanzas from '@/pages/Finanzas';
 import Dashboard from '@/pages/Dashboard';
 import PAES from '@/pages/PAES';
+import NotFound from '@/pages/NotFound';
 
-// Componente wrapper para páginas con transiciones cinematográficas
-const CinematicPageWrapper: React.FC<{ children: React.ReactNode; scene: string }> = ({ children, scene }) => (
-  <UniversalTransition scene={scene}>
-    {children}
-  </UniversalTransition>
-);
-
-// Layout root que maneja la estructura global
-const RootLayout: React.FC = () => (
+// Layout neurológico unificado - UN SOLO HEADER
+const NeuralLayout: React.FC = () => (
   <CinematicAudioProvider>
-    <AppLayout>
-      <Outlet />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <AppHeader />
+      <main className="flex-1">
+        <Outlet />
+      </main>
       <CinematicControls />
-    </AppLayout>
+    </div>
   </CinematicAudioProvider>
 );
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <RootLayout />,
+    element: <NeuralLayout />,
     children: [
-      { 
-        path: '/', 
-        element: (
-          <CinematicPageWrapper scene="dashboard">
-            <Index />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/lectoguia', 
-        element: (
-          <CinematicPageWrapper scene="lectoguia">
-            <LectoGuia />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/diagnostico', 
-        element: (
-          <CinematicPageWrapper scene="diagnostic">
-            <Diagnostico />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/plan', 
-        element: (
-          <CinematicPageWrapper scene="plan">
-            <Plan />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/planes-estudio', 
-        element: (
-          <CinematicPageWrapper scene="plan">
-            <Plan />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/progreso', 
-        element: (
-          <CinematicPageWrapper scene="progress">
-            <Progreso />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/paes-dashboard', 
-        element: (
-          <CinematicPageWrapper scene="paes">
-            <PAESDashboard />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/paes-universe', 
-        element: (
-          <CinematicPageWrapper scene="universe">
-            <PAESUniversePage />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/paes', 
-        element: (
-          <CinematicPageWrapper scene="paes">
-            <PAES />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/materia/:subject', 
-        element: (
-          <CinematicPageWrapper scene="subject">
-            <SubjectDetail />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/ejercicios', 
-        element: (
-          <CinematicPageWrapper scene="exercises">
-            <Ejercicios />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/ejercicios/:subject', 
-        element: (
-          <CinematicPageWrapper scene="exercises">
-            <Ejercicios />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/settings', 
-        element: (
-          <CinematicPageWrapper scene="settings">
-            <Settings />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/configuracion', 
-        element: (
-          <CinematicPageWrapper scene="settings">
-            <Settings />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/evaluaciones', 
-        element: (
-          <CinematicPageWrapper scene="evaluation">
-            <Evaluaciones />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/entrenamiento', 
-        element: (
-          <CinematicPageWrapper scene="training">
-            <Entrenamiento />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/analisis', 
-        element: (
-          <CinematicPageWrapper scene="analysis">
-            <Analisis />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/calendario', 
-        element: (
-          <CinematicPageWrapper scene="calendar">
-            <Calendario />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/finanzas', 
-        element: (
-          <CinematicPageWrapper scene="finances">
-            <Finanzas />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/centro-financiero', 
-        element: (
-          <CinematicPageWrapper scene="finances">
-            <Finanzas />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/dashboard', 
-        element: (
-          <CinematicPageWrapper scene="dashboard">
-            <Dashboard />
-          </CinematicPageWrapper>
-        )
-      },
-      { 
-        path: '/login', 
-        element: (
-          <CinematicPageWrapper scene="auth">
-            <Login />
-          </CinematicPageWrapper>
-        )
-      }
+      { path: '/', element: <Index /> },
+      { path: '/lectoguia', element: <LectoGuia /> },
+      { path: '/diagnostico', element: <Diagnostico /> },
+      { path: '/plan', element: <Plan /> },
+      { path: '/planes-estudio', element: <Plan /> },
+      { path: '/progreso', element: <Progreso /> },
+      { path: '/evaluacion', element: <Evaluacion /> },
+      { path: '/evaluaciones', element: <Evaluacion /> },
+      { path: '/paes-dashboard', element: <PAESDashboard /> },
+      { path: '/paes-universe', element: <PAESUniversePage /> },
+      { path: '/paes', element: <PAES /> },
+      { path: '/materia/:subject', element: <SubjectDetail /> },
+      { path: '/ejercicios', element: <Ejercicios /> },
+      { path: '/ejercicios/:subject', element: <Ejercicios /> },
+      { path: '/settings', element: <Settings /> },
+      { path: '/configuracion', element: <Settings /> },
+      { path: '/entrenamiento', element: <Entrenamiento /> },
+      { path: '/analisis', element: <Analisis /> },
+      { path: '/calendario', element: <Calendario /> },
+      { path: '/finanzas', element: <Finanzas /> },
+      { path: '/centro-financiero', element: <Finanzas /> },
+      { path: '/dashboard', element: <Dashboard /> },
+      { path: '/login', element: <Login /> },
+      { path: '*', element: <NotFound /> }
     ]
   }
 ]);
