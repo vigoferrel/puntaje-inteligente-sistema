@@ -1,8 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise } from '@/types/ai-types';
 import { ExerciseAttempt } from '@/types/lectoguia-types';
 import { TPAESHabilidad } from '@/types/system-types';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function fetchUserExerciseHistory(userId: string): Promise<ExerciseAttempt[]> {
   if (!userId) {
@@ -41,12 +41,15 @@ export async function saveExerciseAttemptToDb(
 ): Promise<ExerciseAttempt> {
   console.log(`Saving attempt with prueba: ${prueba}`);
   
+  // Convertir exercise.id a string si es necesario
+  const exerciseId = typeof exercise.id === 'string' ? exercise.id : String(exercise.id || uuidv4());
+  
   // Use the existing user_exercise_attempts table
   const { data, error } = await supabase
     .from('user_exercise_attempts')
     .insert({
       user_id: userId,
-      exercise_id: exercise.id,
+      exercise_id: exerciseId,
       answer: selectedOption.toString(), // Convert number to string for answer field
       is_correct: isCorrect,
       skill_demonstrated: skillType as TPAESHabilidad

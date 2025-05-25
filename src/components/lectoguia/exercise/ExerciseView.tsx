@@ -112,7 +112,7 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({
       />
       
       {/* Indicador de ejercicio de respaldo si aplica */}
-      {exercise.id?.includes('fallback') && (
+      {typeof exercise.id === 'string' && exercise.id.includes('fallback') && (
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
             <CheckCircle className="inline h-4 w-4 mr-1" />

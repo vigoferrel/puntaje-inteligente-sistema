@@ -20,7 +20,7 @@ export function useLectoGuiaExercise() {
   } = useExerciseState();
   
   // Envolvemos la función para asegurar que se procesa el tipo de prueba
-  const generateExercise = async (skill: TPAESHabilidad, prueba?: TPAESPrueba, difficulty: string = "INTERMEDIATE") => {
+  const generateExercise = async (skill: TPAESHabilidad, prueba?: TPAESPrueba, difficulty: "BASIC" | "INTERMEDIATE" | "ADVANCED" = "INTERMEDIATE") => {
     console.log(`LectoGuiaExercise: Generando ejercicio con skill=${skill}, prueba=${prueba || 'no especificada'}, difficulty=${difficulty}`);
     return await genExercise(skill, prueba, difficulty);
   };

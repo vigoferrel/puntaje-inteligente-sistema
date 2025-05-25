@@ -39,10 +39,13 @@ export function useExercises(userId: string | null, updateSkill: (skillId: numbe
     if (!userId || !exercise) return;
     
     try {
+      // Convertir exercise.id a string si es necesario
+      const exerciseId = typeof exercise.id === 'string' ? exercise.id : String(exercise.id || uuidv4());
+      
       // Usar la nueva tabla user_exercise_attempts
       await supabase.from('user_exercise_attempts').insert({
         user_id: userId,
-        exercise_id: exercise.id || uuidv4(),
+        exercise_id: exerciseId,
         answer: selectedOption.toString(),
         is_correct: isCorrect,
         skill_demonstrated: exercise.skill as TPAESHabilidad,

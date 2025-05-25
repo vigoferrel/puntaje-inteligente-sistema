@@ -292,7 +292,7 @@ export const ExerciseTab: React.FC<ExerciseTabProps> = ({
 
 // Función para extraer número de pregunta PAES si existe
 const getPAESQuestionNumber = (exercise: Exercise | null): number | undefined => {
-  if (!exercise || !exercise.id.startsWith('paes-')) return undefined;
+  if (!exercise || typeof exercise.id !== 'string' || !exercise.id.startsWith('paes-')) return undefined;
   // El ID es "paes-{id}", donde id es el ID de la pregunta en la base de datos
   // Para mostrar el número real necesitaríamos consultarlo, por ahora retornamos undefined
   return undefined;
