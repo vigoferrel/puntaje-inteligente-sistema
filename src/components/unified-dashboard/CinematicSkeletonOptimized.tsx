@@ -6,7 +6,7 @@ import { Brain, Sparkles, Zap } from 'lucide-react';
 interface CinematicSkeletonOptimizedProps {
   message?: string;
   progress?: number;
-  variant?: 'full' | 'card' | 'minimal';
+  variant?: 'full' | 'card' | 'minimal' | 'dashboard' | 'universe' | 'training' | 'diagnostic' | 'financial' | 'calendar';
 }
 
 export const CinematicSkeletonOptimized: React.FC<CinematicSkeletonOptimizedProps> = ({
@@ -14,7 +14,32 @@ export const CinematicSkeletonOptimized: React.FC<CinematicSkeletonOptimizedProp
   progress = 85,
   variant = 'full'
 }) => {
-  if (variant === 'minimal') {
+  // Map specific variants to base variants for consistency
+  const mappedVariant = ['dashboard', 'universe', 'training', 'diagnostic', 'financial', 'calendar'].includes(variant) 
+    ? 'card' 
+    : variant;
+
+  // Custom messages based on variant
+  const getVariantMessage = () => {
+    switch (variant) {
+      case 'dashboard':
+        return "Cargando Dashboard Neural";
+      case 'universe':
+        return "Inicializando Universe 3D";
+      case 'training':
+        return "Preparando Entrenamiento";
+      case 'diagnostic':
+        return "Configurando Diagnóstico";
+      case 'financial':
+        return "Cargando Centro Financiero";
+      case 'calendar':
+        return "Sincronizando Calendario";
+      default:
+        return message;
+    }
+  };
+
+  if (mappedVariant === 'minimal') {
     return (
       <div className="flex items-center justify-center p-4">
         <motion.div
@@ -26,7 +51,7 @@ export const CinematicSkeletonOptimized: React.FC<CinematicSkeletonOptimizedProp
     );
   }
 
-  if (variant === 'card') {
+  if (mappedVariant === 'card') {
     return (
       <div className="cinematic-card p-6 space-y-4">
         <div className="flex items-center gap-3">
@@ -45,6 +70,11 @@ export const CinematicSkeletonOptimized: React.FC<CinematicSkeletonOptimizedProp
         <div className="space-y-2">
           <div className="h-3 bg-white/10 rounded animate-pulse" />
           <div className="h-3 bg-white/10 rounded animate-pulse w-4/5" />
+        </div>
+        <div className="text-center">
+          <p className="text-cyan-300 text-sm font-poppins">
+            {getVariantMessage()}
+          </p>
         </div>
       </div>
     );
@@ -102,7 +132,7 @@ export const CinematicSkeletonOptimized: React.FC<CinematicSkeletonOptimizedProp
             transition={{ delay: 0.2 }}
             className="text-3xl font-bold text-white cinematic-text-glow poppins-heading"
           >
-            {message}
+            {getVariantMessage()}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
