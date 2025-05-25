@@ -63,7 +63,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
 
   const currentSubject = SUBJECTS.find(s => s.code === initialSubject) || SUBJECTS[0];
   
-  // Convertir ChatMessage[] a Message[] y asegurar que stats siempre tenga todas las propiedades
+  // Convertir ChatMessage[] a Message[]
   const convertedMessages: Message[] = (messages || []).map((msg: ChatMessage) => ({
     id: msg.id,
     text: msg.content,
@@ -71,7 +71,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
     timestamp: msg.timestamp
   }));
 
-  // Asegurar que stats siempre tenga todas las propiedades requeridas
+  // Asegurar que stats siempre tenga tipos correctos
   const rawStats = getStats ? getStats() : {
     totalMessages: 0,
     exercisesCompleted: 0,
@@ -81,13 +81,13 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
   };
 
   const stats = {
-    totalMessages: rawStats.totalMessages || 0,
-    exercisesCompleted: rawStats.exercisesCompleted || 0,
+    totalMessages: Number(rawStats.totalMessages) || 0,
+    exercisesCompleted: Number(rawStats.exercisesCompleted) || 0,
     currentSubject: rawStats.currentSubject || initialSubject,
     isConnected: rawStats.isConnected !== undefined ? rawStats.isConnected : true,
     lastSync: rawStats.lastSync || new Date(),
-    averageScore: 'averageScore' in rawStats ? rawStats.averageScore : 0,
-    streak: 'streak' in rawStats ? rawStats.streak : 0
+    averageScore: Number(rawStats.averageScore) || 0,
+    streak: Number(rawStats.streak) || 0
   };
 
   const handleSubjectSelect = (subjectCode: string) => {
