@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Stars, Text, Html } from '@react-three/drei';
@@ -18,6 +17,7 @@ import { NeuralBrain } from '../universe/NeuralBrain';
 import { SubjectGalaxy } from '../universe/SubjectGalaxy';
 import { ProgressNebula } from '../universe/ProgressNebula';
 import { CinematicAudioProvider, CinematicControls } from '../cinematic/UniversalCinematicSystem';
+import { CinematicProvider } from '../cinematic/CinematicTransitionSystem';
 import { NeuralDimensionRenderer } from './NeuralDimensionRenderer';
 import { UniverseMode, Galaxy, UniverseMetrics } from '@/types/universe-types';
 
@@ -228,148 +228,150 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
   }
 
   return (
-    <CinematicAudioProvider>
-      <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-indigo-900 overflow-hidden relative">
-        
-        {/* ✅ HUD NEURAL SUPERIOR OPTIMIZADO */}
-        <motion.div 
-          className="absolute top-0 left-0 right-0 z-50 pointer-events-auto"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="bg-black/40 backdrop-blur-xl border-b border-cyan-500/30 p-4">
-            <div className="flex items-center justify-between text-white">
-              
-              {/* ✅ IDENTIDAD NEURAL */}
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center">
-                  <Brain className="w-6 h-6" />
+    <CinematicProvider>
+      <CinematicAudioProvider>
+        <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-indigo-900 overflow-hidden relative">
+          
+          {/* ✅ HUD NEURAL SUPERIOR OPTIMIZADO */}
+          <motion.div 
+            className="absolute top-0 left-0 right-0 z-50 pointer-events-auto"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="bg-black/40 backdrop-blur-xl border-b border-cyan-500/30 p-4">
+              <div className="flex items-center justify-between text-white">
+                
+                {/* ✅ IDENTIDAD NEURAL */}
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <Brain className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold">{profile?.name || 'Comandante Neural'}</div>
+                    <div className="text-sm text-cyan-400">Nivel {neuralLevel} • {cosmicEnergy} Energía Cósmica</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xl font-bold">{profile?.name || 'Comandante Neural'}</div>
-                  <div className="text-sm text-cyan-400">Nivel {neuralLevel} • {cosmicEnergy} Energía Cósmica</div>
+
+                {/* ✅ MÉTRICAS CENTRALES */}
+                <div className="flex items-center space-x-8">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-cyan-400">{neuralMetrics.projectedScore}</div>
+                    <div className="text-xs opacity-80">Proyección PAES</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-400">{neuralMetrics.neuralPower}%</div>
+                    <div className="text-xs opacity-80">Poder Neural</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-400">{battlePoints}</div>
+                    <div className="text-xs opacity-80">Puntos Batalla</div>
+                  </div>
                 </div>
-              </div>
 
-              {/* ✅ MÉTRICAS CENTRALES */}
-              <div className="flex items-center space-x-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-cyan-400">{neuralMetrics.projectedScore}</div>
-                  <div className="text-xs opacity-80">Proyección PAES</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-400">{neuralMetrics.neuralPower}%</div>
-                  <div className="text-xs opacity-80">Poder Neural</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-400">{battlePoints}</div>
-                  <div className="text-xs opacity-80">Puntos Batalla</div>
-                </div>
-              </div>
-
-              {/* ✅ ESTADO DEL SISTEMA */}
-              <div className="flex items-center space-x-2">
-                <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600">
-                  <Rocket className="w-3 h-3 mr-1" />
-                  Neural Activo
-                </Badge>
-                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
-                  <Star className="w-3 h-3 mr-1" />
-                  IA Adaptativa
-                </Badge>
-                <Badge className="bg-gradient-to-r from-emerald-600 to-teal-600">
-                  <PieChart className="w-3 h-3 mr-1" />
-                  Sistema Listo
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* ✅ PANEL DE CONTROL DIMENSIONAL */}
-        <motion.div 
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 pointer-events-auto"
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30 w-80 ml-4">
-            <CardContent className="p-6 space-y-4">
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-white mb-2">Control Dimensional</h3>
-                <div className="text-sm text-cyan-400">Sistema operativo</div>
-              </div>
-
-              <div className="space-y-3">
-                {neuralDimensions.map((dimension) => {
-                  const Icon = dimension.icon;
-                  const isActive = activeDimension === dimension.id;
-                  
-                  return (
-                    <Button
-                      key={dimension.id}
-                      onClick={() => handleDimensionTransition(dimension.id)}
-                      variant={isActive ? "default" : "outline"}
-                      className={`w-full justify-start h-auto p-4 ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700' 
-                          : 'border-white/30 text-white hover:bg-white/10'
-                      }`}
-                      disabled={isTransitioning}
-                    >
-                      <Icon className="w-6 h-6 mr-3 flex-shrink-0" style={{ color: dimension.color }} />
-                      <div className="text-left">
-                        <div className="font-bold text-sm">{dimension.name}</div>
-                        <div className="text-xs opacity-80">{dimension.description}</div>
-                      </div>
-                    </Button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* ✅ CONTENIDO PRINCIPAL */}
-        <div className="flex-1 pt-24">
-          <NeuralDimensionRenderer
-            activeDimension={activeDimension}
-            selectedGalaxy={selectedGalaxy}
-            galaxies={galaxies}
-            neuralMetrics={neuralMetrics}
-            onGalaxyInteraction={handleGalaxyInteraction}
-            onNavigateToAnalysis={handleNavigateToAnalysis}
-            onNavigateToTraining={handleNavigateToTraining}
-            isTransitioning={isTransitioning}
-          />
-        </div>
-
-        {/* ✅ FOOTER NEURAL */}
-        <motion.div 
-          className="absolute bottom-0 left-0 right-0 z-40 pointer-events-auto"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="bg-black/30 backdrop-blur-xl border-t border-cyan-500/20 p-3">
-            <div className="flex items-center justify-between text-white text-sm">
-              <div className="flex items-center space-x-4">
+                {/* ✅ ESTADO DEL SISTEMA */}
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>Sistema Neural Activo</span>
+                  <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600">
+                    <Rocket className="w-3 h-3 mr-1" />
+                    Neural Activo
+                  </Badge>
+                  <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
+                    <Star className="w-3 h-3 mr-1" />
+                    IA Adaptativa
+                  </Badge>
+                  <Badge className="bg-gradient-to-r from-emerald-600 to-teal-600">
+                    <PieChart className="w-3 h-3 mr-1" />
+                    Sistema Listo
+                  </Badge>
                 </div>
-                <div>Estado: ✅ Operativo</div>
-                <div>Carga: ⚡ Inmediata</div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <CinematicControls />
               </div>
             </div>
+          </motion.div>
+
+          {/* ✅ PANEL DE CONTROL DIMENSIONAL */}
+          <motion.div 
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 pointer-events-auto"
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30 w-80 ml-4">
+              <CardContent className="p-6 space-y-4">
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-white mb-2">Control Dimensional</h3>
+                  <div className="text-sm text-cyan-400">Sistema operativo</div>
+                </div>
+
+                <div className="space-y-3">
+                  {neuralDimensions.map((dimension) => {
+                    const Icon = dimension.icon;
+                    const isActive = activeDimension === dimension.id;
+                    
+                    return (
+                      <Button
+                        key={dimension.id}
+                        onClick={() => handleDimensionTransition(dimension.id)}
+                        variant={isActive ? "default" : "outline"}
+                        className={`w-full justify-start h-auto p-4 ${
+                          isActive 
+                            ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700' 
+                            : 'border-white/30 text-white hover:bg-white/10'
+                        }`}
+                        disabled={isTransitioning}
+                      >
+                        <Icon className="w-6 h-6 mr-3 flex-shrink-0" style={{ color: dimension.color }} />
+                        <div className="text-left">
+                          <div className="font-bold text-sm">{dimension.name}</div>
+                          <div className="text-xs opacity-80">{dimension.description}</div>
+                        </div>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* ✅ CONTENIDO PRINCIPAL */}
+          <div className="flex-1 pt-24">
+            <NeuralDimensionRenderer
+              activeDimension={activeDimension}
+              selectedGalaxy={selectedGalaxy}
+              galaxies={galaxies}
+              neuralMetrics={neuralMetrics}
+              onGalaxyInteraction={handleGalaxyInteraction}
+              onNavigateToAnalysis={handleNavigateToAnalysis}
+              onNavigateToTraining={handleNavigateToTraining}
+              isTransitioning={isTransitioning}
+            />
           </div>
-        </motion.div>
-      </div>
-    </CinematicAudioProvider>
+
+          {/* ✅ FOOTER NEURAL */}
+          <motion.div 
+            className="absolute bottom-0 left-0 right-0 z-40 pointer-events-auto"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="bg-black/30 backdrop-blur-xl border-t border-cyan-500/20 p-3">
+              <div className="flex items-center justify-between text-white text-sm">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>Sistema Neural Activo</span>
+                  </div>
+                  <div>Estado: ✅ Operativo</div>
+                  <div>Carga: ⚡ Inmediata</div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <CinematicControls />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </CinematicAudioProvider>
+    </CinematicProvider>
   );
 };
