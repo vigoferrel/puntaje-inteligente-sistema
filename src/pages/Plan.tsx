@@ -9,98 +9,85 @@ import { Brain, MapPin, Zap, Target, Calendar, Clock, PlayCircle, CheckCircle } 
 import { useIntersectional } from '@/contexts/IntersectionalProvider';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRealPlanData } from '@/hooks/useRealPlanData';
 
 export default function Plan() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const {
     isIntersectionalReady,
-    neuralHealth,
     generateIntersectionalInsights,
     adaptToUser
   } = useIntersectional();
 
-  // Métricas de estrategia neural adaptativa
-  const strategicMetrics = React.useMemo(() => ({
-    strategicEfficiency: Math.round(neuralHealth.neural_efficiency),
-    adaptiveIndex: Math.round(neuralHealth.adaptive_learning_score),
-    goalAlignment: Math.round(neuralHealth.user_experience_harmony),
-    executionRate: Math.round(neuralHealth.cross_pollination_rate),
-    activePlans: Math.floor(neuralHealth.neural_efficiency / 25),
-    completedMilestones: Math.floor(neuralHealth.adaptive_learning_score / 20)
-  }), [neuralHealth]);
+  // Hook para datos reales en lugar de cálculos mock
+  const { metrics: realMetrics, isLoading: metricsLoading } = useRealPlanData();
 
   const handlePlanAction = (actionType: string, planId?: string) => {
     adaptToUser({
       plan_action: actionType,
       plan_id: planId,
       strategic_context: 'neural_optimization',
-      efficiency_level: strategicMetrics.strategicEfficiency
+      efficiency_level: realMetrics?.strategicEfficiency || 0
     });
     
     console.log(`🎯 Acción de plan: ${actionType}`, { planId });
   };
 
-  const strategicPlans = [
-    {
-      id: 'comprehensive_paes',
-      title: 'Plan Integral PAES',
-      description: 'Estrategia neurológica completa para optimización de resultados',
-      icon: Target,
-      color: 'from-blue-500 to-purple-500',
-      status: 'active',
-      progress: strategicMetrics.strategicEfficiency,
-      duration: '16 semanas',
-      priority: 'high'
-    },
-    {
-      id: 'cognitive_optimization',
-      title: 'Optimización Cognitiva',
-      description: 'Mejora adaptativa de patrones de pensamiento',
-      icon: Brain,
-      color: 'from-purple-500 to-pink-500',
-      status: 'active',
-      progress: strategicMetrics.adaptiveIndex,
-      duration: '12 semanas',
-      priority: 'high'
-    },
-    {
-      id: 'skill_reinforcement',
-      title: 'Refuerzo de Habilidades',
-      description: 'Fortalecimiento específico de áreas débiles',
-      icon: Zap,
-      color: 'from-yellow-500 to-orange-500',
-      status: 'planning',
-      progress: strategicMetrics.goalAlignment,
-      duration: '8 semanas',
-      priority: 'medium'
-    },
-    {
-      id: 'strategic_review',
-      title: 'Revisión Estratégica',
-      description: 'Análisis y ajuste periódico de objetivos',
-      icon: MapPin,
-      color: 'from-green-500 to-teal-500',
-      status: 'scheduled',
-      progress: strategicMetrics.executionRate,
-      duration: '4 semanas',
-      priority: 'low'
-    }
-  ];
-
-  const weeklySchedule = [
-    { day: 'Lunes', focus: 'Comprensión Lectora', intensity: 85, duration: '2h' },
-    { day: 'Martes', focus: 'Matemática M1', intensity: 92, duration: '2.5h' },
-    { day: 'Miércoles', focus: 'Ciencias', intensity: 78, duration: '2h' },
-    { day: 'Jueves', focus: 'Matemática M2', intensity: 88, duration: '2.5h' },
-    { day: 'Viernes', focus: 'Historia', intensity: 81, duration: '2h' },
-    { day: 'Sábado', focus: 'Evaluación Integral', intensity: 95, duration: '3h' },
-    { day: 'Domingo', focus: 'Revisión y Descanso', intensity: 45, duration: '1h' }
-  ];
+  const strategicPlans = React.useMemo(() => {
+    if (!realMetrics) return [];
+    
+    return [
+      {
+        id: 'comprehensive_paes',
+        title: 'Plan Integral PAES',
+        description: 'Estrategia neurológica completa para optimización de resultados',
+        icon: Target,
+        color: 'from-blue-500 to-purple-500',
+        status: realMetrics.activePlans > 0 ? 'active' : 'planning',
+        progress: realMetrics.strategicEfficiency,
+        duration: '16 semanas',
+        priority: 'high'
+      },
+      {
+        id: 'cognitive_optimization',
+        title: 'Optimización Cognitiva',
+        description: 'Mejora adaptativa de patrones de pensamiento',
+        icon: Brain,
+        color: 'from-purple-500 to-pink-500',
+        status: realMetrics.adaptiveIndex > 50 ? 'active' : 'planning',
+        progress: realMetrics.adaptiveIndex,
+        duration: '12 semanas',
+        priority: 'high'
+      },
+      {
+        id: 'skill_reinforcement',
+        title: 'Refuerzo de Habilidades',
+        description: 'Fortalecimiento específico de áreas débiles',
+        icon: Zap,
+        color: 'from-yellow-500 to-orange-500',
+        status: realMetrics.goalAlignment > 30 ? 'active' : 'planning',
+        progress: realMetrics.goalAlignment,
+        duration: '8 semanas',
+        priority: 'medium'
+      },
+      {
+        id: 'strategic_review',
+        title: 'Revisión Estratégica',
+        description: 'Análisis y ajuste periódico de objetivos',
+        icon: MapPin,
+        color: 'from-green-500 to-teal-500',
+        status: 'scheduled',
+        progress: realMetrics.executionRate,
+        duration: '4 semanas',
+        priority: 'low'
+      }
+    ];
+  }, [realMetrics]);
 
   const insights = generateIntersectionalInsights();
 
-  if (!isIntersectionalReady) {
+  if (!isIntersectionalReady || metricsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-blue-900 flex items-center justify-center">
         <motion.div
@@ -110,7 +97,19 @@ export default function Plan() {
         >
           <div className="w-16 h-16 border-4 border-green-400 border-t-transparent rounded-full mx-auto animate-spin" />
           <div className="text-xl font-bold">Activando Estrategia Neural</div>
+          <div className="text-sm text-green-200">Cargando planes reales del usuario...</div>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (!realMetrics) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-blue-900 flex items-center justify-center">
+        <div className="text-center text-white space-y-4">
+          <div className="text-xl font-bold">Error al cargar datos de planificación</div>
+          <div className="text-sm text-green-200">No se pudieron obtener los datos reales de los planes</div>
+        </div>
       </div>
     );
   }
@@ -134,11 +133,11 @@ export default function Plan() {
             Planificación Inteligente Personalizada • {user?.email || 'Usuario'}
           </p>
           <Badge className="mt-2 bg-green-600 text-white">
-            Eficiencia Estratégica: {strategicMetrics.strategicEfficiency}%
+            Eficiencia Estratégica: {realMetrics.strategicEfficiency}%
           </Badge>
         </motion.div>
 
-        {/* Métricas Estratégicas */}
+        {/* Métricas Estratégicas - DATOS REALES */}
         <motion.div 
           className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -146,11 +145,11 @@ export default function Plan() {
           transition={{ delay: 0.2 }}
         >
           {[
-            { label: 'Eficiencia', value: `${strategicMetrics.strategicEfficiency}%`, icon: Target, color: 'text-green-400' },
-            { label: 'Adaptación', value: `${strategicMetrics.adaptiveIndex}%`, icon: Brain, color: 'text-blue-400' },
-            { label: 'Alineación', value: `${strategicMetrics.goalAlignment}%`, icon: MapPin, color: 'text-purple-400' },
-            { label: 'Planes Activos', value: strategicMetrics.activePlans, icon: Calendar, color: 'text-yellow-400' },
-            { label: 'Hitos Logrados', value: strategicMetrics.completedMilestones, icon: CheckCircle, color: 'text-pink-400' }
+            { label: 'Eficiencia', value: `${realMetrics.strategicEfficiency}%`, icon: Target, color: 'text-green-400' },
+            { label: 'Adaptación', value: `${realMetrics.adaptiveIndex}%`, icon: Brain, color: 'text-blue-400' },
+            { label: 'Alineación', value: `${realMetrics.goalAlignment}%`, icon: MapPin, color: 'text-purple-400' },
+            { label: 'Planes Activos', value: realMetrics.activePlans, icon: Calendar, color: 'text-yellow-400' },
+            { label: 'Hitos Logrados', value: realMetrics.completedMilestones, icon: CheckCircle, color: 'text-pink-400' }
           ].map((metric, index) => (
             <Card key={metric.label} className="bg-white/10 border-white/20 backdrop-blur-sm">
               <CardContent className="p-4 text-center">
@@ -252,7 +251,7 @@ export default function Plan() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {weeklySchedule.map((schedule, index) => (
+                {realMetrics.weeklySchedule.length > 0 ? realMetrics.weeklySchedule.map((schedule, index) => (
                   <div key={schedule.day} className="bg-white/5 rounded-lg p-3">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium text-white">{schedule.day}</span>
@@ -267,7 +266,13 @@ export default function Plan() {
                       <span className="text-xs text-white/60">{schedule.intensity}%</span>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center text-white/60 py-8">
+                    <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No hay horarios configurados</p>
+                    <p className="text-sm">Configura tu cronograma de estudio</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

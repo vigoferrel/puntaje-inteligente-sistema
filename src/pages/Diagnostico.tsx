@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { DiagnosticBrowser } from "@/components/diagnostic/DiagnosticBrowser";
 import { DiagnosticExecution } from "@/components/diagnostic/DiagnosticExecution";
@@ -11,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, AlertCircle, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDiagnosticFlow } from "@/hooks/diagnostic/useDiagnosticFlow";
+import { useRealDiagnosticData } from "@/hooks/useRealDiagnosticData";
 
 export default function Diagnostico() {
   const [viewMode, setViewMode] = useState<'command_center' | 'browser' | 'execution' | 'results'>('command_center');
@@ -34,6 +36,9 @@ export default function Diagnostico() {
     toggleHint,
     resetFlow
   } = useDiagnosticFlow();
+
+  // Hook para datos reales en lugar de mock data
+  const { metrics: realMetrics, isLoading: metricsLoading } = useRealDiagnosticData();
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -110,7 +115,10 @@ export default function Diagnostico() {
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center space-y-4">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-lg font-medium">Inicializando sistema diagnóstico...</p>
+            <p className="text-lg font-medium">Inicializando sistema diagnóstico neurológico...</p>
+            {metricsLoading && (
+              <p className="text-sm text-gray-600">Cargando datos reales del usuario...</p>
+            )}
           </div>
         </div>
       </div>
@@ -135,17 +143,19 @@ export default function Diagnostico() {
           </div>
         )}
         
-        {/* System Status Banner */}
-        {systemReady && viewMode !== 'command_center' && (
+        {/* System Status Banner - DATOS REALES */}
+        {systemReady && viewMode !== 'command_center' && realMetrics && (
           <Alert className="mb-6 bg-green-50 border-green-200">
             <TrendingUp className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-700">
               <div className="flex items-center justify-between">
                 <span>
-                  Sistema PAES activo: {availableTests.length} diagnósticos disponibles
+                  Sistema PAES activo: {realMetrics.availableTests} diagnósticos disponibles | 
+                  Completados: {realMetrics.completedDiagnostics} | 
+                  Promedio: {realMetrics.averageScore}%
                 </span>
                 <Badge variant="default" className="text-xs">
-                  Sistema: OPERACIONAL
+                  Preparación: {realMetrics.readinessLevel}%
                 </Badge>
               </div>
             </AlertDescription>
@@ -186,44 +196,58 @@ export default function Diagnostico() {
             currentQuestionIndex={currentQuestionIndex}
             answers={answers}
             showHint={showHint}
-            onAnswerSelect={handleAnswerSelect}
+            onAnswerSelect={(questionId, answer) => answerQuestion(questionId, answer)}
             onRequestHint={toggleHint}
-            onPreviousQuestion={handlePreviousQuestion}
-            onNextQuestion={handleNextQuestion}
-            onFinishTest={handleFinishTest}
+            onPreviousQuestion={() => {
+              if (currentQuestionIndex > 0) {
+                navigateQuestion('prev');
+              }
+            }}
+            onNextQuestion={() => {
+              if (currentTest && currentQuestionIndex < currentTest.questions.length - 1) {
+                navigateQuestion('next');
+              }
+            }}
+            onFinishTest={async () => {
+              const success = await finishDiagnostic();
+              if (success) setViewMode('results');
+            }}
           />
         )}
         
         {viewMode === 'results' && results && (
           <DiagnosticResults
             results={results}
-            onRestart={handleRestart}
+            onRestart={() => {
+              resetFlow();
+              setViewMode('command_center');
+            }}
           />
         )}
           
-          {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-8 p-4 bg-gray-900 text-green-400 rounded border border-gray-700 text-xs font-mono">
-              <strong className="text-yellow-400">🔬 Sistema Debug:</strong>
-              <br />
-              <div className="grid grid-cols-2 gap-4 mt-2">
-                <div>
-                  <div className="text-blue-400">Estado Actual:</div>
-                  <div>• Modo: {viewMode}</div>
-                  <div>• Tests: {availableTests.length}</div>
-                  <div>• Sistema: {systemReady ? 'Listo' : 'No listo'}</div>
-                  <div>• Test seleccionado: {selectedTestId || 'Ninguno'}</div>
-                </div>
-                <div>
-                  <div className="text-purple-400">Diagnóstico:</div>
-                  <div>• Activo: {isActive ? 'Sí' : 'No'}</div>
-                  <div>• Pregunta: {currentQuestionIndex + 1}/{currentTest?.questions.length || 0}</div>
-                  <div>• Respuestas: {Object.keys(answers).length}</div>
-                  <div>• Resultados: {results ? 'Disponibles' : 'Pendientes'}</div>
-                </div>
+        {/* Debug info con datos reales */}
+        {process.env.NODE_ENV === 'development' && realMetrics && (
+          <div className="mt-8 p-4 bg-gray-900 text-green-400 rounded border border-gray-700 text-xs font-mono">
+            <strong className="text-yellow-400">🧠 Sistema Neural Real:</strong>
+            <br />
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div>
+                <div className="text-blue-400">Estado Actual:</div>
+                <div>• Modo: {viewMode}</div>
+                <div>• Tests disponibles: {realMetrics.availableTests}</div>
+                <div>• Sistema: {systemReady ? 'Listo' : 'No listo'}</div>
+                <div>• Test seleccionado: {selectedTestId || 'Ninguno'}</div>
+              </div>
+              <div>
+                <div className="text-purple-400">Métricas Reales:</div>
+                <div>• Completados: {realMetrics.completedDiagnostics}</div>
+                <div>• Promedio: {realMetrics.averageScore}%</div>
+                <div>• Preparación: {realMetrics.readinessLevel}%</div>
+                <div>• Tendencia: {realMetrics.progressTrend}</div>
               </div>
             </div>
-          )}
+          </div>
+        )}
       </div>
     </LectoGuiaProvider>
   );

@@ -8,51 +8,49 @@ import { Progress } from '@/components/ui/progress';
 import { Brain, TrendingUp, BarChart3, Activity, Zap, Target, Calendar, Award } from 'lucide-react';
 import { useIntersectional } from '@/contexts/IntersectionalProvider';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRealProgressData } from '@/hooks/useRealProgressData';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 export default function Progreso() {
   const { user } = useAuth();
   const {
     isIntersectionalReady,
-    neuralHealth,
     generateIntersectionalInsights,
     adaptToUser
   } = useIntersectional();
 
-  // Métricas de análisis cognitivo en tiempo real
-  const cognitiveMetrics = React.useMemo(() => ({
-    overallProgress: Math.round(neuralHealth.neural_efficiency),
-    learningVelocity: Math.round(neuralHealth.adaptive_learning_score),
-    retentionRate: Math.round(neuralHealth.user_experience_harmony),
-    cognitiveLoad: Math.round(neuralHealth.cross_pollination_rate),
-    weeklyGrowth: Math.round((neuralHealth.neural_efficiency + neuralHealth.adaptive_learning_score) / 20),
-    totalSessions: Math.floor(neuralHealth.neural_efficiency / 10),
-    streakDays: Math.floor(neuralHealth.adaptive_learning_score / 15)
-  }), [neuralHealth]);
+  // Hook para datos reales en lugar de cálculos mock
+  const { metrics: realMetrics, isLoading: metricsLoading } = useRealProgressData();
 
-  // Datos simulados para gráficos basados en métricas neurales reales
+  // Datos simulados para gráficos basados en métricas reales
   const progressData = React.useMemo(() => {
-    const baseEfficiency = neuralHealth.neural_efficiency;
+    if (!realMetrics) return [];
+    
+    const baseProgress = realMetrics.overallProgress;
     return Array.from({ length: 7 }, (_, i) => ({
       day: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][i],
-      progreso: Math.max(0, Math.min(100, baseEfficiency + (Math.random() - 0.5) * 20)),
-      velocidad: Math.max(0, Math.min(100, neuralHealth.adaptive_learning_score + (Math.random() - 0.5) * 15)),
-      retencion: Math.max(0, Math.min(100, neuralHealth.user_experience_harmony + (Math.random() - 0.5) * 10))
+      progreso: Math.max(0, Math.min(100, baseProgress + (Math.random() - 0.5) * 10)),
+      velocidad: Math.max(0, Math.min(100, realMetrics.learningVelocity + (Math.random() - 0.5) * 8)),
+      retencion: Math.max(0, Math.min(100, realMetrics.retentionRate + (Math.random() - 0.5) * 5))
     }));
-  }, [neuralHealth]);
+  }, [realMetrics]);
 
-  const subjectRadarData = React.useMemo(() => [
-    { subject: 'Lectura', actual: Math.round(neuralHealth.adaptive_learning_score), objetivo: 85 },
-    { subject: 'Matemática', actual: Math.round(neuralHealth.neural_efficiency), objetivo: 80 },
-    { subject: 'Ciencias', actual: Math.round(neuralHealth.cross_pollination_rate), objetivo: 75 },
-    { subject: 'Historia', actual: Math.round(neuralHealth.user_experience_harmony), objetivo: 90 },
-    { subject: 'Análisis', actual: Math.round((neuralHealth.neural_efficiency + neuralHealth.adaptive_learning_score) / 2), objetivo: 85 }
-  ], [neuralHealth]);
+  const subjectRadarData = React.useMemo(() => {
+    if (!realMetrics) return [];
+    
+    return [
+      { subject: 'Lectura', actual: realMetrics.subjectProgress['COMPETENCIA_LECTORA'] || 0, objetivo: 85 },
+      { subject: 'Matemática', actual: realMetrics.subjectProgress['MATEMATICA_1'] || 0, objetivo: 80 },
+      { subject: 'Ciencias', actual: realMetrics.subjectProgress['CIENCIAS'] || 0, objetivo: 75 },
+      { subject: 'Historia', actual: realMetrics.subjectProgress['HISTORIA_CIENCIAS_SOCIALES'] || 0, objetivo: 90 },
+      { subject: 'Análisis', actual: realMetrics.subjectProgress['MATEMATICA_2'] || 0, objetivo: 85 }
+    ];
+  }, [realMetrics]);
 
   const handleAnalysisAction = (actionType: string) => {
     adaptToUser({
       analysis_action: actionType,
-      current_metrics: cognitiveMetrics,
+      current_metrics: realMetrics,
       neural_state: 'analysis_mode'
     });
     console.log(`📊 Acción de análisis: ${actionType}`);
@@ -60,7 +58,7 @@ export default function Progreso() {
 
   const insights = generateIntersectionalInsights();
 
-  if (!isIntersectionalReady) {
+  if (!isIntersectionalReady || metricsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 flex items-center justify-center">
         <motion.div
@@ -70,7 +68,20 @@ export default function Progreso() {
         >
           <div className="w-16 h-16 border-4 border-indigo-400 border-t-transparent rounded-full mx-auto animate-spin" />
           <div className="text-xl font-bold">Activando Análisis Neural</div>
+          <div className="text-sm text-indigo-200">Cargando datos reales del progreso...</div>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (!realMetrics) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 flex items-center justify-center">
+        <div className="text-center text-white space-y-4">
+          <AlertCircle className="w-16 h-16 mx-auto text-red-400" />
+          <div className="text-xl font-bold">Error al cargar datos</div>
+          <div className="text-sm text-indigo-200">No se pudieron obtener los datos reales del progreso</div>
+        </div>
       </div>
     );
   }
@@ -94,11 +105,11 @@ export default function Progreso() {
             Métricas de Rendimiento en Tiempo Real • {user?.email || 'Usuario'}
           </p>
           <Badge className="mt-2 bg-indigo-600 text-white">
-            Progreso Neural: {cognitiveMetrics.overallProgress}% Activo
+            Progreso Neural: {realMetrics.overallProgress}% Activo
           </Badge>
         </motion.div>
 
-        {/* Métricas Principales */}
+        {/* Métricas Principales - DATOS REALES */}
         <motion.div 
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -106,13 +117,13 @@ export default function Progreso() {
           transition={{ delay: 0.2 }}
         >
           {[
-            { label: 'Progreso General', value: `${cognitiveMetrics.overallProgress}%`, icon: TrendingUp, color: 'text-green-400' },
-            { label: 'Velocidad', value: `${cognitiveMetrics.learningVelocity}%`, icon: Zap, color: 'text-yellow-400' },
-            { label: 'Retención', value: `${cognitiveMetrics.retentionRate}%`, icon: Target, color: 'text-blue-400' },
-            { label: 'Carga Cognitiva', value: `${cognitiveMetrics.cognitiveLoad}%`, icon: Brain, color: 'text-purple-400' },
-            { label: 'Crecimiento Semanal', value: `+${cognitiveMetrics.weeklyGrowth}%`, icon: Activity, color: 'text-pink-400' },
-            { label: 'Sesiones Totales', value: cognitiveMetrics.totalSessions, icon: Calendar, color: 'text-orange-400' },
-            { label: 'Racha de Días', value: cognitiveMetrics.streakDays, icon: Award, color: 'text-red-400' }
+            { label: 'Progreso General', value: `${realMetrics.overallProgress}%`, icon: TrendingUp, color: 'text-green-400' },
+            { label: 'Velocidad', value: `${realMetrics.learningVelocity}%`, icon: Zap, color: 'text-yellow-400' },
+            { label: 'Retención', value: `${realMetrics.retentionRate}%`, icon: Target, color: 'text-blue-400' },
+            { label: 'Carga Cognitiva', value: `${realMetrics.cognitiveLoad}%`, icon: Brain, color: 'text-purple-400' },
+            { label: 'Crecimiento Semanal', value: `+${realMetrics.weeklyGrowth}%`, icon: Activity, color: 'text-pink-400' },
+            { label: 'Sesiones Totales', value: realMetrics.totalSessions, icon: Calendar, color: 'text-orange-400' },
+            { label: 'Racha de Días', value: realMetrics.streakDays, icon: Award, color: 'text-red-400' }
           ].map((metric, index) => (
             <Card key={metric.label} className="bg-white/10 border-white/20 backdrop-blur-sm">
               <CardContent className="p-4 text-center">
@@ -196,28 +207,31 @@ export default function Progreso() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          {/* Progreso por Habilidades */}
+          {/* Progreso por Habilidades - DATOS REALES */}
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Brain className="w-5 h-5 text-blue-400" />
-                Desarrollo Cognitivo
+                Desarrollo Cognitivo Real
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  { skill: 'Comprensión Lectora', level: neuralHealth.adaptive_learning_score },
-                  { skill: 'Razonamiento Lógico', level: neuralHealth.neural_efficiency },
-                  { skill: 'Análisis Crítico', level: neuralHealth.cross_pollination_rate },
-                  { skill: 'Síntesis', level: neuralHealth.user_experience_harmony }
-                ].map((skill, index) => (
-                  <div key={skill.skill} className="space-y-2">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Nodos Completados</span>
+                    <span className="text-white font-medium">{realMetrics.completedNodes}/{realMetrics.totalNodes}</span>
+                  </div>
+                  <Progress value={(realMetrics.completedNodes / realMetrics.totalNodes) * 100} className="h-2" />
+                </div>
+                
+                {Object.entries(realMetrics.subjectProgress).map(([subject, progress]) => (
+                  <div key={subject} className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-white/80">{skill.skill}</span>
-                      <span className="text-white font-medium">{Math.round(skill.level)}%</span>
+                      <span className="text-white/80">{subject.replace('_', ' ')}</span>
+                      <span className="text-white font-medium">{progress}%</span>
                     </div>
-                    <Progress value={skill.level} className="h-2" />
+                    <Progress value={progress} className="h-2" />
                   </div>
                 ))}
               </div>
