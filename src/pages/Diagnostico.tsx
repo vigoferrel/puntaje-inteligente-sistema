@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { DiagnosticBrowser } from "@/components/diagnostic/DiagnosticBrowser";
@@ -47,6 +46,9 @@ export default function Diagnostico() {
     window.scrollTo(0, 0);
   }, []);
   
+  // Verificar si debe mostrar el Centro de Inteligencia Diagnóstica
+  const shouldShowIntelligenceCenter = !testStarted && !resultSubmitted && !loading;
+  
   // Handle question navigation
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
@@ -63,8 +65,8 @@ export default function Diagnostico() {
   return (
     <AppLayout>
       <div className="container py-6 max-w-5xl mx-auto">
-        {/* Back button */}
-        {!testStarted && (
+        {/* Back button - solo mostrar cuando no está en el centro de inteligencia */}
+        {!shouldShowIntelligenceCenter && (
           <div className="mb-4">
             <Button variant="ghost" size="sm" asChild className="gap-1">
               <Link to="/">
@@ -128,12 +130,16 @@ export default function Diagnostico() {
         )}
         
         {/* Hierarchical Metrics - Show only when not in test mode */}
-        {!testStarted && !resultSubmitted && hierarchicalData.isSystemReady && (
+        {!testStarted && !resultSubmitted && hierarchicalData.isSystemReady && !shouldShowIntelligenceCenter && (
           <HierarchicalMetrics />
         )}
         
         {/* Main content */}
-        {!testStarted && !resultSubmitted && (
+        {shouldShowIntelligenceCenter && (
+          <DiagnosticIntelligenceCenter />
+        )}
+        
+        {!testStarted && !resultSubmitted && !shouldShowIntelligenceCenter && (
           <DiagnosticBrowser
             tests={tests}
             loading={loading}
