@@ -18,7 +18,7 @@ import {
   PlayCircle
 } from "lucide-react";
 import { EvaluacionCinematica } from '../evaluaciones/EvaluacionCinematica';
-import { LectoGuiaUnified } from '../lectoguia/LectoGuiaUnified';
+import { LectoGuiaIntersectional } from '../lectoguia/LectoGuiaIntersectional';
 import { AdaptiveEvaluationEngine } from '@/services/adaptive-engine/AdaptiveEvaluationEngine';
 import { IntelligentPreloader } from '@/services/preloading/IntelligentPreloader';
 
@@ -172,9 +172,8 @@ export const CinematicIntegration: React.FC<CinematicIntegrationProps> = ({
         exit={{ opacity: 0, x: -100 }}
         transition={{ duration: 0.5 }}
       >
-        <LectoGuiaUnified 
+        <LectoGuiaIntersectional 
           initialSubject={activeSubject}
-          onSubjectChange={handleSubjectChange}
           onNavigateToTool={handleNavigateToTool}
         />
         
@@ -492,22 +491,11 @@ export const CinematicIntegration: React.FC<CinematicIntegrationProps> = ({
                       <span className="text-green-400">✓ Fluidas</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-white/60">Sincronización</span>
-                      <span className="text-green-400">✓ Tiempo Real</span>
+                      <span className="text-white/60">LectoGuía</span>
+                      <span className="text-green-400">✓ Interseccional</span>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-purple-400" />
-                  <span className="text-purple-300 font-medium">Última Sincronización</span>
-                </div>
-                <p className="text-white/80 text-sm">
-                  Sistema actualizado hace {Math.floor(Math.random() * 5) + 1} minutos. 
-                  Todos los componentes operativos.
-                </p>
               </div>
             </CardContent>
           </Card>

@@ -6,7 +6,7 @@ import { CinematicDashboard } from './CinematicDashboard';
 import { IntelligentNavigation } from './IntelligentNavigation';
 import { CinematicSkeleton } from './CinematicSkeleton';
 import { useSystemMetrics } from './SystemMetrics';
-import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
+import { LectoGuiaIntersectional } from '@/components/lectoguia/LectoGuiaIntersectional';
 import { StudyCalendarIntegration } from '@/components/calendar/StudyCalendarIntegration';
 import { PAESFinancialCalculator } from '@/components/financial/PAESFinancialCalculator';
 import { CinematicThemeProvider } from '@/contexts/CinematicThemeProvider';
@@ -88,9 +88,8 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
       
       case 'lectoguia':
         return (
-          <LectoGuiaUnified
+          <LectoGuiaIntersectional
             initialSubject={activeSubject}
-            onSubjectChange={handleSubjectChange}
             onNavigateToTool={handleToolChange}
           />
         );

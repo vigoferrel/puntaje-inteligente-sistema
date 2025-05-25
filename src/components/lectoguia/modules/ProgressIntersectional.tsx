@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Target, Brain, Award, Calendar, ArrowRight } from 'lucide-react';
+import { TrendingUp, Target, Clock, Award, BarChart3 } from 'lucide-react';
 import { IntersectionalContext, CrossModuleAction } from '@/types/intersectional-types';
 
 interface ProgressIntersectionalProps {
-  context: IntersectionalContext & { moduleState: any; ecosystemAlignment?: number };
+  context: IntersectionalContext & { moduleState: any };
   onNavigateToTool: (tool: string, context?: any) => void;
   onDispatchAction: (action: CrossModuleAction) => void;
 }
@@ -19,277 +19,225 @@ export const ProgressIntersectional: React.FC<ProgressIntersectionalProps> = ({
   onNavigateToTool,
   onDispatchAction
 }) => {
-  const metrics = context.crossModuleMetrics;
-  const ecosystemAlignment = context.ecosystemAlignment || 0;
-
-  // Calcular progreso interseccional
-  const calculateIntersectionalProgress = () => {
-    const academicProgress = metrics.averagePerformance;
-    const consistencyBonus = metrics.streakDays * 2;
-    const volumeBonus = Math.min(metrics.exercisesCompleted * 1.5, 20);
-    
-    return Math.min(100, academicProgress + consistencyBonus + volumeBonus);
-  };
-
-  const intersectionalProgress = calculateIntersectionalProgress();
-
-  // Análisis de fortalezas y oportunidades
-  const getAnalysis = () => {
-    const analysis = {
-      strengths: [] as string[],
-      opportunities: [] as string[],
-      recommendations: [] as { title: string; action: string; tool: string }[]
-    };
-
-    // Fortalezas
-    if (metrics.streakDays >= 7) {
-      analysis.strengths.push('Consistencia excepcional en el estudio');
+  const progressData = [
+    {
+      subject: 'Comprensión Lectora',
+      progress: context.crossModuleMetrics.averagePerformance,
+      target: 85,
+      color: 'blue'
+    },
+    {
+      subject: 'Matemática M1',
+      progress: Math.max(0, context.crossModuleMetrics.averagePerformance - 10),
+      target: 80,
+      color: 'green'
+    },
+    {
+      subject: 'Ciencias',
+      progress: Math.max(0, context.crossModuleMetrics.averagePerformance - 15),
+      target: 75,
+      color: 'purple'
     }
-    if (metrics.averagePerformance >= 80) {
-      analysis.strengths.push('Alto rendimiento académico');
-    }
-    if (metrics.exercisesCompleted >= 50) {
-      analysis.strengths.push('Gran volumen de práctica');
-    }
+  ];
 
-    // Oportunidades
-    if (metrics.averagePerformance < 70) {
-      analysis.opportunities.push('Mejorar precisión en ejercicios');
-      analysis.recommendations.push({
-        title: 'Entrenamiento dirigido',
-        action: 'Practicar áreas específicas de debilidad',
-        tool: 'exercise'
-      });
-    }
-    
-    if (ecosystemAlignment < 60) {
-      analysis.opportunities.push('Alinear estudio con plan académico');
-      analysis.recommendations.push({
-        title: 'Revisar plan de estudio',
-        action: 'Ajustar objetivos y cronograma',
-        tool: 'planning'
-      });
-    }
-    
-    if (context.financialGoals && metrics.averagePerformance < 85) {
-      analysis.opportunities.push('Alcanzar nivel requerido para carrera objetivo');
-      analysis.recommendations.push({
-        title: 'Explorar apoyo financiero',
-        action: 'Revisar becas y opciones de financiamiento',
-        tool: 'financial'
-      });
-    }
-
-    return analysis;
-  };
-
-  const analysis = getAnalysis();
-
-  // Proyección de rendimiento
-  const getPerformanceProjection = () => {
-    const currentTrend = metrics.streakDays > 0 ? 'positive' : 'neutral';
-    const projectedImprovement = currentTrend === 'positive' ? 
-      Math.min(100, metrics.averagePerformance + (metrics.streakDays * 1.5)) :
-      metrics.averagePerformance;
-
-    return {
-      trend: currentTrend,
-      projected: Math.round(projectedImprovement),
-      timeToGoal: context.financialGoals ? 
-        Math.max(1, Math.ceil((85 - metrics.averagePerformance) / 2)) : null
-    };
-  };
-
-  const projection = getPerformanceProjection();
+  const weeklyData = [
+    { day: 'Lun', time: 45, exercises: 3 },
+    { day: 'Mar', time: 60, exercises: 4 },
+    { day: 'Mié', time: 30, exercises: 2 },
+    { day: 'Jue', time: 75, exercises: 5 },
+    { day: 'Vie', time: 90, exercises: 6 },
+    { day: 'Sáb', time: 120, exercises: 8 },
+    { day: 'Dom', time: 45, exercises: 3 }
+  ];
 
   return (
     <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <TrendingUp className="w-5 h-5 text-green-600" />
             Progreso Interseccional
           </div>
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            {Math.round(intersectionalProgress)}% Global
-          </Badge>
+          <div className="flex gap-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700">
+              Racha: {context.crossModuleMetrics.streakDays} días
+            </Badge>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+              Nivel: {Math.round(context.crossModuleMetrics.averagePerformance)}%
+            </Badge>
+          </div>
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
-        {/* Métricas Principales */}
+        {/* Métricas principales */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { 
-              label: 'Rendimiento', 
-              value: `${metrics.averagePerformance}%`, 
-              icon: Target,
-              color: metrics.averagePerformance >= 80 ? 'text-green-600' : metrics.averagePerformance >= 60 ? 'text-yellow-600' : 'text-red-600'
-            },
-            { 
-              label: 'Racha', 
-              value: `${metrics.streakDays} días`, 
-              icon: Award,
-              color: metrics.streakDays >= 7 ? 'text-green-600' : 'text-gray-600'
-            },
-            { 
-              label: 'Ejercicios', 
-              value: metrics.exercisesCompleted, 
-              icon: Brain,
-              color: 'text-blue-600'
-            },
-            { 
-              label: 'Tiempo Hoy', 
-              value: `${metrics.totalStudyTime}min`, 
-              icon: Calendar,
-              color: 'text-purple-600'
-            }
-          ].map((metric, index) => {
-            const Icon = metric.icon;
-            return (
-              <motion.div
-                key={metric.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border"
-              >
-                <Icon className={`w-6 h-6 mx-auto mb-2 ${metric.color}`} />
-                <div className="text-2xl font-bold text-gray-900">{metric.value}</div>
-                <div className="text-sm text-gray-600">{metric.label}</div>
-              </motion.div>
-            );
-          })}
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {Math.round(context.crossModuleMetrics.totalStudyTime / 60)}h
+            </div>
+            <div className="text-sm text-gray-600">Tiempo total</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {context.crossModuleMetrics.exercisesCompleted}
+            </div>
+            <div className="text-sm text-gray-600">Ejercicios</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {Math.round(context.crossModuleMetrics.averagePerformance)}%
+            </div>
+            <div className="text-sm text-gray-600">Rendimiento</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-orange-600">
+              {context.crossModuleMetrics.streakDays}
+            </div>
+            <div className="text-sm text-gray-600">Racha</div>
+          </div>
         </div>
 
-        {/* Progreso por Área */}
+        {/* Progreso por materia */}
         <div className="space-y-4">
-          <h3 className="font-semibold text-gray-800">Progreso por Área</h3>
-          
-          {[
-            { area: 'Rendimiento Académico', progress: metrics.averagePerformance, target: 85 },
-            { area: 'Consistencia de Estudio', progress: Math.min(100, metrics.streakDays * 10), target: 100 },
-            { area: 'Volumen de Práctica', progress: Math.min(100, metrics.exercisesCompleted * 2), target: 100 },
-            { area: 'Alineación con Objetivos', progress: ecosystemAlignment, target: 80 }
-          ].map((item, index) => (
+          <h3 className="font-medium text-gray-900">Progreso por Materia</h3>
+          {progressData.map((subject, index) => (
             <motion.div
-              key={item.area}
+              key={subject.subject}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
               className="space-y-2"
             >
-              <div className="flex justify-between text-sm">
-                <span className="font-medium text-gray-700">{item.area}</span>
-                <span className="text-gray-600">{Math.round(item.progress)}% / {item.target}%</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">{subject.subject}</span>
+                <span className="text-sm text-gray-600">
+                  {Math.round(subject.progress)}% / {subject.target}%
+                </span>
               </div>
-              <div className="relative">
-                <Progress value={item.progress} className="h-3" />
-                <div 
-                  className="absolute top-0 h-3 w-1 bg-red-400 rounded"
-                  style={{ left: `${item.target}%` }}
+              <div className="flex gap-2">
+                <Progress 
+                  value={subject.progress} 
+                  className="flex-1 h-2"
+                />
+                <Progress 
+                  value={Math.min(100, (subject.progress / subject.target) * 100)} 
+                  className="w-16 h-2"
                 />
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Proyección de Rendimiento */}
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-          <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Proyección Inteligente
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-sm text-gray-600">Tendencia Actual</div>
-              <div className={`font-semibold ${
-                projection.trend === 'positive' ? 'text-green-600' : 'text-gray-600'
-              }`}>
-                {projection.trend === 'positive' ? '📈 Positiva' : '➡️ Estable'}
+        {/* Actividad semanal */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-gray-900">Actividad Esta Semana</h3>
+          <div className="grid grid-cols-7 gap-2">
+            {weeklyData.map((day, index) => (
+              <div key={day.day} className="text-center">
+                <div className="text-xs text-gray-600 mb-1">{day.day}</div>
+                <div 
+                  className={`h-16 rounded flex flex-col justify-end p-1 text-white text-xs ${
+                    day.time > 60 ? 'bg-green-500' : 
+                    day.time > 30 ? 'bg-yellow-500' : 'bg-gray-300'
+                  }`}
+                  style={{ height: `${Math.max(20, (day.time / 120) * 64)}px` }}
+                >
+                  <div>{day.time}m</div>
+                  <div>{day.exercises}ej</div>
+                </div>
               </div>
-            </div>
-            
-            <div>
-              <div className="text-sm text-gray-600">Rendimiento Proyectado</div>
-              <div className="font-semibold text-blue-600">{projection.projected}%</div>
-            </div>
-            
-            {projection.timeToGoal && (
-              <div>
-                <div className="text-sm text-gray-600">Tiempo al Objetivo</div>
-                <div className="font-semibold text-purple-600">{projection.timeToGoal} semanas</div>
-              </div>
-            )}
+            ))}
           </div>
         </div>
 
-        {/* Análisis y Recomendaciones */}
-        <div className="space-y-4">
-          {/* Fortalezas */}
-          {analysis.strengths.length > 0 && (
-            <div>
-              <h4 className="font-medium text-green-800 mb-2 flex items-center gap-2">
-                ✅ Fortalezas Identificadas
-              </h4>
-              <div className="space-y-1">
-                {analysis.strengths.map((strength, index) => (
-                  <div key={index} className="text-sm text-green-700 bg-green-50 p-2 rounded">
-                    {strength}
-                  </div>
-                ))}
+        {/* Recomendaciones interseccionales */}
+        <div className="space-y-3">
+          <h3 className="font-medium text-gray-900">Recomendaciones Inteligentes</h3>
+          
+          {context.crossModuleMetrics.averagePerformance < 70 && (
+            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+              <div className="flex items-center gap-2 text-yellow-800">
+                <Target className="w-4 h-4" />
+                <span className="font-medium">Foco en Mejora</span>
+              </div>
+              <p className="text-yellow-700 text-sm mt-1">
+                Tu rendimiento actual está por debajo del 70%. Te recomendamos:
+              </p>
+              <div className="flex gap-2 mt-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => onNavigateToTool('diagnostic')}
+                  className="text-yellow-700 border-yellow-300"
+                >
+                  Diagnóstico
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => onNavigateToTool('plan')}
+                  className="text-yellow-700 border-yellow-300"
+                >
+                  Crear Plan
+                </Button>
               </div>
             </div>
           )}
 
-          {/* Oportunidades */}
-          {analysis.opportunities.length > 0 && (
-            <div>
-              <h4 className="font-medium text-orange-800 mb-2 flex items-center gap-2">
-                🎯 Oportunidades de Mejora
-              </h4>
-              <div className="space-y-1">
-                {analysis.opportunities.map((opportunity, index) => (
-                  <div key={index} className="text-sm text-orange-700 bg-orange-50 p-2 rounded">
-                    {opportunity}
-                  </div>
-                ))}
+          {context.crossModuleMetrics.streakDays >= 7 && (
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2 text-green-800">
+                <Award className="w-4 h-4" />
+                <span className="font-medium">¡Excelente racha!</span>
               </div>
+              <p className="text-green-700 text-sm mt-1">
+                Llevas {context.crossModuleMetrics.streakDays} días estudiando consecutivos. 
+                ¡Sigue así!
+              </p>
             </div>
           )}
 
-          {/* Recomendaciones Accionables */}
-          {analysis.recommendations.length > 0 && (
-            <div>
-              <h4 className="font-medium text-blue-800 mb-3 flex items-center gap-2">
-                🚀 Acciones Recomendadas
-              </h4>
-              <div className="space-y-2">
-                {analysis.recommendations.map((rec, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200"
-                  >
-                    <div>
-                      <div className="font-medium text-blue-900">{rec.title}</div>
-                      <div className="text-sm text-blue-700">{rec.action}</div>
-                    </div>
-                    <Button
-                      onClick={() => onNavigateToTool(rec.tool)}
-                      size="sm"
-                      className="gap-1"
-                    >
-                      Ir <ArrowRight className="w-3 h-3" />
-                    </Button>
-                  </motion.div>
-                ))}
+          {context.financialGoals && (
+            <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+              <div className="flex items-center gap-2 text-purple-800">
+                <BarChart3 className="w-4 h-4" />
+                <span className="font-medium">Progreso hacia tu meta</span>
               </div>
+              <p className="text-purple-700 text-sm mt-1">
+                Tu progreso está {context.crossModuleMetrics.averagePerformance >= 80 ? 'bien' : 'regular'} 
+                alineado con tu objetivo de acceder a {context.financialGoals.targetCareer}.
+              </p>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => onNavigateToTool('financial')}
+                className="text-purple-700 border-purple-300 mt-2"
+              >
+                Ver Calculadora
+              </Button>
             </div>
           )}
+        </div>
+
+        {/* Acciones rápidas */}
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onNavigateToTool('diagnostic')}
+            className="justify-start gap-2"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Evaluación
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onNavigateToTool('plan')}
+            className="justify-start gap-2"
+          >
+            <Clock className="w-4 h-4" />
+            Mi Plan
+          </Button>
         </div>
       </CardContent>
     </Card>
