@@ -3,6 +3,9 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UnifiedHeader } from './UnifiedHeader';
 import { CinematicDashboard } from './CinematicDashboard';
+import { IntelligentNavigation } from './IntelligentNavigation';
+import { CinematicSkeleton } from './CinematicSkeleton';
+import { useSystemMetrics } from './SystemMetrics';
 import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
 import { StudyCalendarIntegration } from '@/components/calendar/StudyCalendarIntegration';
 import { PAESFinancialCalculator } from '@/components/financial/PAESFinancialCalculator';
@@ -13,10 +16,6 @@ interface UnifiedDashboardContainerProps {
   initialTool?: string | null;
 }
 
-// Cache para métricas del sistema
-const METRICS_CACHE_KEY = 'paes_system_metrics';
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos en lugar de 1 minuto
-
 export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps> = ({ 
   initialTool = 'dashboard' 
 }) => {
@@ -24,47 +23,29 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
   const [currentTool, setCurrentTool] = useState(initialTool || 'dashboard');
   const [activeSubject, setActiveSubject] = useState('COMPETENCIA_LECTORA');
   const [navigationHistory, setNavigationHistory] = useState<string[]>(['dashboard']);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Sistema de métricas optimizado con cache
-  const systemMetrics = useMemo(() => {
-    const cached = sessionStorage.getItem(METRICS_CACHE_KEY);
-    if (cached) {
-      const { data, timestamp } = JSON.parse(cached);
-      if (Date.now() - timestamp < CACHE_TTL) {
-        return data;
-      }
-    }
+  const systemMetrics = useSystemMetrics();
 
-    // Cálculo optimizado de métricas reales
-    const now = new Date();
-    const daysSinceStart = Math.floor((now.getTime() - new Date(2024, 0, 1).getTime()) / (1000 * 60 * 60 * 24));
-    const baseProgress = Math.min(85, daysSinceStart * 1.2);
-    
-    const metrics = {
-      completedNodes: Math.floor(baseProgress * 0.8),
-      totalNodes: 277, // Total real del sistema
-      todayStudyTime: Math.floor(Math.random() * 90) + 45,
-      streakDays: Math.floor(baseProgress / 12) + 1,
-      totalProgress: Math.round(baseProgress)
-    };
+  // Simulación de carga inicial optimizada
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200); // Reducido de 2000ms a 1200ms
 
-    // Guardar en cache
-    sessionStorage.setItem(METRICS_CACHE_KEY, JSON.stringify({
-      data: metrics,
-      timestamp: Date.now()
-    }));
-
-    return metrics;
-  }, []); // Solo calcular una vez por sesión
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleToolChange = useCallback((tool: string, context?: any) => {
     if (tool !== currentTool) {
-      setNavigationHistory(prev => [...prev, tool]);
+      setNavigationHistory(prev => [...prev.slice(-9), tool]); // Mantener últimos 10
       setCurrentTool(tool);
       
       if (context?.subject) {
         setActiveSubject(context.subject);
       }
+      
+      console.log(`🎯 Navegación: ${currentTool} → ${tool}`, context);
     }
   }, [currentTool]);
 
@@ -83,7 +64,7 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
     }
   }, [navigationHistory]);
 
-  // Memoizar componentes pesados
+  // Renderizado optimizado de herramientas
   const renderCurrentTool = useMemo(() => {
     const toolProps = {
       activeSubject,
@@ -93,7 +74,17 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
 
     switch (currentTool) {
       case 'dashboard':
-        return <CinematicDashboard onNavigateToTool={handleToolChange} />;
+        return (
+          <div className="space-y-8">
+            <CinematicDashboard onNavigateToTool={handleToolChange} />
+            <IntelligentNavigation
+              currentTool={currentTool}
+              onNavigate={handleToolChange}
+              canGoBack={navigationHistory.length > 1}
+              onGoBack={handleGoBack}
+            />
+          </div>
+        );
       
       case 'lectoguia':
         return (
@@ -118,10 +109,10 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
               animate={{ opacity: 1, y: 0 }}
               className="text-center space-y-4"
             >
-              <h2 className="text-2xl font-bold text-white cinematic-text-glow">
+              <h2 className="text-2xl font-bold text-white cinematic-text-glow poppins-title">
                 Ejercicios Adaptativos
               </h2>
-              <p className="text-white/70">
+              <p className="text-white/70 poppins-body">
                 Sistema de ejercicios en desarrollo para {activeSubject}
               </p>
             </motion.div>
@@ -136,10 +127,10 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
               animate={{ opacity: 1, y: 0 }}
               className="text-center space-y-4"
             >
-              <h2 className="text-2xl font-bold text-white cinematic-text-glow">
+              <h2 className="text-2xl font-bold text-white cinematic-text-glow poppins-title">
                 Evaluación Diagnóstica
               </h2>
-              <p className="text-white/70">
+              <p className="text-white/70 poppins-body">
                 Sistema de diagnóstico inteligente para {activeSubject}
               </p>
             </motion.div>
@@ -154,10 +145,10 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
               animate={{ opacity: 1, y: 0 }}
               className="text-center space-y-4"
             >
-              <h2 className="text-2xl font-bold text-white cinematic-text-glow">
+              <h2 className="text-2xl font-bold text-white cinematic-text-glow poppins-title">
                 Plan de Estudio Personalizado
               </h2>
-              <p className="text-white/70">
+              <p className="text-white/70 poppins-body">
                 Plan inteligente adaptado a tu progreso en {activeSubject}
               </p>
             </motion.div>
@@ -165,9 +156,27 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
         );
       
       default:
-        return <CinematicDashboard onNavigateToTool={handleToolChange} />;
+        return (
+          <div className="space-y-8">
+            <CinematicDashboard onNavigateToTool={handleToolChange} />
+            <IntelligentNavigation
+              currentTool={currentTool}
+              onNavigate={handleToolChange}
+              canGoBack={navigationHistory.length > 1}
+              onGoBack={handleGoBack}
+            />
+          </div>
+        );
     }
-  }, [currentTool, activeSubject, handleSubjectChange, handleToolChange]);
+  }, [currentTool, activeSubject, handleSubjectChange, handleToolChange, navigationHistory, handleGoBack]);
+
+  if (isLoading) {
+    return (
+      <CinematicThemeProvider>
+        <CinematicSkeleton message="Inicializando PAES Pro" progress={85} />
+      </CinematicThemeProvider>
+    );
+  }
 
   return (
     <CinematicThemeProvider>
@@ -191,7 +200,7 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ 
-                duration: 0.2, 
+                duration: 0.3, 
                 ease: [0.4, 0, 0.2, 1] 
               }}
               className="min-h-[calc(100vh-80px)]"
