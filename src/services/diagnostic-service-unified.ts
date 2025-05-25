@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest, DiagnosticQuestion, DiagnosticResult } from "@/types/diagnostic";
 import { toast } from "@/components/ui/use-toast";
+import { TPAESHabilidad } from "@/types/system-types";
 
 /**
  * Servicio diagnóstico unificado y simplificado
@@ -48,22 +49,22 @@ export const fetchDiagnosticTests = async (userId: string): Promise<DiagnosticTe
 // Obtener preguntas de un test específico
 export const fetchTestQuestions = async (testId: string): Promise<DiagnosticQuestion[]> => {
   try {
-    const { data: questions, error } = await supabase
-      .from('examenes')
+    const { data: exercises, error } = await supabase
+      .from('exercises')
       .select('*')
       .eq('diagnostic_id', testId)
       .limit(10);
 
-    if (error || !questions) return [];
+    if (error || !exercises) return [];
 
-    return questions.map(q => ({
-      id: q.id || `q-${Date.now()}`,
-      question: q.question || 'Pregunta no disponible',
-      options: Array.isArray(q.options) ? q.options : ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
-      correctAnswer: q.correct_answer || 'Opción A',
+    return exercises.map(exercise => ({
+      id: exercise.id || `q-${Date.now()}`,
+      question: exercise.question || 'Pregunta no disponible',
+      options: Array.isArray(exercise.options) ? exercise.options : ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+      correctAnswer: exercise.correct_answer || 'Opción A',
       skill: 'INTERPRET_RELATE',
       prueba: 'COMPETENCIA_LECTORA',
-      explanation: q.explanation || '',
+      explanation: exercise.explanation || '',
       difficulty: 'intermediate'
     }));
   } catch (error) {
@@ -108,7 +109,7 @@ export const submitDiagnosticResult = async (
       id: data.id,
       userId: data.user_id,
       diagnosticId: data.diagnostic_id,
-      results: data.results,
+      results: safeParseResults(data.results),
       completedAt: data.completed_at
     };
   } catch (error) {
@@ -137,7 +138,7 @@ export const fetchDiagnosticResults = async (userId: string): Promise<Diagnostic
       id: result.id,
       userId: result.user_id,
       diagnosticId: result.diagnostic_id,
-      results: result.results || {},
+      results: safeParseResults(result.results),
       completedAt: result.completed_at
     }));
   } catch (error) {
@@ -168,6 +169,20 @@ const createFallbackTests = (): DiagnosticTest[] => {
   ];
 };
 
+// Función auxiliar para parsear resultados de manera segura
+const safeParseResults = (results: any): Record<TPAESHabilidad, number> => {
+  if (typeof results === 'object' && results !== null) {
+    return results as Record<TPAESHabilidad, number>;
+  }
+  
+  // Valores por defecto si no se puede parsear
+  return {
+    INTERPRET_RELATE: 0,
+    SOLVE_PROBLEMS: 0,
+    REPRESENT: 0
+  } as Record<TPAESHabilidad, number>;
+};
+
 // Calcular resultados básicos
 const calculateBasicResults = (answers: Record<string, string>) => {
   const totalQuestions = Object.keys(answers).length;
@@ -194,6 +209,40 @@ export const ensureDefaultDiagnosticsExist = async (): Promise<boolean> => {
     return (data && data.length > 0) || false;
   } catch (error) {
     console.error('❌ Error verificando diagnósticos:', error);
+    return false;
+  }
+};
+
+// Crear diagnósticos fallback locales
+export const createLocalFallbackDiagnostics = async (): Promise<boolean> => {
+  try {
+    console.log('🔄 Creando diagnósticos fallback locales...');
+    
+    const fallbackTests = createFallbackTests();
+    
+    // Intentar insertar tests fallback en la base de datos
+    for (const test of fallbackTests) {
+      const { error } = await supabase
+        .from('diagnostic_tests')
+        .insert({
+          id: test.id,
+          title: test.title,
+          description: test.description,
+          test_id: test.testId
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.warn(`⚠️ No se pudo insertar test ${test.title}:`, error);
+      } else {
+        console.log(`✅ Test fallback creado: ${test.title}`);
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Error creando diagnósticos fallback:', error);
     return false;
   }
 };

@@ -83,7 +83,7 @@ export const useDiagnosticManager = (): DiagnosticManagerState & DiagnosticManag
         loadedTests = hierarchicalData.diagnosticTests;
         console.log(`✅ Using hierarchical diagnostic tests: ${loadedTests.length}`);
       } else {
-        loadedTests = await fetchDiagnosticTests(userId, 50);
+        loadedTests = await fetchDiagnosticTests(userId); // Solo 1 argumento
         console.log(`✅ Using fallback diagnostic tests: ${loadedTests.length}`);
       }
       

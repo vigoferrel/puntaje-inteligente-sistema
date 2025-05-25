@@ -11,7 +11,7 @@ import {
   submitDiagnosticResult,
   ensureDefaultDiagnosticsExist,
   createLocalFallbackDiagnostics
-} from "@/services/diagnostic";
+} from "@/services/diagnostic-service-unified";
 import { toast } from "@/components/ui/use-toast";
 
 // Re-export types for convenience
