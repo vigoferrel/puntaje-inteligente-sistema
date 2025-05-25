@@ -2,6 +2,26 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from "@/types/diagnostic";
 
+// Simplified interface to avoid type recursion
+interface SimpleExerciseData {
+  id: string;
+  question?: string;
+  enunciado?: string;
+  options?: any;
+  alternativas?: any;
+  alternatives?: any;
+  correct_answer?: string;
+  respuesta_correcta?: string;
+  correctAnswer?: string;
+  explanation?: string;
+  explicacion?: string;
+  skill?: any;
+  competencia_especifica?: any;
+  prueba?: string;
+  nodo_code?: string;
+  year?: number;
+}
+
 export class ExamQuestionExtractor {
   private static instance: ExamQuestionExtractor;
 
@@ -37,18 +57,24 @@ export class ExamQuestionExtractor {
         return this.generateFallbackQuestions(prueba, limit);
       }
 
-      const questions = exercises.map(exercise => this.mapExerciseToQuestion(exercise));
-      console.log(`✅ ${questions.length} preguntas oficiales extraídas`);
+      // Use explicit for loop instead of map to avoid type recursion
+      const mappedQuestions: DiagnosticQuestion[] = [];
+      for (let i = 0; i < exercises.length; i++) {
+        const exercise = exercises[i] as SimpleExerciseData;
+        const mappedQuestion = this.createSimpleQuestion(exercise);
+        mappedQuestions.push(mappedQuestion);
+      }
 
-      return questions;
+      console.log(`✅ ${mappedQuestions.length} preguntas oficiales extraídas`);
+      return mappedQuestions;
     } catch (error) {
       console.error('❌ Error extrayendo preguntas oficiales:', error);
       return this.generateFallbackQuestions(prueba, limit);
     }
   }
 
-  private mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
-    // Simplified mapping to avoid infinite recursion
+  // Isolated mapping function with explicit types
+  private createSimpleQuestion(exercise: SimpleExerciseData): DiagnosticQuestion {
     const question: DiagnosticQuestion = {
       id: exercise.id || `extracted-${Date.now()}-${Math.random()}`,
       question: exercise.question || exercise.enunciado || 'Pregunta no disponible',
@@ -59,7 +85,7 @@ export class ExamQuestionExtractor {
       skill: this.getSkillString(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {
-        source: 'oficial_extracted',
+        source: 'oficial_extracted' as const,
         originalId: exercise.id,
         nodoCode: exercise.nodo_code,
         year: exercise.year
@@ -68,27 +94,28 @@ export class ExamQuestionExtractor {
     return question;
   }
 
-  private extractOptions(exercise: any): string[] {
+  private extractOptions(exercise: SimpleExerciseData): string[] {
     const optionsFields = ['options', 'alternativas', 'alternatives'];
     
     for (const field of optionsFields) {
-      if (exercise[field]) {
-        if (Array.isArray(exercise[field])) {
-          return exercise[field].map((opt: any) => 
+      const fieldValue = (exercise as any)[field];
+      if (fieldValue) {
+        if (Array.isArray(fieldValue)) {
+          return fieldValue.map((opt: any) => 
             typeof opt === 'string' ? opt : opt.contenido || opt.text || String(opt)
           );
         }
         
-        if (typeof exercise[field] === 'string') {
+        if (typeof fieldValue === 'string') {
           try {
-            const parsed = JSON.parse(exercise[field]);
+            const parsed = JSON.parse(fieldValue);
             if (Array.isArray(parsed)) {
               return parsed.map((opt: any) => 
                 typeof opt === 'string' ? opt : opt.contenido || opt.text || String(opt)
               );
             }
           } catch {
-            return [exercise[field]];
+            return [fieldValue];
           }
         }
       }
@@ -97,12 +124,13 @@ export class ExamQuestionExtractor {
     return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
   }
 
-  private extractCorrectAnswer(exercise: any): string {
+  private extractCorrectAnswer(exercise: SimpleExerciseData): string {
     const answerFields = ['correct_answer', 'respuesta_correcta', 'correctAnswer'];
     
     for (const field of answerFields) {
-      if (exercise[field]) {
-        return String(exercise[field]);
+      const fieldValue = (exercise as any)[field];
+      if (fieldValue) {
+        return String(fieldValue);
       }
     }
 
@@ -133,20 +161,26 @@ export class ExamQuestionExtractor {
   }
 
   private generateFallbackQuestions(prueba: string, count: number): DiagnosticQuestion[] {
-    return Array.from({ length: count }, (_, i) => ({
-      id: `fallback-extracted-${prueba}-${i + 1}`,
-      question: `Pregunta extraída ${i + 1} para ${prueba}`,
-      options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
-      correctAnswer: 'Opción A',
-      explanation: 'Pregunta de demostración extraída del sistema.',
-      difficulty: 'INTERMEDIO' as const,
-      skill: 'INTERPRET_RELATE',
-      prueba,
-      metadata: {
-        source: 'fallback_extractor',
-        template: true
-      }
-    }));
+    // Use explicit for loop instead of Array.from().map()
+    const questions: DiagnosticQuestion[] = [];
+    for (let i = 0; i < count; i++) {
+      const question: DiagnosticQuestion = {
+        id: `fallback-extracted-${prueba}-${i + 1}`,
+        question: `Pregunta extraída ${i + 1} para ${prueba}`,
+        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+        correctAnswer: 'Opción A',
+        explanation: 'Pregunta de demostración extraída del sistema.',
+        difficulty: 'INTERMEDIO' as const,
+        skill: 'INTERPRET_RELATE',
+        prueba,
+        metadata: {
+          source: 'fallback_extractor' as const,
+          template: true
+        }
+      };
+      questions.push(question);
+    }
+    return questions;
   }
 }
 

@@ -5,6 +5,22 @@ import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
 // Define types explicitly to avoid recursion
 type TPAESPrueba = 'COMPETENCIA_LECTORA' | 'MATEMATICA_1' | 'MATEMATICA_2' | 'CIENCIAS' | 'HISTORIA';
 
+// Simplified interfaces to avoid type recursion
+interface SimpleExerciseData {
+  id: string;
+  question: string;
+  options: any;
+  correct_answer: string;
+  explanation: string;
+  skill: any;
+  competencia_especifica: any;
+  prueba: string;
+  metadata?: any;
+  originalId?: string;
+  nodo_code?: string;
+  year?: number;
+}
+
 export class ComprehensiveDiagnosticGenerator {
   private static instance: ComprehensiveDiagnosticGenerator;
 
@@ -78,7 +94,7 @@ export class ComprehensiveDiagnosticGenerator {
           source: 'comprehensive_generator',
           officialCount: questions.filter(q => q.metadata?.source === 'oficial').length,
           aiCount: questions.filter(q => q.metadata?.source === 'ai_generated').length,
-          totalCostSavings: questions.length * 0.15, // Estimate
+          totalCostSavings: questions.length * 0.15,
           quality: 'high',
         }
       };
@@ -108,15 +124,23 @@ export class ComprehensiveDiagnosticGenerator {
         return [];
       }
 
-      return exercises.map(exercise => this.mapExerciseToQuestion(exercise));
+      // Use explicit for loop instead of map to avoid type recursion
+      const mappedQuestions: DiagnosticQuestion[] = [];
+      for (let i = 0; i < exercises.length; i++) {
+        const exercise = exercises[i] as SimpleExerciseData;
+        const mappedQuestion = this.createSimpleQuestion(exercise);
+        mappedQuestions.push(mappedQuestion);
+      }
+
+      return mappedQuestions;
     } catch (error) {
       console.error('❌ Error in fetchDatabaseQuestions:', error);
       return [];
     }
   }
 
-  private mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
-    // Simplified mapping to avoid infinite recursion
+  // Isolated mapping function with explicit types
+  private createSimpleQuestion(exercise: SimpleExerciseData): DiagnosticQuestion {
     const question: DiagnosticQuestion = {
       id: exercise.id || `q-${Date.now()}-${Math.random()}`,
       question: exercise.question || 'Pregunta no disponible',
@@ -127,7 +151,7 @@ export class ComprehensiveDiagnosticGenerator {
       skill: this.getSkillString(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {
-        source: exercise.metadata?.source || 'database',
+        source: 'database' as const,
         originalId: exercise.id,
         nodoCode: exercise.nodo_code,
         year: exercise.year
@@ -181,25 +205,32 @@ export class ComprehensiveDiagnosticGenerator {
     targetLevel: string,
     questionCount: number
   ): DiagnosticTest {
-    const questions: DiagnosticQuestion[] = Array.from({ length: questionCount }, (_, i) => ({
-      id: `fallback-${prueba}-${i + 1}`,
-      question: `Pregunta ${i + 1} de ${this.getPruebaDisplayName(prueba)}. Evalúa tu comprensión de conceptos fundamentales.`,
-      options: [
-        'Opción A: Primera alternativa',
-        'Opción B: Segunda alternativa',
-        'Opción C: Tercera alternativa',
-        'Opción D: Cuarta alternativa'
-      ],
-      correctAnswer: 'Opción A: Primera alternativa',
-      explanation: `Esta pregunta evalúa habilidades fundamentales de ${this.getPruebaDisplayName(prueba)}.`,
-      difficulty: 'INTERMEDIO' as const,
-      skill: this.getDefaultSkillForPrueba(prueba),
-      prueba,
-      metadata: {
-        source: 'fallback_generator',
-        template: true
-      }
-    }));
+    console.log('🔄 Creando diagnóstico fallback locales...');
+    
+    // Use explicit for loop instead of Array.from().map()
+    const questions: DiagnosticQuestion[] = [];
+    for (let i = 0; i < questionCount; i++) {
+      const question: DiagnosticQuestion = {
+        id: `fallback-${prueba}-${i + 1}`,
+        question: `Pregunta ${i + 1} de ${this.getPruebaDisplayName(prueba)}. Evalúa tu comprensión de conceptos fundamentales.`,
+        options: [
+          'Opción A: Primera alternativa',
+          'Opción B: Segunda alternativa',
+          'Opción C: Tercera alternativa',
+          'Opción D: Cuarta alternativa'
+        ],
+        correctAnswer: 'Opción A: Primera alternativa',
+        explanation: `Esta pregunta evalúa habilidades fundamentales de ${this.getPruebaDisplayName(prueba)}.`,
+        difficulty: 'INTERMEDIO' as const,
+        skill: this.getDefaultSkillForPrueba(prueba),
+        prueba,
+        metadata: {
+          source: 'fallback_generator' as const,
+          template: true
+        }
+      };
+      questions.push(question);
+    }
 
     return {
       id: `fallback-comprehensive-${prueba.toLowerCase()}-${Date.now()}`,
