@@ -54,7 +54,7 @@ export class PAESNodeMappingService {
         description: this.generateDescription(nodeData),
         subject: this.getSubjectDisplayName(nodeData.subject_area),
         skillType: nodeData.skill_id ? await this.getSkillDisplayName(nodeData.skill_id) : 'General',
-        difficulty: this.mapDifficulty(nodeData.difficulty),
+        difficulty: this.mapDifficultyLevel(nodeData.difficulty),
         prerequisites: await this.getPrerequisiteNames(nodeData.depends_on || []),
         learningObjectives: this.generateLearningObjectives(nodeData),
         estimatedTimeMinutes: nodeData.estimated_time_minutes || 45,
@@ -142,7 +142,7 @@ export class PAESNodeMappingService {
     // Si no hay descripción, generar una básica
     if (!description || description.length < 20) {
       const subject = this.getSubjectDisplayName(nodeData.subject_area);
-      const difficulty = this.mapDifficulty(nodeData.difficulty);
+      const difficulty = this.mapDifficultyLevel(nodeData.difficulty);
       const time = nodeData.estimated_time_minutes || 45;
       
       description = `Nodo de aprendizaje de ${subject} de nivel ${difficulty.toLowerCase()}. ` +
@@ -202,16 +202,16 @@ export class PAESNodeMappingService {
   /**
    * Mapea dificultad técnica a descriptiva
    */
-  private static mapDifficulty(difficulty: string): 'BASICO' | 'INTERMEDIO' | 'AVANZADO' {
+  private static mapDifficultyLevel(difficulty: any): 'BASICO' | 'INTERMEDIO' | 'AVANZADO' {
     if (!difficulty) return 'INTERMEDIO';
     
-    const difficultyLower = difficulty.toLowerCase();
+    const difficultyStr = String(difficulty).toLowerCase();
     
-    if (difficultyLower === 'basic' || difficultyLower === 'basico' || difficultyLower === 'easy') {
+    if (difficultyStr === 'basic' || difficultyStr === 'basico' || difficultyStr === 'easy') {
       return 'BASICO';
     }
     
-    if (difficultyLower === 'advanced' || difficultyLower === 'avanzado' || difficultyLower === 'hard') {
+    if (difficultyStr === 'advanced' || difficultyStr === 'avanzado' || difficultyStr === 'hard') {
       return 'AVANZADO';
     }
     
