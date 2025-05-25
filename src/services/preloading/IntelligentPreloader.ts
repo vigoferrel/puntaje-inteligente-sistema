@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BancoEvaluacionesService } from "../banco-evaluaciones/BancoEvaluacionesService";
 
@@ -314,7 +313,7 @@ export class IntelligentPreloader {
     return data || [];
   }
 
-  private static async getQuestionsByArea(testType: string, targetAreas: string[]) {
+  private static async getQuestionsByArea(testType: string, targetAreas: string[]): Promise<any[]> {
     let query = supabase
       .from('banco_preguntas')
       .select(`
@@ -325,7 +324,8 @@ export class IntelligentPreloader {
       .eq('prueba_paes', testType);
     
     if (targetAreas.length) {
-      query = query.in('competencias_evaluadas', targetAreas);
+      // Corregir el error de tipo: usar overlaps en lugar de in para arrays
+      query = query.overlaps('competencias_evaluadas', targetAreas);
     }
     
     const { data } = await query.limit(100);

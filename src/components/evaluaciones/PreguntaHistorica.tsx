@@ -15,7 +15,7 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
-import ReactMarkdown from 'react-markdown';
+import { SafeMarkdown } from '@/components/shared/SafeMarkdown';
 
 interface TimelineEvent {
   año: number;
@@ -216,7 +216,7 @@ export const PreguntaHistorica: React.FC<PreguntaHistoricaProps> = ({
                     
                     <div className="flex-1 overflow-y-auto bg-white p-4 rounded-lg border border-amber-200">
                       <blockquote className="border-l-4 border-amber-500 pl-4 italic text-justify leading-relaxed">
-                        <ReactMarkdown>{pregunta.documento_fuente}</ReactMarkdown>
+                        <SafeMarkdown>{pregunta.documento_fuente}</SafeMarkdown>
                       </blockquote>
                     </div>
                     
@@ -307,7 +307,7 @@ export const PreguntaHistorica: React.FC<PreguntaHistoricaProps> = ({
                       exit={{ height: 0, opacity: 0 }}
                       className="bg-amber-50 rounded-lg p-3 mt-2 text-sm border border-amber-200"
                     >
-                      <ReactMarkdown>{pregunta.contexto_historico}</ReactMarkdown>
+                      <SafeMarkdown>{pregunta.contexto_historico}</SafeMarkdown>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -338,9 +338,9 @@ export const PreguntaHistorica: React.FC<PreguntaHistoricaProps> = ({
           <CardContent className="flex-1 flex flex-col">
             {/* Enunciado de la pregunta */}
             <div className="mb-6 p-4 bg-white rounded-lg border-l-4 border-red-500">
-              <ReactMarkdown className="prose prose-sm max-w-none">
+              <SafeMarkdown className="prose prose-sm max-w-none">
                 {pregunta.enunciado}
-              </ReactMarkdown>
+              </SafeMarkdown>
             </div>
             
             {/* Alternativas */}
@@ -370,9 +370,9 @@ export const PreguntaHistorica: React.FC<PreguntaHistoricaProps> = ({
                         {alternativa.letra}
                       </div>
                       <div className="flex-1 text-sm">
-                        <ReactMarkdown className="prose prose-sm max-w-none">
+                        <SafeMarkdown className="prose prose-sm max-w-none">
                           {alternativa.contenido}
-                        </ReactMarkdown>
+                        </SafeMarkdown>
                       </div>
                     </div>
                   </Button>
