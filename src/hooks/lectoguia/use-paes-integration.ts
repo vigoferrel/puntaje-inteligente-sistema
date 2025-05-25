@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { PAESService, PAESQuestion } from '@/services/paes/paes-service';
 import { Exercise } from '@/types/ai-types';

@@ -1,6 +1,32 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Interfaces para las respuestas de las funciones RPC
+interface ExamenCompleto {
+  examen: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    tipo: string;
+    año: number;
+    duracion_minutos: number;
+    total_preguntas: number;
+    preguntas_validas: number;
+    instrucciones: string;
+  };
+  preguntas: Array<{
+    numero: number;
+    enunciado: string;
+    contexto?: string;
+    imagen_url?: string;
+    opciones: Array<{
+      letra: string;
+      contenido: string;
+      es_correcta: boolean;
+    }>;
+  }>;
+}
+
 export interface PAESQuestion {
   id: number;
   numero: number;
@@ -16,7 +42,7 @@ export interface PAESQuestion {
 }
 
 export interface PAESExam {
-  id: number;
+  id: string; // Cambiado de number a string para coincidir con Supabase
   codigo: string;
   nombre: string;
   tipo: string;
@@ -26,6 +52,24 @@ export interface PAESExam {
   preguntas_validas: number;
   instrucciones: string;
 }
+
+/**
+ * Cache para evitar consultas repetitivas
+ */
+const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+const getCachedData = (key: string) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    return cached.data;
+  }
+  cache.delete(key);
+  return null;
+};
+
+const setCachedData = (key: string, data: any, ttl: number = 300000) => {
+  cache.set(key, { data, timestamp: Date.now(), ttl });
+};
 
 /**
  * Servicio para gestionar preguntas oficiales de PAES conectado a Supabase
@@ -39,6 +83,13 @@ export class PAESService {
     try {
       console.log(`🔍 Obteniendo examen: ${codigo}`);
       
+      const cacheKey = `exam_${codigo}`;
+      const cached = getCachedData(cacheKey);
+      if (cached) {
+        console.log('📦 Usando datos cacheados para examen');
+        return cached;
+      }
+
       const { data, error } = await supabase
         .from('examenes')
         .select('*')
@@ -56,7 +107,7 @@ export class PAESService {
       }
 
       const exam: PAESExam = {
-        id: data.id,
+        id: data.id, // Ya es string en Supabase
         codigo: data.codigo,
         nombre: data.nombre,
         tipo: data.tipo,
@@ -67,6 +118,7 @@ export class PAESService {
         instrucciones: data.instrucciones || ''
       };
 
+      setCachedData(cacheKey, exam);
       console.log(`✅ Examen obtenido: ${exam.nombre}`);
       return exam;
 
@@ -86,6 +138,15 @@ export class PAESService {
     try {
       console.log(`🎯 Obteniendo pregunta aleatoria de ${examCode} (${difficultyRange.min}-${difficultyRange.max})`);
 
+      const cacheKey = `questions_${examCode}_${difficultyRange.min}_${difficultyRange.max}`;
+      const cached = getCachedData(cacheKey);
+      
+      if (cached && cached.length > 0) {
+        const randomQuestion = cached[Math.floor(Math.random() * cached.length)];
+        console.log('📦 Usando pregunta cacheada');
+        return randomQuestion;
+      }
+
       // Usar la función RPC para obtener el examen completo
       const { data, error } = await supabase.rpc('obtener_examen_completo', {
         codigo_examen: examCode
@@ -96,13 +157,21 @@ export class PAESService {
         return null;
       }
 
-      if (!data || !data.preguntas || data.preguntas.length === 0) {
+      if (!data) {
+        console.warn(`No se encontraron datos para ${examCode}`);
+        return null;
+      }
+
+      // Convertir la respuesta a tipo conocido
+      const examData = data as ExamenCompleto;
+      
+      if (!examData.preguntas || examData.preguntas.length === 0) {
         console.warn(`No se encontraron preguntas para ${examCode}`);
         return null;
       }
 
       // Filtrar preguntas por rango de número
-      const preguntasEnRango = data.preguntas.filter((p: any) => 
+      const preguntasEnRango = examData.preguntas.filter(p => 
         p.numero >= difficultyRange.min && p.numero <= difficultyRange.max
       );
 
@@ -110,6 +179,9 @@ export class PAESService {
         console.warn(`No hay preguntas en el rango ${difficultyRange.min}-${difficultyRange.max}`);
         return null;
       }
+
+      // Cache las preguntas filtradas
+      setCachedData(cacheKey, preguntasEnRango, 600000); // 10 minutos
 
       // Seleccionar pregunta aleatoria
       const preguntaSeleccionada = preguntasEnRango[Math.floor(Math.random() * preguntasEnRango.length)];
@@ -158,17 +230,24 @@ export class PAESService {
     try {
       console.log(`📊 Obteniendo estadísticas para ${examCode}`);
 
+      const cacheKey = `stats_${examCode}`;
+      const cached = getCachedData(cacheKey);
+      if (cached) {
+        console.log('📦 Usando estadísticas cacheadas');
+        return cached;
+      }
+
       const exam = await this.getExam(examCode);
       if (!exam) {
         console.warn(`No se encontró examen ${examCode}`);
         return null;
       }
 
-      // Contar preguntas reales en la base de datos
+      // Contar preguntas reales en la base de datos usando el id como string
       const { data: preguntasData, error: preguntasError } = await supabase
         .from('preguntas')
         .select('id')
-        .eq('examen_id', exam.id);
+        .eq('examen_id', exam.id); // exam.id ya es string
 
       if (preguntasError) {
         console.error('Error al contar preguntas:', preguntasError);
@@ -187,6 +266,7 @@ export class PAESService {
         loadingProgress
       };
 
+      setCachedData(cacheKey, stats, 900000); // 15 minutos
       console.log(`✅ Estadísticas obtenidas: ${questionsLoaded}/${exam.total_preguntas} preguntas`);
       return stats;
 
@@ -203,6 +283,13 @@ export class PAESService {
     try {
       console.log('📚 Obteniendo exámenes disponibles');
 
+      const cacheKey = 'available_exams';
+      const cached = getCachedData(cacheKey);
+      if (cached) {
+        console.log('📦 Usando lista cacheada de exámenes');
+        return cached;
+      }
+
       const { data, error } = await supabase
         .from('examenes')
         .select('*')
@@ -215,7 +302,7 @@ export class PAESService {
       }
 
       const exams: PAESExam[] = (data || []).map(exam => ({
-        id: exam.id,
+        id: exam.id, // Ya es string en Supabase
         codigo: exam.codigo,
         nombre: exam.nombre,
         tipo: exam.tipo,
@@ -226,6 +313,7 @@ export class PAESService {
         instrucciones: exam.instrucciones || ''
       }));
 
+      setCachedData(cacheKey, exams, 1800000); // 30 minutos
       console.log(`✅ ${exams.length} exámenes disponibles`);
       return exams;
 
@@ -249,20 +337,28 @@ export class PAESService {
         codigo_examen: examCode
       });
 
-      if (error || !data?.preguntas) {
+      if (error || !data) {
         console.error('Error al obtener preguntas específicas:', error);
         return [];
       }
 
-      const preguntasEspecificas = data.preguntas
-        .filter((p: any) => questionNumbers.includes(p.numero))
-        .map((p: any) => ({
+      // Convertir la respuesta a tipo conocido
+      const examData = data as ExamenCompleto;
+      
+      if (!examData.preguntas) {
+        console.warn('No se encontraron preguntas en la respuesta');
+        return [];
+      }
+
+      const preguntasEspecificas = examData.preguntas
+        .filter(p => questionNumbers.includes(p.numero))
+        .map(p => ({
           id: Date.now() + p.numero,
           numero: p.numero,
           enunciado: p.enunciado,
           contexto: p.contexto,
           imagen_url: p.imagen_url,
-          tipo_pregunta: 'multiple_choice',
+          tipo_pregunta: 'multiple_choice' as const,
           opciones: p.opciones || []
         }));
 
@@ -286,5 +382,13 @@ export class PAESService {
       console.error('Error validando examen:', error);
       return false;
     }
+  }
+
+  /**
+   * Limpiar cache (útil para desarrollo)
+   */
+  static clearCache(): void {
+    cache.clear();
+    console.log('🗑️ Cache limpiado');
   }
 }
