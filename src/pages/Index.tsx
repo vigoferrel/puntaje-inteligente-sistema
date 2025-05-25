@@ -1,9 +1,9 @@
 
-import React from "react";
-import { AppLayout } from "@/components/app-layout";
-import { CinematicUnifiedDashboard } from "@/components/dashboard/CinematicUnifiedDashboard";
+import React from 'react';
+import { AppLayout } from '@/components/app-layout';
+import { CinematicUnifiedDashboard } from '@/components/dashboard/CinematicUnifiedDashboard';
 
-const Index = () => {
+const Index: React.FC = () => {
   return (
     <AppLayout>
       <CinematicUnifiedDashboard />
