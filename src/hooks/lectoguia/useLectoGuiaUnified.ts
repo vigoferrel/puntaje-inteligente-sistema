@@ -41,7 +41,7 @@ export const useLectoGuiaUnified = (userId?: string) => {
     coherenceLevel: 100
   });
 
-  // Integraciones del sistema
+  // Integraciones del sistema - CORRECCIÓN: Usamos la interfaz correcta
   const comprehensiveDiagnostic = useComprehensiveDiagnostic();
   const hierarchicalDiagnostic = useHierarchicalDiagnostic();
   const { 
@@ -61,9 +61,8 @@ export const useLectoGuiaUnified = (userId?: string) => {
 
   // Referencias para evitar re-renders innecesarios
   const lastValidationRef = useRef<Date | null>(null);
-  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sincronización con backend
+  // Sincronización con backend - CORRECCIÓN: Llamamos la función correcta
   const syncWithBackend = useCallback(async () => {
     if (!userId) return;
 
@@ -72,7 +71,7 @@ export const useLectoGuiaUnified = (userId?: string) => {
 
       // Sincronizar datos en paralelo
       await Promise.all([
-        comprehensiveDiagnostic.initializeSystem(),
+        comprehensiveDiagnostic.initializeSystem(), // CORRECCIÓN: Función correcta
         hierarchicalDiagnostic.initializeHierarchicalSystem(),
         fetchLearningPlans(userId)
       ]);
@@ -188,7 +187,7 @@ export const useLectoGuiaUnified = (userId?: string) => {
     }
   }, [systemState.phase, validateSystemCoherence]);
 
-  // Integraciones específicas
+  // Integraciones específicas - CORRECCIÓN: Usamos las propiedades correctas
   const diagnosticIntegration = {
     isReady: comprehensiveDiagnostic.isSystemReady,
     availableTests: comprehensiveDiagnostic.diagnosticTests.length,

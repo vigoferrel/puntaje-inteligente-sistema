@@ -63,8 +63,9 @@ export const useComprehensiveDiagnostic = () => {
     data,
     isInitializing,
     isSystemReady: (data?.systemMetrics.isSystemReady && data?.diagnosticTests.length > 0) || false,
+    initializeSystem, // CORRECCIÓN: Exponemos esta función
     startQuantumDiagnostic,
-    refreshSystem: initializeSystem,
+    refreshSystem: initializeSystem, // Alias para compatibilidad
     
     // Easy access to data with safe defaults
     diagnosticTests: data?.diagnosticTests || [],
