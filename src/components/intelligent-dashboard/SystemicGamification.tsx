@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Trophy, Star, Award, Target, Zap, Crown,
-  Medal, Gem, Shield, Rocket, Flame, Lightning
+  Medal, Gem, Shield, Rocket, Flame
 } from 'lucide-react';
 import { StudentProfile, SkillNode } from '@/core/unified-education-system/EducationDataHub';
 
@@ -64,7 +63,7 @@ export const SystemicGamification: React.FC<SystemicGamificationProps> = ({
         id: 'speed_learner',
         title: 'Aprendiz Veloz',
         description: 'Mantener velocidad de aprendizaje > 80%',
-        icon: Lightning,
+        icon: Zap,
         progress: Math.min(100, systemMetrics.learningVelocity * 100),
         completed: systemMetrics.learningVelocity >= 0.8,
         rarity: 'legendary',
