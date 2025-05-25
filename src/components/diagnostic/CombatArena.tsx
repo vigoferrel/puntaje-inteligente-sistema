@@ -3,26 +3,25 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   Zap, 
-  Shield, 
-  Sword, 
   Target, 
-  Trophy, 
+  Sword, 
+  Shield,
+  Trophy,
   Flame,
   Star,
-  Crown,
-  Skull
+  ChevronRight,
+  Activity,
+  Timer
 } from 'lucide-react';
-import { TPAESPrueba, getPruebaDisplayName } from '@/types/system-types';
-import { PAESTest } from '@/types/unified-diagnostic';
 
 interface CombatArenaProps {
-  tests: PAESTest[];
-  currentScores: Record<TPAESPrueba, number> | null;
-  onStartCombat: (prueba: TPAESPrueba) => void;
+  tests: any[];
+  currentScores: any;
+  onStartCombat: (prueba: string) => void;
   onViewProgress: () => void;
 }
 
@@ -32,88 +31,79 @@ export const CombatArena: React.FC<CombatArenaProps> = ({
   onStartCombat,
   onViewProgress
 }) => {
-  const [selectedBoss, setSelectedBoss] = useState<TPAESPrueba | null>(null);
-  const [combatMode, setCombatMode] = useState<'selection' | 'preparation' | 'battle'>('selection');
-  const [playerStats, setPlayerStats] = useState({
-    level: 15,
-    xp: 2450,
-    streak: 7,
-    totalVictories: 23
-  });
+  const [selectedBattle, setSelectedBattle] = useState<string | null>(null);
+  const [combatReady, setCombatReady] = useState(false);
+  const [arenaEnergy, setArenaEnergy] = useState(0);
 
-  // Configuración de "jefes" por materia
-  const bossConfig = {
-    'COMPETENCIA_LECTORA': {
-      name: 'Hydra de Comprensión',
-      difficulty: 'Legendario',
-      hp: 850,
-      abilities: ['Textos Complejos', 'Inferencias Ocultas', 'Análisis Crítico'],
-      rewards: ['XP x200', 'Título: Maestro Lector', 'Nuevo Avatar'],
-      color: 'from-blue-600 to-cyan-600',
-      icon: '📚',
-      threat: 'EXTREMO'
+  // Initialize arena
+  useEffect(() => {
+    const energySequence = async () => {
+      for (let i = 0; i <= 100; i += 3) {
+        setArenaEnergy(i);
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
+      setCombatReady(true);
+    };
+
+    energySequence();
+  }, []);
+
+  const battleModes = [
+    {
+      id: 'COMPETENCIA_LECTORA',
+      name: 'Duelo de Lectura',
+      difficulty: 'EXPERT',
+      icon: Target,
+      color: 'blue',
+      description: 'Domina la comprensión y análisis textual'
     },
-    'MATEMATICA_1': {
-      name: 'Golem Algebraico',
-      difficulty: 'Épico',
-      hp: 750,
-      abilities: ['Ecuaciones Mortales', 'Funciones Caóticas', 'Geometría Letal'],
-      rewards: ['XP x150', 'Calculadora Mágica', 'Skin Matemático'],
-      color: 'from-green-600 to-emerald-600',
-      icon: '🔢',
-      threat: 'ALTO'
+    {
+      id: 'MATEMATICA_1',
+      name: 'Arena Matemática I',
+      difficulty: 'WARRIOR',
+      icon: Sword,
+      color: 'green',
+      description: 'Combate con álgebra y geometría básica'
     },
-    'MATEMATICA_2': {
-      name: 'Dragón del Cálculo',
-      difficulty: 'Mítico',
-      hp: 900,
-      abilities: ['Derivadas Infernales', 'Integrales Supremas', 'Límites Infinitos'],
-      rewards: ['XP x250', 'Corona de Números', 'Poder Matemático'],
-      color: 'from-purple-600 to-pink-600',
-      icon: '∫',
-      threat: 'APOCALÍPTICO'
+    {
+      id: 'MATEMATICA_2',
+      name: 'Arena Matemática II',
+      difficulty: 'LEGEND',
+      icon: Flame,
+      color: 'red',
+      description: 'Desafío de matemática avanzada'
     },
-    'CIENCIAS': {
-      name: 'Kraken Científico',
-      difficulty: 'Legendario',
-      hp: 800,
-      abilities: ['Reacciones Explosivas', 'Leyes Físicas', 'Evolución Mortal'],
-      rewards: ['XP x180', 'Laboratorio Personal', 'Bata de Científico'],
-      color: 'from-orange-600 to-red-600',
-      icon: '⚗️',
-      threat: 'EXTREMO'
+    {
+      id: 'CIENCIAS',
+      name: 'Laboratorio de Combate',
+      difficulty: 'MASTER',
+      icon: Star,
+      color: 'purple',
+      description: 'Batalla científica multidisciplinaria'
     },
-    'HISTORIA': {
-      name: 'Espectro del Tiempo',
-      difficulty: 'Épico',
-      hp: 700,
-      abilities: ['Líneas Temporales', 'Causas Ocultas', 'Análisis Histórico'],
-      rewards: ['XP x160', 'Máquina del Tiempo', 'Capa Histórica'],
-      color: 'from-yellow-600 to-orange-600',
-      icon: '🏛️',
-      threat: 'ALTO'
+    {
+      id: 'HISTORIA',
+      name: 'Coliseo Histórico',
+      difficulty: 'SAGE',
+      icon: Shield,
+      color: 'yellow',
+      description: 'Enfrentamiento de conocimiento histórico'
+    }
+  ];
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'WARRIOR': return 'text-green-400 border-green-400/50';
+      case 'EXPERT': return 'text-blue-400 border-blue-400/50';
+      case 'MASTER': return 'text-purple-400 border-purple-400/50';
+      case 'LEGEND': return 'text-red-400 border-red-400/50';
+      case 'SAGE': return 'text-yellow-400 border-yellow-400/50';
+      default: return 'text-gray-400 border-gray-400/50';
     }
   };
 
-  const getThreatColor = (threat: string) => {
-    switch (threat) {
-      case 'APOCALÍPTICO': return 'text-red-500 animate-pulse';
-      case 'EXTREMO': return 'text-red-400';
-      case 'ALTO': return 'text-orange-400';
-      default: return 'text-yellow-400';
-    }
-  };
-
-  const startBossFight = (prueba: TPAESPrueba) => {
-    setSelectedBoss(prueba);
-    setCombatMode('preparation');
-  };
-
-  const launchCombat = () => {
-    if (selectedBoss) {
-      setCombatMode('battle');
-      onStartCombat(selectedBoss);
-    }
+  const getScoreForBattle = (battleId: string) => {
+    return currentScores?.[battleId] || 0;
   };
 
   return (
@@ -121,146 +111,169 @@ export const CombatArena: React.FC<CombatArenaProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="relative z-10 p-6"
+      className="relative min-h-screen bg-gradient-to-br from-red-900 via-gray-900 to-black p-6"
     >
-      {/* Header épico */}
+      {/* Arena Effects */}
+      <div className="absolute inset-0">
+        {/* Combat particles */}
+        {Array.from({ length: 30 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-red-400 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              opacity: [0, 1, 0],
+              scale: [0, 1.5, 0],
+              rotate: 360,
+            }}
+            transition={{
+              duration: 2 + Math.random() * 3,
+              repeat: Infinity,
+              delay: Math.random() * 5,
+            }}
+          />
+        ))}
+
+        {/* Energy rings */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {[1, 2, 3].map((ring) => (
+            <motion.div
+              key={ring}
+              className="absolute border border-red-400/20 rounded-full"
+              style={{
+                width: `${ring * 300}px`,
+                height: `${ring * 300}px`,
+              }}
+              animate={{
+                rotate: -360,
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 8 + ring * 2,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Arena Header */}
       <motion.div
-        initial={{ y: -50 }}
-        animate={{ y: 0 }}
-        className="mb-8"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="relative z-10 mb-8"
       >
-        <Card className="bg-gradient-to-r from-red-900/80 to-orange-900/80 backdrop-blur-lg border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+        <Card className="bg-black/80 backdrop-blur-lg border-red-500/50 shadow-2xl">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-red-400 flex items-center mb-2">
-                  <Sword className="w-10 h-10 mr-3 animate-pulse" />
-                  ARENA DE COMBATE ACADÉMICO
+            <div className="text-center">
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.05, 1],
+                  textShadow: ['0 0 20px #ef4444', '0 0 30px #ef4444', '0 0 20px #ef4444']
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="mb-4"
+              >
+                <h1 className="text-4xl font-bold text-red-400 tracking-wider">
+                  ⚔️ ARENA DE COMBATE ACADÉMICO ⚔️
                 </h1>
-                <p className="text-red-300">
-                  🔥 Enfrenta a los jefes más poderosos del conocimiento
-                </p>
-              </div>
+              </motion.div>
               
-              {/* Stats del jugador */}
-              <div className="text-right">
-                <div className="flex items-center space-x-4">
-                  <Badge className="bg-purple-600/20 text-purple-300 border-purple-400">
-                    <Crown className="w-3 h-3 mr-1" />
-                    Nivel {playerStats.level}
-                  </Badge>
-                  <Badge className="bg-yellow-600/20 text-yellow-300 border-yellow-400">
-                    <Star className="w-3 h-3 mr-1" />
-                    {playerStats.xp} XP
-                  </Badge>
-                  <Badge className="bg-green-600/20 text-green-300 border-green-400">
-                    <Flame className="w-3 h-3 mr-1" />
-                    Racha x{playerStats.streak}
-                  </Badge>
+              <p className="text-red-300 text-lg mb-4">
+                Enfrenta desafíos épicos y demuestra tu dominio en cada disciplina
+              </p>
+
+              {/* Arena Energy */}
+              <div className="max-w-md mx-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-red-300">Energía de Arena</span>
+                  <span className="text-red-400 font-mono">{arenaEnergy}%</span>
                 </div>
+                <Progress value={arenaEnergy} className="h-3 bg-gray-800">
+                  <div className="h-full bg-gradient-to-r from-red-600 to-orange-500 transition-all duration-300" />
+                </Progress>
               </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
 
-      <AnimatePresence mode="wait">
-        {combatMode === 'selection' && (
+      {/* Battle Selection */}
+      <AnimatePresence>
+        {combatReady && (
           <motion.div
-            key="selection"
-            initial={{ opacity: 0, x: -100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+            className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
           >
-            {tests.map((test) => {
-              const prueba = test.code as TPAESPrueba;
-              const boss = bossConfig[prueba];
-              const currentScore = currentScores?.[prueba] || 0;
-              const powerLevel = Math.round((currentScore / 850) * 100);
+            {battleModes.map((battle, index) => {
+              const score = getScoreForBattle(battle.id);
+              const isSelected = selectedBattle === battle.id;
               
               return (
                 <motion.div
-                  key={test.id}
-                  whileHover={{ scale: 1.05, y: -10 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="cursor-pointer"
-                  onClick={() => startBossFight(prueba)}
+                  key={battle.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                  className={`cursor-pointer ${isSelected ? 'ring-2 ring-red-400' : ''}`}
+                  onClick={() => setSelectedBattle(battle.id)}
                 >
-                  <Card className={`bg-gradient-to-br ${boss.color} bg-opacity-20 backdrop-blur-lg border-2 hover:border-red-400 transition-all duration-300 shadow-2xl hover:shadow-red-500/20`}>
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-4xl">{boss.icon}</div>
-                        <Badge className={`${getThreatColor(boss.threat)} border-current`}>
-                          {boss.threat}
-                        </Badge>
+                  <Card className={`bg-black/70 backdrop-blur-sm border-${battle.color}-500/50 h-full transition-all duration-300 ${
+                    isSelected ? 'shadow-[0_0_30px_rgba(239,68,68,0.5)]' : ''
+                  }`}>
+                    <CardHeader className="text-center">
+                      <div className="flex justify-center mb-3">
+                        <div className={`p-4 rounded-full bg-${battle.color}-600/20 border border-${battle.color}-500/50`}>
+                          <battle.icon className={`w-8 h-8 text-${battle.color}-400`} />
+                        </div>
                       </div>
-                      <CardTitle className="text-white text-xl">
-                        {boss.name}
+                      
+                      <CardTitle className={`text-${battle.color}-400 text-xl`}>
+                        {battle.name}
                       </CardTitle>
-                      <p className="text-gray-300 text-sm">
-                        {getPruebaDisplayName(prueba)}
-                      </p>
+                      
+                      <Badge className={getDifficultyColor(battle.difficulty)}>
+                        {battle.difficulty}
+                      </Badge>
                     </CardHeader>
                     
                     <CardContent className="space-y-4">
-                      {/* Estadísticas del jefe */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="text-center p-2 bg-black/30 rounded">
-                          <div className="text-red-400 font-bold">{boss.hp}</div>
-                          <div className="text-xs text-gray-400">HP</div>
+                      <p className="text-gray-300 text-sm text-center">
+                        {battle.description}
+                      </p>
+                      
+                      {/* Current Score */}
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-white mb-1">
+                          {score}
                         </div>
-                        <div className="text-center p-2 bg-black/30 rounded">
-                          <div className="text-purple-400 font-bold">{boss.difficulty}</div>
-                          <div className="text-xs text-gray-400">Rango</div>
-                        </div>
+                        <div className="text-xs text-gray-400">Puntaje Actual</div>
+                        <Progress 
+                          value={score / 8.5} 
+                          className="h-2 mt-2"
+                        />
                       </div>
 
-                      {/* Habilidades del jefe */}
-                      <div>
-                        <div className="text-sm text-gray-300 mb-2">Habilidades:</div>
-                        <div className="space-y-1">
-                          {boss.abilities.map((ability, i) => (
-                            <div key={i} className="text-xs text-red-300 flex items-center">
-                              <Skull className="w-3 h-3 mr-1" />
-                              {ability}
-                            </div>
-                          ))}
+                      {/* Combat Stats */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="text-center p-2 bg-gray-900/50 rounded">
+                          <Activity className="w-4 h-4 mx-auto mb-1 text-green-400" />
+                          <div className="text-green-400">
+                            {score > 600 ? 'DOMINADO' : score > 400 ? 'EN PROGRESO' : 'DESAFÍO'}
+                          </div>
+                        </div>
+                        <div className="text-center p-2 bg-gray-900/50 rounded">
+                          <Timer className="w-4 h-4 mx-auto mb-1 text-blue-400" />
+                          <div className="text-blue-400">45min</div>
                         </div>
                       </div>
-
-                      {/* Poder del jugador */}
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-gray-300">Tu Poder:</span>
-                          <span className="text-blue-400">{powerLevel}%</span>
-                        </div>
-                        <Progress value={powerLevel} className="h-2" />
-                      </div>
-
-                      {/* Recompensas */}
-                      <div>
-                        <div className="text-sm text-gray-300 mb-2">Recompensas:</div>
-                        <div className="space-y-1">
-                          {boss.rewards.slice(0, 2).map((reward, i) => (
-                            <div key={i} className="text-xs text-yellow-300 flex items-center">
-                              <Trophy className="w-3 h-3 mr-1" />
-                              {reward}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Button 
-                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startBossFight(prueba);
-                        }}
-                      >
-                        <Zap className="w-4 h-4 mr-2" />
-                        ¡DESAFIAR!
-                      </Button>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -268,124 +281,48 @@ export const CombatArena: React.FC<CombatArenaProps> = ({
             })}
           </motion.div>
         )}
+      </AnimatePresence>
 
-        {combatMode === 'preparation' && selectedBoss && (
+      {/* Combat Actions */}
+      <AnimatePresence>
+        {selectedBattle && combatReady && (
           <motion.div
-            key="preparation"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="max-w-4xl mx-auto"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="relative z-10"
           >
-            <Card className="bg-gradient-to-br from-purple-900/90 to-blue-900/90 backdrop-blur-lg border-purple-500/50">
-              <CardHeader className="text-center">
-                <CardTitle className="text-3xl text-white mb-4">
-                  🛡️ PREPARACIÓN PARA EL COMBATE
-                </CardTitle>
-                <p className="text-purple-300">
-                  Estás a punto de enfrentar al {bossConfig[selectedBoss].name}
-                </p>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                {/* Información del jefe */}
-                <div className="text-center p-6 bg-black/30 rounded-lg">
-                  <div className="text-6xl mb-4">{bossConfig[selectedBoss].icon}</div>
+            <Card className="bg-black/80 backdrop-blur-lg border-red-500/50 max-w-2xl mx-auto">
+              <CardContent className="p-8 text-center">
+                <div className="mb-6">
+                  <Sword className="w-16 h-16 text-red-400 mx-auto mb-4 animate-pulse" />
                   <h2 className="text-2xl font-bold text-white mb-2">
-                    {bossConfig[selectedBoss].name}
+                    ¿Listo para el combate?
                   </h2>
-                  <Badge className="text-red-400 border-red-400 mb-4">
-                    {bossConfig[selectedBoss].difficulty}
-                  </Badge>
-                  
-                  <div className="grid grid-cols-3 gap-4 mt-6">
-                    <div className="text-center">
-                      <div className="text-red-400 text-2xl font-bold">{bossConfig[selectedBoss].hp}</div>
-                      <div className="text-gray-400 text-sm">Puntos de Vida</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-purple-400 text-2xl font-bold">{bossConfig[selectedBoss].abilities.length}</div>
-                      <div className="text-gray-400 text-sm">Habilidades</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-yellow-400 text-2xl font-bold">{bossConfig[selectedBoss].rewards.length}</div>
-                      <div className="text-gray-400 text-sm">Recompensas</div>
-                    </div>
-                  </div>
+                  <p className="text-gray-300">
+                    Has seleccionado: <span className="text-red-400 font-semibold">
+                      {battleModes.find(b => b.id === selectedBattle)?.name}
+                    </span>
+                  </p>
                 </div>
 
-                {/* Estrategia de combate */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card className="bg-black/40 border-green-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-green-400 text-lg flex items-center">
-                        <Shield className="w-5 h-5 mr-2" />
-                        Tu Arsenal
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Conocimiento Base:</span>
-                          <span className="text-green-400">{currentScores?.[selectedBoss] || 0}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Ejercicios IA:</span>
-                          <span className="text-blue-400">Ilimitados</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">LectoGuía:</span>
-                          <span className="text-purple-400">Activo</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Nivel Actual:</span>
-                          <span className="text-yellow-400">{playerStats.level}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-black/40 border-red-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-red-400 text-lg flex items-center">
-                        <Target className="w-5 h-5 mr-2" />
-                        Estrategia
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm">
-                        <p className="text-gray-300">
-                          • Enfócate en conceptos fundamentales
-                        </p>
-                        <p className="text-gray-300">
-                          • Usa ejercicios progresivos
-                        </p>
-                        <p className="text-gray-300">
-                          • Consulta a LectoGuía para hints
-                        </p>
-                        <p className="text-gray-300">
-                          • Mantén tu racha de victorias
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Botones de acción */}
-                <div className="flex space-x-4 pt-4">
+                <div className="flex justify-center space-x-4">
                   <Button
-                    variant="outline"
-                    onClick={() => setCombatMode('selection')}
-                    className="flex-1 border-gray-500 text-gray-300 hover:bg-gray-700"
-                  >
-                    Volver a Selección
-                  </Button>
-                  <Button
-                    onClick={launchCombat}
-                    className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold text-lg py-3"
+                    onClick={() => onStartCombat(selectedBattle)}
+                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-8 py-3 text-lg font-semibold"
                   >
                     <Zap className="w-5 h-5 mr-2" />
-                    ¡INICIAR COMBATE!
+                    INICIAR COMBATE
+                    <ChevronRight className="w-5 h-5 ml-2" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={onViewProgress}
+                    className="border-blue-400/50 text-blue-400 hover:bg-blue-400/10 px-6 py-3"
+                  >
+                    <Trophy className="w-5 h-5 mr-2" />
+                    Ver Progreso
                   </Button>
                 </div>
               </CardContent>
@@ -393,6 +330,25 @@ export const CombatArena: React.FC<CombatArenaProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Combat Ready Indicator */}
+      {!selectedBattle && combatReady && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="relative z-10 text-center"
+        >
+          <Card className="bg-black/60 backdrop-blur-sm border-gray-500/30 max-w-md mx-auto">
+            <CardContent className="p-6">
+              <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl text-white mb-2">Selecciona tu Arena</h3>
+              <p className="text-gray-400">
+                Elige una disciplina para comenzar tu entrenamiento de combate
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </motion.div>
   );
 };

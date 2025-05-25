@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
@@ -23,29 +24,29 @@ interface HolographicMetricsProps {
   onExitMatrix: () => void;
 }
 
-// Componente 3D para visualización de datos
+// Fixed 3D Data Visualization component with proper Vector3 types
 const DataVisualization3D: React.FC<{ metrics: any }> = ({ metrics }) => {
   const dataPoints = useMemo(() => {
     if (!metrics) return [];
     
     return [
-      { position: [0, 2, 0] as [number, number, number], value: metrics.overallProgress, color: '#3B82F6', label: 'Progreso' },
-      { position: [2, 0, 2] as [number, number, number], value: metrics.completedNodes, color: '#10B981', label: 'Nodos' },
-      { position: [-2, 0, 2] as [number, number, number], value: metrics.aiPrediction, color: '#8B5CF6', label: 'IA' },
-      { position: [0, -2, 0] as [number, number, number], value: metrics.totalNodes, color: '#F59E0B', label: 'Total' },
-      { position: [2, 0, -2] as [number, number, number], value: 75, color: '#EF4444', label: 'Eficiencia' },
-      { position: [-2, 0, -2] as [number, number, number], value: 88, color: '#06B6D4', label: 'Velocidad' }
+      { position: [0, 2, 0] as const, value: metrics.overallProgress, color: '#3B82F6', label: 'Progreso' },
+      { position: [2, 0, 2] as const, value: metrics.completedNodes, color: '#10B981', label: 'Nodos' },
+      { position: [-2, 0, 2] as const, value: metrics.aiPrediction, color: '#8B5CF6', label: 'IA' },
+      { position: [0, -2, 0] as const, value: metrics.totalNodes, color: '#F59E0B', label: 'Total' },
+      { position: [2, 0, -2] as const, value: 75, color: '#EF4444', label: 'Eficiencia' },
+      { position: [-2, 0, -2] as const, value: 88, color: '#06B6D4', label: 'Velocidad' }
     ];
   }, [metrics]);
 
   return (
     <group>
-      {/* Esfera central */}
+      {/* Central sphere */}
       <Sphere args={[0.5]} position={[0, 0, 0]}>
         <meshStandardMaterial color="#3B82F6" emissive="#1E40AF" emissiveIntensity={0.3} />
       </Sphere>
 
-      {/* Anillos orbitales */}
+      {/* Orbital rings */}
       {[1, 2, 3].map((radius) => (
         <group key={radius} rotation={[0, 0, Math.PI / 4]}>
           <Ring args={[radius, radius + 0.1, 32]} rotation={[Math.PI / 2, 0, 0]}>
@@ -54,7 +55,7 @@ const DataVisualization3D: React.FC<{ metrics: any }> = ({ metrics }) => {
         </group>
       ))}
 
-      {/* Puntos de datos */}
+      {/* Data points */}
       {dataPoints.map((point, index) => (
         <group key={index} position={point.position}>
           <Sphere args={[0.2]}>
@@ -87,7 +88,7 @@ const DataVisualization3D: React.FC<{ metrics: any }> = ({ metrics }) => {
         </group>
       ))}
 
-      {/* Conexiones entre puntos */}
+      {/* Connections between points with proper Vector3 handling */}
       {dataPoints.map((point, index) => {
         const nextPoint = dataPoints[(index + 1) % dataPoints.length];
         const start = new THREE.Vector3(...point.position);
@@ -122,7 +123,7 @@ export const HolographicMetrics: React.FC<HolographicMetricsProps> = ({
   const [scanMode, setScanMode] = useState<'overview' | 'deep' | 'prediction'>('overview');
   const [digitalRain, setDigitalRain] = useState<string[]>([]);
 
-  // Generar lluvia digital
+  // Generate digital rain
   useEffect(() => {
     const generateRain = () => {
       const chars = '01アカサタナハマヤラワガザダバパ数学科学歴史読解';
@@ -174,7 +175,7 @@ export const HolographicMetrics: React.FC<HolographicMetricsProps> = ({
       exit={{ opacity: 0 }}
       className="relative min-h-screen bg-black overflow-hidden"
     >
-      {/* Lluvia Matrix de fondo */}
+      {/* Matrix digital rain background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {digitalRain.map((char, i) => (
           <motion.div
@@ -185,7 +186,7 @@ export const HolographicMetrics: React.FC<HolographicMetricsProps> = ({
               top: '-10px',
             }}
             animate={{
-              y: window.innerHeight + 100,
+              y: typeof window !== 'undefined' ? window.innerHeight + 100 : 800,
               opacity: [0, 1, 1, 0],
             }}
             transition={{
@@ -200,7 +201,7 @@ export const HolographicMetrics: React.FC<HolographicMetricsProps> = ({
         ))}
       </div>
 
-      {/* Header Matrix */}
+      {/* Matrix Header */}
       <motion.div
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -239,7 +240,7 @@ export const HolographicMetrics: React.FC<HolographicMetricsProps> = ({
         </Card>
       </motion.div>
 
-      {/* Controles de escaneo */}
+      {/* Scan mode controls */}
       <div className="relative z-10 px-6 mb-6">
         <div className="flex justify-center space-x-4">
           {[
@@ -267,7 +268,7 @@ export const HolographicMetrics: React.FC<HolographicMetricsProps> = ({
       <div className="relative z-10 px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          {/* Visualización 3D */}
+          {/* 3D Visualization */}
           <Card className="bg-black/90 backdrop-blur-sm border-green-400/50 min-h-[500px]">
             <CardHeader>
               <CardTitle className="text-green-400 font-mono flex items-center">
@@ -294,7 +295,7 @@ export const HolographicMetrics: React.FC<HolographicMetricsProps> = ({
             </CardContent>
           </Card>
 
-          {/* Matriz de datos */}
+          {/* Data matrix */}
           <Card className="bg-black/90 backdrop-blur-sm border-green-400/50">
             <CardHeader>
               <CardTitle className="text-green-400 font-mono flex items-center">
@@ -347,7 +348,7 @@ export const HolographicMetrics: React.FC<HolographicMetricsProps> = ({
         </div>
       </div>
 
-      {/* Controles inferiores */}
+      {/* Bottom controls */}
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}

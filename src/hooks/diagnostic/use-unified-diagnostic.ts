@@ -11,7 +11,7 @@ export const useUnifiedDiagnostic = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [orchestrator, setOrchestrator] = useState<DiagnosticOrchestrator | null>(null);
 
-  // Inicializar orquestador cuando el usuario esté disponible
+  // Initialize orchestrator when user is available
   useEffect(() => {
     if (user?.id) {
       const newOrchestrator = new DiagnosticOrchestrator(user.id);
@@ -19,7 +19,7 @@ export const useUnifiedDiagnostic = () => {
     }
   }, [user?.id]);
 
-  // Cargar datos cuando el orquestrador esté listo
+  // Load data when orchestrator is ready
   const loadData = useCallback(async () => {
     if (!orchestrator) return;
 
@@ -43,7 +43,7 @@ export const useUnifiedDiagnostic = () => {
     loadData();
   }, [loadData]);
 
-  // Acciones principales
+  // Main actions
   const performInitialAssessment = useCallback(async () => {
     if (!orchestrator) return;
     await orchestrator.performInitialAssessment();
@@ -60,21 +60,24 @@ export const useUnifiedDiagnostic = () => {
   }, [orchestrator]);
 
   const refreshData = useCallback(() => {
+    if (orchestrator) {
+      orchestrator.clearCache();
+    }
     loadData();
-  }, [loadData]);
+  }, [loadData, orchestrator]);
 
   return {
     // Data
     data,
     isLoading,
     
-    // Acciones
+    // Actions
     performInitialAssessment,
     scheduleProgressAssessment,
     generatePersonalizedExercises,
     refreshData,
 
-    // Computed properties para facilitar el acceso
+    // Computed properties for easy access
     tests: data?.tests || [],
     skills: data?.skills || [],
     baselineScores: data?.baselineScores,
