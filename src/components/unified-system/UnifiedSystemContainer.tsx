@@ -1,49 +1,43 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCenter';
 import { UnifiedDashboardContainerOptimized } from '@/components/unified-dashboard/UnifiedDashboardContainerOptimized';
 import { SystemModeToggle } from './SystemModeToggle';
 import { CinematicSkeletonOptimized } from '@/components/unified-dashboard/CinematicSkeletonOptimized';
-import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
+import { useUnifiedRouting } from '@/hooks/useUnifiedRouting';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface UnifiedSystemContainerProps {
-  initialTool?: string;
-}
 
 type SystemMode = 'neural' | 'unified' | 'auto';
 
-export const UnifiedSystemContainer: React.FC<UnifiedSystemContainerProps> = ({ 
-  initialTool = 'dashboard' 
-}) => {
+export const UnifiedSystemContainer: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [systemMode, setSystemMode] = useState<SystemMode>('auto');
   const [isLoading, setIsLoading] = useState(true);
   
-  const { currentTool, navigateToTool, context } = useUnifiedNavigation();
+  const { currentTool, currentRoute, navigateToTool } = useUnifiedRouting();
 
   // Intelligent system mode detection
   const detectedMode = useMemo(() => {
-    const urlMode = searchParams.get('mode') as SystemMode;
+    const params = new URLSearchParams(location.search);
+    const urlMode = params.get('mode') as SystemMode;
     const savedMode = localStorage.getItem('preferred-system-mode') as SystemMode;
     
     // URL takes precedence, then saved preference, then auto-detection
     if (urlMode && ['neural', 'unified'].includes(urlMode)) return urlMode;
     if (savedMode && ['neural', 'unified'].includes(savedMode)) return savedMode;
     
-    // Auto-detection based on tool and user context
-    const neuralTools = ['universe', 'simulation', 'battle', 'training', 'analysis'];
-    const unifiedTools = ['dashboard', 'lectoguia', 'calendar', 'financial', 'exercises'];
+    // Auto-detection based on current route
+    const neuralRoutes = ['/neural', '/universe', '/simulation', '/battle'];
+    const unifiedRoutes = ['/dashboard', '/lectoguia', '/calendar', '/financial'];
     
-    if (neuralTools.some(tool => location.pathname.includes(tool))) return 'neural';
-    if (unifiedTools.some(tool => location.pathname.includes(tool))) return 'unified';
+    if (neuralRoutes.some(route => location.pathname.includes(route))) return 'neural';
+    if (unifiedRoutes.some(route => location.pathname.includes(route))) return 'unified';
     
-    return 'neural'; // Default to neural for new users
-  }, [searchParams, location.pathname]);
+    return 'neural'; // Default to neural
+  }, [location.pathname, location.search]);
 
   // Sync system mode
   useEffect(() => {
@@ -65,44 +59,36 @@ export const UnifiedSystemContainer: React.FC<UnifiedSystemContainerProps> = ({
   const handleNeuralNavigation = (tool: string, toolContext?: any) => {
     console.log('🔗 Neural navigation:', tool, toolContext);
     
-    // Map neural tools to unified tools
-    const toolMapping: Record<string, string> = {
-      'universe': 'dashboard',
-      'lectoguia': 'lectoguia',
-      'diagnostic': 'diagnostic',
-      'plan': 'plan',
-      'calendar': 'calendar',
-      'financial': 'financial',
-      'exercises': 'exercises',
-      'evaluation': 'evaluation'
+    // Map neural tools to unified tools and switch modes accordingly
+    const toolMapping: Record<string, { tool: string; mode: 'neural' | 'unified' }> = {
+      'universe': { tool: 'dashboard', mode: 'unified' },
+      'lectoguia': { tool: 'lectoguia', mode: 'unified' },
+      'diagnostic': { tool: 'diagnostic', mode: 'unified' },
+      'plan': { tool: 'plan', mode: 'unified' },
+      'calendar': { tool: 'calendar', mode: 'unified' },
+      'financial': { tool: 'financial', mode: 'unified' },
+      'exercises': { tool: 'exercises', mode: 'unified' },
+      'evaluation': { tool: 'evaluation', mode: 'unified' }
     };
 
-    const mappedTool = toolMapping[tool] || tool;
-    
-    // Switch to unified mode for certain tools
-    if (['lectoguia', 'dashboard', 'calendar', 'financial'].includes(mappedTool)) {
-      setSystemMode('unified');
-      updateURL('unified', mappedTool);
+    const mapping = toolMapping[tool];
+    if (mapping) {
+      setSystemMode(mapping.mode);
+      navigateToTool(mapping.tool, toolContext);
+    } else {
+      navigateToTool(tool, toolContext);
     }
-    
-    navigateToTool(mappedTool, toolContext);
   };
 
   // Handle mode toggle
   const handleModeToggle = (newMode: 'neural' | 'unified') => {
     setSystemMode(newMode);
-    updateURL(newMode, currentTool);
-    
-    // Save preference
     localStorage.setItem('preferred-system-mode', newMode);
-  };
-
-  // Update URL with mode and tool
-  const updateURL = (mode: SystemMode, tool: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set('mode', mode);
-    newParams.set('tool', tool);
-    setSearchParams(newParams);
+    
+    // Update URL with mode parameter
+    const params = new URLSearchParams(location.search);
+    params.set('mode', newMode);
+    window.history.replaceState({}, '', `${location.pathname}?${params.toString()}`);
   };
 
   // Loading state
@@ -146,7 +132,7 @@ export const UnifiedSystemContainer: React.FC<UnifiedSystemContainerProps> = ({
             />
           ) : (
             <UnifiedDashboardContainerOptimized 
-              initialTool={initialTool || currentTool}
+              initialTool={currentTool}
             />
           )}
         </motion.div>

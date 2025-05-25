@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUnifiedRouting } from './useUnifiedRouting';
 
 export interface NavigationContext {
   subject?: string;
@@ -14,11 +14,7 @@ export interface NavigationContext {
 
 export function useUnifiedNavigation() {
   const { user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  
-  const [currentTool, setCurrentTool] = useState(() => {
-    return searchParams.get('tool') || 'dashboard';
-  });
+  const { currentTool, context: routingContext, navigateToTool: routingNavigate, updateContext: routingUpdateContext } = useUnifiedRouting();
   
   const [navigationHistory, setNavigationHistory] = useState<string[]>(() => {
     const saved = localStorage.getItem('navigation-history');
@@ -30,24 +26,12 @@ export function useUnifiedNavigation() {
     return saved ? JSON.parse(saved) : {};
   });
 
-  // Sync with URL parameters
+  // Sync with routing context
   useEffect(() => {
-    const urlTool = searchParams.get('tool');
-    const urlSubject = searchParams.get('subject');
-    const urlMode = searchParams.get('mode');
-    
-    if (urlTool && urlTool !== currentTool) {
-      setCurrentTool(urlTool);
+    if (routingContext && Object.keys(routingContext).length > 0) {
+      setContext(prev => ({ ...prev, ...routingContext }));
     }
-    
-    if (urlSubject || urlMode) {
-      setContext(prev => ({
-        ...prev,
-        ...(urlSubject && { subject: urlSubject }),
-        ...(urlMode && { systemMode: urlMode as 'neural' | 'unified' })
-      }));
-    }
-  }, [searchParams, currentTool]);
+  }, [routingContext]);
 
   // Persist state
   useEffect(() => {
@@ -68,9 +52,6 @@ export function useUnifiedNavigation() {
       user: user?.id 
     });
     
-    // Update tool
-    setCurrentTool(tool);
-    
     // Update context
     if (newContext) {
       setContext(prev => ({ 
@@ -88,22 +69,11 @@ export function useUnifiedNavigation() {
       });
     }
     
-    // Update URL
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set('tool', tool);
-    
-    if (newContext?.subject) {
-      newParams.set('subject', newContext.subject);
-    }
-    
-    if (newContext?.systemMode) {
-      newParams.set('mode', newContext.systemMode);
-    }
-    
-    setSearchParams(newParams);
+    // Delegate to routing
+    routingNavigate(tool, newContext);
     
     console.log(`✅ Navegación completada a ${tool}`);
-  }, [currentTool, user?.id, searchParams, setSearchParams]);
+  }, [currentTool, user?.id, routingNavigate]);
 
   const goBack = useCallback(() => {
     if (navigationHistory.length > 1) {
@@ -119,23 +89,21 @@ export function useUnifiedNavigation() {
   }, [navigationHistory, navigateToTool]);
 
   const resetNavigation = useCallback(() => {
-    setCurrentTool('dashboard');
     setNavigationHistory(['dashboard']);
     setContext({});
-    
-    const newParams = new URLSearchParams();
-    newParams.set('tool', 'dashboard');
-    setSearchParams(newParams);
     
     localStorage.removeItem('navigation-history');
     localStorage.removeItem('navigation-context');
     
+    routingNavigate('dashboard');
+    
     console.log('🔄 Navegación reiniciada');
-  }, [setSearchParams]);
+  }, [routingNavigate]);
 
   const updateContext = useCallback((newContext: Partial<NavigationContext>) => {
     setContext(prev => ({ ...prev, ...newContext }));
-  }, []);
+    routingUpdateContext(newContext);
+  }, [routingUpdateContext]);
 
   return {
     currentTool,

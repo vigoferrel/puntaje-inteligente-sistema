@@ -5,39 +5,42 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LectoGuiaProvider } from "@/contexts/lectoguia";
 import { CinematicThemeProvider } from "@/contexts/CinematicThemeProvider";
 import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
-import { UnifiedSystemRouter } from "@/router/UnifiedSystemRouter";
+import { UnifiedSystemContainer } from "@/components/unified-system/UnifiedSystemContainer";
 import './index.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
     },
   },
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <IntersectionalProvider>
-        <LectoGuiaProvider>
-          <CinematicThemeProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <UnifiedSystemRouter />
-            </TooltipProvider>
-          </CinematicThemeProvider>
-        </LectoGuiaProvider>
-      </IntersectionalProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <IntersectionalProvider>
+          <LectoGuiaProvider>
+            <CinematicThemeProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <UnifiedSystemContainer />
+              </TooltipProvider>
+            </CinematicThemeProvider>
+          </LectoGuiaProvider>
+        </IntersectionalProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </BrowserRouter>
 );
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
