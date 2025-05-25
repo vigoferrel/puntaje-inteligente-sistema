@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -12,7 +11,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import { PAESUnifiedMetrics, PAESTestPerformance } from '@/hooks/use-paes-unified-dashboard';
+import { PAESUnifiedMetrics, PAESTestPerformance } from '@/hooks/use-paes-unified-dashboard-optimized';
 
 interface PAESGlobalMetricsProps {
   metrics: PAESUnifiedMetrics;
