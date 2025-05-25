@@ -1,145 +1,160 @@
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/app-layout";
-import { AppInitializer } from "@/components/AppInitializer";
-import { PAESUnifiedDashboard } from "@/components/paes-unified/PAESUnifiedDashboard";
-import { PAESLearningUniverse } from "@/components/paes-learning-universe/PAESLearningUniverse";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { PAESEvaluationDashboard } from "@/components/paes/PAESEvaluationDashboard";
 import { 
-  BarChart3, 
-  Map, 
-  ArrowRight, 
-  Sparkles,
-  Brain,
-  Target,
-  Rocket
+  TrendingUp, 
+  Target, 
+  Award,
+  BarChart3,
+  Calendar,
+  PlayCircle
 } from "lucide-react";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Link, useNavigate } from "react-router-dom";
 
 const PAESDashboard = () => {
-  const [viewMode, setViewMode] = useState<'traditional' | 'universe'>('universe');
+  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'analytics' | 'schedule'>('dashboard');
 
-  const ViewToggle = () => (
-    <motion.div 
-      className="mb-6"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <Card className="bg-gradient-to-r from-slate-800 to-slate-900 border-slate-700">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Sparkles className="w-5 h-5 text-blue-400" />
-                <h2 className="text-xl font-bold text-white">Dashboard PAES</h2>
-                <Badge className="bg-blue-600 text-white border-none">
-                  277 Nodos Activos
-                </Badge>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button
-                variant={viewMode === 'traditional' ? 'default' : 'outline'}
-                className={`${
-                  viewMode === 'traditional' 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'border-slate-600 text-slate-300 hover:bg-slate-700'
-                }`}
-                onClick={() => setViewMode('traditional')}
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Vista Analítica
-              </Button>
-              <Button
-                variant={viewMode === 'universe' ? 'default' : 'outline'}
-                className={`${
-                  viewMode === 'universe' 
-                    ? 'bg-purple-600 hover:bg-purple-700' 
-                    : 'border-slate-600 text-slate-300 hover:bg-slate-700'
-                }`}
-                onClick={() => setViewMode('universe')}
-              >
-                <Map className="w-4 h-4 mr-2" />
-                Mapa Curricular 3D
-                <Badge className="ml-2 bg-yellow-500 text-black text-xs">
-                  NUEVO
-                </Badge>
-              </Button>
-              
-              {/* Botón de acceso directo al PAES Universe */}
-              <Button
-                asChild
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-              >
-                <Link to="/paes-universe" className="flex items-center space-x-2">
-                  <Rocket className="w-4 h-4" />
-                  <span>PAES Universe</span>
-                  <Badge className="bg-orange-500 text-black text-xs font-bold">
-                    BETA
-                  </Badge>
-                </Link>
-              </Button>
-            </div>
-          </div>
-          
-          {viewMode === 'universe' && (
-            <motion.div 
-              className="mt-4 pt-4 border-t border-slate-600"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-            >
-              <div className="flex items-center justify-between text-slate-300">
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <Brain className="w-4 h-4 text-green-400" />
-                    <span className="text-sm">Navegación 3D Interactiva</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Target className="w-4 h-4 text-blue-400" />
-                    <span className="text-sm">Rutas de Aprendizaje Inteligentes</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Sparkles className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm">Validación con Ejercicios Reales</span>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400" />
-              </div>
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+  const handleStartDiagnostic = () => {
+    navigate('/diagnostico');
+  };
 
-  if (viewMode === 'universe') {
-    return (
-      <AppInitializer>
-        <AppLayout>
-          <div className="container mx-auto py-6 px-4">
-            <ViewToggle />
-          </div>
-          <div className="h-[calc(100vh-200px)]">
-            <PAESLearningUniverse />
-          </div>
-        </AppLayout>
-      </AppInitializer>
-    );
-  }
+  const handleViewResults = () => {
+    navigate('/analisis');
+  };
+
+  const handleScheduleTest = () => {
+    navigate('/calendario');
+  };
 
   return (
-    <AppInitializer>
-      <AppLayout>
-        <div className="container mx-auto py-6 px-4">
-          <ViewToggle />
-          <PAESUnifiedDashboard />
-        </div>
-      </AppLayout>
-    </AppInitializer>
+    <AppLayout>
+      <div className="container py-8">
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild><Link to="/">Inicio</Link></BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink>Evaluación PAES</BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-green-500/20 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-green-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Evaluación PAES</h1>
+              <p className="text-muted-foreground">
+                Dashboard completo de tu preparación y resultados PAES
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+              { id: 'analytics', label: 'Análisis', icon: TrendingUp },
+              { id: 'schedule', label: 'Cronograma', icon: Calendar }
+            ].map((tab) => (
+              <Button
+                key={tab.id}
+                variant={activeSection === tab.id ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveSection(tab.id as any)}
+                className="gap-2"
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </Button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Main Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <PAESEvaluationDashboard 
+            onStartDiagnostic={handleStartDiagnostic}
+            onViewResults={handleViewResults}
+            onScheduleTest={handleScheduleTest}
+          />
+        </motion.div>
+
+        {/* Additional Analytics */}
+        {activeSection === 'analytics' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-8"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Análisis Avanzado</CardTitle>
+                <CardDescription>
+                  Métricas detalladas de tu preparación PAES
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium mb-3">Tendencias de Puntaje</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Comprensión Lectora</span>
+                        <Badge variant="default" className="bg-green-600">+15%</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Matemática M1</span>
+                        <Badge variant="default" className="bg-blue-600">+8%</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Ciencias</span>
+                        <Badge variant="secondary">+3%</Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3">Predicciones IA</h4>
+                    <div className="space-y-2">
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <div className="text-sm text-blue-700">Puntaje Proyectado</div>
+                        <div className="font-bold text-blue-900">720 puntos</div>
+                      </div>
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <div className="text-sm text-green-700">Probabilidad de Meta</div>
+                        <div className="font-bold text-green-900">87%</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </div>
+    </AppLayout>
   );
 };
 
