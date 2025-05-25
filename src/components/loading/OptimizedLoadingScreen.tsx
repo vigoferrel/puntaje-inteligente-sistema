@@ -10,17 +10,17 @@ interface OptimizedLoadingScreenProps {
 
 export const OptimizedLoadingScreen: React.FC<OptimizedLoadingScreenProps> = ({ 
   onComplete,
-  maxLoadTime = 2000 
+  maxLoadTime = 500 // ✅ REDUCIDO A 500MS MÁXIMO
 }) => {
   const [progress, setProgress] = useState(0);
-  const [step, setStep] = useState('Inicializando...');
+  const [step, setStep] = useState('Cargando...');
 
   useEffect(() => {
+    // ✅ CARGA INMEDIATA Y SIMPLE
     const steps = [
-      { text: 'Inicializando sistemas...', duration: 200 },
-      { text: 'Cargando contexto neural...', duration: 300 },
-      { text: 'Activando interfaz...', duration: 500 },
-      { text: 'Sistema listo', duration: 200 }
+      { text: 'Inicializando...', duration: 100 },
+      { text: 'Preparando dashboard...', duration: 200 },
+      { text: 'Listo', duration: 100 }
     ];
 
     let currentStep = 0;
@@ -33,15 +33,15 @@ export const OptimizedLoadingScreen: React.FC<OptimizedLoadingScreenProps> = ({
         const stepProgress = 100 / steps.length;
         const targetProgress = (currentStep + 1) * stepProgress;
         
-        // Animar progreso
+        // ✅ PROGRESO RÁPIDO
         const progressInterval = setInterval(() => {
-          currentProgress += 2;
+          currentProgress += 10; // Más rápido
           setProgress(Math.min(currentProgress, targetProgress));
           
           if (currentProgress >= targetProgress) {
             clearInterval(progressInterval);
           }
-        }, 20);
+        }, 10);
 
         setTimeout(() => {
           clearInterval(progressInterval);
@@ -49,7 +49,7 @@ export const OptimizedLoadingScreen: React.FC<OptimizedLoadingScreenProps> = ({
           
           if (currentStep >= steps.length) {
             setProgress(100);
-            setTimeout(onComplete, 300);
+            setTimeout(onComplete, 100); // ✅ COMPLETAR RÁPIDO
           } else {
             advanceStep();
           }
@@ -57,9 +57,9 @@ export const OptimizedLoadingScreen: React.FC<OptimizedLoadingScreenProps> = ({
       }
     };
 
-    // Timeout de seguridad
+    // ✅ TIMEOUT DE SEGURIDAD MUY CORTO
     const safetyTimeout = setTimeout(() => {
-      console.log('⚠️ Timeout de seguridad activado, forzando carga');
+      console.log('⚡ Carga inmediata activada');
       setProgress(100);
       onComplete();
     }, maxLoadTime);
@@ -72,35 +72,33 @@ export const OptimizedLoadingScreen: React.FC<OptimizedLoadingScreenProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center">
       <motion.div
-        className="text-center text-white space-y-8"
+        className="text-center text-white space-y-6"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.3 }}
       >
-        {/* Neural Loading Animation */}
+        {/* ✅ ANIMACIÓN SIMPLE Y RÁPIDA */}
         <div className="relative">
           <motion.div
-            className="w-24 h-24 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full mx-auto"
+            className="w-20 h-20 border-3 border-cyan-400/30 border-t-cyan-400 rounded-full mx-auto"
             animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
           />
           <motion.div
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
             animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
+            transition={{ duration: 0.8, repeat: Infinity }}
           >
-            <Brain className="w-8 h-8 text-cyan-400" />
+            <Brain className="w-6 h-6 text-cyan-400" />
           </motion.div>
         </div>
 
-        {/* Loading Text */}
-        <div className="space-y-4">
+        {/* ✅ TEXTO SIMPLE */}
+        <div className="space-y-3">
           <motion.h1
-            className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent"
-            animate={{ opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent"
           >
-            Centro de Comando Neural
+            PAES Command
           </motion.h1>
           
           <div className="flex items-center justify-center space-x-2 text-cyan-300">
@@ -109,47 +107,29 @@ export const OptimizedLoadingScreen: React.FC<OptimizedLoadingScreenProps> = ({
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-64 mx-auto">
-          <div className="w-full bg-white/10 rounded-full h-2">
+        {/* ✅ BARRA DE PROGRESO SIMPLE */}
+        <div className="w-48 mx-auto">
+          <div className="w-full bg-white/10 rounded-full h-1.5">
             <motion.div
-              className="bg-gradient-to-r from-cyan-400 to-purple-400 h-2 rounded-full"
+              className="bg-gradient-to-r from-cyan-400 to-purple-400 h-1.5 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2 }}
             />
           </div>
           <div className="text-xs text-cyan-300 mt-2">{Math.round(progress)}%</div>
         </div>
 
-        {/* Status Indicators */}
-        <div className="space-y-2 text-xs text-cyan-200">
+        {/* ✅ INDICADORES MÍNIMOS */}
+        <div className="space-y-1 text-xs text-cyan-200">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
             className="flex items-center justify-center space-x-2"
           >
             <CheckCircle className="w-3 h-3 text-green-400" />
-            <span>Sistema cardiovascular activado</span>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex items-center justify-center space-x-2"
-          >
-            <CheckCircle className="w-3 h-3 text-green-400" />
-            <span>Anti-tracking configurado</span>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex items-center justify-center space-x-2"
-          >
-            <CheckCircle className="w-3 h-3 text-green-400" />
-            <span>Conexión establecida</span>
+            <span>Sistema activo</span>
           </motion.div>
         </div>
       </motion.div>

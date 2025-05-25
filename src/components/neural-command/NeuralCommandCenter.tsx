@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Stars, Text, Html } from '@react-three/drei';
@@ -49,18 +50,31 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
   const [cosmicEnergy, setCosmicEnergy] = useState(8947);
   const [battlePoints, setBattlePoints] = useState(2456);
 
-  // Controlar la pantalla de carga
+  // ✅ CONTROLAR LA PANTALLA DE CARGA - INMEDIATO
   const handleLoadingComplete = useCallback(() => {
     setShowLoading(false);
-    console.log('✅ Carga completada, mostrando dashboard');
+    console.log('⚡ Dashboard cargado inmediatamente');
   }, []);
 
-  // Si está cargando, mostrar pantalla optimizada
-  if (showLoading || !intersectional.isIntersectionalReady) {
-    return <OptimizedLoadingScreen onComplete={handleLoadingComplete} />;
+  // ✅ CARGA INMEDIATA - NO ESPERAR CONTEXTO
+  useEffect(() => {
+    // Forzar carga inmediata si el sistema tarda
+    const forceLoad = setTimeout(() => {
+      if (showLoading) {
+        console.log('⚡ Forzando carga inmediata del dashboard');
+        setShowLoading(false);
+      }
+    }, 300); // ✅ 300ms máximo
+
+    return () => clearTimeout(forceLoad);
+  }, [showLoading]);
+
+  // ✅ MOSTRAR LOADING SOLO POR MÁXIMO 500MS
+  if (showLoading) {
+    return <OptimizedLoadingScreen onComplete={handleLoadingComplete} maxLoadTime={500} />;
   }
 
-  // Configuración de galaxias unificada
+  // ✅ CONFIGURACIÓN DE GALAXIAS
   const galaxies = useMemo<Galaxy[]>(() => [
     {
       id: 'competencia-lectora',
@@ -114,7 +128,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     }
   ], []);
 
-  // Métricas neurales en tiempo real
+  // ✅ MÉTRICAS NEURALES SIEMPRE DISPONIBLES
   const neuralMetrics = useMemo<UniverseMetrics>(() => {
     const totalNodes = galaxies.reduce((sum, g) => sum + g.nodes, 0);
     const totalCompleted = galaxies.reduce((sum, g) => sum + g.completed, 0);
@@ -130,7 +144,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     };
   }, [galaxies]);
 
-  // Dimensiones neurales de la plataforma
+  // ✅ DIMENSIONES NEURALES
   const neuralDimensions = useMemo(() => [
     {
       id: 'universe_exploration' as NeuralDimension,
@@ -190,20 +204,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     }
   ], []);
 
-  // Activación neural al inicializar - solo si el contexto está listo
-  useEffect(() => {
-    if (user?.id && intersectional.isIntersectionalReady && intersectional.adaptToUser) {
-      intersectional.adaptToUser({
-        neural_command_center_active: true,
-        active_dimension: activeDimension,
-        selected_galaxy: selectedGalaxy,
-        neural_level: neuralLevel,
-        cosmic_energy: cosmicEnergy,
-        user_action: 'entering_neural_command_center'
-      });
-    }
-  }, [user?.id, intersectional.isIntersectionalReady, activeDimension, selectedGalaxy, neuralLevel, cosmicEnergy, intersectional.adaptToUser]);
-
+  // ✅ FUNCIONES DE NAVEGACIÓN
   const handleDimensionTransition = useCallback((dimension: NeuralDimension) => {
     setIsTransitioning(true);
     setActiveDimension(dimension);
@@ -228,17 +229,17 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     <CinematicAudioProvider>
       <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-indigo-900 overflow-hidden relative">
         
-        {/* HUD Neural Superior */}
+        {/* ✅ HUD NEURAL SUPERIOR OPTIMIZADO */}
         <motion.div 
           className="absolute top-0 left-0 right-0 z-50 pointer-events-auto"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.5 }}
+          transition={{ duration: 0.5 }}
         >
           <div className="bg-black/40 backdrop-blur-xl border-b border-cyan-500/30 p-4">
             <div className="flex items-center justify-between text-white">
               
-              {/* Identidad Neural */}
+              {/* ✅ IDENTIDAD NEURAL */}
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center">
                   <Brain className="w-6 h-6" />
@@ -249,7 +250,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
                 </div>
               </div>
 
-              {/* Métricas Centrales */}
+              {/* ✅ MÉTRICAS CENTRALES */}
               <div className="flex items-center space-x-8">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-cyan-400">{neuralMetrics.projectedScore}</div>
@@ -265,7 +266,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
                 </div>
               </div>
 
-              {/* Estado del Sistema */}
+              {/* ✅ ESTADO DEL SISTEMA */}
               <div className="flex items-center space-x-2">
                 <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600">
                   <Rocket className="w-3 h-3 mr-1" />
@@ -277,25 +278,25 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
                 </Badge>
                 <Badge className="bg-gradient-to-r from-emerald-600 to-teal-600">
                   <PieChart className="w-3 h-3 mr-1" />
-                  Sistema Optimizado
+                  Sistema Listo
                 </Badge>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Panel de Control Dimensional Lateral */}
+        {/* ✅ PANEL DE CONTROL DIMENSIONAL */}
         <motion.div 
           className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 pointer-events-auto"
           initial={{ opacity: 0, x: -100 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 0.5 }}
+          transition={{ duration: 0.5 }}
         >
           <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30 w-80 ml-4">
             <CardContent className="p-6 space-y-4">
               <div className="text-center">
                 <h3 className="text-xl font-bold text-white mb-2">Control Dimensional</h3>
-                <div className="text-sm text-cyan-400">Sistema optimizado y funcional</div>
+                <div className="text-sm text-cyan-400">Sistema operativo</div>
               </div>
 
               <div className="space-y-3">
@@ -328,7 +329,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
           </Card>
         </motion.div>
 
-        {/* Contenido Principal - Renderizador de Dimensiones */}
+        {/* ✅ CONTENIDO PRINCIPAL */}
         <div className="flex-1 pt-24">
           <NeuralDimensionRenderer
             activeDimension={activeDimension}
@@ -342,22 +343,22 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
           />
         </div>
 
-        {/* Footer Neural */}
+        {/* ✅ FOOTER NEURAL */}
         <motion.div 
           className="absolute bottom-0 left-0 right-0 z-40 pointer-events-auto"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 1 }}
+          transition={{ duration: 0.5 }}
         >
           <div className="bg-black/30 backdrop-blur-xl border-t border-cyan-500/20 p-3">
             <div className="flex items-center justify-between text-white text-sm">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>Sistema Neural Optimizado</span>
+                  <span>Sistema Neural Activo</span>
                 </div>
-                <div>Contexto: ✅ Activo</div>
-                <div>Carga: ✅ Rápida</div>
+                <div>Estado: ✅ Operativo</div>
+                <div>Carga: ⚡ Inmediata</div>
               </div>
               
               <div className="flex items-center space-x-2">
