@@ -1,11 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Send, Mic, Upload, Sparkles } from 'lucide-react';
+import { MessageCircle, Zap, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 
 interface ChatInterfaceProps {
   context: any;
@@ -22,177 +20,79 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onAction,
   onNavigate
 }) => {
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: '1',
-      type: 'assistant',
-      content: '¡Hola! Soy tu asistente inteligente de LectoGuía. Te ayudo con ejercicios, diagnósticos y tu plan de estudio. ¿En qué puedo ayudarte?',
-      timestamp: new Date()
-    }
-  ]);
-
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-
-    // Agregar mensaje del usuario
-    const userMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: message,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-
-    // Simular respuesta del asistente (aquí se integraría con el backend)
-    setTimeout(() => {
-      const assistantMessage = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: generateContextualResponse(message, context, diagnosticIntegration, planIntegration),
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-    }, 1000);
-
-    setMessage('');
-  };
-
-  const generateContextualResponse = (userMessage: string, context: any, diagnostics: any, plan: any) => {
-    const msg = userMessage.toLowerCase();
-    
-    if (msg.includes('ejercicio') || msg.includes('practica')) {
-      return `Perfecto! Puedo generar ejercicios personalizados para ti. Tienes ${diagnostics.availableTests} diagnósticos disponibles. ¿Te gustaría empezar con ejercicios de ${context.selectedPrueba}?`;
-    }
-    
-    if (msg.includes('plan') || msg.includes('estudio')) {
-      return plan.currentPlan 
-        ? `Excelente! Tienes el plan "${plan.currentPlan.title}" activo. ¿Quieres que revisemos tu progreso o creemos actividades específicas?`
-        : 'Te ayudo a crear un plan de estudio personalizado. ¿Cuáles son tus objetivos para la PAES?';
-    }
-    
-    if (msg.includes('diagnostico') || msg.includes('evaluacion')) {
-      return `Tengo ${diagnostics.availableTests} diagnósticos disponibles para ti, basados en exámenes oficiales PAES. ¿Te gustaría hacer uno específico?`;
-    }
-    
-    return 'Estoy aquí para ayudarte con todo lo relacionado a tu preparación PAES. Puedo generar ejercicios, revisar tu plan de estudio, hacer diagnósticos y mucho más.';
+  const handleQuickAction = (actionType: string, payload?: any) => {
+    onAction({ type: actionType, payload });
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-      {/* Chat principal */}
-      <div className="lg:col-span-3">
-        <Card className="h-[calc(100vh-250px)] flex flex-col bg-white/5 backdrop-blur border-white/10">
-          {/* Mensajes */}
-          <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] p-3 rounded-2xl ${
-                    msg.type === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-white/10 text-white'
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </motion.div>
-            ))}
-          </CardContent>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      {/* Header del Chat */}
+      <div className="text-center space-y-4">
+        <div className="mx-auto w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+          <MessageCircle className="w-8 h-8 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-white">Chat Inteligente PAES</h2>
+          <p className="text-white/70">Tu asistente personal de estudio</p>
+        </div>
+      </div>
 
-          {/* Input de mensaje */}
-          <div className="p-4 border-t border-white/10">
-            <div className="flex gap-2">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Escribe tu mensaje..."
-                className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              />
-              <Button size="sm" onClick={handleSendMessage}>
-                <Send className="w-4 h-4" />
-              </Button>
-              <Button variant="outline" size="sm" className="border-white/20 text-white">
-                <Mic className="w-4 h-4" />
-              </Button>
-              <Button variant="outline" size="sm" className="border-white/20 text-white">
-                <Upload className="w-4 h-4" />
-              </Button>
+      {/* Acciones Rápidas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-white/10 border-white/20 hover:bg-white/20 transition-colors cursor-pointer">
+          <CardContent className="p-6 text-center">
+            <Zap className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
+            <h3 className="font-semibold text-white mb-2">Iniciar Diagnóstico</h3>
+            <p className="text-white/70 text-sm mb-4">
+              Evalúa tu nivel actual en las materias PAES
+            </p>
+            <Button 
+              onClick={() => handleQuickAction('START_DIAGNOSTIC')}
+              className="w-full"
+              disabled={!diagnosticIntegration.isReady}
+            >
+              {diagnosticIntegration.isReady ? 'Comenzar' : 'Preparando...'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/10 border-white/20 hover:bg-white/20 transition-colors cursor-pointer">
+          <CardContent className="p-6 text-center">
+            <BookOpen className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+            <h3 className="font-semibold text-white mb-2">Crear Plan</h3>
+            <p className="text-white/70 text-sm mb-4">
+              Diseña tu plan de estudio personalizado
+            </p>
+            <Button 
+              onClick={() => handleQuickAction('CREATE_PLAN', { title: 'Plan PAES 2024' })}
+              variant="outline"
+              className="w-full border-white/20 text-white hover:bg-white/10"
+            >
+              Crear Plan
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Estado del Sistema */}
+      <Card className="bg-white/5 border-white/10">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-primary">{diagnosticIntegration.availableTests}</div>
+              <div className="text-xs text-white/70">Tests Disponibles</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-green-400">{planIntegration.allPlans?.length || 0}</div>
+              <div className="text-xs text-white/70">Planes Activos</div>
             </div>
           </div>
-        </Card>
-      </div>
-
-      {/* Panel de contexto */}
-      <div className="space-y-4">
-        <Card className="bg-white/5 backdrop-blur border-white/10">
-          <CardContent className="p-4">
-            <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Acciones Rápidas
-            </h3>
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start border-white/20 text-white"
-                onClick={() => onNavigate('exercise')}
-              >
-                Generar Ejercicio
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start border-white/20 text-white"
-                onClick={() => onNavigate('diagnostic')}
-              >
-                Hacer Diagnóstico
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start border-white/20 text-white"
-                onClick={() => onNavigate('plan')}
-              >
-                Ver Mi Plan
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/5 backdrop-blur border-white/10">
-          <CardContent className="p-4">
-            <h3 className="text-white font-medium mb-3">Estado del Sistema</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-white/70">Diagnósticos</span>
-                <Badge variant="outline" className="text-white border-white/20">
-                  {diagnosticIntegration.availableTests}
-                </Badge>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/70">Plan Activo</span>
-                <Badge variant="outline" className="text-white border-white/20">
-                  {planIntegration.currentPlan ? 'Sí' : 'No'}
-                </Badge>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/70">Materia</span>
-                <Badge variant="outline" className="text-white border-white/20">
-                  {context.activeSubject}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };

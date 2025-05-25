@@ -1,8 +1,9 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEducationalFlow } from '@/hooks/lectoguia/useEducationalFlow';
+import { LectoGuiaEmergencyMode } from './LectoGuiaEmergencyMode';
 import { CinematicHeader } from './components/CinematicHeader';
 import { UnifiedContent } from './components/UnifiedContent';
 import { ValidationOverlay } from './components/ValidationOverlay';
@@ -11,23 +12,39 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 
 /**
- * LectoGuía Unificado Refactorizado Quirúrgicamente
- * Arquitectura simplificada con flujo educativo optimizado
+ * LectoGuía Unificado con Modo de Emergencia
+ * Versión robusta que maneja errores graciosamente
  */
 export const LectoGuiaUnified: React.FC = () => {
   const { user } = useAuth();
   const { flowState, actions, diagnostic } = useEducationalFlow();
+  const [showEmergencyMode, setShowEmergencyMode] = useState(false);
+  const [initializationTimeout, setInitializationTimeout] = useState(false);
 
-  // Inicialización automática del sistema educativo
+  // Timeout de inicialización para evitar carga infinita
   useEffect(() => {
-    if (user?.id && !flowState.isCoherent) {
-      console.log('🚀 Inicializando flujo educativo...');
-      actions.syncSystem();
-    }
-  }, [user?.id, flowState.isCoherent, actions]);
+    const timer = setTimeout(() => {
+      if (!flowState.user.isAuthenticated) {
+        setInitializationTimeout(true);
+      }
+    }, 10000); // 10 segundos
 
-  // Estado de carga
-  if (!flowState.user.isAuthenticated) {
+    return () => clearTimeout(timer);
+  }, [flowState.user.isAuthenticated]);
+
+  // Mostrar modo de emergencia si hay problemas
+  useEffect(() => {
+    if (initializationTimeout || (!flowState.isCoherent && flowState.user.isAuthenticated)) {
+      const emergencyTimer = setTimeout(() => {
+        setShowEmergencyMode(true);
+      }, 5000); // 5 segundos adicionales
+
+      return () => clearTimeout(emergencyTimer);
+    }
+  }, [initializationTimeout, flowState.isCoherent, flowState.user.isAuthenticated]);
+
+  // Estado de carga inicial
+  if (!flowState.user.isAuthenticated && !initializationTimeout) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
         <motion.div
@@ -43,32 +60,24 @@ export const LectoGuiaUnified: React.FC = () => {
     );
   }
 
-  // Estado de error del sistema
-  if (!flowState.isCoherent) {
+  // Modo de emergencia
+  if (showEmergencyMode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto" />
-          <h2 className="text-xl font-semibold text-white">Sistema Incoherente</h2>
-          <p className="text-gray-300">No se pudo sincronizar el flujo educativo</p>
-          <button 
-            onClick={actions.syncSystem}
-            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
-          >
-            Reintentar Sincronización
-          </button>
-        </motion.div>
-      </div>
+      <LectoGuiaEmergencyMode 
+        error="No se pudo sincronizar completamente el sistema educativo"
+        onRetry={() => {
+          setShowEmergencyMode(false);
+          setInitializationTimeout(false);
+          actions.syncSystem();
+        }}
+      />
     );
   }
 
+  // Renderizado normal
   return (
     <div className="lectoguia-unified min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Header simplificado */}
+      {/* Header */}
       <CinematicHeader
         user={user}
         systemState={{ 
@@ -83,18 +92,18 @@ export const LectoGuiaUnified: React.FC = () => {
         onNavigateToModule={actions.navigateToContext}
       />
 
-      {/* Estado del sistema educativo */}
+      {/* Estado del sistema */}
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center gap-2 text-sm">
           {flowState.isCoherent ? (
             <Badge variant="default" className="bg-green-600">
               <CheckCircle className="w-3 h-3 mr-1" />
-              Sistema Coherente
+              Sistema Operativo
             </Badge>
           ) : (
-            <Badge variant="destructive">
+            <Badge variant="secondary">
               <AlertTriangle className="w-3 h-3 mr-1" />
-              Sincronización Pendiente
+              Modo Simplificado
             </Badge>
           )}
           
@@ -105,12 +114,6 @@ export const LectoGuiaUnified: React.FC = () => {
           <Badge variant="outline" className="text-white border-white/20">
             Planes: {flowState.learning.totalPlans}
           </Badge>
-          
-          {flowState.diagnostic.isActive && (
-            <Badge variant="outline" className="text-white border-white/20 bg-blue-600/20">
-              Diagnóstico Activo: {Math.round(flowState.diagnostic.progress)}%
-            </Badge>
-          )}
         </div>
       </div>
 
@@ -138,7 +141,8 @@ export const LectoGuiaUnified: React.FC = () => {
                 startDiagnostic: () => actions.navigateToContext('diagnostic')
               }}
               planIntegration={{
-                allPlans: [],
+                allPlans: flowState.learning.totalPlans > 0 ? [flowState.learning.currentPlan].filter(Boolean) : [],
+                currentPlan: flowState.learning.currentPlan,
                 navigateToPlan: () => actions.navigateToContext('plan')
               }}
               onAction={(action) => {
@@ -150,7 +154,7 @@ export const LectoGuiaUnified: React.FC = () => {
                     actions.createLearningPlan(action.payload?.title, action.payload?.description);
                     break;
                   default:
-                    console.warn('Acción no reconocida:', action.type);
+                    console.log('Acción:', action.type);
                 }
               }}
               onNavigate={actions.navigateToContext}
@@ -160,7 +164,7 @@ export const LectoGuiaUnified: React.FC = () => {
       </main>
 
       {/* Overlay solo para errores críticos */}
-      {!flowState.isCoherent && (
+      {!flowState.isCoherent && !showEmergencyMode && (
         <ValidationOverlay
           validationStatus={{ 
             isValid: false, 
@@ -170,7 +174,7 @@ export const LectoGuiaUnified: React.FC = () => {
         />
       )}
 
-      {/* Capa de integración optimizada */}
+      {/* Capa de integración simplificada */}
       <SystemIntegrationLayer
         diagnosticIntegration={{
           isReady: flowState.diagnostic.canStart,
