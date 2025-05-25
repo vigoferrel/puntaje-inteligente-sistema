@@ -288,7 +288,7 @@ export default function Plan() {
                       <Badge className={
                         insight.level === 'excellent' ? "bg-green-600" :
                         insight.level === 'good' ? "bg-blue-600" : "bg-orange-600"
-                      } size="sm">
+                      }>
                         {insight.level === 'excellent' ? 'Óptimo' :
                          insight.level === 'good' ? 'Bien' : 'Ajustar'}
                       </Badge>
