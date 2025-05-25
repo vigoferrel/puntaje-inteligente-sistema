@@ -3,6 +3,7 @@ import React, { createContext, useContext, ReactNode, useState, useCallback } fr
 import { AuthProvider } from './AuthContext';
 import { LearningPlanProvider } from './learning-plan';
 import { PAESProvider } from './PAESContext';
+import { ThemeProvider } from './ThemeContext';
 
 interface UnifiedAppContextType {
   isInitializing: boolean;
@@ -72,13 +73,15 @@ export const UnifiedAppProvider: React.FC<{ children: ReactNode }> = ({ children
 
   return (
     <UnifiedAppContext.Provider value={contextValue}>
-      <AuthProvider>
-        <LearningPlanProvider>
-          <PAESProvider>
-            {children}
-          </PAESProvider>
-        </LearningPlanProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <LearningPlanProvider>
+            <PAESProvider>
+              {children}
+            </PAESProvider>
+          </LearningPlanProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </UnifiedAppContext.Provider>
   );
 };
