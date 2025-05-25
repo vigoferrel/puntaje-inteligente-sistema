@@ -19,7 +19,7 @@ interface OptimizedExercise {
   options: string[];
   correctAnswer: string;
   explanation: string;
-  source: 'oficial' | 'ai_contextual' | 'hibrido' | 'fallback';
+  source: 'oficial' | 'ai_contextual' | 'hibrido' | 'cache';
   metadata: {
     difficulty: string;
     skill: string;
@@ -121,7 +121,7 @@ export const useOptimizedLectoGuia = () => {
         type: 'ai',
         content: 'Lo siento, tuve un problema al procesar tu mensaje. Estoy optimizando mi respuesta...',
         timestamp: new Date(),
-        source: 'fallback'
+        source: 'cache'
       };
       messageIdRef.current++;
       setMessages(prev => [...prev, errorMessage]);
@@ -141,8 +141,8 @@ export const useOptimizedLectoGuia = () => {
       
       const exercise = await contentOrchestrator.generateOptimizedExercise(
         activeSubject,
-        'INTERPRET_RELATE', // Skill por defecto
-        'INTERMEDIO', // Dificultad por defecto
+        'INTERPRET_RELATE',
+        'INTERMEDIO',
         user?.id
       );
 
@@ -174,7 +174,7 @@ export const useOptimizedLectoGuia = () => {
         'oficial': 'pregunta oficial de PAES',
         'ai_contextual': 'ejercicio personalizado con IA',
         'hibrido': 'pregunta oficial + explicación personalizada',
-        'fallback': 'ejercicio de práctica'
+        'cache': 'ejercicio de práctica'
       }[optimizedExercise.source] || 'ejercicio optimizado';
 
       const confirmMessage: OptimizedMessage = {
@@ -205,7 +205,7 @@ export const useOptimizedLectoGuia = () => {
   const handleOptionSelect = useCallback((option: string | number) => {
     const selectedOptionText = typeof option === 'number' && currentExercise
       ? currentExercise.options[option]
-      : option.toString();
+      : String(option);
     
     setSelectedOption(selectedOptionText);
     setShowFeedback(true);

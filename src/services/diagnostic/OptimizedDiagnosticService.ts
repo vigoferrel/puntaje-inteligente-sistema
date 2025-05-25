@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { contentOrchestrator } from '@/services/content-optimization/ContentOrchestrator';
 import { BancoEvaluacionesService } from '@/services/banco-evaluaciones/BancoEvaluacionesService';
@@ -101,7 +100,11 @@ export class OptimizedDiagnosticService {
         prueba_paes: prueba,
         total_preguntas: count,
         duracion_minutos: count * 2,
-        distribucion_dificultad: { [difficulty.toLowerCase()]: 100 }
+        distribucion_dificultad: { 
+          basico: difficulty === 'BASICO' ? 100 : 0,
+          intermedio: difficulty === 'INTERMEDIO' ? 100 : 0,
+          avanzado: difficulty === 'AVANZADO' ? 100 : 0
+        }
       });
 
       if (evaluacion.preguntas && evaluacion.preguntas.length > 0) {
@@ -113,6 +116,7 @@ export class OptimizedDiagnosticService {
           explanation: this.generateOfficialExplanation(pregunta),
           difficulty: difficulty as any,
           skill: this.mapToSkill(pregunta.competencia_especifica),
+          prueba: prueba,
           metadata: {
             source: 'oficial_paes',
             originalId: pregunta.id,
@@ -159,16 +163,15 @@ export class OptimizedDiagnosticService {
           explanation: exercise.explanation,
           difficulty: difficulty as any,
           skill: 'INTERPRET_RELATE',
+          prueba: prueba,
           metadata: {
             source: 'ai_adaptive',
-            costUsed: 0.015,
-            personalizada: !!userId
+            costUsed: 0.015
           }
         });
 
       } catch (error) {
         console.error(`Error generando pregunta IA ${i + 1}:`, error);
-        // Agregar pregunta fallback
         questions.push(this.createFallbackQuestion(prueba, difficulty, i + 1));
       }
     }
@@ -210,6 +213,7 @@ export class OptimizedDiagnosticService {
       explanation: template.explanation,
       difficulty: difficulty as any,
       skill: 'INTERPRET_RELATE',
+      prueba: prueba,
       metadata: {
         source: 'fallback',
         template: true
@@ -217,6 +221,7 @@ export class OptimizedDiagnosticService {
     };
   }
 
+  // Métodos auxiliares
   private getQuestionTemplates(prueba: string) {
     const templates: Record<string, any[]> = {
       'COMPETENCIA_LECTORA': [
@@ -259,7 +264,6 @@ export class OptimizedDiagnosticService {
     return templates[prueba] || templates['COMPETENCIA_LECTORA'];
   }
 
-  // Métodos auxiliares
   private getPruebaDisplayName(prueba: string): string {
     const names: Record<string, string> = {
       'COMPETENCIA_LECTORA': 'Comprensión Lectora',

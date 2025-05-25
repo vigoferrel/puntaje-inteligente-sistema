@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { openRouterService } from '@/services/openrouter/core';
 import { BancoEvaluacionesService } from '@/services/banco-evaluaciones/BancoEvaluacionesService';
@@ -69,12 +68,12 @@ export class ContentOrchestrator {
     // 2. Verificar cache
     const cacheKey = `content_${prueba}_${skill}_${difficulty}`;
     const cached = intelligentCache.get(cacheKey);
-    if (cached) {
+    if (cached && typeof cached === 'object' && cached !== null) {
       this.metrics.cacheHitRate++;
       return {
         useOfficial: false,
         source: 'ai_generated',
-        confidence: cached.confidence || 0.8,
+        confidence: (cached as any).confidence || 0.8,
         costEstimate: 0
       };
     }
@@ -87,7 +86,7 @@ export class ContentOrchestrator {
       useOfficial: false,
       source: shouldUseAI ? 'ai_generated' : 'hybrid',
       confidence: 0.7,
-      costEstimate: shouldUseAI ? 0.02 : 0.005 // Costos estimados en USD
+      costEstimate: shouldUseAI ? 0.02 : 0.005
     };
   }
 
@@ -131,11 +130,15 @@ export class ContentOrchestrator {
    */
   private async getOfficialExercise(prueba: string, skill: string, difficulty: string): Promise<any> {
     const evaluacion = await BancoEvaluacionesService.generarEvaluacionOptimizada({
-      tipo_evaluacion: 'practica',
+      tipo_evaluacion: 'diagnostica',
       prueba_paes: prueba,
       total_preguntas: 1,
       duracion_minutos: 5,
-      distribucion_dificultad: { [difficulty.toLowerCase()]: 100 }
+      distribucion_dificultad: { 
+        basico: difficulty.toLowerCase() === 'basico' ? 100 : 0,
+        intermedio: difficulty.toLowerCase() === 'intermedio' ? 100 : 0,
+        avanzado: difficulty.toLowerCase() === 'avanzado' ? 100 : 0
+      }
     });
 
     if (evaluacion.preguntas && evaluacion.preguntas.length > 0) {
@@ -143,7 +146,7 @@ export class ContentOrchestrator {
       return {
         id: `oficial-${pregunta.id}`,
         question: pregunta.enunciado,
-        context: pregunta.contexto_situacional,
+        context: pregunta.contexto_situacional || '',
         options: pregunta.alternativas?.map((alt: any) => alt.contenido) || [],
         correctAnswer: pregunta.alternativas?.find((alt: any) => alt.es_correcta)?.contenido || '',
         explanation: `Pregunta oficial de PAES ${prueba}. Esta pregunta evalúa ${skill} en nivel ${difficulty}.`,
@@ -152,7 +155,7 @@ export class ContentOrchestrator {
           difficulty,
           skill,
           prueba,
-          costSaving: 0.02 // Ahorro vs IA
+          costSaving: 0.02
         }
       };
     }
@@ -177,7 +180,7 @@ export class ContentOrchestrator {
       action: 'generate_exercise',
       payload: {
         prompt,
-        model: 'anthropic/claude-3.5-sonnet', // Modelo potente para calidad
+        model: 'anthropic/claude-3.5-sonnet',
         contextualData: userContext
       }
     });
@@ -186,7 +189,7 @@ export class ContentOrchestrator {
     
     // Cache para futuro uso
     const cacheKey = `content_${prueba}_${skill}_${difficulty}`;
-    intelligentCache.set(cacheKey, exercise, 7200000, 'high'); // 2 horas
+    intelligentCache.set(cacheKey, exercise, 7200000, 'high');
 
     return {
       ...exercise,
@@ -227,7 +230,7 @@ export class ContentOrchestrator {
         metadata: {
           baseOfficial: true,
           aiEnhanced: true,
-          costUsed: 0.005 // Menor costo
+          costUsed: 0.005
         }
       };
     }
@@ -349,11 +352,17 @@ export class ContentOrchestrator {
         action: 'generate_explanation',
         payload: {
           prompt,
-          model: 'anthropic/claude-3.5-haiku' // Modelo más económico para explicaciones
+          model: 'anthropic/claude-3.5-haiku'
         }
       });
 
-      return typeof response === 'string' ? response : response.explanation || question.explanation;
+      if (typeof response === 'string') {
+        return response;
+      } else if (response && typeof response === 'object' && 'explanation' in response) {
+        return (response as any).explanation || question.explanation;
+      }
+      
+      return question.explanation || 'Explicación estándar de la pregunta.';
     } catch (error) {
       console.warn('Error generando explicación personalizada:', error);
       return question.explanation || 'Explicación estándar de la pregunta.';
@@ -365,7 +374,7 @@ export class ContentOrchestrator {
    */
   getOptimizationMetrics(): OptimizationMetrics & { costSavingsProjected: number } {
     const totalRequests = this.metrics.officialContentUsage + this.metrics.aiUsage;
-    const costSavingsProjected = this.metrics.officialContentUsage * 0.02; // $0.02 por request ahorrado
+    const costSavingsProjected = this.metrics.officialContentUsage * 0.02;
 
     return {
       ...this.metrics,

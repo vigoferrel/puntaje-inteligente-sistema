@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 
 interface SystemMetrics {
   completedNodes: number;
+  totalNodes: number;
   todayStudyTime: number;
   streakDays: number;
   totalProgress: number;
@@ -17,12 +18,21 @@ interface SystemMetrics {
   };
 }
 
+interface UserProgress {
+  overallScore: number;
+  level: number;
+  completedExercises: number;
+  streakDays: number;
+}
+
 interface UnifiedState {
   currentTool: string;
   navigationHistory: string[];
   systemMetrics: SystemMetrics;
+  userProgress: UserProgress;
   setCurrentTool: (tool: string) => void;
   updateSystemMetrics: (updates: Partial<SystemMetrics>) => void;
+  updateUserProgress: (updates: Partial<UserProgress>) => void;
 }
 
 /**
@@ -34,6 +44,7 @@ export const useUnifiedState = (): UnifiedState => {
   const [navigationHistory, setNavigationHistory] = useState<string[]>(['dashboard']);
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics>({
     completedNodes: 0,
+    totalNodes: 277, // Total nodes in system
     todayStudyTime: 0,
     streakDays: 1,
     totalProgress: 0,
@@ -48,6 +59,13 @@ export const useUnifiedState = (): UnifiedState => {
     }
   });
 
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    overallScore: 0,
+    level: 1,
+    completedExercises: 0,
+    streakDays: 1
+  });
+
   // Cargar estado desde localStorage
   useEffect(() => {
     const savedState = localStorage.getItem('unified-state');
@@ -57,6 +75,7 @@ export const useUnifiedState = (): UnifiedState => {
         setCurrentToolState(parsed.currentTool || 'dashboard');
         setNavigationHistory(parsed.navigationHistory || ['dashboard']);
         setSystemMetrics(prev => ({ ...prev, ...parsed.systemMetrics }));
+        setUserProgress(prev => ({ ...prev, ...parsed.userProgress }));
       } catch (error) {
         console.warn('Error cargando estado unificado:', error);
       }
@@ -68,10 +87,11 @@ export const useUnifiedState = (): UnifiedState => {
     const stateToSave = {
       currentTool,
       navigationHistory,
-      systemMetrics
+      systemMetrics,
+      userProgress
     };
     localStorage.setItem('unified-state', JSON.stringify(stateToSave));
-  }, [currentTool, navigationHistory, systemMetrics]);
+  }, [currentTool, navigationHistory, systemMetrics, userProgress]);
 
   const setCurrentTool = useCallback((tool: string) => {
     if (tool !== currentTool) {
@@ -90,11 +110,21 @@ export const useUnifiedState = (): UnifiedState => {
     console.log('📊 Métricas actualizadas:', updates);
   }, []);
 
+  const updateUserProgress = useCallback((updates: Partial<UserProgress>) => {
+    setUserProgress(prev => ({
+      ...prev,
+      ...updates
+    }));
+    console.log('👤 Progreso usuario actualizado:', updates);
+  }, []);
+
   return {
     currentTool,
     navigationHistory,
     systemMetrics,
+    userProgress,
     setCurrentTool,
-    updateSystemMetrics
+    updateSystemMetrics,
+    updateUserProgress
   };
 };
