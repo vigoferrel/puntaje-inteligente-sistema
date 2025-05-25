@@ -114,7 +114,14 @@ export const useLearningPlans = () => {
     setError(null);
 
     try {
-      const newPlan = await originalCreatePlan(userId, title, description || '', targetDate, skillPriorities);
+      // Pasar todos los argumentos requeridos a originalCreatePlan
+      const newPlan = await originalCreatePlan(
+        userId, 
+        title, 
+        description || '', 
+        targetDate, 
+        skillPriorities
+      );
       
       // Actualizar cache
       if (newPlan) {
