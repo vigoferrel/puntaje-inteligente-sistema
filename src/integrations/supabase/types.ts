@@ -1081,6 +1081,17 @@ export type Database = {
         }
         Relationships: []
       }
+      nodes_summary_by_subject: {
+        Row: {
+          avg_time_minutes: number | null
+          avg_weight: number | null
+          bloom_levels: string | null
+          node_count: number | null
+          subject_area: string | null
+          tier_priority: Database["public"]["Enums"]["tier_priority"] | null
+        }
+        Relationships: []
+      }
       skill_distribution_ciencias_2024: {
         Row: {
           content_area: string | null
@@ -1203,6 +1214,14 @@ export type Database = {
           enunciado: string
           contexto: string
           opciones: Json
+        }[]
+      }
+      validate_nodes_coherence: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          issue_type: string
+          description: string
+          node_count: number
         }[]
       }
     }

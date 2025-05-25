@@ -19,7 +19,8 @@ export const useAppInitialization = () => {
   const { profile } = useAuth();
   const { setInitializationFlag, hasInitialized, isInitializing } = useUnifiedApp();
   const [error, setError] = useState<string | null>(null);
-  const [phase, setPhase] = useState<'idle' | 'auth' | 'nodes' | 'plans' | 'paes' | 'complete'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'auth' | 'nodes' | 'validation' | 'plans' | 'paes' | 'complete'>('idle');
+  const [systemStats, setSystemStats] = useState<any>(null);
   
   const initializationInProgress = useRef(false);
   const lastUserId = useRef<string | null>(null);
@@ -44,7 +45,7 @@ export const useAppInitialization = () => {
       return;
     }
 
-    console.log('🚀 Starting unified app initialization...');
+    console.log('🚀 Starting unified app initialization with enhanced node system...');
     initializationInProgress.current = true;
     lastUserId.current = profile!.id;
     initStartTime.current = Date.now();
@@ -56,17 +57,42 @@ export const useAppInitialization = () => {
       setInitializationFlag('auth', true);
       console.log('✅ Phase 1: Auth completed');
 
-      // Fase 2: Nodos de aprendizaje
+      // Fase 2: Validación del sistema de nodos (nuevo)
+      setPhase('validation');
+      const { enhancedInitializationService } = await import('@/services/learning/enhanced-initialization-service');
+      const systemStatus = await enhancedInitializationService.getSystemStatus();
+      setSystemStats(systemStatus);
+      
+      if (systemStatus.totalNodes !== 277) {
+        console.warn(`⚠️ Sistema con ${systemStatus.totalNodes} nodos, esperados: 277`);
+      }
+
+      if (!systemStatus.success && systemStatus.errors.length > 0) {
+        console.warn('⚠️ Problemas en validación del sistema:', systemStatus.errors);
+        // Intentar auto-reparación
+        const { fixed, issues } = await enhancedInitializationService.validateAndFixNodes();
+        if (fixed > 0) {
+          console.log(`🔧 Auto-reparados ${fixed} problemas`);
+        }
+        if (issues.length > 0) {
+          console.warn(`⚠️ ${issues.length} problemas sin resolver:`, issues);
+        }
+      }
+
+      setInitializationFlag('nodeValidation', true);
+      console.log('✅ Phase 2: Node validation completed');
+
+      // Fase 3: Nodos de aprendizaje
       setPhase('nodes');
       await ensureLearningNodesExist();
       setInitializationFlag('learningNodes', true);
-      console.log('✅ Phase 2: Learning nodes completed');
+      console.log('✅ Phase 3: Learning nodes completed');
 
-      // Fase 3: Planes de aprendizaje (en paralelo con PAES)
+      // Fase 4: Planes de aprendizaje (en paralelo con PAES)
       setPhase('plans');
       const plansPromise = fetchLearningPlans(profile!.id);
       
-      // Fase 4: Datos PAES (en paralelo con planes)
+      // Fase 5: Datos PAES (en paralelo con planes)
       setPhase('paes');
       const paesPromise = refreshPAESData();
 
@@ -79,7 +105,8 @@ export const useAppInitialization = () => {
       setPhase('complete');
       
       const totalTime = Date.now() - initStartTime.current!;
-      console.log(`✅ App initialization completed in ${totalTime}ms`);
+      console.log(`✅ Enhanced app initialization completed in ${totalTime}ms`);
+      console.log(`📊 System stats: ${systemStats?.totalNodes || 0} nodos, coherencia: ${systemStats?.validationResult?.stats?.coherenceScore || 0}%`);
       
       // Registro de éxito en circuit breaker
       initCircuitBreaker.success();
@@ -93,6 +120,7 @@ export const useAppInitialization = () => {
       
       // Reset de flags en caso de error
       setInitializationFlag('auth', false);
+      setInitializationFlag('nodeValidation', false);
       setInitializationFlag('learningNodes', false);
       setInitializationFlag('learningPlans', false);
       setInitializationFlag('paesData', false);
@@ -136,6 +164,7 @@ export const useAppInitialization = () => {
     hasInitialized,
     error,
     phase,
+    systemStats,
     retry: initializeApp,
     circuitBreakerState: initCircuitBreaker.getState()
   };

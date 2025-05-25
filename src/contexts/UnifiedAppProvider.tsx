@@ -31,16 +31,24 @@ export const UnifiedAppProvider: React.FC<{ children: ReactNode }> = ({ children
     setInitializationFlags(prev => {
       const updated = { ...prev, [key]: value };
       
-      // Condiciones más flexibles para inicialización
+      // Condiciones más estrictas para inicialización con sistema de 277 nodos
       const hasAuth = updated['auth'] === true;
+      const hasNodeValidation = updated['nodeValidation'] === true;
+      const hasLearningNodes = updated['learningNodes'] === true;
       const hasEmergency = updated['emergency'] === true;
-      const hasAnyData = updated['learningNodes'] || updated['learningPlans'] || updated['paesData'];
+      const hasAnyData = updated['learningPlans'] || updated['paesData'];
       
-      // Permitir inicialización si tenemos auth Y (datos O modo emergencia)
-      if (hasAuth && (hasAnyData || hasEmergency)) {
+      // Permitir inicialización si tenemos:
+      // 1. Auth + NodeValidation + LearningNodes + AnyData (modo normal completo)
+      // 2. Auth + Emergency (modo emergencia)
+      if (hasAuth && hasNodeValidation && hasLearningNodes && hasAnyData) {
         setHasInitialized(true);
         setIsInitializing(false);
-        console.log('✅ App inicializada (modo:', hasEmergency ? 'emergencia' : 'normal', ')');
+        console.log('✅ App inicializada (modo normal completo con 277 nodos)');
+      } else if (hasAuth && hasEmergency) {
+        setHasInitialized(true);
+        setIsInitializing(false);
+        console.log('✅ App inicializada (modo emergencia)');
       }
       
       return updated;
