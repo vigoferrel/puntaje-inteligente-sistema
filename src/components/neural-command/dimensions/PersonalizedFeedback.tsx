@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,7 +73,7 @@ export const PersonalizedFeedback: React.FC<PersonalizedFeedbackProps> = ({
       impact: 'positive',
       suggestion: 'Aprovecha esta fortaleza para materias narrativas'
     }
-  ];
+  ]);
 
   const generateIntelligentFeedback = () => {
     setIsGeneratingFeedback(true);
