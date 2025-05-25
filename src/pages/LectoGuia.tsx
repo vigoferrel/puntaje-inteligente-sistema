@@ -4,89 +4,38 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, BookOpen, Zap, Target, TrendingUp, MessageSquare, Play } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Brain, BookOpen, Target, Zap, Eye, MessageSquare, TrendingUp, Clock, Award, AlertCircle } from 'lucide-react';
 import { useIntersectional } from '@/contexts/IntersectionalProvider';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRealLectoGuiaData } from '@/hooks/useRealLectoGuiaData';
 
-const LectoGuia: React.FC = () => {
-  const navigate = useNavigate();
+export default function LectoGuia() {
   const { user } = useAuth();
   const {
     isIntersectionalReady,
-    neuralHealth,
     generateIntersectionalInsights,
     adaptToUser
   } = useIntersectional();
 
-  // Métricas neurológicas de comprensión lectora
-  const readingMetrics = React.useMemo(() => ({
-    comprehensionLevel: Math.round(neuralHealth.adaptive_learning_score),
-    readingSpeed: Math.round(neuralHealth.neural_efficiency),
-    criticalThinking: Math.round(neuralHealth.cross_pollination_rate),
-    textualAnalysis: Math.round(neuralHealth.user_experience_harmony),
-    activeTexts: Math.floor(neuralHealth.adaptive_learning_score / 20),
-    completedAnalyses: Math.floor(neuralHealth.neural_efficiency / 15)
-  }), [neuralHealth]);
+  // Hook para datos reales en lugar de mock data
+  const { metrics: realMetrics, isLoading: metricsLoading } = useRealLectoGuiaData();
 
-  const handleStartReading = (type: string) => {
+  const handleReadingAction = (actionType: string, context?: any) => {
     adaptToUser({
-      reading_session_type: type,
-      comprehension_level: readingMetrics.comprehensionLevel,
-      neural_readiness: neuralHealth.neural_efficiency
+      reading_action: actionType,
+      comprehension_level: realMetrics?.readingComprehension || 0,
+      vocabulary_strength: realMetrics?.vocabularyLevel || 0,
+      neural_context: 'lectoguia_optimization'
     });
-    
-    // Navegar al módulo específico según el tipo
-    if (type === 'interactive_chat') {
-      // Por ahora mantener en la misma página, más adelante implementar chat
-      console.log('🤖 Iniciando chat interactivo de lectura');
-    }
+    console.log(`📖 Acción de lectura neural: ${actionType}`, context);
   };
-
-  const readingModules = [
-    {
-      id: 'critical_analysis',
-      title: 'Análisis Crítico Neural',
-      description: 'Comprensión profunda de textos complejos con IA',
-      icon: Brain,
-      color: 'from-purple-500 to-blue-500',
-      difficulty: 'Avanzado',
-      neuralActivity: readingMetrics.criticalThinking
-    },
-    {
-      id: 'speed_comprehension',
-      title: 'Comprensión Acelerada',
-      description: 'Técnicas neurológicas para lectura eficiente',
-      icon: Zap,
-      color: 'from-yellow-500 to-orange-500',
-      difficulty: 'Intermedio',
-      neuralActivity: readingMetrics.readingSpeed
-    },
-    {
-      id: 'textual_synthesis',
-      title: 'Síntesis Textual IA',
-      description: 'Extracción inteligente de ideas principales',
-      icon: Target,
-      color: 'from-green-500 to-teal-500',
-      difficulty: 'Básico',
-      neuralActivity: readingMetrics.textualAnalysis
-    },
-    {
-      id: 'interactive_chat',
-      title: 'Chat Interactivo',
-      description: 'Conversación inteligente sobre textos',
-      icon: MessageSquare,
-      color: 'from-pink-500 to-red-500',
-      difficulty: 'Adaptativo',
-      neuralActivity: readingMetrics.comprehensionLevel
-    }
-  ];
 
   const insights = generateIntersectionalInsights();
 
-  if (!isIntersectionalReady) {
+  if (!isIntersectionalReady || metricsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center">
         <motion.div
           className="text-center text-white space-y-4"
           initial={{ opacity: 0, scale: 0.8 }}
@@ -94,15 +43,28 @@ const LectoGuia: React.FC = () => {
         >
           <div className="w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full mx-auto animate-spin" />
           <div className="text-xl font-bold">Activando LectoGuía Neural</div>
+          <div className="text-sm text-purple-200">Cargando datos reales de comprensión lectora...</div>
         </motion.div>
       </div>
     );
   }
 
+  if (!realMetrics) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center text-white space-y-4">
+          <AlertCircle className="w-16 h-16 mx-auto text-red-400" />
+          <div className="text-xl font-bold">Error al cargar datos de LectoGuía</div>
+          <div className="text-sm text-purple-200">No se pudieron obtener los datos reales de comprensión lectora</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white">
       <div className="container mx-auto py-8 px-4">
-        {/* Header LectoGuía Neural */}
+        {/* Header Neural de LectoGuía */}
         <motion.div 
           className="text-center mb-8"
           initial={{ opacity: 0, y: -30 }}
@@ -110,31 +72,34 @@ const LectoGuia: React.FC = () => {
         >
           <div className="flex items-center justify-center space-x-3 mb-4">
             <BookOpen className="w-10 h-10 text-purple-400" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              LectoGuía Neural IA
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              LectoGuía Neural Adaptativa
             </h1>
           </div>
           <p className="text-purple-200 text-lg">
-            Sistema Inteligente de Comprensión Lectora • {user?.email || 'Usuario'}
+            Sistema de Comprensión Lectora Inteligente • {user?.email || 'Usuario'}
           </p>
           <Badge className="mt-2 bg-purple-600 text-white">
-            Comprensión Neural: {readingMetrics.comprehensionLevel}% Activa
+            Comprensión Neural: {realMetrics.readingComprehension}% Activo
           </Badge>
         </motion.div>
 
-        {/* Métricas de Lectura Neural */}
+        {/* Métricas de Comprensión - DATOS REALES */}
         <motion.div 
-          className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
           {[
-            { label: 'Comprensión', value: `${readingMetrics.comprehensionLevel}%`, icon: Brain, color: 'text-purple-400' },
-            { label: 'Velocidad', value: `${readingMetrics.readingSpeed}%`, icon: Zap, color: 'text-yellow-400' },
-            { label: 'Análisis Crítico', value: `${readingMetrics.criticalThinking}%`, icon: Target, color: 'text-green-400' },
-            { label: 'Textos Activos', value: readingMetrics.activeTexts, icon: BookOpen, color: 'text-blue-400' },
-            { label: 'Análisis Completados', value: readingMetrics.completedAnalyses, icon: TrendingUp, color: 'text-pink-400' }
+            { label: 'Comprensión', value: `${realMetrics.readingComprehension}%`, icon: Brain, color: 'text-purple-400' },
+            { label: 'Vocabulario', value: `${realMetrics.vocabularyLevel}%`, icon: BookOpen, color: 'text-blue-400' },
+            { label: 'Análisis', value: `${realMetrics.textAnalysisSkill}%`, icon: Eye, color: 'text-green-400' },
+            { label: 'Pensamiento Crítico', value: `${realMetrics.criticalThinking}%`, icon: Target, color: 'text-yellow-400' },
+            { label: 'Textos Procesados', value: realMetrics.totalTextsProcessed, icon: MessageSquare, color: 'text-pink-400' },
+            { label: 'Tiempo Promedio', value: `${realMetrics.averageReadingTime}min`, icon: Clock, color: 'text-orange-400' },
+            { label: 'Precisión', value: `${realMetrics.comprehensionAccuracy}%`, icon: Award, color: 'text-red-400' },
+            { label: 'Estrategias', value: realMetrics.strategiesLearned, icon: Zap, color: 'text-indigo-400' }
           ].map((metric, index) => (
             <Card key={metric.label} className="bg-white/10 border-white/20 backdrop-blur-sm">
               <CardContent className="p-4 text-center">
@@ -146,71 +111,160 @@ const LectoGuia: React.FC = () => {
           ))}
         </motion.div>
 
-        {/* Módulos de Lectura Neural */}
+        {/* Panel Principal de Estrategias y Textos */}
         <motion.div 
-          className="grid md:grid-cols-2 gap-6 mb-8"
+          className="grid lg:grid-cols-2 gap-6 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          {readingModules.map((module, index) => {
-            const Icon = module.icon;
-            return (
-              <Card key={module.id} className="bg-white/10 border-white/20 backdrop-blur-sm hover:bg-white/15 transition-all cursor-pointer group">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`p-3 rounded-lg bg-gradient-to-r ${module.color} group-hover:scale-110 transition-transform`}>
-                      <Icon className="w-6 h-6 text-white" />
+          {/* Estrategias Activas - Datos Reales */}
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Zap className="w-5 h-5 text-yellow-400" />
+                Estrategias Neurales Activas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {realMetrics.activeStrategies.map((strategy, index) => (
+                  <div key={index} className="bg-white/5 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-medium text-white">{strategy.name}</h3>
+                      <Badge className={
+                        strategy.effectiveness >= 80 ? "bg-green-600" :
+                        strategy.effectiveness >= 60 ? "bg-blue-600" : "bg-orange-600"
+                      }>
+                        {strategy.effectiveness}% Efectiva
+                      </Badge>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-white/60">Actividad Neural</div>
-                      <div className="text-lg font-bold text-white">{Math.round(module.neuralActivity)}%</div>
+                    <p className="text-sm text-white/70 mb-3">{strategy.description}</p>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-white/60">Usos:</span>
+                      <span className="text-white">{strategy.timesUsed}</span>
+                    </div>
+                    <Progress value={strategy.effectiveness} className="h-2 mt-2" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Textos Recientes - Datos Reales */}
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-purple-400" />
+                Textos Procesados Recientemente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {realMetrics.recentTexts.length > 0 ? realMetrics.recentTexts.map((text, index) => (
+                  <div key={index} className="bg-white/5 rounded-lg p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-white">{text.title}</span>
+                      <Badge className={
+                        text.difficulty === 'advanced' ? "bg-red-600" :
+                        text.difficulty === 'intermediate' ? "bg-yellow-600" : "bg-green-600"
+                      }>
+                        {text.difficulty === 'advanced' ? 'Avanzado' :
+                         text.difficulty === 'intermediate' ? 'Intermedio' : 'Básico'}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <span className="text-white/60">Score:</span>
+                        <div className="text-white font-medium">{text.comprehensionScore}%</div>
+                      </div>
+                      <div>
+                        <span className="text-white/60">Tiempo:</span>
+                        <div className="text-white font-medium">{Math.round(text.timeSpent / 60)}min</div>
+                      </div>
+                      <div>
+                        <span className="text-white/60">Fecha:</span>
+                        <div className="text-white font-medium">{text.date}</div>
+                      </div>
                     </div>
                   </div>
-                  
-                  <h3 className="text-xl font-bold text-white mb-2">{module.title}</h3>
-                  <p className="text-white/70 text-sm mb-4">{module.description}</p>
-                  
-                  <div className="flex justify-between items-center mb-4">
-                    <Badge variant="outline" className="text-white border-white/30">
-                      {module.difficulty}
-                    </Badge>
-                    <span className="text-sm text-white/60">
-                      Neural: {Math.round(module.neuralActivity)}%
-                    </span>
+                )) : (
+                  <div className="text-center text-white/60 py-8">
+                    <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No hay textos procesados aún</p>
+                    <p className="text-sm">Comienza tu práctica de lectura</p>
                   </div>
-                  
-                  <Button 
-                    onClick={() => handleStartReading(module.id)}
-                    className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Iniciar Módulo
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
-        {/* Insights de Comprensión Neural */}
+        {/* Panel de Control y Análisis Neural */}
         <motion.div 
+          className="grid lg:grid-cols-3 gap-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
+          {/* Control Neural de Lectura */}
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Brain className="w-5 h-5 text-purple-400" />
-                Análisis Neural de Lectura
+                Control Neural de Lectura
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
-                {insights.slice(0, 3).map((insight, index) => (
-                  <div key={index} className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => handleReadingAction('start_adaptive_reading')}
+                  className="w-full bg-purple-600 hover:bg-purple-700 justify-start"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Lectura Adaptativa
+                </Button>
+                
+                <Button 
+                  onClick={() => handleReadingAction('strategy_training')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 justify-start"
+                >
+                  <Target className="w-4 h-4 mr-2" />
+                  Entrenamiento Estratégico
+                </Button>
+                
+                <Button 
+                  onClick={() => handleReadingAction('vocabulary_expansion')}
+                  className="w-full bg-green-600 hover:bg-green-700 justify-start"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Expansión Vocabulario
+                </Button>
+                
+                <Button 
+                  onClick={() => handleReadingAction('critical_analysis')}
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 justify-start"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Análisis Crítico
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Análisis Neural de Comprensión */}
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-green-400" />
+                Análisis Neural
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {insights.slice(0, 4).map((insight, index) => (
+                  <div key={index} className="bg-white/5 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1">
                       <span className="text-purple-200 font-medium text-sm">{insight.title}</span>
                       <Badge className={
                         insight.level === 'excellent' ? "bg-green-600" :
@@ -228,10 +282,52 @@ const LectoGuia: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Progreso Neurológico */}
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Award className="w-5 h-5 text-yellow-400" />
+                Progreso Neurológico
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Desarrollo Cognitivo</span>
+                    <span className="text-white font-medium">{realMetrics.readingComprehension}%</span>
+                  </div>
+                  <Progress value={realMetrics.readingComprehension} className="h-2" />
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Dominio Vocabulario</span>
+                    <span className="text-white font-medium">{realMetrics.vocabularyLevel}%</span>
+                  </div>
+                  <Progress value={realMetrics.vocabularyLevel} className="h-2" />
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Análisis Textual</span>
+                    <span className="text-white font-medium">{realMetrics.textAnalysisSkill}%</span>
+                  </div>
+                  <Progress value={realMetrics.textAnalysisSkill} className="h-2" />
+                </div>
+                
+                <div className="pt-3 border-t border-white/10">
+                  <div className="text-xs text-white/60 mb-2">Próxima sesión recomendada:</div>
+                  <div className="text-sm text-white font-medium">
+                    {new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
     </div>
   );
-};
-
-export default LectoGuia;
+}
