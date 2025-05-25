@@ -12,6 +12,7 @@ export interface DiagnosticTest {
     aiCount?: number;
     totalCostSavings?: number;
     quality?: string;
+    targetTier?: string;
   };
 }
 
@@ -31,6 +32,9 @@ export interface DiagnosticQuestion {
     costSaving?: number;
     costUsed?: number;
     template?: boolean;
+    bloomLevel?: string;
+    nodeId?: string;
+    paesFrequencyWeight?: number;
   };
 }
 
@@ -97,4 +101,43 @@ export interface LearningNode {
   adaptiveAdjustment: number;
   bloomComplexityScore: number;
   paesFrequency: number;
+}
+
+// Tipos para simulaciones PAES
+export interface PAESSimulation {
+  id: string;
+  name: string;
+  type: 'official' | 'practice' | 'diagnostic';
+  prueba: string;
+  duration: number; // minutos
+  totalQuestions: number;
+  questions: DiagnosticQuestion[];
+  scheduledDate?: Date;
+  isCompleted: boolean;
+  result?: PAESSimulationResult;
+  metadata?: {
+    officialFormat: boolean;
+    timedMode: boolean;
+    allowNavigation: boolean;
+    showAnswers: boolean;
+  };
+}
+
+export interface PAESSimulationResult {
+  id: string;
+  simulationId: string;
+  userId: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  timeSpent: number; // segundos
+  answers: {
+    questionId: string;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    timeSpent: number;
+  }[];
+  skillPerformance: Record<string, number>;
+  completedAt: string;
+  predictedPAESScore?: number;
 }

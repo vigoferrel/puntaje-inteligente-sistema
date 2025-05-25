@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from "@/types/diagnostic";
 import { TPAESHabilidad } from "@/types/system-types";
@@ -64,4 +63,29 @@ export const validateQuestionData = (question: any): boolean => {
     question.options.length >= 2 &&
     question.correctAnswer
   );
+};
+
+const createFallbackQuestions = (testId: number): DiagnosticQuestion[] => {
+  const testMapping = {
+    1: 'COMPETENCIA_LECTORA',
+    2: 'MATEMATICA_1', 
+    3: 'MATEMATICA_2',
+    4: 'HISTORIA',
+    5: 'CIENCIAS'
+  };
+
+  const prueba = testMapping[testId as keyof typeof testMapping] || 'COMPETENCIA_LECTORA';
+
+  return [
+    {
+      id: `fallback-${testId}-1`,
+      question: `Pregunta de demostración para ${prueba}. ¿Cuál es la respuesta correcta?`,
+      options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+      correctAnswer: 'Opción A',
+      skill: 'INTERPRET_RELATE',
+      prueba,
+      explanation: 'Esta es una pregunta de demostración del sistema.',
+      difficulty: 'INTERMEDIO' as const
+    }
+  ];
 };
