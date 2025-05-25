@@ -1,4 +1,3 @@
-
 export interface DiagnosticTest {
   id: string;
   title: string;
@@ -29,6 +28,7 @@ export interface DiagnosticQuestion {
     source?: string;
     originalId?: string;
     nodoCode?: string;
+    year?: number;
     costSaving?: number;
     costUsed?: number;
     template?: boolean;

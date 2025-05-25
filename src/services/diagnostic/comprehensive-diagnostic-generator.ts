@@ -14,6 +14,41 @@ export class ComprehensiveDiagnosticGenerator {
     return ComprehensiveDiagnosticGenerator.instance;
   }
 
+  static async generateAllDiagnostics(userId: string): Promise<DiagnosticTest[]> {
+    const generator = ComprehensiveDiagnosticGenerator.getInstance();
+    
+    try {
+      console.log(`🎯 Generando todos los diagnósticos para usuario: ${userId}`);
+      
+      const allPruebas: TPAESPrueba[] = [
+        'COMPETENCIA_LECTORA',
+        'MATEMATICA_1', 
+        'MATEMATICA_2',
+        'CIENCIAS',
+        'HISTORIA'
+      ];
+      
+      const diagnostics: DiagnosticTest[] = [];
+      
+      for (const prueba of allPruebas) {
+        try {
+          const diagnostic = await generator.generateComprehensiveDiagnostic(prueba, 'intermediate', 15);
+          diagnostics.push(diagnostic);
+        } catch (error) {
+          console.warn(`⚠️ Error generando diagnóstico para ${prueba}:`, error);
+          // Continue with other diagnostics even if one fails
+        }
+      }
+      
+      console.log(`✅ Generados ${diagnostics.length} diagnósticos integrales`);
+      return diagnostics;
+      
+    } catch (error) {
+      console.error('❌ Error en generateAllDiagnostics:', error);
+      return [];
+    }
+  }
+
   async generateComprehensiveDiagnostic(
     prueba: TPAESPrueba,
     targetLevel: 'basic' | 'intermediate' | 'advanced' = 'intermediate',
@@ -87,12 +122,13 @@ export class ComprehensiveDiagnosticGenerator {
       correctAnswer: exercise.correct_answer || 'Opción A',
       explanation: exercise.explanation || '',
       difficulty: mapDifficultyToSpanish(exercise.difficulty || 'intermediate'),
-      skill: this.mapSkill(exercise.skill || exercise.competencia_especifica) as TPAESHabilidad,
+      skill: this.mapSkill(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {
         source: exercise.metadata?.source || 'database',
         originalId: exercise.id,
-        nodoCode: exercise.nodo_code
+        nodoCode: exercise.nodo_code,
+        year: exercise.year
       }
     };
   }

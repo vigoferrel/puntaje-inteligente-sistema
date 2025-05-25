@@ -150,13 +150,11 @@ export class ExamQuestionExtractor {
       'temporal': 'TEMPORAL_THINKING',
       'tiempo': 'TEMPORAL_THINKING',
       'fuentes': 'SOURCE_ANALYSIS',
-      'analisis': 'SOURCE_ANALYSIS',
       'multicausal': 'MULTICAUSAL_ANALYSIS',
       'causas': 'MULTICAUSAL_ANALYSIS',
       'critico': 'CRITICAL_THINKING',
       'pensamiento': 'CRITICAL_THINKING',
-      'reflexion': 'REFLECTION',
-      'reflexionar': 'REFLECTION'
+      'reflexion': 'REFLECTION'
     };
 
     for (const [key, value] of Object.entries(skillMapping)) {
