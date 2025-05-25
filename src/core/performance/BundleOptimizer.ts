@@ -36,6 +36,16 @@ export const LoadingPriorities = {
   low: ['AdminUtils'] // Cargar solo si es necesario
 };
 
+// Mapa de importers para preloading manual
+const componentImporters: Record<string, () => Promise<any>> = {
+  PAESUniversePage: () => import('@/pages/PAESUniversePage'),
+  PAESDashboard: () => import('@/pages/PAESDashboard'),
+  Diagnostico: () => import('@/pages/Diagnostico'),
+  Plan: () => import('@/pages/Plan'),
+  Progreso: () => import('@/pages/Progreso'),
+  AdminUtils: () => import('@/pages/AdminUtils')
+};
+
 // Hook optimizado para cargar componentes de manera segura
 export const useOptimizedComponentLoading = (route: string) => {
   useEffect(() => {
@@ -45,11 +55,13 @@ export const useOptimizedComponentLoading = (route: string) => {
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
         preloadComponents.forEach(componentName => {
-          const Component = ChunkedComponents[componentName as keyof typeof ChunkedComponents];
-          if (Component) {
+          const importer = componentImporters[componentName];
+          if (importer) {
             console.log(`🚀 Preloading: ${componentName}`);
-            // Trigger lazy loading de manera segura
-            Component.preload?.();
+            // Trigger lazy loading de manera segura usando el importer directo
+            importer().catch(error => {
+              console.warn(`❌ Failed to preload ${componentName}:`, error);
+            });
           }
         });
       });
