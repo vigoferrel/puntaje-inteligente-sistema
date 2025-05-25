@@ -1,40 +1,40 @@
 
 /**
- * Implementación de Circuit Breaker para prevenir llamadas repetidas a servicios fallidos
- * y proporcionar un mecanismo de recuperación automática.
+ * Circuit Breaker más permisivo para evitar bloqueos indefinidos
  */
 interface CircuitBreakerOptions {
-  failureThreshold: number;   // Número de fallos antes de abrir el circuito
-  resetTimeout: number;       // Tiempo en ms antes de intentar cerrar el circuito
-  onOpen?: () => void;        // Callback cuando el circuito se abre
-  onClose?: () => void;       // Callback cuando el circuito se cierra
+  failureThreshold: number;
+  resetTimeout: number;
+  maxConsecutiveFailures: number; // Nuevo: máximo de fallos consecutivos
+  onOpen?: () => void;
+  onClose?: () => void;
 }
 
 enum CircuitState {
-  CLOSED,   // Operación normal, las solicitudes pasan
-  OPEN,     // No se permiten solicitudes
-  HALF_OPEN // Modo de prueba, se permite una solicitud
+  CLOSED,
+  OPEN,
+  HALF_OPEN
 }
 
 export class CircuitBreaker {
   private state: CircuitState = CircuitState.CLOSED;
   private failureCount: number = 0;
+  private consecutiveFailures: number = 0;
   private nextAttemptTime: number = 0;
   private readonly options: CircuitBreakerOptions;
 
   constructor(options: CircuitBreakerOptions) {
     this.options = {
-      failureThreshold: 3,
-      resetTimeout: 30000, // 30 segundos por defecto
+      failureThreshold: 5,        // Más permisivo
+      resetTimeout: 10000,        // Timeout más corto
+      maxConsecutiveFailures: 3,  // Límite de fallos consecutivos
       ...options
     };
   }
 
-  /**
-   * Registra una operación exitosa
-   */
   public success(): void {
     this.failureCount = 0;
+    this.consecutiveFailures = 0;
     
     if (this.state === CircuitState.HALF_OPEN) {
       this.state = CircuitState.CLOSED;
@@ -44,22 +44,17 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Registra una operación fallida y potencialmente abre el circuito
-   */
   public failure(): void {
     this.failureCount++;
+    this.consecutiveFailures++;
 
-    if (this.failureCount >= this.options.failureThreshold || 
-        this.state === CircuitState.HALF_OPEN) {
-      
+    // Abrir circuito solo si excedemos ambos límites
+    if (this.failureCount >= this.options.failureThreshold && 
+        this.consecutiveFailures >= this.options.maxConsecutiveFailures) {
       this.open();
     }
   }
 
-  /**
-   * Verifica si el circuito está abierto
-   */
   public isOpen(): boolean {
     if (this.state === CircuitState.HALF_OPEN) {
       return false;
@@ -68,7 +63,6 @@ export class CircuitBreaker {
     if (this.state === CircuitState.OPEN) {
       const now = Date.now();
       
-      // Si ha pasado el tiempo de espera, cambiar a medio-abierto
       if (now >= this.nextAttemptTime) {
         this.state = CircuitState.HALF_OPEN;
         return false;
@@ -80,9 +74,6 @@ export class CircuitBreaker {
     return false;
   }
 
-  /**
-   * Abre manualmente el circuito
-   */
   private open(): void {
     if (this.state !== CircuitState.OPEN) {
       this.state = CircuitState.OPEN;
@@ -94,21 +85,16 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Resetea el estado del circuito a cerrado
-   */
   public reset(): void {
     this.state = CircuitState.CLOSED;
     this.failureCount = 0;
+    this.consecutiveFailures = 0;
     
     if (this.options.onClose) {
       this.options.onClose();
     }
   }
   
-  /**
-   * Estado actual del circuito
-   */
   public getState(): string {
     switch (this.state) {
       case CircuitState.CLOSED:
@@ -118,5 +104,12 @@ export class CircuitBreaker {
       case CircuitState.HALF_OPEN:
         return 'half-open';
     }
+  }
+
+  // Método para forzar el cierre en emergencias
+  public forceClose(): void {
+    this.state = CircuitState.CLOSED;
+    this.failureCount = 0;
+    this.consecutiveFailures = 0;
   }
 }

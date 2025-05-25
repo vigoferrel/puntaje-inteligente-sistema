@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 import { AuthProvider } from './AuthContext';
 import { LearningPlanProvider } from './learning-plan';
 import { PAESProvider } from './PAESContext';
@@ -26,21 +26,21 @@ export const UnifiedAppProvider: React.FC<{ children: ReactNode }> = ({ children
   const [isInitializing, setIsInitializing] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [initializationFlags, setInitializationFlags] = useState<Record<string, boolean>>({});
-  const initRef = useRef(false);
 
   const setInitializationFlag = useCallback((key: string, value: boolean) => {
     setInitializationFlags(prev => {
       const updated = { ...prev, [key]: value };
       
-      // Check if all critical flags are true
-      const criticalFlags = ['auth', 'learningPlans', 'paesData'];
-      const allCriticalReady = criticalFlags.every(flag => updated[flag] === true);
+      // Condiciones más flexibles para inicialización
+      const hasAuth = updated['auth'] === true;
+      const hasEmergency = updated['emergency'] === true;
+      const hasAnyData = updated['learningNodes'] || updated['learningPlans'] || updated['paesData'];
       
-      if (allCriticalReady && !initRef.current) {
-        initRef.current = true;
+      // Permitir inicialización si tenemos auth Y (datos O modo emergencia)
+      if (hasAuth && (hasAnyData || hasEmergency)) {
         setHasInitialized(true);
         setIsInitializing(false);
-        console.log('✅ App fully initialized');
+        console.log('✅ App inicializada (modo:', hasEmergency ? 'emergencia' : 'normal', ')');
       }
       
       return updated;
@@ -48,7 +48,6 @@ export const UnifiedAppProvider: React.FC<{ children: ReactNode }> = ({ children
   }, []);
 
   const resetInitialization = useCallback(() => {
-    initRef.current = false;
     setHasInitialized(false);
     setIsInitializing(true);
     setInitializationFlags({});

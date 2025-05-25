@@ -1,51 +1,78 @@
 
 import React from 'react';
-import { useAppInitialization } from '@/hooks/use-app-initialization';
-import { useUnifiedApp } from '@/contexts/UnifiedAppProvider';
+import { useResilientInitialization } from '@/hooks/use-resilient-initialization';
 import { LoadingState } from '@/components/plan/LoadingState';
 import { ErrorState } from '@/components/plan/ErrorState';
+import { EmergencyModeIndicator } from '@/components/EmergencyModeIndicator';
 
 interface AppInitializerProps {
   children: React.ReactNode;
 }
 
 export const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
-  const { isInitializing, hasInitialized } = useUnifiedApp();
-  const { error, retry, phase, circuitBreakerState } = useAppInitialization();
+  const { 
+    isInitializing, 
+    canProceed, 
+    error, 
+    retry, 
+    phase, 
+    emergencyMode,
+    progress,
+    completedSteps,
+    skippedSteps
+  } = useResilientInitialization();
 
-  if (error) {
+  // Mostrar error solo si no podemos proceder
+  if (error && !canProceed) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 max-w-md">
           <ErrorState onRetry={retry} />
-          {circuitBreakerState === 'open' && (
-            <p className="text-yellow-500 text-sm">
-              Sistema en modo protección. Reintentando automáticamente...
-            </p>
-          )}
+          <div className="text-sm text-gray-400">
+            <p>Pasos completados: {completedSteps.join(', ') || 'Ninguno'}</p>
+            {skippedSteps.length > 0 && (
+              <p>Pasos omitidos: {skippedSteps.join(', ')}</p>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (isInitializing || !hasInitialized) {
+  // Mostrar loading solo si está inicializando y no puede proceder
+  if (isInitializing && !canProceed) {
     const getPhaseMessage = (currentPhase: string) => {
       switch (currentPhase) {
         case 'auth': return 'Verificando autenticación...';
         case 'nodes': return 'Cargando nodos de aprendizaje...';
         case 'plans': return 'Cargando planes de estudio...';
         case 'paes': return 'Cargando datos PAES...';
-        case 'complete': return 'Finalizando inicialización...';
+        case 'emergency': return 'Activando modo de emergencia...';
         default: return 'Inicializando aplicación...';
       }
     };
 
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <LoadingState message={getPhaseMessage(phase)} />
+        <div className="text-center space-y-4">
+          <LoadingState message={getPhaseMessage(phase)} />
+          <div className="w-64 bg-gray-700 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-400">{progress}% completado</p>
+        </div>
       </div>
     );
   }
 
-  return <>{children}</>;
+  // Si llegamos aquí, podemos proceder (inicializado o modo emergencia)
+  return (
+    <>
+      {emergencyMode && <EmergencyModeIndicator />}
+      {children}
+    </>
+  );
 };
