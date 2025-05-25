@@ -1,14 +1,15 @@
 
-import React, { createContext, useContext, useEffect, useRef } from 'react';
-import { useCrossModuleDataSync, useAutomaticSync } from '@/core/intersectional-sync/CrossModuleDataSync';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useIntersectionalNexus } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
+import { useNeuralIntegration } from '@/hooks/use-neural-integration';
 
 interface IntersectionalContextType {
   isIntersectionalReady: boolean;
-  crossModuleMetrics: any;
-  unifiedUserProfile: any;
-  syncAllModules: () => Promise<void>;
+  neuralHealth: any;
   generateIntersectionalInsights: () => any[];
+  harmonizeExperience: () => void;
+  adaptToUser: (behavior: any) => void;
 }
 
 const IntersectionalContext = createContext<IntersectionalContextType | undefined>(undefined);
@@ -22,91 +23,86 @@ export const useIntersectional = () => {
 };
 
 export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { 
-    crossModuleMetrics, 
-    unifiedUserProfile, 
-    syncAllModules,
-    generateUnifiedRecommendations,
-    lastSyncTime,
-    loadRealUserData
-  } = useCrossModuleDataSync();
-  
+  const nexus = useIntersectionalNexus();
   const { isInitialized } = useUnifiedPAES();
   
-  // Referencias para controlar notificaciones
-  const hasNotifiedReady = useRef(false);
-  const lastNotificationTime = useRef<Date | null>(null);
-  
-  // Activar sync automático con intervalo aumentado (5 minutos)
-  useAutomaticSync(300000);
+  // Integración neurológica del provider
+  const neural = useNeuralIntegration('dashboard', [
+    'system_coordination',
+    'cross_module_synthesis',
+    'adaptive_orchestration'
+  ], {
+    isInitialized,
+    activeModules: nexus.active_modules.size,
+    globalCoherence: nexus.global_coherence
+  });
 
+  // Sistema neurológico listo cuando hay coherencia y módulos activos
   const isIntersectionalReady = Boolean(
     isInitialized && 
-    lastSyncTime && 
-    crossModuleMetrics.systemCoherence > 50
+    nexus.global_coherence > 75 &&
+    nexus.active_modules.size >= 2
   );
 
+  // Síntesis automática de insights cada vez que cambia el estado
+  useEffect(() => {
+    if (isIntersectionalReady) {
+      const interval = setInterval(() => {
+        nexus.synthesizeInsights();
+      }, 120000); // Cada 2 minutos
+
+      return () => clearInterval(interval);
+    }
+  }, [isIntersectionalReady, nexus]);
+
+  // Auto-armonización cuando hay cambios significativos
+  useEffect(() => {
+    if (nexus.active_modules.size >= 3) {
+      nexus.harmonizeExperience();
+    }
+  }, [nexus.active_modules.size]);
+
   const generateIntersectionalInsights = () => {
-    const recommendations = generateUnifiedRecommendations();
-    const coherenceLevel = crossModuleMetrics.systemCoherence;
-    
-    const insights = [
+    const systemInsights = [
       {
-        type: 'system-health',
-        title: 'Estado del Sistema',
-        description: `Coherencia interseccional: ${Math.round(coherenceLevel)}%`,
-        level: coherenceLevel > 80 ? 'excellent' : coherenceLevel > 60 ? 'good' : 'needs-attention'
-      },
-      ...recommendations.map(rec => ({
-        type: 'recommendation',
-        title: rec.title,
-        description: rec.description,
-        level: rec.priority === 'Alta' ? 'high' : 'medium'
-      }))
+        type: 'neural-health',
+        title: 'Salud del Sistema Neural',
+        description: `Red neurológica funcionando al ${Math.round(nexus.system_health.neural_efficiency)}%`,
+        level: nexus.system_health.neural_efficiency > 90 ? 'excellent' : 
+               nexus.system_health.neural_efficiency > 75 ? 'good' : 'needs-attention',
+        data: nexus.system_health
+      }
     ];
 
-    return insights;
+    // Agregar insights de cross-pollination
+    nexus.cross_module_patterns.forEach(pattern => {
+      systemInsights.push({
+        type: 'cross-pollination',
+        title: pattern.recommended_integration,
+        description: `Sinergia potencial del ${pattern.synergy_potential}%`,
+        level: pattern.synergy_potential > 60 ? 'high' : 'medium',
+        data: pattern
+      });
+    });
+
+    return systemInsights;
   };
 
-  // Notificación controlada - solo una vez y con debounce
-  useEffect(() => {
-    if (isIntersectionalReady && !hasNotifiedReady.current) {
-      const now = new Date();
-      
-      // Debounce de 30 segundos para notificaciones
-      if (!lastNotificationTime.current || 
-          (now.getTime() - lastNotificationTime.current.getTime()) > 30000) {
-        
-        // Usar setTimeout para mover fuera del ciclo de render
-        setTimeout(() => {
-          import('@/hooks/use-toast').then(({ toast }) => {
-            toast({
-              title: "🌐 Sistema Interseccional Activo",
-              description: "Sincronización optimizada habilitada",
-              duration: 3000
-            });
-          });
-        }, 100);
-        
-        hasNotifiedReady.current = true;
-        lastNotificationTime.current = now;
-      }
-    }
-  }, [isIntersectionalReady]);
-
-  // Cargar datos reales del usuario cuando esté disponible
-  useEffect(() => {
-    if (isInitialized && !unifiedUserProfile?.isLoaded) {
-      loadRealUserData('user-123'); // TODO: usar userId real
-    }
-  }, [isInitialized, unifiedUserProfile?.isLoaded, loadRealUserData]);
+  const adaptToUser = (behavior: any) => {
+    nexus.adaptToUserBehavior(behavior);
+    neural.notifyEngagement({
+      behavior_type: 'adaptive_learning',
+      adaptation_success: true,
+      user_satisfaction_estimated: nexus.system_health.user_experience_harmony
+    });
+  };
 
   const contextValue: IntersectionalContextType = {
     isIntersectionalReady,
-    crossModuleMetrics,
-    unifiedUserProfile,
-    syncAllModules,
+    neuralHealth: nexus.system_health,
     generateIntersectionalInsights,
+    harmonizeExperience: nexus.harmonizeExperience,
+    adaptToUser
   };
 
   return (
