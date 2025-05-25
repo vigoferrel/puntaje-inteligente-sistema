@@ -12,6 +12,10 @@ import Plan from '@/pages/Plan';
 import FinancialCenter from '@/pages/FinancialCenter';
 import AppLayout from '@/layouts/AppLayout';
 import Calendario from '@/pages/Calendario';
+import Settings from '@/pages/Settings';
+import Evaluaciones from '@/pages/Evaluaciones';
+import Entrenamiento from '@/pages/Entrenamiento';
+import Analisis from '@/pages/Analisis';
 
 export const router = createBrowserRouter([
   {
@@ -65,6 +69,26 @@ export const router = createBrowserRouter([
       {
         path: "/calendario",
         element: <Calendario />
+      },
+      {
+        path: "/settings",
+        element: <Settings />
+      },
+      {
+        path: "/configuracion",
+        element: <Settings />
+      },
+      {
+        path: "/evaluaciones",
+        element: <Evaluaciones />
+      },
+      {
+        path: "/entrenamiento", 
+        element: <Entrenamiento />
+      },
+      {
+        path: "/analisis",
+        element: <Analisis />
       },
     ]
   }

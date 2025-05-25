@@ -20,6 +20,9 @@ import PAESDashboard from "./pages/PAESDashboard";
 import PAESUniversePage from "./pages/PAESUniversePage";
 import SubjectDetail from "./pages/SubjectDetail";
 import Settings from "./pages/Settings";
+import Evaluaciones from "./pages/Evaluaciones";
+import Entrenamiento from "./pages/Entrenamiento";
+import Analisis from "./pages/Analisis";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +51,9 @@ const App = () => (
               <Route path="/materia/:subject" element={<SubjectDetail />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/configuracion" element={<Settings />} />
+              <Route path="/evaluaciones" element={<Evaluaciones />} />
+              <Route path="/entrenamiento" element={<Entrenamiento />} />
+              <Route path="/analisis" element={<Analisis />} />
             </Routes>
           </AppInitializer>
         </BrowserRouter>

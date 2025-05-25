@@ -1,3 +1,4 @@
+
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -32,7 +33,10 @@ import {
   Calendar,
   Settings,
   History,
-  FlaskConical
+  FlaskConical,
+  ClipboardList,
+  BarChart2,
+  Dumbbell
 } from "lucide-react";
 import { useCinematicDashboard } from "@/hooks/dashboard/useCinematicDashboard";
 import { useGlobalStore } from "@/store/globalStore";
@@ -93,6 +97,24 @@ const toolsItems = [
     title: "Configuración",
     url: "/settings",
     icon: Settings
+  }
+];
+
+const assessmentItems = [
+  {
+    title: "Evaluaciones",
+    url: "/evaluaciones",
+    icon: ClipboardList
+  },
+  {
+    title: "Entrenamiento",
+    url: "/entrenamiento",
+    icon: Dumbbell
+  },
+  {
+    title: "Análisis",
+    url: "/analisis",
+    icon: BarChart2
   }
 ];
 
@@ -204,6 +226,44 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Evaluación y Análisis */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-medium text-orange-400 px-2 py-3 flex items-center space-x-2 tracking-wide">
+            <BarChart2 className="w-3 h-3" />
+            <span>Evaluación y Análisis</span>
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {assessmentItems.map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (workflowItems.length + index) * 0.1 }}
+                >
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
+                            isActive 
+                              ? "bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-300 border border-orange-500/30 shadow-lg shadow-orange-500/20" 
+                              : "text-gray-300 hover:text-white hover:bg-white/5"
+                          }`
+                        }
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </motion.div>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {/* Herramientas */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-purple-400 px-2 py-3 flex items-center space-x-2 tracking-wide">
@@ -217,7 +277,7 @@ export function AppSidebar() {
                   key={item.title}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (workflowItems.length + index) * 0.1 }}
+                  transition={{ delay: (workflowItems.length + assessmentItems.length + index) * 0.1 }}
                 >
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
