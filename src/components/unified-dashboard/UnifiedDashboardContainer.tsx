@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { UnifiedHeader } from './UnifiedHeader';
 import { RealDataDashboard } from './RealDataDashboard';
 import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
@@ -22,6 +23,7 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
   initialTool 
 }) => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentTool, setCurrentTool] = useState(initialTool || 'dashboard');
   const [activeSubject, setActiveSubject] = useState('COMPETENCIA_LECTORA');
   const [systemMetrics, setSystemMetrics] = useState({
@@ -32,9 +34,26 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
   });
   const [totalProgress, setTotalProgress] = useState(0);
   const [toolContext, setToolContext] = useState<any>(null);
+  const [navigationHistory, setNavigationHistory] = useState<string[]>(['dashboard']);
 
   // Hook diagnóstico
   const diagnostic = useDiagnosticSystem();
+
+  // Manejar parámetros URL para navegación directa
+  useEffect(() => {
+    const urlTool = searchParams.get('tool');
+    const urlSubject = searchParams.get('subject');
+    
+    if (urlTool && urlTool !== currentTool) {
+      console.log(`🔗 Navegando via URL a herramienta: ${urlTool}`);
+      setCurrentTool(urlTool);
+    }
+    
+    if (urlSubject && urlSubject !== activeSubject) {
+      console.log(`📚 Cambiando materia via URL: ${urlSubject}`);
+      setActiveSubject(urlSubject);
+    }
+  }, [searchParams]);
 
   // Usar herramienta inicial si se proporciona
   useEffect(() => {
@@ -93,19 +112,62 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
     return Math.max(0, 7 - diffDays);
   };
 
+  // Navegación inteligente con contexto y URL updates
   const handleToolChange = (tool: string, context?: any) => {
-    console.log(`🔧 Cambiando herramienta: ${tool}`, context);
+    console.log(`🔧 Navegación inteligente: ${tool}`, context);
+    
+    // Actualizar herramienta
     setCurrentTool(tool);
     setToolContext(context);
     
+    // Actualizar URL para navegación directa
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('tool', tool);
+    
     if (context?.subject) {
       setActiveSubject(context.subject);
+      newParams.set('subject', context.subject);
+    }
+    
+    setSearchParams(newParams);
+    
+    // Actualizar historial de navegación
+    setNavigationHistory(prev => [...prev, tool]);
+    
+    // Recomendaciones contextuales después del cambio
+    setTimeout(() => {
+      provideContextualRecommendations(tool, context);
+    }, 1000);
+  };
+
+  // Sistema de recomendaciones contextuales
+  const provideContextualRecommendations = (currentTool: string, context?: any) => {
+    console.log(`💡 Generando recomendaciones para: ${currentTool}`);
+    
+    switch (currentTool) {
+      case 'diagnostic':
+        console.log('💡 Recomendación: Después del diagnóstico, considera crear un plan de estudio personalizado');
+        break;
+      case 'plan':
+        console.log('💡 Recomendación: Con tu plan listo, puedes generar ejercicios específicos o usar LectoGuía');
+        break;
+      case 'exercises':
+        console.log('💡 Recomendación: Después de practicar, revisa tu progreso o chatea con LectoGuía');
+        break;
+      case 'lectoguia':
+        console.log('💡 Recomendación: LectoGuía puede ayudarte a generar más ejercicios o planificar tu estudio');
+        break;
     }
   };
 
   const handleSubjectChange = (subject: string) => {
     setActiveSubject(subject);
     setToolContext(prev => ({ ...prev, subject }));
+    
+    // Actualizar URL
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('subject', subject);
+    setSearchParams(newParams);
   };
 
   const handleNavigateToTool = (tool: string, context?: any) => {
@@ -121,6 +183,18 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
   const handleDiagnosticResume = () => {
     if (mockPausedProgress) {
       console.log('Resumiendo diagnóstico');
+    }
+  };
+
+  // Función para navegar atrás en el historial
+  const goBack = () => {
+    if (navigationHistory.length > 1) {
+      const newHistory = [...navigationHistory];
+      newHistory.pop(); // Remover actual
+      const previousTool = newHistory[newHistory.length - 1];
+      
+      setNavigationHistory(newHistory);
+      handleToolChange(previousTool);
     }
   };
 
@@ -217,6 +291,10 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
               onGeneratePlan={(config) => {
                 console.log('Plan generado:', config);
                 loadSystemMetrics();
+                // Sugerir siguiente paso
+                setTimeout(() => {
+                  console.log('💡 Plan creado! Sugerencia: Genera ejercicios específicos para tu plan');
+                }, 2000);
               }}
               isGenerating={false}
             />
@@ -242,6 +320,8 @@ export const UnifiedDashboardContainer: React.FC<UnifiedDashboardContainerProps>
         onToolChange={handleToolChange}
         onSubjectChange={handleSubjectChange}
         systemMetrics={systemMetrics}
+        navigationHistory={navigationHistory}
+        onGoBack={goBack}
       />
       
       <main>

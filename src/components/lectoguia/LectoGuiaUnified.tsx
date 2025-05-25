@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useLectoGuia } from '@/hooks/use-lectoguia';
 import { LectoGuiaChat } from './LectoGuiaChat';
-import { ExerciseInterface } from './components/modules/ExerciseInterface';
 
 interface LectoGuiaUnifiedProps {
   initialSubject: string;
@@ -219,88 +218,75 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
             </TabsContent>
             
             <TabsContent value="exercise" className="p-6">
-              {ExerciseInterface && (
-                <ExerciseInterface
-                  context={{ 
-                    currentExercise, 
-                    selectedOption, 
-                    showFeedback,
-                    subject: initialSubject
-                  }}
-                  onAction={handleActionFromInterface}
-                  onNavigate={onNavigateToTool}
-                />
-              )}
-              
-              {currentExercise && (
-                <div className="mt-6 space-y-4">
-                  <h3 className="font-semibold">{currentExercise.question}</h3>
-                  <div className="space-y-2">
-                    {currentExercise.options.map((option, index) => (
-                      <Button
-                        key={index}
-                        variant={
-                          showFeedback 
-                            ? (index === selectedOption 
-                                ? (option === currentExercise.correctAnswer ? "default" : "destructive")
-                                : (option === currentExercise.correctAnswer ? "default" : "outline"))
-                            : "outline"
-                        }
-                        onClick={() => handleExerciseOptionSelect && handleExerciseOptionSelect(index)}
-                        disabled={showFeedback}
-                        className="w-full text-left justify-start"
-                      >
-                        {String.fromCharCode(65 + index)}. {option}
-                      </Button>
-                    ))}
-                  </div>
-                  
-                  {showFeedback && (
-                    <div className="mt-4 space-y-4">
-                      <div className={`p-4 rounded-lg ${
-                        selectedOption !== null && 
-                        currentExercise.options[selectedOption] === currentExercise.correctAnswer
-                          ? 'bg-green-50 border border-green-200'
-                          : 'bg-red-50 border border-red-200'
-                      }`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className={`w-5 h-5 ${
-                            selectedOption !== null && 
-                            currentExercise.options[selectedOption] === currentExercise.correctAnswer
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`} />
-                          <span className="font-medium">
-                            {selectedOption !== null && 
-                             currentExercise.options[selectedOption] === currentExercise.correctAnswer
-                              ? '¡Correcto!'
-                              : 'Incorrecto'}
-                          </span>
-                        </div>
-                        {currentExercise.explanation && (
-                          <p className="text-sm text-gray-700">{currentExercise.explanation}</p>
-                        )}
-                      </div>
-                      
-                      <Button onClick={handleNewExercise} className="w-full">
-                        <Zap className="w-4 h-4 mr-2" />
-                        Nuevo Ejercicio
-                      </Button>
+              <div className="space-y-6">
+                {currentExercise ? (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">{currentExercise.question}</h3>
+                    <div className="space-y-2">
+                      {currentExercise.options.map((option, index) => (
+                        <Button
+                          key={index}
+                          variant={
+                            showFeedback 
+                              ? (index === selectedOption 
+                                  ? (option === currentExercise.correctAnswer ? "default" : "destructive")
+                                  : (option === currentExercise.correctAnswer ? "default" : "outline"))
+                              : "outline"
+                          }
+                          onClick={() => handleExerciseOptionSelect && handleExerciseOptionSelect(index)}
+                          disabled={showFeedback}
+                          className="w-full text-left justify-start"
+                        >
+                          {String.fromCharCode(65 + index)}. {option}
+                        </Button>
+                      ))}
                     </div>
-                  )}
-                </div>
-              )}
-              
-              {!currentExercise && (
-                <div className="text-center py-8">
-                  <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600 mb-4">No hay ejercicios disponibles en este momento</p>
-                  <Button onClick={() => handleNewExercise && handleNewExercise()}>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Generar Ejercicio
-                  </Button>
-                </div>
-              )}
+                    
+                    {showFeedback && (
+                      <div className="mt-4 space-y-4">
+                        <div className={`p-4 rounded-lg ${
+                          selectedOption !== null && 
+                          currentExercise.options[selectedOption] === currentExercise.correctAnswer
+                            ? 'bg-green-50 border border-green-200'
+                            : 'bg-red-50 border border-red-200'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className={`w-5 h-5 ${
+                              selectedOption !== null && 
+                              currentExercise.options[selectedOption] === currentExercise.correctAnswer
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }`} />
+                            <span className="font-medium">
+                              {selectedOption !== null && 
+                               currentExercise.options[selectedOption] === currentExercise.correctAnswer
+                                ? '¡Correcto!'
+                                : 'Incorrecto'}
+                            </span>
+                          </div>
+                          {currentExercise.explanation && (
+                            <p className="text-sm text-gray-700">{currentExercise.explanation}</p>
+                          )}
+                        </div>
+                        
+                        <Button onClick={handleNewExercise} className="w-full">
+                          <Zap className="w-4 h-4 mr-2" />
+                          Nuevo Ejercicio
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600 mb-4">No hay ejercicios disponibles en este momento</p>
+                    <Button onClick={() => handleNewExercise && handleNewExercise()}>
+                      <Zap className="w-4 h-4 mr-2" />
+                      Generar Ejercicio
+                    </Button>
+                  </div>
+                )}
+              </div>
             </TabsContent>
             
             <TabsContent value="progress" className="p-6">
