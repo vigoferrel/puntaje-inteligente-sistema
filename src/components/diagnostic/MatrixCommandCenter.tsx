@@ -171,8 +171,8 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                 {currentScores && Object.entries(currentScores).map(([prueba, score]) => (
                   <div key={prueba} className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-300">{String(prueba)}</span>
-                      <span className="text-white font-mono">{String(score)}</span>
+                      <span className="text-gray-300">{prueba}</span>
+                      <span className="text-white font-mono">{typeof score === 'number' ? score : '0'}</span>
                     </div>
                     <Progress 
                       value={typeof score === 'number' ? score / 8.5 : 0} 
@@ -196,10 +196,10 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                   criticalAreas.map(([prueba, score]) => (
                     <div key={prueba} className="flex items-center justify-between p-3 bg-red-900/20 rounded border border-red-500/30">
                       <div>
-                        <div className="text-red-300 font-semibold">{String(prueba)}</div>
+                        <div className="text-red-300 font-semibold">{prueba}</div>
                         <div className="text-red-200 text-sm">Requiere atención inmediata</div>
                       </div>
-                      <div className="text-red-400 font-mono text-lg">{String(score)}</div>
+                      <div className="text-red-400 font-mono text-lg">{typeof score === 'number' ? score : '0'}</div>
                     </div>
                   ))
                 ) : (
@@ -224,10 +224,10 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                   strongAreas.map(([prueba, score]) => (
                     <div key={prueba} className="flex items-center justify-between p-3 bg-green-900/20 rounded border border-green-500/30">
                       <div>
-                        <div className="text-green-300 font-semibold">{String(prueba)}</div>
+                        <div className="text-green-300 font-semibold">{prueba}</div>
                         <div className="text-green-200 text-sm">Rendimiento sobresaliente</div>
                       </div>
-                      <div className="text-green-400 font-mono text-lg">{String(score)}</div>
+                      <div className="text-green-400 font-mono text-lg">{typeof score === 'number' ? score : '0'}</div>
                     </div>
                   ))
                 ) : (
@@ -256,7 +256,7 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                     <CardTitle className="text-purple-400 flex items-center justify-between">
                       <div className="flex items-center">
                         <Brain className="w-5 h-5 mr-2" />
-                        Estrategia: {String(strategy.area)}
+                        Estrategia: {strategy.area ? String(strategy.area) : 'Área no especificada'}
                       </div>
                       <Badge className={`${
                         strategy.priority === 'high' 
@@ -265,32 +265,32 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                           ? 'bg-yellow-600/20 text-yellow-400 border-yellow-400/50'
                           : 'bg-green-600/20 text-green-400 border-green-400/50'
                       }`}>
-                        {String(strategy.priority).toUpperCase()}
+                        {strategy.priority ? String(strategy.priority).toUpperCase() : 'LOW'}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-gray-300">{String(strategy.strategy)}</p>
+                    <p className="text-gray-300">{strategy.strategy ? String(strategy.strategy) : 'Estrategia no disponible'}</p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <h4 className="text-white font-semibold mb-2">Ejercicios Recomendados</h4>
                         {strategy.exercises && Array.isArray(strategy.exercises) && strategy.exercises.map((exercise: any, idx: number) => (
                           <div key={idx} className="text-sm text-gray-400 mb-1">
-                            • {String(exercise.type)} ({String(exercise.difficulty)}) - {String(exercise.estimated_time)}min
+                            • {exercise.type ? String(exercise.type) : 'Tipo no especificado'} ({exercise.difficulty ? String(exercise.difficulty) : 'Básico'}) - {exercise.estimated_time ? String(exercise.estimated_time) : '30'}min
                           </div>
                         ))}
                       </div>
                       <div>
                         <h4 className="text-white font-semibold mb-2">Mejora Estimada</h4>
                         <div className="text-2xl font-bold text-green-400">
-                          +{String(strategy.estimated_improvement)} puntos
+                          +{strategy.estimated_improvement ? String(strategy.estimated_improvement) : '0'} puntos
                         </div>
                       </div>
                     </div>
                     
                     <Button
-                      onClick={() => onGenerateExercises(String(strategy.area))}
+                      onClick={() => onGenerateExercises(strategy.area ? String(strategy.area) : '')}
                       className="bg-purple-600 hover:bg-purple-700 text-white"
                     >
                       <Zap className="w-4 h-4 mr-2" />
@@ -344,7 +344,9 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                         <span className="text-white">Promedio General</span>
                         <span className="text-blue-400 font-mono">
                           {trend.scores && typeof trend.scores === 'object' 
-                            ? Math.round(Object.values(trend.scores).reduce((a: number, b: any) => a + (typeof b === 'number' ? b : 0), 0) / Object.values(trend.scores).length)
+                            ? Math.round(Object.values(trend.scores)
+                                .filter((score): score is number => typeof score === 'number')
+                                .reduce((a, b) => a + b, 0) / Math.max(1, Object.values(trend.scores).filter((score): score is number => typeof score === 'number').length))
                             : 0
                           }
                         </span>
@@ -368,10 +370,10 @@ export const MatrixCommandCenter: React.FC<MatrixCommandCenterProps> = ({
                   <div className="space-y-3">
                     {Object.entries(predictedScores).map(([prueba, score]) => (
                       <div key={prueba} className="flex justify-between items-center">
-                        <span className="text-gray-300">{String(prueba)}</span>
+                        <span className="text-gray-300">{prueba}</span>
                         <div className="text-right">
                           <div className="text-green-400 font-mono">
-                            {typeof score === 'number' ? Math.round(score) : String(score)}
+                            {typeof score === 'number' ? Math.round(score) : '0'}
                           </div>
                           <div className="text-xs text-gray-400">proyectado</div>
                         </div>
