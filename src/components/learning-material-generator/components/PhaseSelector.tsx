@@ -3,13 +3,14 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TLearningCyclePhase } from '@/types/system-types';
-import { PHASE_CONFIG } from '../utils/phase-material-mapping';
-import { Clock, Target } from 'lucide-react';
+import { PHASE_CONFIG, getPhaseConfigSafe } from '../utils/phase-material-mapping';
+import { Clock, Target, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface PhaseSelectorProps {
   selectedPhase: TLearningCyclePhase;
   onPhaseChange: (phase: TLearningCyclePhase) => void;
-  currentUserPhase?: TLearningCyclePhase;
+  currentUserPhase?: TLearningCyclePhase | null;
 }
 
 export const PhaseSelector: React.FC<PhaseSelectorProps> = ({
@@ -25,6 +26,18 @@ export const PhaseSelector: React.FC<PhaseSelectorProps> = ({
     'FINAL_SIMULATIONS'
   ];
 
+  // Validar que PHASE_CONFIG esté disponible
+  if (!PHASE_CONFIG || typeof PHASE_CONFIG !== 'object') {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Error al cargar las fases del ciclo de aprendizaje. Por favor, recarga la página.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-3">
@@ -32,16 +45,22 @@ export const PhaseSelector: React.FC<PhaseSelectorProps> = ({
         <h3 className="font-semibold">Fase del Ciclo de Aprendizaje</h3>
         {currentUserPhase && (
           <Badge variant="outline" className="text-xs">
-            Actual: {PHASE_CONFIG[currentUserPhase].icon} {PHASE_CONFIG[currentUserPhase].name}
+            Actual: {getPhaseConfigSafe(currentUserPhase).icon} {getPhaseConfigSafe(currentUserPhase).name}
           </Badge>
         )}
       </div>
       
       <div className="grid grid-cols-1 gap-2">
         {mainPhases.map((phase) => {
-          const config = PHASE_CONFIG[phase];
+          const config = getPhaseConfigSafe(phase);
           const isSelected = selectedPhase === phase;
           const isCurrent = currentUserPhase === phase;
+          
+          // Validación adicional por si alguna fase no tiene configuración
+          if (!config) {
+            console.warn('Configuración no encontrada para fase:', phase);
+            return null;
+          }
           
           return (
             <Card

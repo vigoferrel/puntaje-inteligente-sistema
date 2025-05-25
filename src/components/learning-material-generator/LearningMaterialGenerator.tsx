@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, RefreshCw, Settings as SettingsIcon, Brain, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, RefreshCw, Settings as SettingsIcon, Brain, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { PhaseSelector } from './components/PhaseSelector';
 import { MaterialTypeSelector } from './components/MaterialTypeSelector';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
 import { NodeDescriptor } from '../exercise-generator/components/NodeDescriptor';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
 import { MaterialGenerationConfig, MaterialType } from './types/learning-material-types';
 import { TLearningCyclePhase } from '@/types/system-types';
 import { PHASE_CONFIG, getRecommendedConfigForPhase } from './utils/phase-material-mapping';
@@ -32,6 +34,10 @@ export const LearningMaterialGenerator: React.FC<LearningMaterialGeneratorProps>
   const { user } = useAuth();
   const { getPhaseConfig } = usePAESCycleIntegration();
   
+  // Estados de carga y error
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+  
   // Estado del generador
   const [selectedPhase, setSelectedPhase] = useState<TLearningCyclePhase>('SKILL_TRAINING');
   const [currentUserPhase, setCurrentUserPhase] = useState<TLearningCyclePhase | null>(null);
@@ -52,37 +58,72 @@ export const LearningMaterialGenerator: React.FC<LearningMaterialGeneratorProps>
     personalizedMode: false
   });
 
-  // Cargar fase actual del usuario
+  // Función helper para validar fase
+  const isValidPhase = (phase: string): phase is TLearningCyclePhase => {
+    return PHASE_CONFIG && typeof PHASE_CONFIG === 'object' && phase in PHASE_CONFIG;
+  };
+
+  // Cargar fase actual del usuario con manejo de errores
   useEffect(() => {
     const loadUserPhase = async () => {
-      if (user?.id) {
-        try {
-          const phase = await getLearningCyclePhase(user.id);
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setLoadingError(null);
+        
+        const phase = await getLearningCyclePhase(user.id);
+        
+        if (isValidPhase(phase)) {
           setCurrentUserPhase(phase);
           setSelectedPhase(phase);
           setConfig(prev => ({ ...prev, phase }));
-        } catch (error) {
-          console.error('Error loading user phase:', error);
+        } else {
+          console.warn('Fase inválida recibida:', phase);
+          setCurrentUserPhase('SKILL_TRAINING');
+          setSelectedPhase('SKILL_TRAINING');
         }
+      } catch (error) {
+        console.error('Error loading user phase:', error);
+        setLoadingError('Error al cargar la fase del usuario');
+        // Usar valores por defecto en caso de error
+        setCurrentUserPhase('SKILL_TRAINING');
+        setSelectedPhase('SKILL_TRAINING');
+      } finally {
+        setIsLoading(false);
       }
     };
     
     loadUserPhase();
   }, [user?.id]);
 
-  // Actualizar configuración cuando cambia la fase
+  // Actualizar configuración cuando cambia la fase con validación
   useEffect(() => {
-    const phaseConfig = getRecommendedConfigForPhase(selectedPhase, selectedSubject);
-    const phaseData = PHASE_CONFIG[selectedPhase];
-    
-    setMaterialType(phaseConfig.primaryMaterial);
-    setConfig(prev => ({
-      ...prev,
-      phase: selectedPhase,
-      materialType: phaseConfig.primaryMaterial,
-      count: phaseData.defaultCount,
-      timeAvailable: phaseData.estimatedDuration
-    }));
+    if (!isValidPhase(selectedPhase)) {
+      console.warn('Fase seleccionada inválida:', selectedPhase);
+      return;
+    }
+
+    try {
+      const phaseConfig = getRecommendedConfigForPhase(selectedPhase, selectedSubject);
+      const phaseData = PHASE_CONFIG[selectedPhase];
+      
+      if (phaseData && phaseConfig) {
+        setMaterialType(phaseConfig.primaryMaterial);
+        setConfig(prev => ({
+          ...prev,
+          phase: selectedPhase,
+          materialType: phaseConfig.primaryMaterial,
+          count: phaseData.defaultCount,
+          timeAvailable: phaseData.estimatedDuration
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating phase configuration:', error);
+    }
   }, [selectedPhase, selectedSubject]);
 
   // Actualizar configuración cuando cambia el tipo de material
@@ -124,8 +165,17 @@ export const LearningMaterialGenerator: React.FC<LearningMaterialGeneratorProps>
   };
 
   const availableNodes = getNodesForTier(selectedSubject, config.tier);
-  const phaseData = PHASE_CONFIG[selectedPhase];
-  const recommendedMaterials = phaseData.recommendedMaterials;
+  
+  // Obtener datos de fase de forma segura
+  const getPhaseData = () => {
+    if (!isValidPhase(selectedPhase)) {
+      return PHASE_CONFIG['SKILL_TRAINING']; // fallback seguro
+    }
+    return PHASE_CONFIG[selectedPhase];
+  };
+
+  const phaseData = getPhaseData();
+  const recommendedMaterials = phaseData?.recommendedMaterials || ['exercises'];
 
   const handleNodeToggle = (nodeId: string) => {
     const newNodes = selectedNodes.includes(nodeId) 
@@ -153,19 +203,51 @@ export const LearningMaterialGenerator: React.FC<LearningMaterialGeneratorProps>
     onGenerate(finalConfig);
   };
 
+  // Estado de carga
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Estado de error
+  if (loadingError) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          {loadingError}. Usando configuración por defecto.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header con información de la fase actual */}
-      {currentUserPhase && (
+      {currentUserPhase && isValidPhase(currentUserPhase) && (
         <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{PHASE_CONFIG[currentUserPhase].icon}</span>
+                <span className="text-2xl">{PHASE_CONFIG[currentUserPhase]?.icon || '🎯'}</span>
                 <div>
-                  <h3 className="font-semibold">Tu Fase Actual: {PHASE_CONFIG[currentUserPhase].name}</h3>
+                  <h3 className="font-semibold">
+                    Tu Fase Actual: {PHASE_CONFIG[currentUserPhase]?.name || 'Entrenamiento'}
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    {PHASE_CONFIG[currentUserPhase].description}
+                    {PHASE_CONFIG[currentUserPhase]?.description || 'Desarrolla tus habilidades'}
                   </p>
                 </div>
               </div>
@@ -251,7 +333,7 @@ export const LearningMaterialGenerator: React.FC<LearningMaterialGeneratorProps>
             {isGenerating ? (
               <>
                 <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                Generando {PHASE_CONFIG[selectedPhase].name}...
+                Generando {phaseData?.name || 'Material'}...
               </>
             ) : (
               <>
@@ -268,7 +350,7 @@ export const LearningMaterialGenerator: React.FC<LearningMaterialGeneratorProps>
             <div className="mt-3 p-3 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground">
                 ✨ Se generará material para <strong>{selectedNodes.length} nodos</strong> en la fase de{' '}
-                <strong>{PHASE_CONFIG[selectedPhase].name}</strong>
+                <strong>{phaseData?.name || 'Entrenamiento'}</strong>
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Tiempo estimado: ~{config.timeAvailable} minutos

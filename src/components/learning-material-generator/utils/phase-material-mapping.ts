@@ -140,6 +140,20 @@ export const MATERIAL_TYPE_CONFIG: Record<MaterialType, {
 };
 
 export const getRecommendedConfigForPhase = (phase: TLearningCyclePhase, subject: string) => {
+  // Validación defensiva
+  if (!phase || !PHASE_CONFIG[phase]) {
+    console.warn('Fase inválida o no encontrada:', phase);
+    // Retornar configuración por defecto
+    return {
+      recommendedMaterials: ['exercises'] as MaterialType[],
+      defaultCount: 5,
+      estimatedDuration: 30,
+      primaryMaterial: 'exercises' as MaterialType,
+      phase: 'SKILL_TRAINING' as TLearningCyclePhase,
+      subject: subject
+    };
+  }
+
   const phaseConfig = PHASE_CONFIG[phase];
   
   return {
@@ -150,4 +164,14 @@ export const getRecommendedConfigForPhase = (phase: TLearningCyclePhase, subject
     phase: phase,
     subject: subject
   };
+};
+
+// Función helper para validar fases
+export const isValidPhase = (phase: any): phase is TLearningCyclePhase => {
+  return typeof phase === 'string' && phase in PHASE_CONFIG;
+};
+
+// Función helper para obtener la configuración de fase de forma segura
+export const getPhaseConfigSafe = (phase: TLearningCyclePhase) => {
+  return PHASE_CONFIG[phase] || PHASE_CONFIG['SKILL_TRAINING'];
 };

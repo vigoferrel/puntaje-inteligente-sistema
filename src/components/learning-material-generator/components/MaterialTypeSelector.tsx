@@ -2,9 +2,10 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MaterialType } from '../types/learning-material-types';
 import { MATERIAL_TYPE_CONFIG } from '../utils/phase-material-mapping';
-import { Clock, Sparkles } from 'lucide-react';
+import { Clock, Sparkles, AlertCircle } from 'lucide-react';
 
 interface MaterialTypeSelectorProps {
   selectedType: MaterialType;
@@ -27,8 +28,25 @@ export const MaterialTypeSelector: React.FC<MaterialTypeSelectorProps> = ({
     'simulations'
   ];
 
+  // Validar que MATERIAL_TYPE_CONFIG esté disponible
+  if (!MATERIAL_TYPE_CONFIG || typeof MATERIAL_TYPE_CONFIG !== 'object') {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Error al cargar los tipos de material. Por favor, recarga la página.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   const getEstimatedTime = (type: MaterialType) => {
-    return MATERIAL_TYPE_CONFIG[type].estimatedTimePerItem * count;
+    const config = MATERIAL_TYPE_CONFIG[type];
+    if (!config) {
+      console.warn('Configuración no encontrada para tipo de material:', type);
+      return count * 3; // fallback por defecto
+    }
+    return config.estimatedTimePerItem * count;
   };
 
   return (
@@ -41,6 +59,13 @@ export const MaterialTypeSelector: React.FC<MaterialTypeSelectorProps> = ({
       <div className="grid grid-cols-1 gap-2">
         {allTypes.map((type) => {
           const config = MATERIAL_TYPE_CONFIG[type];
+          
+          // Validación por tipo individual
+          if (!config) {
+            console.warn('Configuración no encontrada para tipo:', type);
+            return null;
+          }
+          
           const isSelected = selectedType === type;
           const isRecommended = recommendedTypes.includes(type);
           
