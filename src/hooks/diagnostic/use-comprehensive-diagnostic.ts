@@ -23,10 +23,16 @@ export const useComprehensiveDiagnostic = () => {
 
     setIsInitializing(true);
     try {
+      console.log('🔄 Inicializando sistema diagnóstico integral...');
       const systemData = await orchestrator.initializeSystem();
       setData(systemData);
+      console.log('✅ Sistema inicializado exitosamente:', {
+        diagnostics: systemData.diagnosticTests.length,
+        exercises: systemData.officialExercises.length,
+        nodes: systemData.systemMetrics.totalNodes
+      });
     } catch (error) {
-      console.error('Error initializing comprehensive diagnostic system:', error);
+      console.error('❌ Error inicializando sistema diagnóstico:', error);
     } finally {
       setIsInitializing(false);
     }
@@ -42,17 +48,25 @@ export const useComprehensiveDiagnostic = () => {
   // Start quantum diagnostic
   const startQuantumDiagnostic = useCallback(async () => {
     if (!orchestrator) return false;
-    return await orchestrator.startQuantumDiagnostic();
+    
+    try {
+      const result = await orchestrator.startQuantumDiagnostic();
+      console.log('🔬 Diagnóstico cuántico iniciado:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error iniciando diagnóstico cuántico:', error);
+      return false;
+    }
   }, [orchestrator]);
 
   return {
     data,
     isInitializing,
-    isSystemReady: data?.systemMetrics.isSystemReady || false,
+    isSystemReady: (data?.systemMetrics.isSystemReady && data?.diagnosticTests.length > 0) || false,
     startQuantumDiagnostic,
     refreshSystem: initializeSystem,
     
-    // Easy access to data
+    // Easy access to data with safe defaults
     diagnosticTests: data?.diagnosticTests || [],
     officialExercises: data?.officialExercises || [],
     paesSkills: data?.paesSkills || [],

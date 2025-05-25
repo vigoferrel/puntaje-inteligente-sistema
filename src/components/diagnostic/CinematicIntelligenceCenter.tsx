@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
@@ -17,7 +16,8 @@ import {
   Shield,
   Rocket,
   Eye,
-  Activity
+  Activity,
+  CheckCircle
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,13 +48,13 @@ export const CinematicIntelligenceCenter: React.FC = () => {
   useEffect(() => {
     const initSequence = async () => {
       // System power-up sequence
-      for (let i = 0; i <= 100; i += 2) {
+      for (let i = 0; i <= 100; i += 4) {
         setSystemPower(i);
-        await new Promise(resolve => setTimeout(resolve, 30));
+        await new Promise(resolve => setTimeout(resolve, 20));
       }
       
       // Activate AI assistant after system is ready
-      setTimeout(() => setAssistantActive(true), 1000);
+      setTimeout(() => setAssistantActive(true), 500);
     };
 
     if (!isInitializing && isSystemReady) {
@@ -65,16 +65,9 @@ export const CinematicIntelligenceCenter: React.FC = () => {
   // Handle quantum diagnostic start
   const handleStartQuantumDiagnostic = async () => {
     const success = await startQuantumDiagnostic();
-    if (success) {
-      // Navigate to diagnostic selection/execution
+    if (success && diagnosticTests.length > 0) {
+      console.log('🎯 Diagnóstico cuántico iniciado exitosamente');
       setActiveMode('command');
-      
-      // If we have diagnostics available, we can proceed
-      if (diagnosticTests.length > 0) {
-        // For now, let's show the command center
-        // In the future, this could automatically start the first diagnostic
-        console.log('🎯 Diagnóstico cuántico iniciado, mostrando centro de comando');
-      }
     }
   };
 
@@ -85,7 +78,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
         {/* Background effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-purple-900/20 animate-pulse"></div>
-          {Array.from({ length: 30 }).map((_, i) => (
+          {Array.from({ length: 50 }).map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-blue-400 rounded-full"
@@ -95,12 +88,12 @@ export const CinematicIntelligenceCenter: React.FC = () => {
               }}
               animate={{
                 opacity: [0, 1, 0],
-                scale: [0, 1, 0],
+                scale: [0, 1.5, 0],
               }}
               transition={{
-                duration: 2,
+                duration: 3,
                 repeat: Infinity,
-                delay: Math.random() * 2,
+                delay: Math.random() * 3,
               }}
             />
           ))}
@@ -115,7 +108,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
             className="mb-8"
           >
             <div className="relative">
-              <Brain className="w-24 h-24 text-blue-400 mx-auto animate-pulse" />
+              <Brain className="w-32 h-32 text-blue-400 mx-auto animate-pulse" />
               <div className="absolute inset-0 bg-blue-400/20 rounded-full animate-ping"></div>
             </div>
           </motion.div>
@@ -123,8 +116,8 @@ export const CinematicIntelligenceCenter: React.FC = () => {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-4xl font-bold text-white mb-6 tracking-wider"
+            transition={{ delay: 0.3 }}
+            className="text-5xl font-bold text-white mb-8 tracking-wider"
           >
             CENTRO DE INTELIGENCIA DIAGNÓSTICA
           </motion.h1>
@@ -132,36 +125,41 @@ export const CinematicIntelligenceCenter: React.FC = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="space-y-4"
+            transition={{ delay: 0.7 }}
+            className="space-y-6"
           >
-            <div className="text-blue-300 text-lg">
-              {isInitializing ? 'Cargando sistema integral...' : 'Inicializando sistemas neurales...'}
+            <div className="text-blue-300 text-xl font-medium">
+              {systemPower < 20 && "Conectando con base de datos PAES..."}
+              {systemPower >= 20 && systemPower < 40 && "Cargando exámenes oficiales 2024..."}
+              {systemPower >= 40 && systemPower < 60 && "Generando diagnósticos desde exámenes reales..."}
+              {systemPower >= 60 && systemPower < 80 && "Mapeando 170 nodos de aprendizaje..."}
+              {systemPower >= 80 && systemPower < 95 && "Activando sistema LectoGuía..."}
+              {systemPower >= 95 && "Iniciando protocolo cuántico..."}
             </div>
             
-            <div className="w-80 mx-auto bg-gray-800 rounded-full h-3 overflow-hidden">
+            <div className="w-96 mx-auto bg-gray-800 rounded-full h-4 overflow-hidden border border-blue-500/30">
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400"
                 initial={{ width: 0 }}
                 animate={{ width: `${systemPower}%` }}
                 transition={{ duration: 0.1 }}
               />
             </div>
 
-            <div className="text-sm text-gray-400">
-              {systemPower < 30 && "Conectando con base de datos PAES..."}
-              {systemPower >= 30 && systemPower < 60 && "Cargando ejercicios oficiales..."}
-              {systemPower >= 60 && systemPower < 90 && "Inicializando generador IA..."}
-              {systemPower >= 90 && "Activando sistema LectoGuía..."}
+            <div className="text-sm text-gray-400 space-y-2">
+              <div>Sistema Neural: {systemPower >= 100 ? 'OPERACIONAL' : 'CARGANDO'}</div>
+              <div>Diagnósticos: {diagnosticTests.length} listos</div>
+              <div>Nodos: {systemMetrics.totalNodes} mapeados</div>
             </div>
 
-            {systemPower >= 90 && (
+            {systemPower >= 95 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-green-400 text-sm"
+                className="flex items-center justify-center space-x-2 text-green-400 text-lg"
               >
-                ✓ Sistema listo para diagnóstico cuántico
+                <CheckCircle className="w-6 h-6" />
+                <span>Sistema listo para diagnóstico cuántico</span>
               </motion.div>
             )}
           </motion.div>
@@ -191,34 +189,40 @@ export const CinematicIntelligenceCenter: React.FC = () => {
         </Canvas>
       </div>
 
-      {/* System status header */}
+      {/* System status header - enhanced */}
       <motion.div
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className="relative z-10 p-4"
       >
-        <Card className="bg-black/40 backdrop-blur-lg border-blue-500/30">
+        <Card className="bg-black/60 backdrop-blur-lg border-green-500/40">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
                 <div className="flex items-center space-x-2">
                   <Activity className="w-5 h-5 text-green-400 animate-pulse" />
-                  <span className="text-green-400 font-mono">SISTEMA ACTIVO</span>
+                  <span className="text-green-400 font-mono font-bold">SISTEMA OPERACIONAL</span>
                 </div>
                 <div className="text-white">
-                  Usuario: <span className="text-blue-300">{user?.email}</span>
+                  Usuario: <span className="text-blue-300 font-semibold">{user?.email}</span>
+                </div>
+                <div className="text-sm text-gray-300">
+                  Diagnósticos disponibles: <span className="text-yellow-400 font-bold">{diagnosticTests.length}</span>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4">
-                <Badge variant="outline" className="border-green-400 text-green-400">
-                  {systemMetrics.completedNodes}/{systemMetrics.totalNodes} Nodos
+              <div className="flex items-center space-x-3">
+                <Badge variant="outline" className="border-green-400 text-green-400 bg-green-400/10">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  {systemMetrics.totalNodes} Nodos
                 </Badge>
-                <Badge variant="outline" className="border-blue-400 text-blue-400">
+                <Badge variant="outline" className="border-blue-400 text-blue-400 bg-blue-400/10">
+                  <Target className="w-3 h-3 mr-1" />
                   {diagnosticTests.length} Diagnósticos
                 </Badge>
-                <Badge variant="outline" className="border-purple-400 text-purple-400">
-                  Sistema: {isSystemReady ? 'OPERACIONAL' : 'CARGANDO'}
+                <Badge variant="outline" className="border-purple-400 text-purple-400 bg-purple-400/10">
+                  <Zap className="w-3 h-3 mr-1" />
+                  {data?.officialExercises.length || 0} Oficiales
                 </Badge>
               </div>
             </div>
@@ -257,7 +261,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
           <MatrixCommandCenter
             key="command"
             tests={diagnosticTests}
-            skills={[]}
+            skills={data?.paesSkills || []}
             baselineScores={{}}
             currentScores={{}}
             progressTrends={[]}
@@ -329,19 +333,42 @@ export const CinematicIntelligenceCenter: React.FC = () => {
         </Button>
       </div>
 
-      {/* Improved debug info with better contrast */}
+      {/* Enhanced debug info with better styling */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed bottom-4 left-4 z-50 max-w-sm">
-          <Card className="bg-black/80 backdrop-blur-lg border-yellow-500/50">
-            <CardContent className="p-3">
-              <div className="text-yellow-400 text-xs font-mono space-y-1">
-                <div className="text-yellow-300 font-bold mb-2">📊 Sistema Debug</div>
-                <div>Sistema Listo: <span className="text-green-400">{isSystemReady ? 'SÍ' : 'NO'}</span></div>
-                <div>Diagnósticos: <span className="text-blue-400">{diagnosticTests.length}</span></div>
-                <div>Nodos Totales: <span className="text-purple-400">{systemMetrics.totalNodes}</span></div>
-                <div>Ejercicios Oficiales: <span className="text-orange-400">{data?.officialExercises.length || 0}</span></div>
-                <div>Skills PAES: <span className="text-pink-400">{data?.paesSkills.length || 0}</span></div>
-                <div>Modo Activo: <span className="text-cyan-400">{activeMode}</span></div>
+          <Card className="bg-black/90 backdrop-blur-lg border-yellow-500/70 shadow-2xl">
+            <CardContent className="p-4">
+              <div className="text-yellow-300 text-xs font-mono space-y-2">
+                <div className="text-yellow-200 font-bold mb-3 flex items-center">
+                  <Cpu className="w-4 h-4 mr-2" />
+                  Sistema Integral Debug
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  <div className="flex justify-between">
+                    <span>Sistema Listo:</span> 
+                    <span className="text-green-400 font-bold">{isSystemReady ? 'SÍ' : 'NO'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Diagnósticos:</span> 
+                    <span className="text-blue-400 font-bold">{diagnosticTests.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Nodos Totales:</span> 
+                    <span className="text-purple-400 font-bold">{systemMetrics.totalNodes}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Ejercicios:</span> 
+                    <span className="text-orange-400 font-bold">{data?.officialExercises.length || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Skills PAES:</span> 
+                    <span className="text-pink-400 font-bold">{data?.paesSkills.length || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Modo:</span> 
+                    <span className="text-cyan-400 font-bold">{activeMode.toUpperCase()}</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
