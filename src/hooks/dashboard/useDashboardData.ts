@@ -50,7 +50,7 @@ export const useDashboardData = () => {
   // Hooks de sistemas - corregir nombres de propiedades
   const diagnosticSystem = useDiagnosticSystem();
   const { plans, currentPlan, loading: plansLoading } = useLearningPlans();
-  const { events, loading: eventsLoading } = useCalendarEvents();
+  const { events, isLoading: eventsLoading } = useCalendarEvents();
   const lectoGuiaSystem = useLectoGuiaUnified(user?.id);
 
   // Calcular métricas unificadas
@@ -58,7 +58,7 @@ export const useDashboardData = () => {
     if (!diagnosticSystem.isSystemReady) return;
 
     const completedNodes = diagnosticSystem.learningNodes.filter(
-      node => node.status === 'completed' || (node as any).progress >= 80
+      node => node.progress >= 80 || (node as any).isCompleted
     ).length;
     
     const upcomingEvents = events.filter(

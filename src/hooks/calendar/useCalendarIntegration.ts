@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useCalendarEvents } from './useCalendarEvents';
 import { useLearningPlans } from '@/hooks/learning-plans/use-learning-plans';
