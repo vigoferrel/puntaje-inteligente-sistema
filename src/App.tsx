@@ -16,6 +16,10 @@ import PAES from "./pages/PAES";
 import Ejercicios from "./pages/Ejercicios";
 import Finanzas from "./pages/Finanzas";
 import Dashboard from "./pages/Dashboard";
+import PAESDashboard from "./pages/PAESDashboard";
+import PAESUniversePage from "./pages/PAESUniversePage";
+import SubjectDetail from "./pages/SubjectDetail";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -35,9 +39,15 @@ const App = () => (
               <Route path="/calendario" element={<Calendario />} />
               <Route path="/lectoguia" element={<LectoGuia />} />
               <Route path="/paes" element={<PAES />} />
+              <Route path="/paes-dashboard" element={<PAESDashboard />} />
+              <Route path="/paes-universe" element={<PAESUniversePage />} />
               <Route path="/ejercicios" element={<Ejercicios />} />
               <Route path="/finanzas" element={<Finanzas />} />
+              <Route path="/centro-financiero" element={<Finanzas />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/materia/:subject" element={<SubjectDetail />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/configuracion" element={<Settings />} />
             </Routes>
           </AppInitializer>
         </BrowserRouter>

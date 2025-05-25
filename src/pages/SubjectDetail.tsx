@@ -1,247 +1,332 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/app-layout';
-import { AppInitializer } from '@/components/AppInitializer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Play, BookOpen, Target, Clock, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { 
+  BookOpen, 
+  Calculator, 
+  History, 
+  FlaskConical, 
+  Target,
+  Play,
+  CheckCircle,
+  Clock,
+  TrendingUp,
+  Brain,
+  Zap
+} from 'lucide-react';
+import { useDiagnosticSystem } from '@/hooks/diagnostic/useDiagnosticSystem';
+import { useLearningPlans } from '@/hooks/learning-plans/use-learning-plans';
 
-const SubjectDetail = () => {
-  const { subject } = useParams();
+const SubjectDetail: React.FC = () => {
+  const { subject } = useParams<{ subject: string }>();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'overview' | 'nodes' | 'progress' | 'exercises'>('overview');
+  
+  const diagnosticSystem = useDiagnosticSystem();
+  const { currentPlan } = useLearningPlans();
 
-  // Mock data de la materia
-  const subjectData = {
+  const subjectInfo = {
     'competencia-lectora': {
       name: 'Competencia Lectora',
-      description: 'Desarrollo de habilidades de comprensión lectora para la PAES',
+      icon: BookOpen,
+      color: 'from-blue-500 to-cyan-500',
       totalNodes: 30,
-      completedNodes: 18,
-      tier1: { total: 14, completed: 10 },
-      tier2: { total: 13, completed: 6 },
-      tier3: { total: 3, completed: 2 },
-      estimatedTime: '45 horas',
-      lastActivity: 'Hace 2 días'
+      tier1: 14, tier2: 13, tier3: 3,
+      description: 'Desarrolla habilidades de comprensión, análisis y síntesis textual'
+    },
+    'matematica-m1': {
+      name: 'Matemática M1',
+      icon: Calculator,
+      color: 'from-green-500 to-emerald-500',
+      totalNodes: 25,
+      tier1: 10, tier2: 10, tier3: 5,
+      description: 'Álgebra, funciones y probabilidades'
+    },
+    'matematica-m2': {
+      name: 'Matemática M2',
+      icon: Calculator,
+      color: 'from-purple-500 to-violet-500',
+      totalNodes: 22,
+      tier1: 13, tier2: 6, tier3: 3,
+      description: 'Geometría, trigonometría y cálculo'
+    },
+    'historia': {
+      name: 'Historia y Ciencias Sociales',
+      icon: History,
+      color: 'from-orange-500 to-red-500',
+      totalNodes: 65,
+      tier1: 19, tier2: 26, tier3: 20,
+      description: 'Historia de Chile, mundial y educación cívica'
+    },
+    'ciencias': {
+      name: 'Ciencias',
+      icon: FlaskConical,
+      color: 'from-red-500 to-pink-500',
+      totalNodes: 135,
+      tier1: 33, tier2: 53, tier3: 49,
+      description: 'Biología, química, física y ciencias de la Tierra'
     }
   };
 
-  const data = subjectData[subject as keyof typeof subjectData];
+  const currentSubject = subject ? subjectInfo[subject as keyof typeof subjectInfo] : null;
 
-  if (!data) {
+  if (!currentSubject) {
     return (
-      <AppInitializer>
-        <AppLayout>
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-bold">Materia no encontrada</h1>
-            <Button onClick={() => navigate('/')} className="mt-4">
-              Volver al inicio
-            </Button>
-          </div>
-        </AppLayout>
-      </AppInitializer>
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center">
+          <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700">
+            <CardContent className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-white mb-4">Materia no encontrada</h2>
+              <Button onClick={() => navigate('/')} className="bg-blue-600 hover:bg-blue-700">
+                Volver al inicio
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AppLayout>
     );
   }
 
-  const overallProgress = (data.completedNodes / data.totalNodes) * 100;
+  const subjectNodes = diagnosticSystem.learningNodes.filter(node => 
+    node.subject?.toLowerCase().includes(subject?.toLowerCase() || '')
+  );
+
+  const completedNodes = subjectNodes.filter(node => 
+    (node as any).progress >= 80 || (node as any).isCompleted
+  ).length;
+
+  const progressPercentage = subjectNodes.length > 0 
+    ? (completedNodes / subjectNodes.length) * 100 
+    : 0;
 
   return (
-    <AppInitializer>
-      <AppLayout>
+    <AppLayout>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-6">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`relative overflow-hidden rounded-xl bg-gradient-to-r ${currentSubject.color} p-8 mb-6`}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver
-              </Button>
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <currentSubject.icon className="w-8 h-8 text-white" />
+              </div>
               <div>
-                <h1 className="text-3xl font-bold">{data.name}</h1>
-                <p className="text-muted-foreground">{data.description}</p>
+                <h1 className="text-3xl font-bold text-white">{currentSubject.name}</h1>
+                <p className="text-white/80">{currentSubject.description}</p>
               </div>
             </div>
             
-            <Button
-              onClick={() => navigate(`/ejercicios/${subject}`)}
-              className="flex items-center gap-2"
-            >
-              <Play className="h-4 w-4" />
-              Generar Ejercicios
-            </Button>
-          </div>
-
-          {/* Progress Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Progreso General
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Progreso Total</span>
-                    <span className="font-semibold">{Math.round(overallProgress)}%</span>
-                  </div>
-                  <Progress value={overallProgress} className="h-3" />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">{data.completedNodes}</div>
-                    <div className="text-sm text-muted-foreground">Nodos Completados</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{data.totalNodes}</div>
-                    <div className="text-sm text-muted-foreground">Nodos Totales</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{data.estimatedTime}</div>
-                    <div className="text-sm text-muted-foreground">Tiempo Estimado</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{data.lastActivity}</div>
-                    <div className="text-sm text-muted-foreground">Última Actividad</div>
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white/10 backdrop-blur-xl rounded-lg p-4">
+                <div className="text-2xl font-bold text-white">{currentSubject.totalNodes}</div>
+                <div className="text-sm text-white/80">Nodos Totales</div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Tier Progress */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="border-red-200 bg-red-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Target className="h-5 w-5 text-red-600" />
-                  Tier 1 - Críticos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Progreso</span>
-                    <span className="text-sm font-semibold">
-                      {data.tier1.completed}/{data.tier1.total}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={(data.tier1.completed / data.tier1.total) * 100} 
-                    className="h-2"
-                  />
-                  <Badge variant="destructive" className="w-full justify-center">
-                    Alta Prioridad
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-yellow-600" />
-                  Tier 2 - Importantes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Progreso</span>
-                    <span className="text-sm font-semibold">
-                      {data.tier2.completed}/{data.tier2.total}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={(data.tier2.completed / data.tier2.total) * 100} 
-                    className="h-2"
-                  />
-                  <Badge className="w-full justify-center bg-yellow-100 text-yellow-800">
-                    Media Prioridad
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-green-600" />
-                  Tier 3 - Complementarios
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Progreso</span>
-                    <span className="text-sm font-semibold">
-                      {data.tier3.completed}/{data.tier3.total}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={(data.tier3.completed / data.tier3.total) * 100} 
-                    className="h-2"
-                  />
-                  <Badge className="w-full justify-center bg-green-100 text-green-800">
-                    Baja Prioridad
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Acciones Rápidas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(`/ejercicios/${subject}`)}
-                  className="h-16 flex flex-col items-center justify-center gap-2"
-                >
-                  <Play className="h-6 w-6" />
-                  <span>Generar Ejercicios</span>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/diagnostico')}
-                  className="h-16 flex flex-col items-center justify-center gap-2"
-                >
-                  <Target className="h-6 w-6" />
-                  <span>Diagnóstico</span>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/lectoguia')}
-                  className="h-16 flex flex-col items-center justify-center gap-2"
-                >
-                  <BookOpen className="h-6 w-6" />
-                  <span>LectoGuía</span>
-                </Button>
+              <div className="bg-white/10 backdrop-blur-xl rounded-lg p-4">
+                <div className="text-2xl font-bold text-white">{completedNodes}</div>
+                <div className="text-sm text-white/80">Completados</div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="bg-white/10 backdrop-blur-xl rounded-lg p-4">
+                <div className="text-2xl font-bold text-white">{Math.round(progressPercentage)}%</div>
+                <div className="text-sm text-white/80">Progreso</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-xl rounded-lg p-4">
+                <div className="text-2xl font-bold text-white">{currentSubject.tier1}</div>
+                <div className="text-sm text-white/80">Tier 1 (Alta prioridad)</div>
+              </div>
+            </div>
+          </div>
         </motion.div>
-      </AppLayout>
-    </AppInitializer>
+
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 mb-6">
+          {[
+            { id: 'overview', label: 'Resumen', icon: Target },
+            { id: 'nodes', label: 'Nodos', icon: Brain },
+            { id: 'progress', label: 'Progreso', icon: TrendingUp },
+            { id: 'exercises', label: 'Ejercicios', icon: Zap }
+          ].map((tab) => (
+            <Button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              variant={activeTab === tab.id ? 'default' : 'outline'}
+              className={`
+                px-4 py-2 ${activeTab === tab.id 
+                  ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
+                  : 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                }
+              `}
+            >
+              <tab.icon className="w-4 h-4 mr-2" />
+              {tab.label}
+            </Button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Target className="w-5 h-5 text-blue-400" />
+                    Progreso General
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-400">Completado</span>
+                        <span className="text-cyan-400">{Math.round(progressPercentage)}%</span>
+                      </div>
+                      <Progress value={progressPercentage} className="h-2" />
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-xl font-bold text-green-400">{currentSubject.tier1}</div>
+                        <div className="text-xs text-gray-400">Tier 1</div>
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold text-yellow-400">{currentSubject.tier2}</div>
+                        <div className="text-xs text-gray-400">Tier 2</div>
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold text-red-400">{currentSubject.tier3}</div>
+                        <div className="text-xs text-gray-400">Tier 3</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                    Acciones Rápidas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    onClick={() => navigate('/lectoguia')}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Continuar Estudio
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/ejercicios')}
+                    variant="outline" 
+                    className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    Generar Ejercicios
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/diagnostico')}
+                    variant="outline" 
+                    className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+                  >
+                    <Brain className="w-4 h-4 mr-2" />
+                    Diagnóstico Específico
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'nodes' && (
+            <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Nodos de {currentSubject.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {subjectNodes.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {subjectNodes.slice(0, 12).map((node, index) => (
+                      <motion.div
+                        key={node.id}
+                        whileHover={{ scale: 1.02 }}
+                        className="p-4 bg-gray-700/50 rounded-lg border border-gray-600 hover:border-blue-500 transition-all cursor-pointer"
+                        onClick={() => navigate('/lectoguia')}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline" className="text-xs">
+                            Nodo {index + 1}
+                          </Badge>
+                          {(node as any).isCompleted ? (
+                            <CheckCircle className="w-4 h-4 text-green-400" />
+                          ) : (
+                            <Clock className="w-4 h-4 text-yellow-400" />
+                          )}
+                        </div>
+                        <h4 className="text-white font-medium mb-1">{node.title}</h4>
+                        <p className="text-sm text-gray-400">{node.estimatedTimeMinutes} min</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BookOpen className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">No hay nodos disponibles para esta materia</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'progress' && (
+            <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Análisis de Progreso</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <TrendingUp className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                  <p className="text-gray-400 mb-4">Análisis detallado próximamente</p>
+                  <Button onClick={() => navigate('/diagnostico')} className="bg-blue-600 hover:bg-blue-700">
+                    Ver Diagnóstico General
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'exercises' && (
+            <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Ejercicios Personalizados</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Zap className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+                  <p className="text-gray-400 mb-4">Genera ejercicios específicos para {currentSubject.name}</p>
+                  <Button onClick={() => navigate('/ejercicios')} className="bg-yellow-600 hover:bg-yellow-700">
+                    Ir a Generador de Ejercicios
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
+      </div>
+    </AppLayout>
   );
 };
 

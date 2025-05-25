@@ -29,7 +29,10 @@ import {
   TrendingUp,
   Shield,
   GraduationCap,
-  Calendar
+  Calendar,
+  Settings,
+  History,
+  FlaskConical
 } from "lucide-react";
 import { useCinematicDashboard } from "@/hooks/dashboard/useCinematicDashboard";
 import { useGlobalStore } from "@/store/globalStore";
@@ -85,6 +88,11 @@ const toolsItems = [
     url: "/calendario",
     icon: Calendar,
     badge: "Nuevo"
+  },
+  {
+    title: "Configuración",
+    url: "/settings",
+    icon: Settings
   }
 ];
 
@@ -128,8 +136,8 @@ export function AppSidebar() {
     { name: "Comp. Lectora", nodes: 30, url: "/materia/competencia-lectora", icon: BookOpen },
     { name: "Matemática M1", nodes: 25, url: "/materia/matematica-m1", icon: Target },
     { name: "Matemática M2", nodes: 22, url: "/materia/matematica-m2", icon: Target },
-    { name: "Ciencias", nodes: 135, url: "/materia/ciencias", icon: Shield },
-    { name: "Historia", nodes: 65, url: "/materia/historia", icon: BookOpen }
+    { name: "Ciencias", nodes: 135, url: "/materia/ciencias", icon: FlaskConical },
+    { name: "Historia", nodes: 65, url: "/materia/historia", icon: History }
   ];
 
   return (
