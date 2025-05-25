@@ -41,21 +41,16 @@ export const usePlanInitialization = () => {
     
     try {
       // Cargar en paralelo para optimizar el tiempo de inicialización
-      const [nodesExist, plansData] = await Promise.all([
+      const [nodesExist] = await Promise.all([
         ensureLearningNodesExist(),
         fetchLearningPlans(profile.id)
       ]);
       
       console.log('Datos iniciales cargados correctamente');
       
-      // Si hay un plan actual, cargamos su progreso
-      if (currentPlan) {
-        loadPlanProgress(profile.id, currentPlan.id);
-      } else if (plansData && plansData.length > 0) {
-        // Si no hay plan actual pero se cargaron planes, usamos el primero
-        const firstPlan = plansData[0];
-        loadPlanProgress(profile.id, firstPlan.id);
-      }
+      // Wait for plans to be loaded before proceeding
+      // The plans will be available in the next render through the hook's state
+      
     } catch (error) {
       console.error("Error en la carga inicial:", error);
       toast({
@@ -66,7 +61,21 @@ export const usePlanInitialization = () => {
     } finally {
       setInitializing(false);
     }
-  }, [profile, fetchLearningPlans, currentPlan, loadPlanProgress]);
+  }, [profile, fetchLearningPlans]);
+
+  // Effect to handle plan progress loading when plans are available
+  useEffect(() => {
+    if (plans.length > 0 && profile) {
+      // Si hay un plan actual, cargamos su progreso
+      if (currentPlan) {
+        loadPlanProgress(profile.id, currentPlan.id);
+      } else {
+        // Si no hay plan actual pero se cargaron planes, usamos el primero
+        const firstPlan = plans[0];
+        loadPlanProgress(profile.id, firstPlan.id);
+      }
+    }
+  }, [plans, currentPlan, profile, loadPlanProgress]);
   
   // Cargar datos iniciales
   useEffect(() => {
