@@ -7,7 +7,7 @@ interface UseExerciseProgressProps {
   selectedOption: number | null;
   showFeedback: boolean;
   isLoading: boolean;
-  updateProgress: (progress: number) => void;
+  updateProgress: (progress: number | ((prev: number) => number)) => void;
   completeExercise: () => void;
 }
 

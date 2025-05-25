@@ -11,8 +11,12 @@ export function useExerciseTabState() {
     setShowCompletionCard(false);
   }, []);
 
-  const updateProgress = useCallback((progress: number) => {
-    setExerciseProgress(Math.min(Math.max(progress, 0), 100));
+  const updateProgress = useCallback((progress: number | ((prev: number) => number)) => {
+    if (typeof progress === 'function') {
+      setExerciseProgress(prev => Math.min(Math.max(progress(prev), 0), 100));
+    } else {
+      setExerciseProgress(Math.min(Math.max(progress, 0), 100));
+    }
   }, []);
 
   const completeExercise = useCallback(() => {
