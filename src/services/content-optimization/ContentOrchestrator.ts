@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { openRouterService } from '@/services/openrouter/core';
 import { BancoEvaluacionesService } from '@/services/banco-evaluaciones/BancoEvaluacionesService';
@@ -16,6 +17,11 @@ interface OptimizationMetrics {
   cacheHitRate: number;
   costSavings: number;
   userSatisfaction: number;
+}
+
+interface CachedContent {
+  confidence: number;
+  [key: string]: any;
 }
 
 /**
@@ -70,10 +76,11 @@ export class ContentOrchestrator {
     const cached = intelligentCache.get(cacheKey);
     if (cached && typeof cached === 'object' && cached !== null) {
       this.metrics.cacheHitRate++;
+      const cachedContent = cached as CachedContent;
       return {
         useOfficial: false,
         source: 'ai_generated',
-        confidence: (cached as any).confidence || 0.8,
+        confidence: cachedContent.confidence || 0.8,
         costEstimate: 0
       };
     }
@@ -129,15 +136,21 @@ export class ContentOrchestrator {
    * CONTENIDO OFICIAL DEL BANCO
    */
   private async getOfficialExercise(prueba: string, skill: string, difficulty: string): Promise<any> {
+    const difficultyMapping = {
+      'BASICO': 100,
+      'INTERMEDIO': 100,
+      'AVANZADO': 100
+    };
+
     const evaluacion = await BancoEvaluacionesService.generarEvaluacionOptimizada({
-      tipo_evaluacion: 'diagnostica',
+      tipo_evaluacion: 'formativa',
       prueba_paes: prueba,
       total_preguntas: 1,
       duracion_minutos: 5,
       distribucion_dificultad: { 
-        basico: difficulty.toLowerCase() === 'basico' ? 100 : 0,
-        intermedio: difficulty.toLowerCase() === 'intermedio' ? 100 : 0,
-        avanzado: difficulty.toLowerCase() === 'avanzado' ? 100 : 0
+        basico: difficulty === 'BASICO' ? 100 : 0,
+        intermedio: difficulty === 'INTERMEDIO' ? 100 : 0,
+        avanzado: difficulty === 'AVANZADO' ? 100 : 0
       }
     });
 
@@ -254,7 +267,7 @@ export class ContentOrchestrator {
       ],
       correctAnswer: 'A) Primera opción',
       explanation: `Ejercicio de práctica para ${skill} en ${prueba}. Nivel: ${difficulty}`,
-      source: 'fallback',
+      source: 'cache',
       metadata: {
         difficulty,
         skill,
@@ -358,8 +371,9 @@ export class ContentOrchestrator {
 
       if (typeof response === 'string') {
         return response;
-      } else if (response && typeof response === 'object' && 'explanation' in response) {
-        return (response as any).explanation || question.explanation;
+      } else if (response && typeof response === 'object') {
+        const responseObj = response as any;
+        return responseObj.explanation || question.explanation || 'Explicación estándar de la pregunta.';
       }
       
       return question.explanation || 'Explicación estándar de la pregunta.';

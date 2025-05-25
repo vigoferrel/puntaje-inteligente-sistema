@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 
 interface SystemMetrics {
@@ -23,6 +22,7 @@ interface UserProgress {
   level: number;
   completedExercises: number;
   streakDays: number;
+  streak: number; // Added for compatibility
 }
 
 interface UnifiedState {
@@ -63,7 +63,8 @@ export const useUnifiedState = (): UnifiedState => {
     overallScore: 0,
     level: 1,
     completedExercises: 0,
-    streakDays: 1
+    streakDays: 1,
+    streak: 1 // Added for compatibility
   });
 
   // Cargar estado desde localStorage

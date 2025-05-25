@@ -152,7 +152,7 @@ export const useOptimizedLectoGuia = () => {
         options: exercise.options || [],
         correctAnswer: exercise.correctAnswer,
         explanation: exercise.explanation,
-        source: exercise.source || 'oficial',
+        source: (exercise.source as 'oficial' | 'ai_contextual' | 'hibrido') || 'cache',
         metadata: {
           difficulty: exercise.metadata?.difficulty || 'INTERMEDIO',
           skill: exercise.metadata?.skill || 'INTERPRET_RELATE',
@@ -272,7 +272,7 @@ export const useOptimizedLectoGuia = () => {
   const getCachedResponse = (content: string, subject: string): string => {
     const cacheKey = `response_${subject}_${content.substring(0, 50)}`;
     const cached = intelligentCache.get(cacheKey);
-    return cached || generateOptimizedResponse(content, subject);
+    return (cached as string) || generateOptimizedResponse(content, subject);
   };
 
   const generateContextualResponse = async (content: string, subject: string, userId?: string): Promise<string> => {
