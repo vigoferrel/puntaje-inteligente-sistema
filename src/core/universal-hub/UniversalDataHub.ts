@@ -76,7 +76,10 @@ export class UniversalDataHub {
     };
   }
 
-  private notifySubscribers(key: string, data: any): void {
+  /**
+   * NOTIFICACIÓN PÚBLICA - Método expuesto para bridges
+   */
+  public notifySubscribers(key: string, data: any): void {
     const subscribers = this.subscribers.get(key) || [];
     subscribers.forEach(callback => {
       try {
@@ -275,7 +278,7 @@ export class UniversalDataHub {
     const latest = diagnostics[0];
     const strongAreas: string[] = [];
     
-    if (latest.results) {
+    if (latest.results && typeof latest.results === 'object') {
       Object.entries(latest.results).forEach(([area, score]: [string, any]) => {
         if (typeof score === 'number' && score > 600) {
           strongAreas.push(area);
@@ -293,7 +296,7 @@ export class UniversalDataHub {
     const latest = diagnostics[0];
     const weakAreas: string[] = [];
     
-    if (latest.results) {
+    if (latest.results && typeof latest.results === 'object') {
       Object.entries(latest.results).forEach(([area, score]: [string, any]) => {
         if (typeof score === 'number' && score < 450) {
           weakAreas.push(area);
@@ -308,7 +311,7 @@ export class UniversalDataHub {
     if (!evaluations.length) return 0;
     
     // Algoritmo quirúrgico de eficiencia
-    const totalTime = evaluations.reduce((acc, eval) => acc + (eval.tiempo_total_segundos || 0), 0);
+    const totalTime = evaluations.reduce((acc, evalItem) => acc + (evalItem.tiempo_total_segundos || 0), 0);
     const avgTime = totalTime / evaluations.length;
     
     return Math.min(100, Math.max(0, 100 - (avgTime / 60))); // Eficiencia basada en tiempo promedio
@@ -340,7 +343,7 @@ export class UniversalDataHub {
     
     if (diagnostics.length > 0) {
       const latest = diagnostics[0];
-      if (latest.results) {
+      if (latest.results && typeof latest.results === 'object') {
         Object.entries(latest.results).forEach(([area, score]: [string, any]) => {
           if (typeof score === 'number' && score > 550) {
             readyAreas.push(area);

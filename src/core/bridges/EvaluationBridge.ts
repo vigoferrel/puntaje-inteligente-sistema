@@ -1,4 +1,3 @@
-
 import { universalHub } from '../universal-hub/UniversalDataHub';
 import { BancoEvaluacionesService } from '@/services/banco-evaluaciones/BancoEvaluacionesService';
 
@@ -103,7 +102,7 @@ export class EvaluationBridge {
 
   private findRelevantNodes(preguntas: any[], nodes: any[]): any[] {
     return nodes.filter(node => 
-      preguntas.some(pregunta => pregunta.nodo_code === node.code)
+      preguntas.some((pregunta: any) => pregunta.nodo_code === node.code)
     );
   }
 
@@ -186,7 +185,7 @@ export class EvaluationBridge {
   }
 
   private async calculateIRTResponse(questionId: string, response: string, analytics: any): Promise<any> {
-    // Implementación IRT simplificada
+    // Implementación IRT simplificada usando el nuevo método
     const question = await BancoEvaluacionesService.obtenerPreguntaPorId(questionId);
     const isCorrect = question?.alternativas.find(alt => alt.letra === response)?.es_correcta || false;
     
@@ -226,7 +225,7 @@ export class EvaluationBridge {
   }
 
   private async selectNextAdaptiveQuestion(userId: string, irtAnalysis: any): Promise<any> {
-    // Selección adaptativa quirúrgica
+    // Selección adaptativa quirúrgica usando el nuevo método
     const targetDifficulty = irtAnalysis.abilityEstimate;
     const usedQuestions = await this.getUsedQuestions(userId);
     

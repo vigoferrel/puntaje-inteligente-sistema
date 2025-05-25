@@ -1,4 +1,3 @@
-
 import { universalHub } from '../universal-hub/UniversalDataHub';
 import { evaluationBridge } from '../bridges/EvaluationBridge';
 
@@ -75,7 +74,7 @@ export class CentralizedStateManager {
   private async orchestrateEvaluationFlow(userId: string, payload: any): Promise<any> {
     const { prueba, configuracion } = payload;
     
-    // Estado centralizdo
+    // Estado centralizado
     this.setState(`evaluation_${userId}`, {
       active: true,
       prueba,
@@ -109,15 +108,28 @@ export class CentralizedStateManager {
     
     // Actualizar estado global
     const currentEvaluation = this.getState(`evaluation_${userId}`) || {};
-    this.setState(`evaluation_${userId}`, {
-      ...currentEvaluation,
-      lastResponse: {
-        questionId,
-        response,
-        result: adaptiveResult,
-        timestamp: Date.now()
-      }
-    }, 'COMPLETE_QUESTION');
+    
+    // Verificar que currentEvaluation es un objeto antes de hacer spread
+    const updatedEvaluation = typeof currentEvaluation === 'object' && currentEvaluation !== null
+      ? {
+          ...currentEvaluation,
+          lastResponse: {
+            questionId,
+            response,
+            result: adaptiveResult,
+            timestamp: Date.now()
+          }
+        }
+      : {
+          lastResponse: {
+            questionId,
+            response,
+            result: adaptiveResult,
+            timestamp: Date.now()
+          }
+        };
+
+    this.setState(`evaluation_${userId}`, updatedEvaluation, 'COMPLETE_QUESTION');
     
     // Bridge interseccional automático
     await this.syncCrossModule(userId, 'question_completed', {
@@ -205,7 +217,7 @@ export class CentralizedStateManager {
     this.setState(`educational_context_${userId}`, educationalContext, 'SYNC_CONTEXT');
     
     // Bridge con evaluación si está activa
-    const activeEvaluation = this.getState(`evaluation_${userId}`);
+    const activeEvaluation = this.getState(`evaluation_${userId}`) as { active?: boolean } | undefined;
     if (activeEvaluation?.active) {
       await this.bridgeEvaluationWithContext(userId, educationalContext);
     }

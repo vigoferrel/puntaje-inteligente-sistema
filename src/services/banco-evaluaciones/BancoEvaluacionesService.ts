@@ -474,6 +474,169 @@ export class BancoEvaluacionesService {
   }
 
   /**
+   * NUEVO: Obtener pregunta específica por ID
+   */
+  static async obtenerPreguntaPorId(preguntaId: string): Promise<PreguntaBanco | null> {
+    const cacheKey = `pregunta_${preguntaId}`;
+    const cached = this.obtenerDelCache(cacheKey);
+    
+    if (cached?.data) {
+      return cached.data;
+    }
+
+    try {
+      const { data: pregunta, error } = await supabase
+        .from('banco_preguntas')
+        .select(`
+          id,
+          codigo_pregunta,
+          nodo_code,
+          prueba_paes,
+          enunciado,
+          nivel_dificultad,
+          tipo_pregunta,
+          tiempo_estimado_segundos,
+          parametro_discriminacion,
+          parametro_dificultad,
+          alternativas_respuesta (
+            id,
+            letra,
+            contenido,
+            es_correcta,
+            tipo_distractor,
+            explicacion_por_que_incorrecta
+          ),
+          explicaciones_pregunta (
+            explicacion_respuesta_correcta,
+            razonamiento_paso_a_paso,
+            conceptos_clave_involucrados,
+            consejos_resolucion,
+            estrategias_mejora
+          )
+        `)
+        .eq('id', preguntaId)
+        .single();
+
+      if (error) {
+        console.error('Error obteniendo pregunta por ID:', error);
+        return null;
+      }
+
+      const preguntaFormatted: PreguntaBanco = {
+        ...pregunta,
+        nivel_dificultad: pregunta.nivel_dificultad as 'basico' | 'intermedio' | 'avanzado',
+        tipo_pregunta: pregunta.tipo_pregunta as 'multiple_choice' | 'multiple_select' | 'true_false' | 'ordenar_secuencia' | 'completar_texto' | 'drag_drop' | 'hotspot_imagen' | 'respuesta_numerica',
+        alternativas: pregunta.alternativas_respuesta || [],
+        explicacion: pregunta.explicaciones_pregunta?.[0],
+        parametro_discriminacion: pregunta.parametro_discriminacion || 1.0,
+        parametro_dificultad: pregunta.parametro_dificultad || 0.0
+      };
+
+      // Cachear resultado
+      this.cache.set(cacheKey, {
+        data: preguntaFormatted,
+        timestamp: Date.now()
+      });
+
+      return preguntaFormatted;
+
+    } catch (error) {
+      console.error('Error en obtenerPreguntaPorId:', error);
+      return null;
+    }
+  }
+
+  /**
+   * NUEVO: Selección adaptativa de preguntas basada en IRT
+   */
+  static async seleccionarPreguntaAdaptativa(config: {
+    targetDifficulty: number;
+    usedQuestions: string[];
+    maxInformation?: boolean;
+    pruebaPaes?: string;
+  }): Promise<PreguntaBanco | null> {
+    const { targetDifficulty, usedQuestions, maxInformation = true, pruebaPaes = 'COMPETENCIA_LECTORA' } = config;
+
+    try {
+      // Construir query excluyendo preguntas ya utilizadas
+      let query = supabase
+        .from('banco_preguntas')
+        .select(`
+          id,
+          codigo_pregunta,
+          nodo_code,
+          prueba_paes,
+          enunciado,
+          nivel_dificultad,
+          tipo_pregunta,
+          tiempo_estimado_segundos,
+          parametro_discriminacion,
+          parametro_dificultad,
+          alternativas_respuesta (
+            id,
+            letra,
+            contenido,
+            es_correcta,
+            tipo_distractor,
+            explicacion_por_que_incorrecta
+          )
+        `)
+        .eq('validada', true)
+        .eq('prueba_paes', pruebaPaes);
+
+      // Excluir preguntas ya utilizadas
+      if (usedQuestions.length > 0) {
+        query = query.not('id', 'in', `(${usedQuestions.join(',')})`);
+      }
+
+      const { data: preguntas, error } = await query.limit(50);
+
+      if (error || !preguntas?.length) {
+        console.error('Error en selección adaptativa:', error);
+        return null;
+      }
+
+      // Algoritmo IRT simplificado para seleccionar la mejor pregunta
+      let bestPregunta: any = null;
+      let bestInformation = 0;
+
+      preguntas.forEach(pregunta => {
+        const discrimination = pregunta.parametro_discriminacion || 1.0;
+        const difficulty = pregunta.parametro_dificultad || 0.0;
+        
+        // Calcular información de Fisher simplificada
+        const diffFromTarget = Math.abs(difficulty - targetDifficulty);
+        const information = discrimination * Math.exp(-Math.pow(diffFromTarget, 2));
+        
+        if (information > bestInformation || !bestPregunta) {
+          bestInformation = information;
+          bestPregunta = pregunta;
+        }
+      });
+
+      if (!bestPregunta) return null;
+
+      // Formatear resultado
+      const preguntaFormatted: PreguntaBanco = {
+        ...bestPregunta,
+        nivel_dificultad: bestPregunta.nivel_dificultad as 'basico' | 'intermedio' | 'avanzado',
+        tipo_pregunta: bestPregunta.tipo_pregunta as 'multiple_choice' | 'multiple_select' | 'true_false' | 'ordenar_secuencia' | 'completar_texto' | 'drag_drop' | 'hotspot_imagen' | 'respuesta_numerica',
+        alternativas: bestPregunta.alternativas_respuesta || [],
+        parametro_discriminacion: bestPregunta.parametro_discriminacion || 1.0,
+        parametro_dificultad: bestPregunta.parametro_dificultad || 0.0
+      };
+
+      console.log(`🎯 Pregunta adaptativa seleccionada: dificultad=${difficulty}, información=${bestInformation}`);
+      
+      return preguntaFormatted;
+
+    } catch (error) {
+      console.error('Error en seleccionarPreguntaAdaptativa:', error);
+      return null;
+    }
+  }
+
+  /**
    * Análisis en tiempo real del progreso
    */
   static async analizarProgresoTiempoReal(
