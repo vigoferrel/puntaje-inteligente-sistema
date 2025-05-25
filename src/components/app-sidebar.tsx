@@ -21,8 +21,6 @@ import {
   Target, 
   BookOpen, 
   Stethoscope,
-  FileText,
-  GraduationCap,
   Brain,
   DollarSign,
   ChevronDown,
@@ -30,7 +28,8 @@ import {
   Sparkles,
   Zap,
   TrendingUp,
-  Shield
+  Shield,
+  GraduationCap
 } from "lucide-react";
 import { useCinematicDashboard } from "@/hooks/dashboard/useCinematicDashboard";
 import { useGlobalStore } from "@/store/globalStore";
@@ -41,36 +40,31 @@ const workflowItems = [
     title: "Centro de Comando",
     url: "/",
     icon: Home,
-    phase: "dashboard",
-    description: "Panel de control principal"
+    phase: "dashboard"
   },
   {
-    title: "Diagnóstico Inteligente",
+    title: "Diagnóstico IA",
     url: "/diagnostico",
     icon: Stethoscope,
-    phase: "diagnostic",
-    description: "Evaluación de habilidades"
+    phase: "diagnostic"
   },
   {
-    title: "Plan Personalizado",
+    title: "Plan Inteligente",
     url: "/plan",
     icon: Target,
-    phase: "planning",
-    description: "Estrategia de estudio"
+    phase: "planning"
   },
   {
     title: "LectoGuía IA",
     url: "/lectoguia",
     icon: Brain,
-    phase: "study",
-    description: "Asistente de aprendizaje"
+    phase: "study"
   },
   {
-    title: "Evaluación Continua",
+    title: "Evaluación PAES",
     url: "/paes-dashboard",
     icon: TrendingUp,
-    phase: "evaluation",
-    description: "Seguimiento de progreso"
+    phase: "evaluation"
   }
 ];
 
@@ -79,14 +73,12 @@ const toolsItems = [
     title: "Centro Financiero",
     url: "/centro-financiero",
     icon: DollarSign,
-    badge: "PAES 2025",
-    color: "from-yellow-500 to-orange-500"
+    badge: "2025"
   },
   {
-    title: "Generador de Ejercicios",
+    title: "Ejercicios IA",
     url: "/ejercicios",
-    icon: Zap,
-    color: "from-purple-500 to-pink-500"
+    icon: Zap
   }
 ];
 
@@ -114,53 +106,53 @@ export function AppSidebar() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="text-xs px-1 py-0 bg-green-600">✓</Badge>;
+        return <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />;
       case 'in_progress':
-        return <Badge className="text-xs px-1 py-0 bg-blue-600">•••</Badge>;
+        return <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />;
       case 'available':
-        return <Badge className="text-xs px-1 py-0 bg-yellow-600">→</Badge>;
+        return <div className="w-2 h-2 bg-yellow-400 rounded-full" />;
       case 'locked':
-        return <Badge className="text-xs px-1 py-0 bg-gray-600">🔒</Badge>;
+        return <div className="w-2 h-2 bg-gray-600 rounded-full" />;
       default:
         return null;
     }
   };
 
   const paesSubjects = [
-    { name: "Competencia Lectora", nodes: 30, tier1: 14, url: "/materia/competencia-lectora", icon: BookOpen },
-    { name: "Matemática M1", nodes: 25, tier1: 10, url: "/materia/matematica-m1", icon: FileText },
-    { name: "Matemática M2", nodes: 22, tier1: 13, url: "/materia/matematica-m2", icon: FileText },
-    { name: "Ciencias", nodes: 135, tier1: 33, url: "/materia/ciencias", icon: Shield },
-    { name: "Historia", nodes: 65, tier1: 19, url: "/materia/historia", icon: BookOpen }
+    { name: "Comp. Lectora", nodes: 30, url: "/materia/competencia-lectora", icon: BookOpen },
+    { name: "Matemática M1", nodes: 25, url: "/materia/matematica-m1", icon: Target },
+    { name: "Matemática M2", nodes: 22, url: "/materia/matematica-m2", icon: Target },
+    { name: "Ciencias", nodes: 135, url: "/materia/ciencias", icon: Shield },
+    { name: "Historia", nodes: 65, url: "/materia/historia", icon: BookOpen }
   ];
 
   return (
-    <Sidebar className="cinematic-sidebar border-r border-cyan-500/30">
-      <SidebarHeader className="p-4 cinematic-hologram">
+    <Sidebar className="font-luxury border-r border-cyan-500/20 bg-black/90 backdrop-blur-xl">
+      <SidebarHeader className="p-6 border-b border-cyan-500/20">
         <motion.div 
           className="flex items-center gap-3"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-cyan-500 to-purple-600 cinematic-glow-text">
-            <GraduationCap className="h-5 w-5 text-white" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-cyan-400 to-purple-500 shadow-lg shadow-cyan-500/30">
+            <GraduationCap className="h-4 w-4 text-white" />
           </div>
-          <div className="grid flex-1 text-left leading-tight">
-            <span className="font-bold text-white cinematic-glow-text">PAES Command</span>
-            <span className="text-xs text-cyan-200">Sistema Cinematográfico</span>
+          <div>
+            <span className="text-lg font-semibold text-white tracking-wide">PAES Command</span>
+            <div className="text-xs text-cyan-400 font-light">Sistema IA</div>
           </div>
         </motion.div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 cinematic-particle-bg">
+      <SidebarContent className="px-4 py-2">
         {/* Workflow Principal */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-medium text-cyan-400 px-2 py-2 flex items-center space-x-2">
+          <SidebarGroupLabel className="text-xs font-medium text-cyan-400 px-2 py-3 flex items-center space-x-2 tracking-wide">
             <Sparkles className="w-3 h-3" />
             <span>Workflow de Aprendizaje</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {workflowItems.map((item, index) => {
                 const status = getPhaseStatus(item.phase);
                 const isDisabled = status === 'locked';
@@ -173,21 +165,20 @@ export function AppSidebar() {
                     transition={{ delay: index * 0.1 }}
                   >
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}>
+                      <SidebarMenuButton asChild className={isDisabled ? 'opacity-40 cursor-not-allowed' : ''}>
                         <NavLink 
                           to={isDisabled ? '#' : item.url}
                           className={({ isActive }) =>
-                            `flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-all cinematic-nav-item ${
-                              isActive && !isDisabled ? "bg-cyan-500/20 text-cyan-300 border-l-2 border-cyan-400" : "text-gray-300 hover:text-white"
+                            `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
+                              isActive && !isDisabled 
+                                ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/20" 
+                                : "text-gray-300 hover:text-white hover:bg-white/5"
                             }`
                           }
                           onClick={(e) => isDisabled && e.preventDefault()}
                         >
                           <item.icon className="h-4 w-4" />
-                          <div className="flex-1">
-                            <div className="font-medium">{item.title}</div>
-                            <div className="text-xs text-gray-400">{item.description}</div>
-                          </div>
+                          <span className="flex-1">{item.title}</span>
                           {getStatusBadge(status)}
                         </NavLink>
                       </SidebarMenuButton>
@@ -199,14 +190,14 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Herramientas Especializadas */}
+        {/* Herramientas */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-medium text-purple-400 px-2 py-2 flex items-center space-x-2">
+          <SidebarGroupLabel className="text-xs font-medium text-purple-400 px-2 py-3 flex items-center space-x-2 tracking-wide">
             <Zap className="w-3 h-3" />
-            <span>Herramientas Avanzadas</span>
+            <span>Herramientas</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {toolsItems.map((item, index) => (
                 <motion.div
                   key={item.title}
@@ -219,15 +210,17 @@ export function AppSidebar() {
                       <NavLink 
                         to={item.url}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all cinematic-nav-item ${
-                            isActive ? "bg-purple-500/20 text-purple-300 border-l-2 border-purple-400" : "text-gray-300 hover:text-white"
+                          `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
+                            isActive 
+                              ? "bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30 shadow-lg shadow-purple-500/20" 
+                              : "text-gray-300 hover:text-white hover:bg-white/5"
                           }`
                         }
                       >
                         <item.icon className="h-4 w-4" />
                         <span className="flex-1">{item.title}</span>
                         {item.badge && (
-                          <Badge variant="destructive" className="text-xs px-1 py-0 h-4">
+                          <Badge variant="destructive" className="text-xs px-1.5 py-0 h-4 font-medium">
                             {item.badge}
                           </Badge>
                         )}
@@ -244,12 +237,12 @@ export function AppSidebar() {
         {currentPlan && (
           <SidebarGroup>
             <Collapsible open={showPAESSubjects} onOpenChange={setShowPAESSubjects}>
-              <SidebarGroupLabel className="text-xs font-medium text-green-400 px-2 py-2">
+              <SidebarGroupLabel className="text-xs font-medium text-green-400 px-2 py-3">
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-between p-0 h-auto text-green-400 hover:text-green-300">
+                  <Button variant="ghost" className="w-full justify-between p-0 h-auto text-green-400 hover:text-green-300 font-medium tracking-wide">
                     <div className="flex items-center space-x-2">
                       <Target className="w-3 h-3" />
-                      <span>Plan PAES Activo</span>
+                      <span>Materias PAES</span>
                     </div>
                     {showPAESSubjects ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                   </Button>
@@ -257,7 +250,7 @@ export function AppSidebar() {
               </SidebarGroupLabel>
               <CollapsibleContent>
                 <SidebarGroupContent>
-                  <SidebarMenu>
+                  <SidebarMenu className="space-y-1">
                     {paesSubjects.map((subject, index) => (
                       <motion.div
                         key={subject.name}
@@ -269,19 +262,12 @@ export function AppSidebar() {
                           <SidebarMenuButton asChild>
                             <NavLink 
                               to={subject.url}
-                              className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs transition-all cinematic-nav-item text-gray-400 hover:text-white"
+                              className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-all duration-300 text-gray-400 hover:text-white hover:bg-white/5"
                             >
                               <subject.icon className="h-3 w-3" />
                               <div className="flex-1">
                                 <div>{subject.name}</div>
-                                <div className="flex gap-1 mt-1">
-                                  <Badge variant="outline" className="text-xs px-1 py-0 h-3 text-gray-500 border-gray-600">
-                                    {subject.nodes}n
-                                  </Badge>
-                                  <Badge variant="destructive" className="text-xs px-1 py-0 h-3">
-                                    T1:{subject.tier1}
-                                  </Badge>
-                                </div>
+                                <div className="text-xs text-gray-500 font-light">{subject.nodes} nodos</div>
                               </div>
                             </NavLink>
                           </SidebarMenuButton>
@@ -296,27 +282,27 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 cinematic-hologram">
+      <SidebarFooter className="p-4 border-t border-cyan-500/20">
         <motion.div 
-          className="rounded-lg bg-gradient-to-r from-gray-900/80 via-cyan-900/80 to-purple-900/80 p-3 backdrop-blur-md border border-cyan-500/30"
+          className="rounded-xl bg-gradient-to-r from-gray-900/80 via-cyan-900/30 to-purple-900/30 p-4 backdrop-blur-md border border-cyan-500/20"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="text-xs font-medium text-cyan-300 flex items-center space-x-2">
+          <div className="text-xs font-medium text-cyan-300 flex items-center space-x-2 mb-2">
             <Brain className="w-3 h-3" />
             <span>Sistema Neural PAES</span>
           </div>
-          <div className="text-2xl font-bold text-white cinematic-glow-text">277</div>
-          <div className="text-xs text-gray-400">nodos de aprendizaje activos</div>
+          <div className="text-2xl font-bold text-white mb-1">277</div>
+          <div className="text-xs text-gray-400 font-light">nodos activos</div>
           
           {dashboardData.stats.currentPlan > 0 && (
-            <div className="flex gap-1 mt-2">
-              <Badge variant="destructive" className="text-xs px-1 py-0">
-                Diagnóstico: ✓
+            <div className="flex gap-1 mt-3">
+              <Badge variant="destructive" className="text-xs px-2 py-0.5 font-medium">
+                Diagnóstico ✓
               </Badge>
-              <Badge className="text-xs px-1 py-0 bg-cyan-600">
-                Plan: Activo
+              <Badge className="text-xs px-2 py-0.5 bg-cyan-600 font-medium">
+                Plan Activo
               </Badge>
             </div>
           )}
