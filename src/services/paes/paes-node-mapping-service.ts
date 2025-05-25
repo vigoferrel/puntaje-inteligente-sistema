@@ -219,6 +219,23 @@ export class PAESNodeMappingService {
   }
   
   /**
+   * Mapea dificultad de interfaz a base de datos
+   */
+  private static mapDifficultyToDatabase(difficulty: string): 'basic' | 'intermediate' | 'advanced' {
+    const difficultyStr = difficulty.toLowerCase();
+    
+    if (difficultyStr === 'basico' || difficultyStr === 'básico' || difficultyStr === 'basic') {
+      return 'basic';
+    }
+    
+    if (difficultyStr === 'avanzado' || difficultyStr === 'advanced') {
+      return 'advanced';
+    }
+    
+    return 'intermediate';
+  }
+  
+  /**
    * Obtiene nombre descriptivo de la habilidad
    */
   private static async getSkillDisplayName(skillId: number): Promise<string> {
@@ -344,7 +361,9 @@ export class PAESNodeMappingService {
       }
       
       if (criteria.difficulty) {
-        query = query.eq('difficulty', criteria.difficulty);
+        // Convert UI difficulty to database difficulty
+        const dbDifficulty = this.mapDifficultyToDatabase(criteria.difficulty);
+        query = query.eq('difficulty', dbDifficulty);
       }
       
       if (criteria.contentArea) {
