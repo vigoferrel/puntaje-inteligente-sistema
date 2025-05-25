@@ -15,8 +15,6 @@ import { Badge } from '@/components/ui/badge';
 import { Brain, Zap, Target, Sparkles, Globe } from 'lucide-react';
 import { UniverseMode, Galaxy, UniverseMetrics, UniverseConfig } from '@/types/universe-types';
 
-type UniverseMode = 'overview' | 'subject' | 'neural' | 'prediction' | 'progress';
-
 interface EducationalUniverseProps {
   initialMode?: UniverseMode;
   activeSubject?: string;
@@ -41,7 +39,7 @@ export const EducationalUniverse: React.FC<EducationalUniverseProps> = ({
       id: 'competencia-lectora',
       name: 'Galaxia Verbal',
       color: '#3B82F6',
-      position: [8, 0, 0],
+      position: [8, 0, 0] as [number, number, number],
       nodes: 45,
       completed: 32,
       description: 'Universo de comprensión y expresión',
@@ -51,7 +49,7 @@ export const EducationalUniverse: React.FC<EducationalUniverseProps> = ({
       id: 'matematica-1',
       name: 'Dimensión Lógica',
       color: '#10B981', 
-      position: [0, 0, 8],
+      position: [0, 0, 8] as [number, number, number],
       nodes: 38,
       completed: 25,
       description: 'Realidad matemática fundamental',
@@ -61,7 +59,7 @@ export const EducationalUniverse: React.FC<EducationalUniverseProps> = ({
       id: 'matematica-2',
       name: 'Cosmos Avanzado',
       color: '#8B5CF6',
-      position: [-8, 0, 0],
+      position: [-8, 0, 0] as [number, number, number],
       nodes: 42,
       completed: 18,
       description: 'Matemáticas del infinito',
@@ -71,7 +69,7 @@ export const EducationalUniverse: React.FC<EducationalUniverseProps> = ({
       id: 'ciencias',
       name: 'Laboratorio Cuántico',
       color: '#F59E0B',
-      position: [0, 8, 0],
+      position: [0, 8, 0] as [number, number, number],
       nodes: 55,
       completed: 31,
       description: 'Secretos del universo físico',
@@ -81,7 +79,7 @@ export const EducationalUniverse: React.FC<EducationalUniverseProps> = ({
       id: 'historia',
       name: 'Línea Temporal',
       color: '#EF4444',
-      position: [0, 0, -8],
+      position: [0, 0, -8] as [number, number, number],
       nodes: 35,
       completed: 28,
       description: 'Tejido de la humanidad',
