@@ -9,7 +9,7 @@ export interface PreguntaBanco {
   prueba_paes: string;
   enunciado: string;
   nivel_dificultad: 'basico' | 'intermedio' | 'avanzado';
-  tipo_pregunta: 'multiple_choice' | 'multiple_select' | 'true_false';
+  tipo_pregunta: 'multiple_choice' | 'multiple_select' | 'true_false' | 'ordenar_secuencia' | 'completar_texto' | 'drag_drop' | 'hotspot_imagen' | 'respuesta_numerica';
   
   // Campos específicos por tipo
   texto_base?: string;
@@ -216,6 +216,7 @@ export class BancoEvaluacionesService {
     return preguntas?.map(p => ({
       ...p,
       nivel_dificultad: p.nivel_dificultad as 'basico' | 'intermedio' | 'avanzado',
+      tipo_pregunta: p.tipo_pregunta as 'multiple_choice' | 'multiple_select' | 'true_false' | 'ordenar_secuencia' | 'completar_texto' | 'drag_drop' | 'hotspot_imagen' | 'respuesta_numerica',
       nivel_complejidad_lexica: p.nivel_complejidad_lexica as 'basico' | 'intermedio' | 'avanzado' | undefined,
       alternativas: p.alternativas_respuesta || [],
       explicacion: p.explicaciones_pregunta?.[0]
@@ -467,6 +468,7 @@ export class BancoEvaluacionesService {
     return data?.map(p => ({
       ...p,
       nivel_dificultad: p.nivel_dificultad as 'basico' | 'intermedio' | 'avanzado',
+      tipo_pregunta: p.tipo_pregunta as 'multiple_choice' | 'multiple_select' | 'true_false' | 'ordenar_secuencia' | 'completar_texto' | 'drag_drop' | 'hotspot_imagen' | 'respuesta_numerica',
       alternativas: p.alternativas_respuesta || []
     })) || [];
   }
