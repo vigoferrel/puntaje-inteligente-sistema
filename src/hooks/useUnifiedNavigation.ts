@@ -12,6 +12,7 @@ export interface NavigationContext {
   systemMode?: 'neural' | 'unified';
   userIntent?: string;
   timestamp?: string;
+  navigationAction?: string;
   neuralMetrics?: {
     efficiency: number;
     adaptiveScore: number;

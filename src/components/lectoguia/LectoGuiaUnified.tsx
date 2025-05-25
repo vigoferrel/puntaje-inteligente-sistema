@@ -153,7 +153,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
                         }`}>
                           <p>{message.content}</p>
                           {message.source && (
-                            <Badge className="mt-2" variant="secondary" size="sm">
+                            <Badge className="mt-2" variant="secondary">
                               {message.source}
                             </Badge>
                           )}
