@@ -86,7 +86,7 @@ const SAMPLE_EXERCISES: Exercise[] = [
 ];
 
 export const useLectoGuiaSimplified = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [state, setState] = useState<LectoGuiaState>(INITIAL_STATE);
 
   // Simular conexión estable
@@ -120,7 +120,7 @@ export const useLectoGuiaSimplified = () => {
       // Intentar obtener respuesta del AI
       const aiResponse = await provideChatFeedback(
         message,
-        `Materia actual: ${state.activeSubject}. Usuario: ${user?.name || 'Estudiante'}`
+        `Materia actual: ${state.activeSubject}. Usuario: ${profile?.name || user?.email || 'Estudiante'}`
       );
 
       // Procesar la respuesta
@@ -161,7 +161,7 @@ export const useLectoGuiaSimplified = () => {
         isTyping: false
       }));
     }
-  }, [state.activeSubject, user?.name]);
+  }, [state.activeSubject, profile?.name, user?.email]);
 
   // Generar respuesta de fallback inteligente
   const generateFallbackResponse = (userMessage: string): string => {

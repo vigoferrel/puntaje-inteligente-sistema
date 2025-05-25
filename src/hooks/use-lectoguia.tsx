@@ -5,42 +5,49 @@ import { useLectoGuiaChat } from "@/hooks/lectoguia-chat";
 import { LectoGuiaSkill } from "@/types/lectoguia-types";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Importamos los hooks refactorizados
-import { 
-  useTabManagement,
-  useSubjects,
-  useExerciseFlow,
-  useNodeInteraction 
-} from "./lectoguia";
-import { useMessageHandler } from "./lectoguia/use-message-handler";
+// Importamos el hook simplificado sin duplicaciones
+import { useLectoGuiaSimplified } from "./lectoguia/useLectoGuiaSimplified";
 
 export function useLectoGuia() {
   // Obtener datos del usuario
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   
-  // Hooks de sesión y chat
-  const { session } = useLectoGuiaSession();
-  const { messages, isTyping } = useLectoGuiaChat();
-  
-  // Hooks refactorizados
-  const { activeTab, setActiveTab } = useTabManagement();
-  const { activeSubject, handleSubjectChange } = useSubjects();
-  
-  const { 
-    currentExercise, 
-    selectedOption, 
+  // Usar el hook simplificado principal
+  const {
+    activeTab,
+    setActiveTab,
+    messages,
+    isTyping,
+    handleSendMessage,
+    activeSubject,
+    handleSubjectChange,
+    currentExercise,
+    selectedOption,
     showFeedback,
     handleOptionSelect,
     handleNewExercise,
-    isLoading
-  } = useExerciseFlow(activeSubject, setActiveTab);
+    isLoading,
+    getStats
+  } = useLectoGuiaSimplified();
   
-  const {
-    handleSendMessage,
-    handleStartSimulation
-  } = useMessageHandler(activeSubject, setActiveTab);
-  
-  const { handleNodeSelect } = useNodeInteraction(user?.id, setActiveTab);
+  // Hooks complementarios para funcionalidad extendida
+  const { session } = useLectoGuiaSession();
+
+  // Funciones adicionales para compatibilidad
+  const handleExerciseOptionSelect = useCallback((option: number) => {
+    handleOptionSelect(option);
+  }, [handleOptionSelect]);
+
+  const handleStartSimulation = useCallback(() => {
+    // Simular inicio de simulación
+    console.log('Iniciando simulación PAES...');
+  }, []);
+
+  const handleNodeSelect = useCallback((nodeId: string) => {
+    // Simular selección de nodo
+    console.log('Seleccionando nodo:', nodeId);
+    setActiveTab('exercise');
+  }, [setActiveTab]);
 
   return {
     activeTab,
@@ -53,11 +60,12 @@ export function useLectoGuia() {
     currentExercise,
     selectedOption,
     showFeedback,
-    handleExerciseOptionSelect: handleOptionSelect,
+    handleExerciseOptionSelect,
     handleNewExercise,
     handleStartSimulation,
     skillLevels: session.skillLevels as Record<LectoGuiaSkill, number>,
     handleNodeSelect,
-    isLoading
+    isLoading,
+    getStats
   };
 }
