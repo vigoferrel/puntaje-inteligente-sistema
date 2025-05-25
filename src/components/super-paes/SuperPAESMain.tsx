@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,15 +10,15 @@ import {
 import { useCinematic } from '@/components/cinematic/CinematicTransitionSystem';
 
 export const SuperPAESMain: React.FC = () => {
-  const { setState } = useCinematic();
+  const { startTransition } = useCinematic();
 
   const handleNavigateToUniverse = () => {
-    setState({ currentScene: 'dashboard' });
+    startTransition('dashboard');
   };
 
   const handleNavigateToModule = (module: string) => {
     console.log(`Navegando a módulo: ${module}`);
-    setState({ currentScene: 'dashboard' });
+    startTransition('dashboard');
   };
 
   return (
