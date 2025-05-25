@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { LearningPlan, PlanProgress } from "@/types/learning-plan";
 import { useUnifiedApp } from '@/contexts/UnifiedAppProvider';
@@ -128,11 +127,7 @@ export const useLearningPlans = () => {
       // Actualizar cache
       if (newPlan) {
         const updatedPlans = [...plans, newPlan];
-        updateCache({
-          plans: updatedPlans,
-          currentPlan: newPlan,
-          planProgress
-        });
+        updateCache(updatedPlans, newPlan, planProgress);
       }
       
       return newPlan;
