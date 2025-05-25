@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Brain, Zap, Target, Settings, Users, Calendar,
   DollarSign, BookOpen, BarChart3, Gamepad2, Play,
-  Matrix, Sparkles, Globe, TrendingUp, Eye, Layers
+  Grid3x3, Sparkles, Globe, TrendingUp, Eye, Layers
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSimplifiedIntersectional } from '@/hooks/useSimplifiedIntersectional';
@@ -55,7 +55,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
       id: 'matrix_diagnostics' as NeuralDimension,
       name: 'Matrix Diagnóstico',
       description: 'Sistema de evaluación neural avanzado',
-      icon: Matrix,
+      icon: Grid3x3,
       color: 'from-green-600 to-emerald-600',
       metrics: Math.round(neuralHealth.neural_efficiency),
       phase: 'Diagnóstico',
@@ -229,7 +229,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
               className="text-center space-y-4"
             >
               <div className="flex items-center justify-center space-x-3 mb-6">
-                <Matrix className="w-8 h-8 text-green-400" />
+                <Grid3x3 className="w-8 h-8 text-green-400" />
                 <h2 className="text-3xl font-bold text-green-400">Matrix Diagnóstico Neural</h2>
               </div>
               <p className="text-white/70 max-w-2xl mx-auto">
