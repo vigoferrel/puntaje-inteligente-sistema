@@ -1,7 +1,7 @@
 
 /**
- * SISTEMA RESPIRATORIO POST-CIRUGÍA v6.0
- * Optimizado para recuperación vascular
+ * SISTEMA RESPIRATORIO POST-CIRUGÍA v6.2
+ * Optimizado para recuperación vascular - ULTRA-ESTABLE
  */
 
 import { RespiratoryHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
@@ -39,10 +39,11 @@ export class RespiratorySystem {
   private eventListeners: ((event: CirculatoryEvent) => void)[] = [];
   private breathingInterval: number | null = null;
   private destroyed: boolean = false;
+  private creationTimestamp: number = Date.now();
 
   constructor(options: Partial<BreathingOptions> = {}) {
     RespiratorySystem.instanceCount++;
-    this.instanceId = `respiratory-surgical-${Date.now()}`;
+    this.instanceId = `respiratory-surgical-v6.2-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
     
     // Marcar en window para tracking post-quirúrgico
     if (typeof window !== 'undefined') {
@@ -59,6 +60,8 @@ export class RespiratorySystem {
     };
 
     this.initializePostSurgery();
+    
+    console.log(`🫁 RESPIRATORY SYSTEM v6.2 CREATED [${this.instanceId}] - Total instances: ${RespiratorySystem.instanceCount}`);
   }
 
   private initializePostSurgery(): void {
@@ -68,7 +71,7 @@ export class RespiratorySystem {
     this.state = LungState.SURGICAL_RECOVERY;
     this.initializeSurgicalRecovery();
     
-    console.log(`🫁 SISTEMA RESPIRATORIO POST-CIRUGÍA v6.0 [${this.instanceId}] - Recuperación iniciada`);
+    console.log(`🫁 SISTEMA RESPIRATORIO POST-CIRUGÍA v6.2 [${this.instanceId}] - Recuperación ultra-estable iniciada`);
   }
 
   private initializeSurgicalRecovery(): void {
@@ -77,12 +80,12 @@ export class RespiratorySystem {
       if (!this.destroyed) {
         this.postSurgicalBreath();
       }
-    }, 20000); // 20 segundos - ultra-conservador
+    }, 25000); // 25 segundos - ultra-conservador y estable
   }
 
   private postSurgicalBreath(): void {
     this.state = LungState.POST_SURGERY;
-    this.oxygenLevel = Math.min(100, this.oxygenLevel + 0.05); // Incremento mínimo
+    this.oxygenLevel = Math.min(100, this.oxygenLevel + 0.03); // Incremento ultra-mínimo
     
     // Monitoreo post-quirúrgico pasivo
     this.emitPostSurgicalBreath();
@@ -97,7 +100,8 @@ export class RespiratorySystem {
         instanceId: this.instanceId,
         postSurgicalMode: true,
         oxygenLevel: this.oxygenLevel,
-        recoveryMode: true
+        recoveryMode: true,
+        version: '6.2'
       },
       timestamp: Date.now()
     };
@@ -180,7 +184,7 @@ export class RespiratorySystem {
     this.state = LungState.SURGICAL_RECOVERY;
     this.purificationActive = false;
     
-    console.log(`🚨 PURGA QUIRÚRGICA COMPLETADA [${this.instanceId}]`);
+    console.log(`🚨 PURGA QUIRÚRGICA v6.2 COMPLETADA [${this.instanceId}]`);
   }
 
   // Método de emergencia para compatibilidad
@@ -190,6 +194,16 @@ export class RespiratorySystem {
 
   public isDestroyed(): boolean {
     return this.destroyed;
+  }
+
+  public getInstanceInfo() {
+    return {
+      id: this.instanceId,
+      created: this.creationTimestamp,
+      destroyed: this.destroyed,
+      age: Date.now() - this.creationTimestamp,
+      version: '6.2'
+    };
   }
 
   public destroy(): void {
@@ -208,10 +222,11 @@ export class RespiratorySystem {
       (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ = null;
     }
     
-    console.log(`🫁 Sistema respiratorio post-cirugía destruido [${this.instanceId}]`);
+    RespiratorySystem.instanceCount--;
+    console.log(`🫁 Sistema respiratorio v6.2 destruido [${this.instanceId}] - Instances remaining: ${RespiratorySystem.instanceCount}`);
   }
 
-  // Factory method estático que usa el manager quirúrgico
+  // Factory method estático que usa el manager quirúrgico v6.2
   public static async getInstance(options?: Partial<BreathingOptions>): Promise<RespiratorySystem> {
     const { RespiratorySystemManager } = await import('./RespiratorySystemManager');
     return RespiratorySystemManager.getInstance(options);
@@ -221,5 +236,14 @@ export class RespiratorySystem {
   public static async destroyAllInstances(): Promise<void> {
     const { RespiratorySystemManager } = await import('./RespiratorySystemManager');
     return RespiratorySystemManager.destroyAllInstances();
+  }
+
+  // v6.2: Método estático para debugging
+  public static getGlobalDebugInfo() {
+    return {
+      totalInstances: RespiratorySystem.instanceCount,
+      version: '6.2',
+      timestamp: new Date().toISOString()
+    };
   }
 }
