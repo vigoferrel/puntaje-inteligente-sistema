@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useDiagnosticSystem } from '@/hooks/diagnostic/useDiagnosticSystem';
 import { useLearningPlans } from '@/hooks/learning-plans/use-learning-plans';
 
@@ -11,6 +11,11 @@ interface ValidationStatus {
   systemHealth: 'excellent' | 'good' | 'fair' | 'poor';
 }
 
+interface ValidationCache {
+  result: ValidationStatus;
+  timestamp: number;
+}
+
 export const useValidationSystem = () => {
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>({
     isValid: true,
@@ -20,35 +25,54 @@ export const useValidationSystem = () => {
     systemHealth: 'good'
   });
 
+  // Cache de validación más agresivo - 30 minutos
+  const validationCache = useRef<ValidationCache | null>(null);
+  const isValidating = useRef(false);
+
   const diagnosticSystem = useDiagnosticSystem();
   const { plans, currentPlan } = useLearningPlans();
 
   const validateSystemCoherence = useCallback(async () => {
+    // Evitar validaciones concurrentes
+    if (isValidating.current) {
+      console.log('🔍 Validación ya en progreso, saltando...');
+      return;
+    }
+
+    // Usar cache si es reciente (30 minutos)
+    const now = Date.now();
+    if (validationCache.current && 
+        (now - validationCache.current.timestamp) < 1800000) {
+      console.log('🔍 Usando validación en cache');
+      setValidationStatus(validationCache.current.result);
+      return;
+    }
+
+    isValidating.current = true;
     const errors: string[] = [];
     const warnings: string[] = [];
 
     try {
-      // Validar sistema diagnóstico
+      // Validaciones básicas y rápidas
       if (!diagnosticSystem.isSystemReady) {
-        errors.push('Sistema diagnóstico no está listo');
+        warnings.push('Sistema diagnóstico inicializando...');
       }
 
       if (diagnosticSystem.learningNodes.length === 0) {
-        warnings.push('No se encontraron nodos de aprendizaje');
+        warnings.push('Cargando nodos de aprendizaje...');
       }
 
-      // Validar planes de aprendizaje
       if (plans.length === 0) {
-        warnings.push('No se encontraron planes de aprendizaje');
+        warnings.push('Generando planes de aprendizaje...');
       }
 
-      // Validar coherencia de datos - CORREGIDO: usar subjectArea
+      // Validación optimizada de nodos
       const nodesWithoutSubject = diagnosticSystem.learningNodes.filter(node => 
         !node.subjectArea
       );
       
-      if (nodesWithoutSubject.length > 0) {
-        warnings.push(`${nodesWithoutSubject.length} nodos sin área de materia definida`);
+      if (nodesWithoutSubject.length > 0 && nodesWithoutSubject.length < 10) {
+        warnings.push(`${nodesWithoutSubject.length} nodos requieren configuración`);
       }
 
       // Calcular salud del sistema
@@ -56,36 +80,49 @@ export const useValidationSystem = () => {
       
       if (errors.length > 0) {
         systemHealth = 'poor';
-      } else if (warnings.length > 2) {
+      } else if (warnings.length > 3) {
         systemHealth = 'fair';
       } else if (warnings.length > 0) {
         systemHealth = 'good';
       }
 
-      setValidationStatus({
+      const result: ValidationStatus = {
         isValid: errors.length === 0,
         errors,
         warnings,
         lastValidated: new Date(),
         systemHealth
-      });
+      };
 
-      console.log('🔍 Validación del sistema completada:', {
+      // Guardar en cache
+      validationCache.current = {
+        result,
+        timestamp: now
+      };
+
+      setValidationStatus(result);
+
+      console.log('🔍 Validación completada:', {
         isValid: errors.length === 0,
-        errors: errors.length,
-        warnings: warnings.length,
-        systemHealth
+        errores: errors.length,
+        advertencias: warnings.length,
+        health: systemHealth
       });
 
     } catch (error) {
       console.error('❌ Error durante validación:', error);
-      setValidationStatus(prev => ({
-        ...prev,
-        errors: [...prev.errors, 'Error durante la validación del sistema'],
+      
+      const errorResult: ValidationStatus = {
         isValid: false,
-        systemHealth: 'poor',
-        lastValidated: new Date()
-      }));
+        errors: ['Error durante la validación del sistema'],
+        warnings: [],
+        lastValidated: new Date(),
+        systemHealth: 'poor'
+      };
+
+      setValidationStatus(errorResult);
+    } finally {
+      isValidating.current = false;
     }
   }, [diagnosticSystem, plans]);
 

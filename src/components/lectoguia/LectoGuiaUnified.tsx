@@ -12,8 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 
 /**
- * LectoGuía Unificado con Modo de Emergencia
- * Versión robusta que maneja errores graciosamente
+ * LectoGuía Unificado Optimizado
+ * Versión corregida sin bucles infinitos ni toasts en render
  */
 export const LectoGuiaUnified: React.FC = () => {
   const { user } = useAuth();
@@ -21,29 +21,29 @@ export const LectoGuiaUnified: React.FC = () => {
   const [showEmergencyMode, setShowEmergencyMode] = useState(false);
   const [initializationTimeout, setInitializationTimeout] = useState(false);
 
-  // Timeout de inicialización para evitar carga infinita
+  // Timeout de inicialización más largo para evitar emergency mode prematuro
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!flowState.user.isAuthenticated) {
         setInitializationTimeout(true);
       }
-    }, 10000); // 10 segundos
+    }, 15000); // Aumentado a 15 segundos
 
     return () => clearTimeout(timer);
   }, [flowState.user.isAuthenticated]);
 
-  // Mostrar modo de emergencia si hay problemas
+  // Emergency mode solo en casos extremos
   useEffect(() => {
-    if (initializationTimeout || (!flowState.isCoherent && flowState.user.isAuthenticated)) {
+    if (initializationTimeout && !flowState.user.isAuthenticated) {
       const emergencyTimer = setTimeout(() => {
         setShowEmergencyMode(true);
-      }, 5000); // 5 segundos adicionales
+      }, 10000); // 10 segundos adicionales
 
       return () => clearTimeout(emergencyTimer);
     }
-  }, [initializationTimeout, flowState.isCoherent, flowState.user.isAuthenticated]);
+  }, [initializationTimeout, flowState.user.isAuthenticated]);
 
-  // Estado de carga inicial
+  // Estado de carga inicial optimizado
   if (!flowState.user.isAuthenticated && !initializationTimeout) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
@@ -54,17 +54,17 @@ export const LectoGuiaUnified: React.FC = () => {
         >
           <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
           <h2 className="text-xl font-semibold text-white">Iniciando LectoGuía</h2>
-          <p className="text-gray-300">Cargando sistema educativo...</p>
+          <p className="text-gray-300">Optimizando sistema educativo...</p>
         </motion.div>
       </div>
     );
   }
 
-  // Modo de emergencia
+  // Modo de emergencia solo en casos críticos
   if (showEmergencyMode) {
     return (
       <LectoGuiaEmergencyMode 
-        error="No se pudo sincronizar completamente el sistema educativo"
+        error="No se pudo sincronizar el sistema educativo"
         onRetry={() => {
           setShowEmergencyMode(false);
           setInitializationTimeout(false);
@@ -74,10 +74,10 @@ export const LectoGuiaUnified: React.FC = () => {
     );
   }
 
-  // Renderizado normal
+  // Renderizado normal optimizado
   return (
     <div className="lectoguia-unified min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Header */}
+      {/* Header optimizado */}
       <CinematicHeader
         user={user}
         systemState={{ 
@@ -92,32 +92,32 @@ export const LectoGuiaUnified: React.FC = () => {
         onNavigateToModule={actions.navigateToContext}
       />
 
-      {/* Estado del sistema */}
+      {/* Estado del sistema simplificado */}
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center gap-2 text-sm">
           {flowState.isCoherent ? (
             <Badge variant="default" className="bg-green-600">
               <CheckCircle className="w-3 h-3 mr-1" />
-              Sistema Operativo
+              Sistema Activo
             </Badge>
           ) : (
             <Badge variant="secondary">
               <AlertTriangle className="w-3 h-3 mr-1" />
-              Modo Simplificado
+              Modo Básico
             </Badge>
           )}
           
           <Badge variant="outline" className="text-white border-white/20">
-            Tests: {flowState.diagnostic.availableTests}
+            Diagnósticos: {flowState.diagnostic.availableTests || 0}
           </Badge>
           
           <Badge variant="outline" className="text-white border-white/20">
-            Planes: {flowState.learning.totalPlans}
+            Planes: {flowState.learning.totalPlans || 0}
           </Badge>
         </div>
       </div>
 
-      {/* Contenido principal */}
+      {/* Contenido principal optimizado */}
       <main className="container mx-auto px-4 pb-8">
         <AnimatePresence mode="wait">
           <motion.div
@@ -136,7 +136,7 @@ export const LectoGuiaUnified: React.FC = () => {
               }}
               diagnosticIntegration={{
                 isReady: flowState.diagnostic.canStart,
-                availableTests: flowState.diagnostic.availableTests,
+                availableTests: flowState.diagnostic.availableTests || 0,
                 systemMetrics: { totalNodes: 0, isSystemReady: true },
                 startDiagnostic: () => actions.navigateToContext('diagnostic')
               }}
@@ -178,11 +178,11 @@ export const LectoGuiaUnified: React.FC = () => {
       <SystemIntegrationLayer
         diagnosticIntegration={{
           isReady: flowState.diagnostic.canStart,
-          availableTests: flowState.diagnostic.availableTests
+          availableTests: flowState.diagnostic.availableTests || 0
         }}
         planIntegration={{
           currentPlan: flowState.learning.currentPlan,
-          totalPlans: flowState.learning.totalPlans
+          totalPlans: flowState.learning.totalPlans || 0
         }}
         dashboardSync={{
           isConnected: flowState.isCoherent,

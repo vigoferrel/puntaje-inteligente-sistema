@@ -1,8 +1,7 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useCrossModuleDataSync, useAutomaticSync } from '@/core/intersectional-sync/CrossModuleDataSync';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
-import { toast } from '@/components/ui/use-toast';
 
 interface IntersectionalContextType {
   isIntersectionalReady: boolean;
@@ -28,13 +27,18 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     unifiedUserProfile, 
     syncAllModules,
     generateUnifiedRecommendations,
-    lastSyncTime 
+    lastSyncTime,
+    loadRealUserData
   } = useCrossModuleDataSync();
   
   const { isInitialized } = useUnifiedPAES();
   
-  // Activar sincronización automática
-  useAutomaticSync(300000); // 5 minutos
+  // Referencias para controlar notificaciones
+  const hasNotifiedReady = useRef(false);
+  const lastNotificationTime = useRef<Date | null>(null);
+  
+  // Activar sync automático con intervalo aumentado (5 minutos)
+  useAutomaticSync(300000);
 
   const isIntersectionalReady = Boolean(
     isInitialized && 
@@ -64,15 +68,38 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     return insights;
   };
 
-  // Notificar cuando el sistema esté listo
+  // Notificación controlada - solo una vez y con debounce
   useEffect(() => {
-    if (isIntersectionalReady) {
-      toast({
-        title: "🌐 Sistema Interseccional Activo",
-        description: "Sincronización automática entre módulos habilitada",
-      });
+    if (isIntersectionalReady && !hasNotifiedReady.current) {
+      const now = new Date();
+      
+      // Debounce de 30 segundos para notificaciones
+      if (!lastNotificationTime.current || 
+          (now.getTime() - lastNotificationTime.current.getTime()) > 30000) {
+        
+        // Usar setTimeout para mover fuera del ciclo de render
+        setTimeout(() => {
+          import('@/hooks/use-toast').then(({ toast }) => {
+            toast({
+              title: "🌐 Sistema Interseccional Activo",
+              description: "Sincronización optimizada habilitada",
+              duration: 3000
+            });
+          });
+        }, 100);
+        
+        hasNotifiedReady.current = true;
+        lastNotificationTime.current = now;
+      }
     }
   }, [isIntersectionalReady]);
+
+  // Cargar datos reales del usuario cuando esté disponible
+  useEffect(() => {
+    if (isInitialized && !unifiedUserProfile?.isLoaded) {
+      loadRealUserData('user-123'); // TODO: usar userId real
+    }
+  }, [isInitialized, unifiedUserProfile?.isLoaded, loadRealUserData]);
 
   const contextValue: IntersectionalContextType = {
     isIntersectionalReady,
