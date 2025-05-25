@@ -23,6 +23,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNavigation = false 
     { href: '/planes-estudio', label: 'Planes', icon: BookOpen },
   ];
 
+  // Get user display name from metadata or fallback to email
+  const getUserDisplayName = () => {
+    if (user?.user_metadata?.name) return user.user_metadata.name;
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.email) return user.email.split('@')[0];
+    return 'Usuario';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {!hideNavigation && (
@@ -69,7 +77,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNavigation = false 
                 {user ? (
                   <div className="flex items-center space-x-2">
                     <button className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-primary text-primary-foreground">
-                      <span className="text-sm">Hola, {user.name || 'Usuario'}</span>
+                      <span className="text-sm">Hola, {getUserDisplayName()}</span>
                     </button>
                     <button className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-primary text-primary-foreground">
                       <span className="text-sm">Cerrar Sesión</span>
