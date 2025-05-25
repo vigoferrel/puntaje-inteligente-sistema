@@ -2,6 +2,12 @@
 import React from 'react';
 import { CinematicIntelligenceCenter } from './CinematicIntelligenceCenter';
 
-export const DiagnosticIntelligenceCenter: React.FC = () => {
-  return <CinematicIntelligenceCenter />;
+interface DiagnosticIntelligenceCenterProps {
+  onStartAssessment?: () => void;
+}
+
+export const DiagnosticIntelligenceCenter: React.FC<DiagnosticIntelligenceCenterProps> = ({ 
+  onStartAssessment 
+}) => {
+  return <CinematicIntelligenceCenter onStartAssessment={onStartAssessment} />;
 };

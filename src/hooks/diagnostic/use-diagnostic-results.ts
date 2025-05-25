@@ -21,11 +21,7 @@ export const useDiagnosticResults = ({
   const [testResults, setTestResults] = useState<DiagnosticResult | null>(null);
   
   // Use the extracted submission hook
-  const { handleFinishTest } = useSubmitResult({
-    currentTest,
-    answers,
-    timeStarted
-  });
+  const { submit, submitting } = useSubmitResult();
   
   // Use the extracted restart hook
   const { handleRestartDiagnostic } = useRestartDiagnostic({
@@ -33,6 +29,29 @@ export const useDiagnosticResults = ({
     setTestResults: setTestResults as (value: null) => void,
     setTestStarted
   });
+  
+  const handleFinishTest = async () => {
+    if (!currentTest) return null;
+    
+    try {
+      const result = await submit(
+        'demo-user',
+        currentTest.id,
+        answers,
+        currentTest.questions
+      );
+      
+      if (result) {
+        setTestResults(result);
+        setResultSubmitted(true);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error finishing test:', error);
+      return null;
+    }
+  };
   
   return {
     resultSubmitted,

@@ -1,9 +1,8 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { DiagnosticTest, DiagnosticQuestion, DiagnosticResult } from '@/types/diagnostic';
 import { useDiagnosticTests } from './use-diagnostic-tests';
 import { useSubmitResult } from './results/use-submit-result';
-import { calculateDiagnosticResults } from '@/utils/diagnostic-helpers';
 
 interface DiagnosticFlowState {
   currentTest: DiagnosticTest | null;
@@ -11,6 +10,9 @@ interface DiagnosticFlowState {
   answers: Record<string, string>;
   isCompleted: boolean;
   result: DiagnosticResult | null;
+  selectedTestId: string | null;
+  isActive: boolean;
+  showHint: boolean;
 }
 
 export const useDiagnosticFlow = (userId?: string) => {
@@ -19,11 +21,32 @@ export const useDiagnosticFlow = (userId?: string) => {
     currentQuestionIndex: 0,
     answers: {},
     isCompleted: false,
-    result: null
+    result: null,
+    selectedTestId: null,
+    isActive: false,
+    showHint: false
   });
 
   const { tests, loading: testsLoading, fetchTests } = useDiagnosticTests();
   const { submit, submitting } = useSubmitResult();
+
+  // Auto-fetch tests on mount
+  useEffect(() => {
+    fetchTests();
+  }, [fetchTests]);
+
+  const selectTest = useCallback((testId: string) => {
+    const test = tests.find(t => t.id === testId);
+    if (!test) return false;
+
+    setFlowState(prev => ({
+      ...prev,
+      selectedTestId: testId,
+      currentTest: test
+    }));
+
+    return true;
+  }, [tests]);
 
   const startTest = useCallback((testId: string) => {
     const test = tests.find(t => t.id === testId);
@@ -34,11 +57,19 @@ export const useDiagnosticFlow = (userId?: string) => {
       currentQuestionIndex: 0,
       answers: {},
       isCompleted: false,
-      result: null
+      result: null,
+      selectedTestId: testId,
+      isActive: true,
+      showHint: false
     });
 
     return true;
   }, [tests]);
+
+  const startDiagnostic = useCallback(() => {
+    if (!flowState.selectedTestId) return false;
+    return startTest(flowState.selectedTestId);
+  }, [flowState.selectedTestId, startTest]);
 
   const answerQuestion = useCallback((questionId: string, answer: string) => {
     setFlowState(prev => ({
@@ -50,11 +81,23 @@ export const useDiagnosticFlow = (userId?: string) => {
     }));
   }, []);
 
-  const nextQuestion = useCallback(() => {
+  const navigateQuestion = useCallback((direction: 'next' | 'prev' | number) => {
     setFlowState(prev => {
       if (!prev.currentTest) return prev;
       
-      const nextIndex = prev.currentQuestionIndex + 1;
+      let nextIndex: number;
+      
+      if (typeof direction === 'number') {
+        nextIndex = direction;
+      } else if (direction === 'next') {
+        nextIndex = prev.currentQuestionIndex + 1;
+      } else {
+        nextIndex = prev.currentQuestionIndex - 1;
+      }
+      
+      // Clamp to valid range
+      nextIndex = Math.max(0, Math.min(nextIndex, prev.currentTest.questions.length - 1));
+      
       const isCompleted = nextIndex >= prev.currentTest.questions.length;
       
       return {
@@ -65,15 +108,15 @@ export const useDiagnosticFlow = (userId?: string) => {
     });
   }, []);
 
-  const previousQuestion = useCallback(() => {
+  const toggleHint = useCallback(() => {
     setFlowState(prev => ({
       ...prev,
-      currentQuestionIndex: Math.max(0, prev.currentQuestionIndex - 1)
+      showHint: !prev.showHint
     }));
   }, []);
 
-  const submitTest = useCallback(async () => {
-    if (!flowState.currentTest || !userId) return null;
+  const finishDiagnostic = useCallback(async () => {
+    if (!flowState.currentTest || !userId) return false;
 
     try {
       const result = await submit(
@@ -87,14 +130,16 @@ export const useDiagnosticFlow = (userId?: string) => {
         setFlowState(prev => ({
           ...prev,
           result,
-          isCompleted: true
+          isCompleted: true,
+          isActive: false
         }));
+        return true;
       }
 
-      return result;
+      return false;
     } catch (error) {
       console.error('Error submitting test:', error);
-      return null;
+      return false;
     }
   }, [flowState, userId, submit]);
 
@@ -104,7 +149,10 @@ export const useDiagnosticFlow = (userId?: string) => {
       currentQuestionIndex: 0,
       answers: {},
       isCompleted: false,
-      result: null
+      result: null,
+      selectedTestId: null,
+      isActive: false,
+      showHint: false
     });
   }, []);
 
@@ -126,17 +174,29 @@ export const useDiagnosticFlow = (userId?: string) => {
   }, [flowState]);
 
   return {
-    // State
+    // State - mapped to expected interface
     flowState,
     tests,
     loading: testsLoading || submitting,
+    availableTests: tests,
+    selectedTestId: flowState.selectedTestId,
+    currentTest: flowState.currentTest,
+    isActive: flowState.isActive,
+    currentQuestionIndex: flowState.currentQuestionIndex,
+    answers: flowState.answers,
+    showHint: flowState.showHint,
+    results: flowState.result,
+    systemReady: tests.length > 0,
+    isLoading: testsLoading || submitting,
 
     // Actions
+    selectTest,
     startTest,
+    startDiagnostic,
     answerQuestion,
-    nextQuestion,
-    previousQuestion,
-    submitTest,
+    navigateQuestion,
+    toggleHint,
+    finishDiagnostic,
     resetFlow,
     fetchTests,
 

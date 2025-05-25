@@ -1,18 +1,16 @@
 
 // Hook de compatibilidad que usa el nuevo sistema de flujo diagnóstico
 import { useDiagnosticFlow } from './useDiagnosticFlow';
-import { useDiagnosticSystem } from './useDiagnosticSystem';
 
 /**
  * Hook de compatibilidad para mantener la interfaz legacy
- * Mapea la nueva arquitectura a la interfaz anterior
+ * Ahora mapea correctamente todas las propiedades de useDiagnosticFlow
  */
 export const useDiagnosticManager = () => {
   const diagnosticFlow = useDiagnosticFlow();
-  const diagnosticSystem = useDiagnosticSystem();
 
   return {
-    // Estado principal
+    // Estado principal - mapeo directo desde diagnosticFlow
     tests: diagnosticFlow.availableTests,
     currentTest: diagnosticFlow.currentTest,
     loading: diagnosticFlow.isLoading,
@@ -25,10 +23,8 @@ export const useDiagnosticManager = () => {
     resultSubmitted: !!diagnosticFlow.results,
     testResults: diagnosticFlow.results,
 
-    // Acciones
-    loadTests: () => {
-      // Auto-cargado por el sistema
-    },
+    // Acciones - mapeo directo
+    loadTests: diagnosticFlow.fetchTests,
     selectTest: diagnosticFlow.selectTest,
     startTest: diagnosticFlow.startDiagnostic,
     answerQuestion: diagnosticFlow.answerQuestion,
@@ -39,9 +35,9 @@ export const useDiagnosticManager = () => {
 
     // Sistema jerárquico
     hierarchicalData: {
-      isSystemReady: diagnosticSystem.isSystemReady,
-      paesTests: diagnosticSystem.paesTests,
-      tier1Nodes: diagnosticSystem.tier1Nodes
+      isSystemReady: diagnosticFlow.systemReady,
+      paesTests: diagnosticFlow.availableTests,
+      tier1Nodes: []
     }
   };
 };
