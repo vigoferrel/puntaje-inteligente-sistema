@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { LectoGuiaSimplified } from '@/components/lectoguia/LectoGuiaSimplified';
+import { SuperPAESMain } from '@/components/super-paes/SuperPAESMain';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 
@@ -16,12 +16,12 @@ const LectoGuia: React.FC = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink>LectoGuía IA</BreadcrumbLink>
+              <BreadcrumbLink>SuperPAES - Sistema Vocacional</BreadcrumbLink>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
-        <LectoGuiaSimplified />
+        <SuperPAESMain />
       </div>
     </AppLayout>
   );
