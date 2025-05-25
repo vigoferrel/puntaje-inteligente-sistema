@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
-type NeuralDimensionId = 
+export type NeuralDimensionId = 
   | 'neural_command'
   | 'educational_universe'
   | 'neural_training'
@@ -21,9 +21,33 @@ interface NavigationState {
   navigationHistory: NeuralDimensionId[];
 }
 
+// Helper function to validate dimension ID
+const isValidDimensionId = (id: string): id is NeuralDimensionId => {
+  const validIds: NeuralDimensionId[] = [
+    'neural_command',
+    'educational_universe', 
+    'neural_training',
+    'progress_analysis',
+    'paes_simulation',
+    'personalized_feedback',
+    'battle_mode',
+    'achievement_system',
+    'vocational_prediction',
+    'financial_center',
+    'calendar_management',
+    'settings_control'
+  ];
+  return validIds.includes(id as NeuralDimensionId);
+};
+
 export const useNeuralNavigation = (initialDimension: string = 'neural_command') => {
+  // Safely convert string to NeuralDimensionId
+  const safeDimensionId: NeuralDimensionId = isValidDimensionId(initialDimension) 
+    ? initialDimension 
+    : 'neural_command';
+
   const [state, setState] = useState<NavigationState>({
-    activeDimension: initialDimension as NeuralDimensionId,
+    activeDimension: safeDimensionId,
     showDimensionContent: false,
     navigationHistory: []
   });
@@ -74,10 +98,11 @@ export const useNeuralNavigation = (initialDimension: string = 'neural_command')
 
   // Detectar cambios de dimensión basados en URL o props
   useEffect(() => {
-    if (initialDimension !== state.activeDimension && !state.showDimensionContent) {
+    const safeDimension = isValidDimensionId(initialDimension) ? initialDimension : 'neural_command';
+    if (safeDimension !== state.activeDimension && !state.showDimensionContent) {
       setState(prevState => ({
         ...prevState,
-        activeDimension: initialDimension as NeuralDimensionId
+        activeDimension: safeDimension
       }));
     }
   }, [initialDimension, state.activeDimension, state.showDimensionContent]);

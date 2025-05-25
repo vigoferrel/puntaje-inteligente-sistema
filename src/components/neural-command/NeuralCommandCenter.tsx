@@ -10,7 +10,7 @@ import { NEURAL_DIMENSIONS, getDimensionsByPhase } from './config/neuralDimensio
 import { NeuralCommandCenterProps, NeuralDimensionConfig } from './config/neuralTypes';
 
 // Hooks modulares - AHORA CON DATOS REALES
-import { useNeuralNavigation } from './hooks/useNeuralNavigation';
+import { useNeuralNavigation, NeuralDimensionId } from './hooks/useNeuralNavigation';
 import { useRealNeuralMetrics } from '@/hooks/useRealNeuralMetrics';
 
 // Componentes modulares
@@ -67,7 +67,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
     }
     
     // Mapear herramientas externas a dimensiones
-    const toolToDimensionMap: Record<string, string> = {
+    const toolToDimensionMap: Record<string, NeuralDimensionId> = {
       'universe': 'educational_universe',
       'lectoguia': 'neural_training',
       'diagnostic': 'progress_analysis',

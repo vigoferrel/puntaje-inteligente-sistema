@@ -1,7 +1,18 @@
 
 import { useMemo } from 'react';
 import { useRealNeuralMetrics } from '@/hooks/useRealNeuralMetrics';
-import { NeuralMetrics } from '../config/neuralTypes';
+
+// Updated legacy interface to match what the code expects
+interface NeuralMetrics {
+  neural_efficiency: number;
+  adaptive_learning_rate: number;
+  system_coherence: number;
+  user_satisfaction: number;
+  paes_simulation_accuracy: number;
+  universe_exploration_depth: number;
+  prediction_accuracy: number;
+  gamification_engagement: number;
+}
 
 export const useNeuralMetrics = () => {
   // Now redirects to real data hook
@@ -18,15 +29,15 @@ export const useNeuralMetrics = () => {
     }
   }), [metrics]);
 
-  // Legacy metrics format
+  // Legacy metrics format - properly mapped
   const legacyMetrics: NeuralMetrics = useMemo(() => ({
     neural_efficiency: metrics?.neural_efficiency || 0,
-    adaptive_learning_score: metrics?.adaptive_learning_rate || 0,
-    cross_pollination_rate: metrics?.system_coherence || 0,
-    user_experience_harmony: metrics?.user_satisfaction || 0,
+    adaptive_learning_rate: metrics?.adaptive_learning_rate || 0,
+    system_coherence: metrics?.system_coherence || 0,
+    user_satisfaction: metrics?.user_satisfaction || 0,
     paes_simulation_accuracy: metrics?.paes_simulation_accuracy || 0,
     universe_exploration_depth: metrics?.universe_exploration_depth || 0,
-    superpaes_coordination_level: metrics?.prediction_accuracy || 0,
+    prediction_accuracy: metrics?.prediction_accuracy || 0,
     gamification_engagement: metrics?.gamification_engagement || 0
   }), [metrics]);
 
