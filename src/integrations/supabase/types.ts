@@ -604,6 +604,38 @@ export type Database = {
           },
         ]
       }
+      preguntas_metadata: {
+        Row: {
+          created_at: string | null
+          excluida_de_puntaje: boolean | null
+          id: string
+          pregunta_id: string
+          razon_exclusion: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          excluida_de_puntaje?: boolean | null
+          id?: string
+          pregunta_id: string
+          razon_exclusion?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          excluida_de_puntaje?: boolean | null
+          id?: string
+          pregunta_id?: string
+          razon_exclusion?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preguntas_metadata_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: true
+            referencedRelation: "preguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -1074,6 +1106,16 @@ export type Database = {
       }
     }
     Functions: {
+      calcular_puntaje_paes_historia: {
+        Args: { codigo_examen_param: string; respuestas_usuario: Json }
+        Returns: {
+          puntaje_total: number
+          respuestas_correctas: number
+          respuestas_incorrectas: number
+          preguntas_validas: number
+          porcentaje_logro: number
+        }[]
+      }
       calculate_weighted_score_ciencias: {
         Args: { exam_code_param: string; user_responses: Json }
         Returns: {
@@ -1134,6 +1176,15 @@ export type Database = {
         Returns: {
           numero_pregunta: number
           respuesta_correcta: string
+        }[]
+      }
+      simular_examen_historia: {
+        Args: { codigo_examen_param?: string; numero_preguntas?: number }
+        Returns: {
+          numero_pregunta: number
+          enunciado: string
+          contexto: string
+          opciones: Json
         }[]
       }
     }

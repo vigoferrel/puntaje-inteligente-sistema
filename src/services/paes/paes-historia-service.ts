@@ -37,7 +37,7 @@ export interface PAESHistoriaExamComplete {
  */
 export const fetchPAESHistoriaExam = async (): Promise<PAESHistoriaExamComplete | null> => {
   try {
-    console.log('🔍 Fetching PAES Historia exam using historia-specific function');
+    console.log('🔍 Fetching complete PAES Historia exam (65 questions)');
     
     // Usar la función específica para historia
     const { data, error } = await supabase.rpc('obtener_examen_historia_completo', {
@@ -76,8 +76,7 @@ const fetchHistoriaExamDirect = async (): Promise<PAESHistoriaExamComplete | nul
     const { data: examenData, error: examenError } = await supabase
       .from('examenes')
       .select('*')
-      .or('nombre.ilike.%historia%,nombre.ilike.%ciencias sociales%')
-      .eq('año', 2024)
+      .eq('codigo', 'HISTORIA_2024_FORMA_123')
       .single();
 
     if (examenError || !examenData) {
@@ -203,8 +202,7 @@ const fetchCorrectAnswersDirect = async (): Promise<Record<number, string>> => {
     const { data: examenData } = await supabase
       .from('examenes')
       .select('id')
-      .or('nombre.ilike.%historia%,nombre.ilike.%ciencias sociales%')
-      .eq('año', 2024)
+      .eq('codigo', 'HISTORIA_2024_FORMA_123')
       .single();
 
     if (!examenData) {
@@ -306,10 +304,84 @@ export const getHistoriaExamStats = async () => {
       historia: historia.length,
       sistemaEconomico: sistemaEconomico.length,
       duracionMinutos: examData.examen.duracion_minutos,
-      año: examData.examen.año
+      año: examData.examen.año,
+      preguntasValidas: examData.examen.preguntas_validas,
+      preguntasExcluidas: examData.examen.total_preguntas - examData.examen.preguntas_validas
     };
   } catch (error) {
     console.error('Error in getHistoriaExamStats:', error);
     throw error;
+  }
+};
+
+/**
+ * Valida la integridad del examen PAES Historia
+ */
+export const validateHistoriaExamIntegrity = async (): Promise<{
+  isValid: boolean;
+  issues: string[];
+  stats: any;
+}> => {
+  try {
+    const examData = await fetchPAESHistoriaExam();
+    const issues: string[] = [];
+    
+    if (!examData) {
+      return {
+        isValid: false,
+        issues: ['Examen no encontrado'],
+        stats: null
+      };
+    }
+
+    // Validar que tengamos 65 preguntas
+    if (examData.preguntas.length !== 65) {
+      issues.push(`Se esperaban 65 preguntas, se encontraron ${examData.preguntas.length}`);
+    }
+
+    // Validar numeración secuencial
+    const numeros = examData.preguntas.map(p => p.numero).sort((a, b) => a - b);
+    for (let i = 1; i <= 65; i++) {
+      if (!numeros.includes(i)) {
+        issues.push(`Falta la pregunta número ${i}`);
+      }
+    }
+
+    // Validar opciones por pregunta
+    examData.preguntas.forEach(pregunta => {
+      if (pregunta.numero === 56) {
+        // La pregunta 56 debe tener 5 opciones
+        if (pregunta.opciones.length !== 5) {
+          issues.push(`Pregunta ${pregunta.numero} debe tener 5 opciones, tiene ${pregunta.opciones.length}`);
+        }
+      } else {
+        // Las demás preguntas deben tener 4 opciones
+        if (pregunta.opciones.length !== 4) {
+          issues.push(`Pregunta ${pregunta.numero} debe tener 4 opciones, tiene ${pregunta.opciones.length}`);
+        }
+      }
+
+      // Validar que cada pregunta tenga exactamente una respuesta correcta
+      const correctas = pregunta.opciones.filter(o => o.es_correcta);
+      if (correctas.length !== 1) {
+        issues.push(`Pregunta ${pregunta.numero} tiene ${correctas.length} respuestas correctas, debe tener 1`);
+      }
+    });
+
+    const stats = await getHistoriaExamStats();
+
+    return {
+      isValid: issues.length === 0,
+      issues,
+      stats
+    };
+
+  } catch (error) {
+    console.error('Error validating Historia exam integrity:', error);
+    return {
+      isValid: false,
+      issues: [`Error durante validación: ${error}`],
+      stats: null
+    };
   }
 };
