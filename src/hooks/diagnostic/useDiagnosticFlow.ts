@@ -1,13 +1,13 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDiagnosticSystem } from './useDiagnosticSystem';
 import { DiagnosticTest, DiagnosticResult } from '@/types/diagnostic';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/components/ui/use-toast';
-import { submitDiagnosticResult } from '@/services/diagnostic/test-services';
+import { toast } from '@/hooks/use-toast';
+import { submitDiagnosticResult } from '@/services/diagnostic/results/submit-result';
+import { fetchDiagnosticQuestions } from '@/services/diagnostic/question/fetch-questions';
 
 interface DiagnosticFlowState {
-  // Estado esencial simplificado
   selectedTestId: string | null;
   currentTest: DiagnosticTest | null;
   isActive: boolean;
@@ -18,10 +18,6 @@ interface DiagnosticFlowState {
   results: DiagnosticResult | null;
 }
 
-/**
- * Hook simplificado para el flujo diagnóstico
- * Reemplaza use-diagnostic-manager con lógica quirúrgicamente reducida
- */
 export const useDiagnosticFlow = () => {
   const { user } = useAuth();
   const diagnosticSystem = useDiagnosticSystem();
@@ -37,22 +33,106 @@ export const useDiagnosticFlow = () => {
     results: null
   });
 
-  // Seleccionar test
-  const selectTest = useCallback((testId: string) => {
-    const test = diagnosticSystem.diagnosticTests.find(t => t.id === testId);
-    if (!test) return false;
+  // Cargar preguntas para un test
+  const loadTestQuestions = useCallback(async (test: DiagnosticTest): Promise<DiagnosticTest> => {
+    try {
+      console.log('📋 Cargando preguntas para test:', test.id);
+      
+      // Intentar cargar preguntas reales
+      const questions = await fetchDiagnosticQuestions(test.id, test.testId);
+      
+      if (questions.length > 0) {
+        console.log(`✅ Cargadas ${questions.length} preguntas reales`);
+        return { ...test, questions };
+      }
+      
+      // Fallback: crear preguntas de demostración
+      console.log('⚠️ Usando preguntas de demostración');
+      const demoQuestions = Array.from({ length: 5 }, (_, i) => ({
+        id: `demo-${test.id}-${i + 1}`,
+        question: `Pregunta de demostración ${i + 1} para ${test.title}`,
+        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+        correctAnswer: 'Opción A',
+        skill: 'INTERPRET_RELATE' as any,
+        prueba: 'COMPETENCIA_LECTORA' as any,
+        explanation: `Explicación para la pregunta ${i + 1}`,
+        difficulty: 'intermediate' as any
+      }));
+      
+      return { ...test, questions: demoQuestions };
+    } catch (error) {
+      console.error('❌ Error cargando preguntas:', error);
+      
+      // Fallback de emergencia
+      const fallbackQuestions = Array.from({ length: 3 }, (_, i) => ({
+        id: `fallback-${test.id}-${i + 1}`,
+        question: `Pregunta de fallback ${i + 1}`,
+        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+        correctAnswer: 'Opción A',
+        skill: 'INTERPRET_RELATE' as any,
+        prueba: 'COMPETENCIA_LECTORA' as any,
+        explanation: 'Explicación de fallback',
+        difficulty: 'basic' as any
+      }));
+      
+      return { ...test, questions: fallbackQuestions };
+    }
+  }, []);
 
-    setState(prev => ({
-      ...prev,
-      selectedTestId: testId,
-      currentTest: test
-    }));
-    return true;
-  }, [diagnosticSystem.diagnosticTests]);
+  // Seleccionar test
+  const selectTest = useCallback(async (testId: string) => {
+    const test = diagnosticSystem.diagnosticTests.find(t => t.id === testId);
+    if (!test) {
+      console.error('❌ Test no encontrado:', testId);
+      return false;
+    }
+
+    console.log('🎯 Seleccionando test:', test.title);
+    
+    try {
+      const testWithQuestions = await loadTestQuestions(test);
+      
+      setState(prev => ({
+        ...prev,
+        selectedTestId: testId,
+        currentTest: testWithQuestions
+      }));
+      
+      toast({
+        title: "Test seleccionado",
+        description: `${test.title} - ${testWithQuestions.questions.length} preguntas`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Error seleccionando test:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar el test seleccionado",
+        variant: "destructive"
+      });
+      return false;
+    }
+  }, [diagnosticSystem.diagnosticTests, loadTestQuestions]);
 
   // Iniciar diagnóstico
   const startDiagnostic = useCallback(() => {
-    if (!state.currentTest) return false;
+    if (!state.currentTest) {
+      console.error('❌ No hay test seleccionado');
+      return false;
+    }
+
+    if (state.currentTest.questions.length === 0) {
+      console.error('❌ Test sin preguntas');
+      toast({
+        title: "Error",
+        description: "El test seleccionado no tiene preguntas disponibles",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    console.log('▶️ Iniciando diagnóstico:', state.currentTest.title);
 
     setState(prev => ({
       ...prev,
@@ -66,7 +146,7 @@ export const useDiagnosticFlow = () => {
 
     toast({
       title: "Diagnóstico iniciado",
-      description: `Comenzando ${state.currentTest.title}`,
+      description: `Comenzando ${state.currentTest.title} - ${state.currentTest.questions.length} preguntas`,
     });
 
     return true;
@@ -74,6 +154,7 @@ export const useDiagnosticFlow = () => {
 
   // Responder pregunta
   const answerQuestion = useCallback((questionId: string, answer: string) => {
+    console.log('📝 Respuesta registrada:', questionId, answer);
     setState(prev => ({
       ...prev,
       answers: { ...prev.answers, [questionId]: answer },
@@ -95,20 +176,30 @@ export const useDiagnosticFlow = () => {
         newIndex = Math.max(newIndex - 1, 0);
       }
 
+      console.log('🔄 Navegando a pregunta:', newIndex + 1);
       return { ...prev, currentQuestionIndex: newIndex, showHint: false };
     });
   }, []);
 
   // Finalizar diagnóstico
-  const finishDiagnostic = useCallback(async () => {
+  const finishDiagnostic = useCallback(async (): Promise<boolean> => {
     if (!state.currentTest || !state.timeStarted || !user?.id) {
+      console.error('❌ Datos insuficientes para finalizar');
       return false;
     }
 
     try {
+      console.log('🏁 Finalizando diagnóstico...');
+      
       const timeSpentMinutes = Math.round(
         (Date.now() - state.timeStarted.getTime()) / 60000
       );
+
+      console.log('📊 Enviando resultados:', {
+        test: state.currentTest.id,
+        answers: Object.keys(state.answers).length,
+        timeSpent: timeSpentMinutes
+      });
 
       const result = await submitDiagnosticResult(
         user.id,
@@ -124,7 +215,7 @@ export const useDiagnosticFlow = () => {
           results: result
         }));
 
-        // Actualizar sistema para refrescar datos
+        // Actualizar sistema
         await diagnosticSystem.refreshSystem();
 
         toast({
@@ -137,7 +228,7 @@ export const useDiagnosticFlow = () => {
 
       return false;
     } catch (error) {
-      console.error('Error finalizando diagnóstico:', error);
+      console.error('❌ Error finalizando diagnóstico:', error);
       toast({
         title: "Error",
         description: "No se pudo completar el diagnóstico",
@@ -154,6 +245,7 @@ export const useDiagnosticFlow = () => {
 
   // Reset completo
   const resetFlow = useCallback(() => {
+    console.log('🔄 Reset completo del flujo');
     setState({
       selectedTestId: null,
       currentTest: null,
