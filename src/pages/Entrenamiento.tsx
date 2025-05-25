@@ -1,51 +1,48 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { AppLayout } from "@/components/app-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell } from "lucide-react";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
+import { AppInitializer } from "@/components/AppInitializer";
+import { TrainingHeader } from "@/components/training/TrainingHeader";
+import { TrainingStats } from "@/components/training/TrainingStats";
+import { TrainingTabs } from "@/components/training/TrainingTabs";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTraining } from "@/hooks/use-training";
 
 const Entrenamiento = () => {
+  const { profile } = useAuth();
+  const { sessionStats } = useTraining();
+  const [activeTab, setActiveTab] = useState("personalizado");
+
   return (
-    <AppLayout>
-      <div className="container py-8">
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link to="/">Inicio</Link></BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink>Entrenamiento</BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        
-        <div className="flex items-center mb-6 gap-2">
-          <Dumbbell className="h-6 w-6 text-primary" />
-          <h1 className="text-3xl font-bold">Entrenamiento de Habilidades</h1>
+    <AppInitializer>
+      <AppLayout>
+        <div className="min-h-screen bg-gray-900">
+          <div className="container mx-auto py-8 px-4">
+            {/* Header */}
+            <TrainingHeader 
+              userName={profile?.name}
+              weeklyProgress={sessionStats.weeklyProgress}
+              weeklyGoal={sessionStats.weeklyGoal}
+              streakDays={sessionStats.streakDays}
+              totalSessions={sessionStats.totalSessions}
+            />
+            
+            {/* Stats */}
+            <div className="mt-8">
+              <TrainingStats stats={sessionStats} />
+            </div>
+            
+            {/* Main Content */}
+            <div className="mt-8">
+              <TrainingTabs 
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              />
+            </div>
+          </div>
         </div>
-        
-        <p className="text-muted-foreground mb-8">
-          Mejora tus habilidades con ejercicios específicos adaptados a tu nivel.
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ejercicios personalizados</CardTitle>
-              <CardDescription>
-                Ejercicios diseñados según tus resultados de diagnóstico
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Los contenidos de entrenamiento estarán disponibles próximamente.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </AppLayout>
+      </AppLayout>
+    </AppInitializer>
   );
 };
 
