@@ -5,19 +5,20 @@ import { Exercise } from '@/types/ai-types';
 import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 
 /**
- * Hook para integrar preguntas oficiales de PAES con LectoGuía
+ * Hook para integrar preguntas oficiales de PAES con LectoGuía - Versión Real
  */
 export function usePAESIntegration() {
   const [isLoading, setIsLoading] = useState(false);
   const [paesStats, setPaesStats] = useState<any>(null);
+  const [availableExams, setAvailableExams] = useState<any[]>([]);
 
-  // Mapeo de materias de LectoGuía a códigos de examen PAES
+  // Mapeo de materias de LectoGuía a códigos de examen PAES reales
   const subjectToExamMap: Record<string, string> = {
-    'matematicas-basica': 'FORMA_113_2024',
-    'matematicas-avanzada': 'FORMA_113_2024', // Cuando tengamos Matemática 2
-    'lectura': 'COMPETENCIA_LECTORA_2024',     // Cuando tengamos Comprensión Lectora
-    'ciencias': 'CIENCIAS_2024',               // Cuando tengamos Ciencias
-    'historia': 'HISTORIA_2024'                // Cuando tengamos Historia
+    'matematicas-basica': 'MATEMATICA_M2_2024_FORMA_153',
+    'matematicas-avanzada': 'MATEMATICA_M2_2024_FORMA_153',
+    'lectura': 'PAES-2024-FORM-103',
+    'ciencias': 'CIENCIAS_2024_FORMA_153',
+    'historia': 'HISTORIA_2024_FORMA_123'
   };
 
   // Mapeo de habilidades a dificultad conceptual
@@ -61,13 +62,13 @@ export function usePAESIntegration() {
         ? `${paesQuestion.contexto}\n\n${paesQuestion.enunciado}`
         : paesQuestion.enunciado,
       options: paesQuestion.opciones.map(opt => opt.contenido),
-      correctAnswer: correctOption?.contenido || paesQuestion.opciones[0].contenido,
+      correctAnswer: correctOption?.contenido || paesQuestion.opciones[0]?.contenido || '',
       explanation: `Esta es una pregunta oficial de PAES ${prueba} (Pregunta #${paesQuestion.numero}). ${correctOption ? 'La respuesta correcta es la opción ' + correctOption.letra + '.' : ''}`
     };
   }, []);
 
   /**
-   * Generar ejercicio oficial de PAES
+   * Generar ejercicio oficial de PAES usando datos reales
    */
   const generatePAESExercise = useCallback(async (
     activeSubject: string,
@@ -77,7 +78,7 @@ export function usePAESIntegration() {
     setIsLoading(true);
     
     try {
-      console.log(`🎯 Generando ejercicio PAES para ${activeSubject} (${skill}, ${prueba})`);
+      console.log(`🎯 Generando ejercicio PAES real para ${activeSubject} (${skill}, ${prueba})`);
       
       // Obtener código de examen basado en la materia
       const examCode = subjectToExamMap[activeSubject];
@@ -86,31 +87,32 @@ export function usePAESIntegration() {
         return null;
       }
 
-      // Solo usar PAES para matemáticas por ahora (tenemos esos datos)
-      if (!activeSubject.includes('matematicas')) {
-        console.log(`📚 Materia ${activeSubject} no tiene datos PAES aún, usando generación AI`);
+      // Validar que el examen existe en la base de datos
+      const isValidExam = await PAESService.validateExam(examCode);
+      if (!isValidExam) {
+        console.warn(`Examen ${examCode} no encontrado en la base de datos`);
         return null;
       }
 
       // Determinar dificultad basada en la habilidad
       const difficulty = skillToDifficultyMap[skill] || 'INTERMEDIO';
       
-      // Obtener pregunta PAES
+      // Obtener pregunta PAES real
       const paesQuestion = await PAESService.getQuestionsByDifficulty(examCode, difficulty);
       
       if (!paesQuestion) {
-        console.warn(`No se encontró pregunta PAES para dificultad ${difficulty}`);
+        console.warn(`No se encontró pregunta PAES para dificultad ${difficulty} en ${examCode}`);
         return null;
       }
 
       // Convertir a formato Exercise
       const exercise = convertPAESToExercise(paesQuestion, prueba, skill);
       
-      console.log(`✅ Ejercicio PAES generado: Pregunta #${paesQuestion.numero}`);
+      console.log(`✅ Ejercicio PAES real generado: Pregunta #${paesQuestion.numero} de ${examCode}`);
       return exercise;
 
     } catch (error) {
-      console.error('Error generando ejercicio PAES:', error);
+      console.error('Error generando ejercicio PAES real:', error);
       return null;
     } finally {
       setIsLoading(false);
@@ -118,12 +120,20 @@ export function usePAESIntegration() {
   }, [convertPAESToExercise, subjectToExamMap, skillToDifficultyMap]);
 
   /**
-   * Obtener estadísticas de PAES
+   * Obtener estadísticas de PAES reales
    */
-  const loadPAESStats = useCallback(async () => {
+  const loadPAESStats = useCallback(async (examCode?: string) => {
     try {
-      const stats = await PAESService.getExamStats();
-      setPaesStats(stats);
+      console.log('📊 Cargando estadísticas PAES reales...');
+      
+      const defaultExamCode = examCode || 'PAES-2024-FORM-103';
+      const stats = await PAESService.getExamStats(defaultExamCode);
+      
+      if (stats) {
+        setPaesStats(stats);
+        console.log(`✅ Estadísticas PAES cargadas: ${stats.questionsLoaded}/${stats.totalQuestions} preguntas`);
+      }
+      
       return stats;
     } catch (error) {
       console.error('Error cargando estadísticas PAES:', error);
@@ -132,18 +142,87 @@ export function usePAESIntegration() {
   }, []);
 
   /**
-   * Verificar si hay contenido PAES disponible para una materia
+   * Cargar exámenes disponibles
    */
-  const hasPAESContent = useCallback((activeSubject: string): boolean => {
-    return activeSubject.includes('matematicas') && !!subjectToExamMap[activeSubject];
+  const loadAvailableExams = useCallback(async () => {
+    try {
+      console.log('📚 Cargando exámenes disponibles...');
+      
+      const exams = await PAESService.getAvailableExams();
+      setAvailableExams(exams);
+      
+      console.log(`✅ ${exams.length} exámenes disponibles cargados`);
+      return exams;
+    } catch (error) {
+      console.error('Error cargando exámenes disponibles:', error);
+      return [];
+    }
+  }, []);
+
+  /**
+   * Verificar si hay contenido PAES real disponible para una materia
+   */
+  const hasPAESContent = useCallback(async (activeSubject: string): Promise<boolean> => {
+    const examCode = subjectToExamMap[activeSubject];
+    if (!examCode) return false;
+    
+    try {
+      return await PAESService.validateExam(examCode);
+    } catch (error) {
+      console.error('Error verificando contenido PAES:', error);
+      return false;
+    }
   }, [subjectToExamMap]);
+
+  /**
+   * Obtener múltiples preguntas para una sesión de práctica
+   */
+  const generatePracticeSession = useCallback(async (
+    activeSubject: string,
+    questionCount: number = 5
+  ): Promise<Exercise[]> => {
+    const examCode = subjectToExamMap[activeSubject];
+    if (!examCode) return [];
+
+    try {
+      console.log(`🏋️ Generando sesión de práctica: ${questionCount} preguntas`);
+      
+      const exercises: Exercise[] = [];
+      const usedNumbers = new Set<number>();
+      
+      for (let i = 0; i < questionCount; i++) {
+        const question = await PAESService.getRandomQuestion(examCode);
+        
+        if (question && !usedNumbers.has(question.numero)) {
+          usedNumbers.add(question.numero);
+          
+          // Determinar prueba y skill basado en la materia
+          const prueba = activeSubject.includes('matematicas') ? 'MATEMATICA_1' : 'COMPETENCIA_LECTORA';
+          const skill = 'INTERPRET_RELATE'; // Skill por defecto, se puede hacer más inteligente
+          
+          const exercise = convertPAESToExercise(question, prueba as TPAESPrueba, skill);
+          exercises.push(exercise);
+        }
+      }
+      
+      console.log(`✅ Sesión de práctica generada: ${exercises.length} ejercicios`);
+      return exercises;
+      
+    } catch (error) {
+      console.error('Error generando sesión de práctica:', error);
+      return [];
+    }
+  }, [subjectToExamMap, convertPAESToExercise]);
 
   return {
     generatePAESExercise,
     loadPAESStats,
+    loadAvailableExams,
     hasPAESContent,
+    generatePracticeSession,
     isLoading,
     paesStats,
+    availableExams,
     subjectToExamMap
   };
 }
