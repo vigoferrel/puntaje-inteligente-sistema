@@ -18,6 +18,7 @@ interface SystemMetrics {
   totalNodes: number;
   systemHealth: number;
   streakDays: number;
+  totalProgress: number;
 }
 
 export const useUnifiedState = () => {
@@ -28,7 +29,8 @@ export const useUnifiedState = () => {
     completedNodes: 8,
     totalNodes: 25,
     systemHealth: 95,
-    streakDays: 5
+    streakDays: 5,
+    totalProgress: 67
   });
 
   const [userProgress, setUserProgress] = useState<UserProgress>({
