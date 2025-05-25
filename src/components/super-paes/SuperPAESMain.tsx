@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -5,12 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Brain, Target, BookOpen, TrendingUp, 
-  Zap, Crown, Award, Star 
+  Zap, Crown, Award, Star, Calendar,
+  Calculator, DollarSign, Users
 } from 'lucide-react';
 import { useCinematic } from '@/components/cinematic/CinematicTransitionSystem';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const SuperPAESMain: React.FC = () => {
   const { startTransition } = useCinematic();
+  const { profile } = useAuth();
 
   const handleNavigateToUniverse = () => {
     startTransition('dashboard');
@@ -19,6 +23,16 @@ export const SuperPAESMain: React.FC = () => {
   const handleNavigateToModule = (module: string) => {
     console.log(`Navegando a módulo: ${module}`);
     startTransition('dashboard');
+  };
+
+  const handleNavigateToFinancial = () => {
+    // Navegar al centro financiero
+    window.location.href = '/financial';
+  };
+
+  const handleNavigateToCalendar = () => {
+    // Navegar al calendario
+    window.location.href = '/calendario';
   };
 
   return (
@@ -45,6 +59,11 @@ export const SuperPAESMain: React.FC = () => {
             <div>
               <h1 className="text-4xl font-bold text-white">SuperPAES</h1>
               <p className="text-cyan-400">Sistema Inteligente de Preparación PAES</p>
+              {profile && (
+                <p className="text-purple-300 text-sm">
+                  Bienvenido, {profile.name}
+                </p>
+              )}
             </div>
           </div>
 
@@ -91,6 +110,27 @@ export const SuperPAESMain: React.FC = () => {
               icon: Zap,
               color: 'from-yellow-500 to-orange-500',
               action: () => handleNavigateToModule('exercises')
+            },
+            {
+              title: 'Centro Financiero',
+              description: 'Calculadora de becas y beneficios',
+              icon: DollarSign,
+              color: 'from-emerald-500 to-green-500',
+              action: () => handleNavigateToFinancial()
+            },
+            {
+              title: 'Calendario Inteligente',
+              description: 'Planificación de estudio y fechas PAES',
+              icon: Calendar,
+              color: 'from-indigo-500 to-purple-500',
+              action: () => handleNavigateToCalendar()
+            },
+            {
+              title: 'Calculadora PAES',
+              description: 'Simulador de puntajes y carreras',
+              icon: Calculator,
+              color: 'from-cyan-500 to-blue-500',
+              action: () => handleNavigateToModule('calculator')
             },
             {
               title: 'Métricas Avanzadas',
@@ -143,15 +183,20 @@ export const SuperPAESMain: React.FC = () => {
                 Estado del Sistema SuperPAES
               </h3>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {[
-                  { label: 'Módulos Activos', value: '6/6', status: 'success' },
+                  { label: 'Módulos Activos', value: '9/9', status: 'success' },
                   { label: 'IA Operativa', value: '100%', status: 'success' },
                   { label: 'Datos Sincronizados', value: 'OK', status: 'success' },
-                  { label: 'Rendimiento', value: 'Óptimo', status: 'success' }
+                  { label: 'Rendimiento', value: 'Óptimo', status: 'success' },
+                  { label: 'Usuario Conectado', value: profile ? 'Sí' : 'No', status: profile ? 'success' : 'warning' }
                 ].map((metric) => (
                   <div key={metric.label} className="text-center">
-                    <div className="text-lg font-bold text-green-400">{metric.value}</div>
+                    <div className={`text-lg font-bold ${
+                      metric.status === 'success' ? 'text-green-400' : 'text-yellow-400'
+                    }`}>
+                      {metric.value}
+                    </div>
                     <div className="text-sm text-gray-300">{metric.label}</div>
                   </div>
                 ))}

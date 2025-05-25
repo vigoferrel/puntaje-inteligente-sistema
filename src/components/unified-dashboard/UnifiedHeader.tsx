@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   Brain, Target, BookOpen, Activity, Settings,
-  Zap, Trophy, Bell, User
+  Zap, Trophy, Bell, User, Calendar, Calculator,
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,7 +30,10 @@ const TOOLS = [
   { id: 'lectoguia', label: 'LectoGuía', icon: Brain },
   { id: 'diagnostic', label: 'Diagnóstico', icon: Target },
   { id: 'exercises', label: 'Ejercicios', icon: BookOpen },
-  { id: 'plan', label: 'Plan', icon: Trophy }
+  { id: 'plan', label: 'Plan', icon: Trophy },
+  { id: 'calendar', label: 'Calendario', icon: Calendar },
+  { id: 'calculator', label: 'Calculadora', icon: Calculator },
+  { id: 'financial', label: 'Becas', icon: DollarSign }
 ];
 
 const SUBJECTS = [
@@ -48,8 +52,21 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   onSubjectChange,
   systemMetrics
 }) => {
-  const { profile } = useAuth();
+  const { profile, user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleToolNavigation = (toolId: string) => {
+    if (toolId === 'calendar') {
+      window.location.href = '/calendario';
+      return;
+    }
+    if (toolId === 'financial') {
+      window.location.href = '/financial';
+      return;
+    }
+    onToolChange(toolId);
+  };
 
   return (
     <motion.header
@@ -101,18 +118,40 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </Button>
 
             {/* User Profile */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg">
-              <User className="w-5 h-5 text-white" />
-              <span className="text-white text-sm font-medium">
-                {profile?.name || 'Estudiante'}
-              </span>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg text-white hover:bg-white/20"
+              >
+                <User className="w-5 h-5" />
+                <span className="text-sm font-medium">
+                  {profile?.name || user?.email || 'Usuario'}
+                </span>
+              </Button>
+              
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">{profile?.name || 'Usuario'}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={logout}
+                    className="w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Cerrar Sesión
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Middle Row - Tools Navigation */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto">
             {TOOLS.map((tool) => {
               const Icon = tool.icon;
               const isActive = currentTool === tool.id;
@@ -121,8 +160,8 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 <Button
                   key={tool.id}
                   variant={isActive ? "default" : "ghost"}
-                  onClick={() => onToolChange(tool.id)}
-                  className={`flex items-center gap-2 ${
+                  onClick={() => handleToolNavigation(tool.id)}
+                  className={`flex items-center gap-2 whitespace-nowrap ${
                     isActive 
                       ? 'bg-white text-slate-900 hover:bg-white/90' 
                       : 'text-white hover:bg-white/10'
@@ -149,14 +188,14 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-white text-sm font-medium">Prueba:</span>
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto">
               {SUBJECTS.map((subject) => (
                 <Button
                   key={subject.code}
                   variant={activeSubject === subject.code ? "default" : "outline"}
                   size="sm"
                   onClick={() => onSubjectChange(subject.code)}
-                  className={`text-xs ${
+                  className={`text-xs whitespace-nowrap ${
                     activeSubject === subject.code
                       ? 'bg-white text-slate-900'
                       : 'border-white/30 text-white hover:bg-white/10'

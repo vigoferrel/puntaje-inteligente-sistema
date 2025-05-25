@@ -1,26 +1,21 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  user_metadata?: {
-    name?: string;
-    full_name?: string;
-    avatar_url?: string;
-  };
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 interface Profile {
   id: string;
   name: string;
   email?: string;
   role: 'student' | 'parent' | 'admin';
+  target_career?: string;
+  learning_phase?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
+  session: Session | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -37,55 +32,111 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>({
-    id: 'demo-user',
-    email: 'estudiante@demo.com',
-    user_metadata: {
-      name: 'Estudiante Demo',
-      full_name: 'Estudiante Demo PAES'
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Cargar perfil del usuario desde la base de datos
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error loading profile:', error);
+        return;
+      }
+
+      if (data) {
+        setProfile({
+          id: data.id,
+          name: data.name || 'Usuario',
+          email: data.email,
+          role: 'student', // Por defecto student
+          target_career: data.target_career,
+          learning_phase: data.learning_phase
+        });
+      }
+    } catch (error) {
+      console.error('Error in loadUserProfile:', error);
     }
-  });
-  
-  const [profile, setProfile] = useState<Profile | null>({
-    id: 'demo-user',
-    name: 'Estudiante Demo',
-    email: 'estudiante@demo.com',
-    role: 'student'
-  });
-  
-  const [isLoading, setIsLoading] = useState(false);
+  };
+
+  useEffect(() => {
+    // Configurar listener de cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Cargar perfil cuando el usuario se autentica
+          await loadUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Verificar sesión existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    // Simular login
-    setTimeout(() => {
-      setUser({ 
-        id: 'demo-user', 
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        user_metadata: {
-          name: 'Estudiante Demo',
-          full_name: 'Estudiante Demo PAES'
-        }
+        password
       });
-      setProfile({ 
-        id: 'demo-user',
-        name: 'Estudiante Demo', 
-        email,
-        role: 'student' 
-      });
+
+      if (error) throw error;
+      
+      if (data.user) {
+        await loadUserProfile(data.user.id);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setProfile(null);
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
     <AuthContext.Provider value={{
       user,
       profile,
+      session,
       login,
       logout,
       isLoading
