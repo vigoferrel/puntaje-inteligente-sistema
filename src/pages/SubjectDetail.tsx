@@ -38,7 +38,8 @@ const SubjectDetail: React.FC = () => {
       color: 'from-blue-500 to-cyan-500',
       totalNodes: 30,
       tier1: 14, tier2: 13, tier3: 3,
-      description: 'Desarrolla habilidades de comprensión, análisis y síntesis textual'
+      description: 'Desarrolla habilidades de comprensión, análisis y síntesis textual',
+      subjectArea: 'COMPETENCIA_LECTORA'
     },
     'matematica-m1': {
       name: 'Matemática M1',
@@ -46,7 +47,8 @@ const SubjectDetail: React.FC = () => {
       color: 'from-green-500 to-emerald-500',
       totalNodes: 25,
       tier1: 10, tier2: 10, tier3: 5,
-      description: 'Álgebra, funciones y probabilidades'
+      description: 'Álgebra, funciones y probabilidades',
+      subjectArea: 'MATEMATICA_M1'
     },
     'matematica-m2': {
       name: 'Matemática M2',
@@ -54,7 +56,8 @@ const SubjectDetail: React.FC = () => {
       color: 'from-purple-500 to-violet-500',
       totalNodes: 22,
       tier1: 13, tier2: 6, tier3: 3,
-      description: 'Geometría, trigonometría y cálculo'
+      description: 'Geometría, trigonometría y cálculo',
+      subjectArea: 'MATEMATICA_M2'
     },
     'historia': {
       name: 'Historia y Ciencias Sociales',
@@ -62,7 +65,8 @@ const SubjectDetail: React.FC = () => {
       color: 'from-orange-500 to-red-500',
       totalNodes: 65,
       tier1: 19, tier2: 26, tier3: 20,
-      description: 'Historia de Chile, mundial y educación cívica'
+      description: 'Historia de Chile, mundial y educación cívica',
+      subjectArea: 'HISTORIA'
     },
     'ciencias': {
       name: 'Ciencias',
@@ -70,7 +74,8 @@ const SubjectDetail: React.FC = () => {
       color: 'from-red-500 to-pink-500',
       totalNodes: 135,
       tier1: 33, tier2: 53, tier3: 49,
-      description: 'Biología, química, física y ciencias de la Tierra'
+      description: 'Biología, química, física y ciencias de la Tierra',
+      subjectArea: 'CIENCIAS'
     }
   };
 
@@ -94,7 +99,7 @@ const SubjectDetail: React.FC = () => {
   }
 
   const subjectNodes = diagnosticSystem.learningNodes.filter(node => 
-    node.subject?.toLowerCase().includes(subject?.toLowerCase() || '')
+    node.subject_area?.toLowerCase().includes(currentSubject.subjectArea.toLowerCase())
   );
 
   const completedNodes = subjectNodes.filter(node => 
