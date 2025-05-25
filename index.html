@@ -20,42 +20,58 @@
     <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
     
-    <!-- PERMISSIONS POLICY QUIRÚRGICO -->
+    <!-- PERMISSIONS POLICY QUIRÚRGICO - V8.3 SILENCIOSO -->
     <meta http-equiv="Permissions-Policy" content="accelerometer=(), autoplay=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), web-share=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(), gamepad=(), speaker-selection=(), conversion-measurement=(), focus-without-user-activation=(), hid=(), idle-detection=(), serial=(), sync-xhr=(), trust-token-redemption=(), window-placement=(), local-fonts=()">
     
     <!-- Anti-fingerprinting quirúrgico -->
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
     
-    <!-- SISTEMA DE MONITOREO VASCULAR v6.0 - QUIRÚRGICO -->
+    <!-- SISTEMA DE MONITOREO VASCULAR v8.3 - MODO SILENCIOSO MANTENIMIENTO -->
     <script>
-      console.log('🚨 CIRUGÍA DE EMERGENCIA v6.0 INICIADA - Reparación vascular quirúrgica:', Date.now());
+      console.log('🩸 SISTEMA VASCULAR v8.3 INICIADO - Modo Mantenimiento Silencioso:', Date.now());
       
-      // Monitor vascular quirúrgico ultra-optimizado
+      // Monitor vascular v8.3 ultra-silencioso
       window.paesVascularMonitor = {
         supabaseConnections: 0,
         lastConnection: null,
         errors: [],
-        status: 'SURGERY_MODE',
-        surgeryPhase: 'VASCULAR_REPAIR'
+        status: 'MAINTENANCE_MODE',
+        surgeryPhase: 'SILENT_OPERATION',
+        lastLogTime: 0,
+        logThrottle: 600000, // 10 minutos entre logs
+        isInitialized: false
       };
       
-      // Interceptor quirúrgico para Supabase
+      // Interceptor vascular v8.3 - solo logs críticos
       const originalFetch = window.fetch;
       window.fetch = function(...args) {
         const url = args[0];
+        const now = Date.now();
+        
         if (typeof url === 'string' && url.includes('supabase.co')) {
           window.paesVascularMonitor.supabaseConnections++;
           window.paesVascularMonitor.lastConnection = new Date().toISOString();
-          window.paesVascularMonitor.status = 'VASCULAR_FLOW_DETECTED';
-          console.log('🩸 FLUJO VASCULAR RESTAURADO:', url);
+          window.paesVascularMonitor.status = 'VASCULAR_FLOW_ACTIVE';
+          
+          // Log solo en inicialización o cada 10 minutos
+          if (!window.paesVascularMonitor.isInitialized || 
+              now - window.paesVascularMonitor.lastLogTime > window.paesVascularMonitor.logThrottle) {
+            console.log('🩸 Flujo vascular v8.3 activo (silencioso)');
+            window.paesVascularMonitor.lastLogTime = now;
+          }
         }
+        
         return originalFetch.apply(this, args)
           .then(response => {
             if (typeof url === 'string' && url.includes('supabase.co')) {
               if (response.ok) {
                 window.paesVascularMonitor.status = 'VASCULAR_FLOW_HEALTHY';
-                console.log('✅ CIRCULACIÓN SUPABASE EXITOSA:', response.status);
+                // Solo log de éxito en inicialización
+                if (!window.paesVascularMonitor.isInitialized) {
+                  console.log('✅ Circulación Supabase establecida v8.3');
+                  window.paesVascularMonitor.isInitialized = true;
+                }
               } else {
                 window.paesVascularMonitor.status = 'VASCULAR_OBSTRUCTION';
                 window.paesVascularMonitor.errors.push({
@@ -63,7 +79,8 @@
                   status: response.status,
                   timestamp: new Date().toISOString()
                 });
-                console.error('❌ OBSTRUCCIÓN VASCULAR:', response.status, url);
+                // Logs de error SIEMPRE se muestran
+                console.error('❌ OBSTRUCCIÓN VASCULAR v8.3:', response.status, url);
               }
             }
             return response;
@@ -76,18 +93,19 @@
                 error: error.message,
                 timestamp: new Date().toISOString()
               });
-              console.error('🚨 RUPTURA VASCULAR CRÍTICA:', error, url);
+              // Logs de error SIEMPRE se muestran
+              console.error('🚨 RUPTURA VASCULAR CRÍTICA v8.3:', error, url);
             }
             throw error;
           });
       };
       
-      // Anti-fingerprinting quirúrgico simplificado
+      // Anti-fingerprinting quirúrgico v8.3 optimizado
       if (window.navigator && window.navigator.getBattery) {
         delete window.navigator.getBattery;
       }
       
-      // Canvas noise quirúrgico ultra-eficiente
+      // Canvas noise v8.3 silencioso
       const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
       HTMLCanvasElement.prototype.toDataURL = function(...args) {
         const context = this.getContext('2d');
@@ -101,28 +119,35 @@
         return originalToDataURL.apply(this, args);
       };
       
-      // Monitoreo vascular cada 3 segundos (optimizado)
+      // Monitoreo vascular v8.3 - MODO MANTENIMIENTO (cada 10 minutos)
       setInterval(() => {
-        console.log('🩸 ESTADO VASCULAR v6.0:', {
-          timestamp: new Date().toISOString(),
-          status: window.paesVascularMonitor.status,
-          connections: window.paesVascularMonitor.supabaseConnections,
-          lastConnection: window.paesVascularMonitor.lastConnection,
-          errors: window.paesVascularMonitor.errors.length,
-          surgeryVersion: '6.0-emergency'
-        });
-      }, 3000);
+        const now = Date.now();
+        
+        // Solo log cada 10 minutos y si hay actividad significativa
+        if (now - window.paesVascularMonitor.lastLogTime > window.paesVascularMonitor.logThrottle) {
+          if (window.paesVascularMonitor.errors.length > 0 || 
+              window.paesVascularMonitor.supabaseConnections > 20) {
+            console.log('🩸 Reporte Vascular v8.3:', {
+              status: window.paesVascularMonitor.status,
+              connections: window.paesVascularMonitor.supabaseConnections,
+              errors: window.paesVascularMonitor.errors.length,
+              timestamp: new Date().toISOString()
+            });
+            window.paesVascularMonitor.lastLogTime = now;
+          }
+        }
+      }, 600000); // 10 minutos
       
-      // Verificación post-quirúrgica
+      // Verificación post-quirúrgica v8.3 (una sola vez)
       setTimeout(() => {
         if (window.paesVascularMonitor.supabaseConnections === 0) {
-          console.warn('⚠️ CIRUGÍA INCONCLUSA - Reiniciar flujo vascular');
-          window.paesVascularMonitor.status = 'POST_SURGERY_MONITORING';
+          console.warn('⚠️ Sistema vascular v8.3 sin actividad - Monitoreo pasivo activado');
+          window.paesVascularMonitor.status = 'PASSIVE_MONITORING';
         } else {
-          console.log('✅ CIRUGÍA EXITOSA - Flujo vascular restaurado');
-          window.paesVascularMonitor.surgeryPhase = 'RECOVERY';
+          console.log('✅ Sistema vascular v8.3 operativo - Modo silencioso activado');
+          window.paesVascularMonitor.surgeryPhase = 'SILENT_OPERATION';
         }
-      }, 2000);
+      }, 3000);
     </script>
   </head>
   <body>
