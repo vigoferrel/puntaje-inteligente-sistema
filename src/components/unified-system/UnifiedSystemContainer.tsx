@@ -89,14 +89,12 @@ export const UnifiedSystemContainer: React.FC<UnifiedSystemContainerProps> = ({
   };
 
   // Handle mode toggle
-  const handleModeToggle = (newMode: SystemMode) => {
+  const handleModeToggle = (newMode: 'neural' | 'unified') => {
     setSystemMode(newMode);
     updateURL(newMode, currentTool);
     
     // Save preference
-    if (newMode !== 'auto') {
-      localStorage.setItem('preferred-system-mode', newMode);
-    }
+    localStorage.setItem('preferred-system-mode', newMode);
   };
 
   // Update URL with mode and tool
@@ -118,13 +116,15 @@ export const UnifiedSystemContainer: React.FC<UnifiedSystemContainerProps> = ({
     );
   }
 
+  // Resolve active mode to ensure it's never 'auto'
   const activeMode = systemMode === 'auto' ? detectedMode : systemMode;
+  const resolvedMode: 'neural' | 'unified' = activeMode === 'auto' ? 'neural' : activeMode as 'neural' | 'unified';
 
   return (
     <div className="min-h-screen relative">
       {/* System Mode Toggle */}
       <SystemModeToggle
-        currentMode={activeMode}
+        currentMode={resolvedMode}
         onModeChange={handleModeToggle}
         className="fixed top-4 right-4 z-50"
       />
@@ -132,14 +132,14 @@ export const UnifiedSystemContainer: React.FC<UnifiedSystemContainerProps> = ({
       {/* Main System Render */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={activeMode}
+          key={resolvedMode}
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="w-full h-full"
         >
-          {activeMode === 'neural' ? (
+          {resolvedMode === 'neural' ? (
             <NeuralCommandCenter 
               onNavigateToTool={handleNeuralNavigation}
               initialDimension={getNeuralDimensionFromTool(currentTool)}
