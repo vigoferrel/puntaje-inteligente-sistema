@@ -2,7 +2,7 @@
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { UnifiedAppProvider } from '@/contexts/UnifiedAppProvider';
 import { RouterProvider } from 'react-router-dom';
-import { router } from './router';
+import { router } from './router/index';
 import { Toaster } from './components/ui/toaster';
 
 function App() {
