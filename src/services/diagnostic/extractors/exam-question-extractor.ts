@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from "@/types/diagnostic";
 import { mapDifficultyToSpanish } from "@/utils/difficulty-mapper";
 
+// Define explicit types to avoid recursion
+type TPAESHabilidad = 'INTERPRET_RELATE' | 'TRACK_LOCATE' | 'EVALUATE_REFLECT' | 'SOLVE_PROBLEMS' | 'REPRESENT' | 'MODEL' | 'ARGUE_COMMUNICATE';
+
 export class ExamQuestionExtractor {
   private static instance: ExamQuestionExtractor;
 
@@ -115,7 +118,7 @@ export class ExamQuestionExtractor {
     return 'Opción A';
   }
 
-  private mapSkillToEnumSafe(skill: any): string {
+  private mapSkillToEnumSafe(skill: any): TPAESHabilidad {
     if (!skill) return 'INTERPRET_RELATE';
 
     const skillString = String(skill).toLowerCase();
@@ -139,7 +142,7 @@ export class ExamQuestionExtractor {
       correctAnswer: 'Opción A',
       explanation: 'Pregunta de demostración extraída del sistema.',
       difficulty: 'INTERMEDIO' as const,
-      skill: 'INTERPRET_RELATE',
+      skill: 'INTERPRET_RELATE' as TPAESHabilidad,
       prueba,
       metadata: {
         source: 'fallback_extractor',

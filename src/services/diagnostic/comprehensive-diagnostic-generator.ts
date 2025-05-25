@@ -1,7 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
-import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
 import { mapDifficultyToSpanish } from "@/utils/difficulty-mapper";
+
+// Define types explicitly to avoid recursion
+type TPAESPrueba = 'COMPETENCIA_LECTORA' | 'MATEMATICA_1' | 'MATEMATICA_2' | 'CIENCIAS' | 'HISTORIA';
+type TPAESHabilidad = 'INTERPRET_RELATE' | 'TRACK_LOCATE' | 'EVALUATE_REFLECT' | 'SOLVE_PROBLEMS' | 'REPRESENT' | 'MODEL' | 'ARGUE_COMMUNICATE' | 'IDENTIFY_THEORIES' | 'PROCESS_ANALYZE' | 'APPLY_PRINCIPLES' | 'SCIENTIFIC_ARGUMENT' | 'TEMPORAL_THINKING' | 'SOURCE_ANALYSIS' | 'MULTICAUSAL_ANALYSIS' | 'CRITICAL_THINKING' | 'REFLECTION';
 
 export class ComprehensiveDiagnosticGenerator {
   private static instance: ComprehensiveDiagnosticGenerator;
@@ -147,13 +150,11 @@ export class ComprehensiveDiagnosticGenerator {
     return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
   }
 
-  private mapSkillSafe(skill: any): string {
-    // Simplified skill mapping to avoid type recursion
+  private mapSkillSafe(skill: any): TPAESHabilidad {
     if (!skill) return 'INTERPRET_RELATE';
     
     const skillStr = String(skill).toLowerCase();
     
-    // Direct mapping without complex type inference
     if (skillStr.includes('localizar')) return 'TRACK_LOCATE';
     if (skillStr.includes('interpretar')) return 'INTERPRET_RELATE';
     if (skillStr.includes('evaluar')) return 'EVALUATE_REFLECT';

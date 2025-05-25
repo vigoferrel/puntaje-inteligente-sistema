@@ -6,11 +6,13 @@ export type UniverseMode =
   | 'progress' 
   | 'prediction';
 
+export type Position3D = [number, number, number];
+
 export interface Galaxy {
   id: string;
   name: string;
   color: string;
-  position: [number, number, number];
+  position: Position3D;
   nodes: number;
   completed: number;
   description: string;
@@ -38,7 +40,24 @@ export interface NeuralDimension {
   name: string;
   description: string;
   color: string;
-  position: [number, number, number];
+  position: Position3D;
   complexity: number;
   isUnlocked: boolean;
+}
+
+export interface NeuralBrainProps {
+  position: Position3D;
+  scale?: number;
+  isActive?: boolean;
+  onClick?: () => void;
+  userLevel: number;
+  cosmicEnergy: number;
+}
+
+export interface SubjectGalaxyProps {
+  galaxy: Galaxy;
+  isSelected?: boolean;
+  isVisible?: boolean;
+  onClick?: () => void;
+  scale?: number;
 }
