@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -29,7 +28,8 @@ import {
   Zap,
   TrendingUp,
   Shield,
-  GraduationCap
+  GraduationCap,
+  Calendar
 } from "lucide-react";
 import { useCinematicDashboard } from "@/hooks/dashboard/useCinematicDashboard";
 import { useGlobalStore } from "@/store/globalStore";
@@ -79,6 +79,12 @@ const toolsItems = [
     title: "Ejercicios IA",
     url: "/ejercicios",
     icon: Zap
+  },
+  {
+    title: "Calendario",
+    url: "/calendario",
+    icon: Calendar,
+    badge: "Nuevo"
   }
 ];
 
