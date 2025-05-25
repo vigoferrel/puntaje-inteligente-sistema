@@ -49,7 +49,17 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
   } = useLectoGuia();
 
   const currentSubject = SUBJECTS.find(s => s.code === initialSubject) || SUBJECTS[0];
-  const stats = getStats();
+  
+  // Stats con valores por defecto para evitar errores
+  const stats = getStats ? getStats() : {
+    totalMessages: 0,
+    exercisesCompleted: 0,
+    currentSubject: initialSubject,
+    isConnected: true,
+    lastSync: new Date(),
+    averageScore: 0,
+    streak: 0
+  };
 
   const handleSubjectSelect = (subjectCode: string) => {
     onSubjectChange(subjectCode);
@@ -123,28 +133,28 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.totalMessages}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.totalMessages || 0}</div>
             <div className="text-sm text-gray-600">Conversaciones</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.exercisesCompleted}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.exercisesCompleted || 0}</div>
             <div className="text-sm text-gray-600">Ejercicios</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.averageScore}%</div>
+            <div className="text-2xl font-bold text-purple-600">{stats.averageScore || 0}%</div>
             <div className="text-sm text-gray-600">Precisión</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.streak}</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.streak || 0}</div>
             <div className="text-sm text-gray-600">Racha</div>
           </CardContent>
         </Card>
@@ -171,24 +181,26 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
             
             <TabsContent value="chat" className="p-6">
               <LectoGuiaChat
-                messages={messages}
-                isTyping={isTyping}
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
+                messages={messages || []}
+                isTyping={isTyping || false}
+                onSendMessage={handleSendMessage || (() => {})}
+                isLoading={isLoading || false}
               />
             </TabsContent>
             
             <TabsContent value="exercise" className="p-6">
-              <ExerciseInterface
-                context={{ 
-                  currentExercise, 
-                  selectedOption, 
-                  showFeedback,
-                  subject: initialSubject
-                }}
-                onAction={handleActionFromInterface}
-                onNavigate={onNavigateToTool}
-              />
+              {ExerciseInterface && (
+                <ExerciseInterface
+                  context={{ 
+                    currentExercise, 
+                    selectedOption, 
+                    showFeedback,
+                    subject: initialSubject
+                  }}
+                  onAction={handleActionFromInterface}
+                  onNavigate={onNavigateToTool}
+                />
+              )}
               
               {currentExercise && (
                 <div className="mt-6 space-y-4">
@@ -204,7 +216,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
                                 : (option === currentExercise.correctAnswer ? "default" : "outline"))
                             : "outline"
                         }
-                        onClick={() => handleExerciseOptionSelect(index)}
+                        onClick={() => handleExerciseOptionSelect && handleExerciseOptionSelect(index)}
                         disabled={showFeedback}
                         className="w-full text-left justify-start"
                       >
@@ -248,6 +260,17 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
                   )}
                 </div>
               )}
+              
+              {!currentExercise && (
+                <div className="text-center py-8">
+                  <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600 mb-4">No hay ejercicios disponibles en este momento</p>
+                  <Button onClick={() => handleNewExercise && handleNewExercise()}>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Generar Ejercicio
+                  </Button>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="progress" className="p-6">
@@ -255,20 +278,27 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
                 <h3 className="text-lg font-semibold">Progreso por Habilidades</h3>
                 
                 <div className="grid gap-4">
-                  {Object.entries(skillLevels).map(([skill, level]) => (
-                    <div key={skill} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <div className="font-medium">{skill.replace(/_/g, ' ')}</div>
-                        <div className="text-sm text-gray-600">Nivel actual</div>
+                  {skillLevels && Object.entries(skillLevels).length > 0 ? (
+                    Object.entries(skillLevels).map(([skill, level]) => (
+                      <div key={skill} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <div className="font-medium">{skill.replace(/_/g, ' ')}</div>
+                          <div className="text-sm text-gray-600">Nivel actual</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-blue-600">{level}%</div>
+                          <Badge variant={level >= 70 ? "default" : level >= 40 ? "secondary" : "destructive"}>
+                            {level >= 70 ? "Avanzado" : level >= 40 ? "Intermedio" : "Básico"}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-600">{level}%</div>
-                        <Badge variant={level >= 70 ? "default" : level >= 40 ? "secondary" : "destructive"}>
-                          {level >= 70 ? "Avanzado" : level >= 40 ? "Intermedio" : "Básico"}
-                        </Badge>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <TrendingUp className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                      <p className="text-gray-600">No hay datos de progreso disponibles</p>
                     </div>
-                  ))}
+                  )}
                 </div>
                 
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg">

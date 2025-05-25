@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +36,7 @@ export const CinematicIntegration: React.FC<CinematicIntegrationProps> = ({
   const [systemState, setSystemState] = useState<any>(null);
   const [adaptiveSession, setAdaptiveSession] = useState<any>(null);
   const [preloadStatus, setPreloadStatus] = useState<any>(null);
+  const [activeSubject, setActiveSubject] = useState('COMPETENCIA_LECTORA');
 
   // Inicialización del sistema integrado
   useEffect(() => {
@@ -106,6 +106,15 @@ export const CinematicIntegration: React.FC<CinematicIntegrationProps> = ({
     setCurrentMode(mode);
   };
 
+  const handleSubjectChange = (subject: string) => {
+    setActiveSubject(subject);
+  };
+
+  const handleNavigateToTool = (tool: string, context?: any) => {
+    console.log('Navegando a herramienta:', tool, context);
+    // Aquí se podría implementar navegación más compleja
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
@@ -163,7 +172,11 @@ export const CinematicIntegration: React.FC<CinematicIntegrationProps> = ({
         exit={{ opacity: 0, x: -100 }}
         transition={{ duration: 0.5 }}
       >
-        <LectoGuiaUnified />
+        <LectoGuiaUnified 
+          initialSubject={activeSubject}
+          onSubjectChange={handleSubjectChange}
+          onNavigateToTool={handleNavigateToTool}
+        />
         
         {/* Botón de regreso */}
         <motion.div 
