@@ -1,7 +1,7 @@
 
 /**
- * SISTEMA RESPIRATORIO ANTI-TRACKING v4.0 - REPARACIÓN QUIRÚRGICA
- * Singleton robusto con control de instancias múltiples y modo seguro
+ * SISTEMA RESPIRATORIO ANTI-TRACKING v5.0 - SINGLETON VERDADERO
+ * Control absoluto de instancias con RespiratorySystemManager
  */
 
 import { RespiratoryHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
@@ -26,57 +26,6 @@ enum LungState {
   OBSERVATION = 'observation'
 }
 
-// Registry global para control de instancias
-class RespiratoryRegistry {
-  private static instances: Map<string, RespiratorySystem> = new Map();
-  private static activeInstance: string | null = null;
-
-  static registerInstance(id: string, instance: RespiratorySystem): boolean {
-    if (this.instances.size >= 1 && !this.activeInstance) {
-      console.warn(`🚫 Registro de instancia respiratoria rechazado: límite alcanzado`);
-      return false;
-    }
-
-    this.instances.set(id, instance);
-    if (!this.activeInstance) {
-      this.activeInstance = id;
-    }
-    
-    console.log(`🫁 Instancia respiratoria registrada: ${id} (Total: ${this.instances.size})`);
-    return true;
-  }
-
-  static unregisterInstance(id: string): void {
-    if (this.instances.delete(id)) {
-      if (this.activeInstance === id) {
-        this.activeInstance = Array.from(this.instances.keys())[0] || null;
-      }
-      console.log(`🫁 Instancia respiratoria desregistrada: ${id} (Total: ${this.instances.size})`);
-    }
-  }
-
-  static getActiveInstance(): RespiratorySystem | null {
-    return this.activeInstance ? this.instances.get(this.activeInstance) || null : null;
-  }
-
-  static destroyAllInstances(): void {
-    this.instances.forEach((instance, id) => {
-      try {
-        instance.forceDestroy();
-      } catch (error) {
-        console.error(`Error destruyendo instancia ${id}:`, error);
-      }
-    });
-    this.instances.clear();
-    this.activeInstance = null;
-    console.log('🫁 Todas las instancias respiratorias destruidas');
-  }
-
-  static getInstanceCount(): number {
-    return this.instances.size;
-  }
-}
-
 export class RespiratorySystem {
   private static instanceCount = 0;
   private instanceId: string;
@@ -88,42 +37,25 @@ export class RespiratorySystem {
   private secureStorage = new Map<string, any>();
   private purificationActive: boolean = false;
   private antiTrackingActive: boolean = false;
-  private trackingAttackCount: number = 0;
   private readonly options: BreathingOptions;
   private eventListeners: ((event: CirculatoryEvent) => void)[] = [];
   private breathingInterval: number | null = null;
-  private antiTrackingInterval: number | null = null;
-  private isDestroyed: boolean = false;
-  private isRegistered: boolean = false;
+  private destroyed: boolean = false;
 
   constructor(options: Partial<BreathingOptions> = {}) {
     RespiratorySystem.instanceCount++;
-    this.instanceId = `respiratory-${RespiratorySystem.instanceCount}-${Date.now()}`;
+    this.instanceId = `respiratory-singleton-${Date.now()}`;
     
-    // Control estricto de instancias múltiples
-    if (RespiratorySystem.instanceCount > 1) {
-      const activeInstance = RespiratoryRegistry.getActiveInstance();
-      if (activeInstance) {
-        console.warn(`⚠️ Instancia respiratoria duplicada detectada, usando la existente`);
-        // Retornar la instancia activa en lugar de crear una nueva
-        return activeInstance;
-      }
+    // Marcar en window para tracking global
+    if (typeof window !== 'undefined') {
+      (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ = this;
     }
-
-    // Registro en el registry global
-    const registered = RespiratoryRegistry.registerInstance(this.instanceId, this);
-    if (!registered) {
-      console.error('🚫 No se pudo registrar la instancia respiratoria');
-      this.isDestroyed = true;
-      return;
-    }
-    this.isRegistered = true;
 
     this.options = {
-      breathsPerMinute: 12, // Más lento y seguro
-      oxygenThreshold: 85,
-      purificationLevel: emergencyDetox.isSafeMode() ? 'safe_mode' : 'observation',
-      antiTrackingMode: false, // Deshabilitado por defecto
+      breathsPerMinute: 6, // Ultra-conservador
+      oxygenThreshold: 50,
+      purificationLevel: 'observation', // Solo observar por defecto
+      antiTrackingMode: false, // Deshabilitado
       emergencyMode: false,
       ...options
     };
@@ -132,133 +64,42 @@ export class RespiratorySystem {
   }
 
   private initializeRespiratory(): void {
-    if (this.isDestroyed) return;
+    if (this.destroyed) return;
 
-    // Verificar si estamos en modo de emergencia
-    if (emergencyDetox.isSafeMode()) {
-      this.state = LungState.SAFE_MODE;
-      this.initializeSafeMode();
-    } else {
-      this.state = LungState.OBSERVATION;
-      this.initializeObservationMode();
-    }
-
-    console.log(`🫁 SISTEMA RESPIRATORIO v4.0 ACTIVADO [${this.instanceId}] - Modo: ${this.state}`);
+    // Solo modo observación por defecto
+    this.state = LungState.OBSERVATION;
+    this.initializeObservationMode();
+    
+    console.log(`🫁 SISTEMA RESPIRATORIO v5.0 SINGLETON [${this.instanceId}] - Modo: ${this.state}`);
   }
 
   private initializeObservationMode(): void {
-    // Modo observación ultraconservador
+    // Respiración muy lenta y pasiva
     this.breathingInterval = window.setInterval(() => {
-      if (!this.isDestroyed) {
-        this.observationalBreath();
+      if (!this.destroyed) {
+        this.passiveBreath();
       }
-    }, 10000); // 10 segundos
+    }, 15000); // 15 segundos - ultra-conservador
   }
 
-  private initializeSafeMode(): void {
-    // Modo seguro sin anti-tracking agresivo
-    this.breathingInterval = window.setInterval(() => {
-      if (!this.isDestroyed) {
-        this.safeBreath();
-      }
-    }, 8000); // 8 segundos
-  }
-
-  private observationalBreath(): void {
+  private passiveBreath(): void {
     this.state = LungState.OBSERVATION;
-    this.oxygenLevel = Math.min(100, this.oxygenLevel + 0.5);
+    this.oxygenLevel = Math.min(100, this.oxygenLevel + 0.1);
     
-    // Solo observar, no interferir
-    this.passiveMonitoring();
-    this.emitObservationalBreath();
+    // Solo monitoreo pasivo
+    this.emitPassiveBreath();
   }
 
-  private passiveMonitoring(): void {
-    try {
-      // Monitoreo ultra-pasivo sin interferir con localStorage
-      const storageSize = this.estimateStorageSize();
-      if (storageSize > 1000000) { // 1MB
-        console.log('📊 Storage size monitored:', storageSize);
-      }
-    } catch (error) {
-      // Monitoreo silencioso
-    }
-  }
-
-  private estimateStorageSize(): number {
-    try {
-      return JSON.stringify(localStorage).length;
-    } catch {
-      return 0;
-    }
-  }
-
-  private safeBreath(): void {
-    this.state = LungState.SAFE_MODE;
-    this.oxygenLevel = Math.min(100, this.oxygenLevel + 1);
-    
-    // Solo limpiar tracking ULTRAOBVIO
-    this.ultraConservativeCleanup();
-    this.emitSafeBreath();
-  }
-
-  private ultraConservativeCleanup(): void {
-    try {
-      const obviousTrackers = ['_ga', '_gid', '_gat_gtag'];
-      let removedCount = 0;
-      
-      obviousTrackers.forEach(tracker => {
-        if (localStorage.getItem(tracker)) {
-          try {
-            localStorage.removeItem(tracker);
-            removedCount++;
-          } catch (error) {
-            // Silencioso
-          }
-        }
-      });
-      
-      if (removedCount > 0) {
-        console.log(`🧹 Limpieza ultraconservadora: ${removedCount} elementos obvios removidos`);
-      }
-    } catch (error) {
-      // Respiración silenciosa si hay problemas
-    }
-  }
-
-  private emitObservationalBreath(): void {
+  private emitPassiveBreath(): void {
     const event: CirculatoryEvent = {
       type: 'breath',
       source: 'lungs',
       data: {
         state: this.state,
         instanceId: this.instanceId,
-        observationMode: true,
+        passiveMode: true,
         oxygenLevel: this.oxygenLevel,
-        registryCount: RespiratoryRegistry.getInstanceCount()
-      },
-      timestamp: Date.now()
-    };
-
-    this.eventListeners.forEach(listener => {
-      try {
-        listener(event);
-      } catch (error) {
-        // Listener silencioso
-      }
-    });
-  }
-
-  private emitSafeBreath(): void {
-    const event: CirculatoryEvent = {
-      type: 'breath',
-      source: 'lungs',
-      data: {
-        state: this.state,
-        instanceId: this.instanceId,
-        safeMode: true,
-        oxygenLevel: this.oxygenLevel,
-        detoxStatus: emergencyDetox.getDetoxStatus()
+        singleton: true
       },
       timestamp: Date.now()
     };
@@ -273,37 +114,22 @@ export class RespiratorySystem {
   }
 
   public breatheIn(data: any): boolean {
-    if (this.isDestroyed) return false;
+    if (this.destroyed) return false;
 
-    if (emergencyDetox.isSafeMode() || this.state === LungState.OBSERVATION) {
-      // En modo seguro/observación, aceptar todo sin procesamiento
-      return true;
-    }
-
-    const now = Date.now();
-    this.breathHistory.push(now);
-    this.lastBreath = now;
-
-    // Procesamiento mínimo y seguro
-    this.oxygenLevel = Math.max(70, this.oxygenLevel - 1);
+    // En modo observación, aceptar todo sin procesamiento
+    this.oxygenLevel = Math.max(50, this.oxygenLevel);
     return true;
   }
 
   public breatheOut(signal: any): any {
-    if (this.isDestroyed) return signal;
+    if (this.destroyed) return signal;
 
-    if (this.state === LungState.OBSERVATION || emergencyDetox.isSafeMode()) {
-      // Modo observación: retornar señal sin modificaciones
-      return signal;
-    }
-
-    // Incrementar oxígeno al exhalar
-    this.oxygenLevel = Math.min(100, this.oxygenLevel + 0.5);
+    // Retornar señal sin modificaciones en modo observación
     return signal;
   }
 
   public oxygenate(module: EnhancedModuleIdentity): EnhancedModuleIdentity {
-    if (this.isDestroyed) return module;
+    if (this.destroyed) return module;
 
     // Oxigenación mínima y segura
     const oxygenatedModule: EnhancedModuleIdentity = {
@@ -328,16 +154,13 @@ export class RespiratorySystem {
     return {
       breathingRate: this.breathingRate,
       oxygenLevel: this.oxygenLevel,
-      airQuality: this.state === LungState.OBSERVATION ? 'pure' :
-                  emergencyDetox.isSafeMode() ? 'filtered' : 
-                  this.oxygenLevel > 90 ? 'pure' : 
-                  this.oxygenLevel > 70 ? 'filtered' : 'contaminated',
-      antiTrackingActive: this.antiTrackingActive && !emergencyDetox.isSafeMode()
+      airQuality: 'pure', // Siempre puro en modo observación
+      antiTrackingActive: false // Siempre deshabilitado
     };
   }
 
   public subscribe(listener: (event: CirculatoryEvent) => void): () => void {
-    if (this.isDestroyed) return () => {};
+    if (this.destroyed) return () => {};
 
     this.eventListeners.push(listener);
     return () => {
@@ -349,61 +172,51 @@ export class RespiratorySystem {
   }
 
   public emergencyPurge(): void {
-    if (this.isDestroyed) return;
+    if (this.destroyed) return;
 
     // Purga ultra-conservadora
-    this.ultraConservativeCleanup();
-    
     this.secureStorage.clear();
     this.oxygenLevel = 100;
     this.breathHistory = [];
     this.state = LungState.OBSERVATION;
     this.purificationActive = false;
-    this.trackingAttackCount = 0;
     
-    console.log(`🚨 PURGA DE EMERGENCIA CONSERVADORA COMPLETADA [${this.instanceId}]`);
+    console.log(`🚨 PURGA DE EMERGENCIA SINGLETON COMPLETADA [${this.instanceId}]`);
   }
 
-  public forceDestroy(): void {
-    this.isDestroyed = true;
+  public isDestroyed(): boolean {
+    return this.destroyed;
+  }
+
+  public destroy(): void {
+    this.destroyed = true;
     
     if (this.breathingInterval) {
       clearInterval(this.breathingInterval);
       this.breathingInterval = null;
     }
-    if (this.antiTrackingInterval) {
-      clearInterval(this.antiTrackingInterval);
-      this.antiTrackingInterval = null;
-    }
     
     this.eventListeners = [];
     this.secureStorage.clear();
     
-    if (this.isRegistered) {
-      RespiratoryRegistry.unregisterInstance(this.instanceId);
+    // Limpiar referencia global
+    if (typeof window !== 'undefined' && (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ === this) {
+      (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ = null;
     }
     
-    console.log(`🫁 Sistema respiratorio destruido [${this.instanceId}]`);
+    console.log(`🫁 Sistema respiratorio singleton destruido [${this.instanceId}]`);
   }
 
-  public destroy(): void {
-    this.forceDestroy();
+  // Factory method estático que usa el manager
+  public static async getInstance(options?: Partial<BreathingOptions>): Promise<RespiratorySystem> {
+    // Importación dinámica para evitar dependencias circulares
+    const { RespiratorySystemManager } = await import('./RespiratorySystemManager');
+    return RespiratorySystemManager.getInstance(options);
   }
 
-  // Método estático para obtener o crear instancia única
-  public static getInstance(options?: Partial<BreathingOptions>): RespiratorySystem {
-    const activeInstance = RespiratoryRegistry.getActiveInstance();
-    if (activeInstance && !activeInstance.isDestroyed) {
-      return activeInstance;
-    }
-    
-    // Si no hay instancia activa, crear una nueva
-    return new RespiratorySystem(options);
-  }
-
-  // Método estático para limpiar todas las instancias
-  public static destroyAllInstances(): void {
-    RespiratoryRegistry.destroyAllInstances();
-    RespiratorySystem.instanceCount = 0;
+  // Método estático para destruir todas las instancias
+  public static async destroyAllInstances(): Promise<void> {
+    const { RespiratorySystemManager } = await import('./RespiratorySystemManager');
+    return RespiratorySystemManager.destroyAllInstances();
   }
 }

@@ -1,7 +1,7 @@
 
 /**
- * SISTEMA DE DESINTOXICACIÓN DE EMERGENCIA v1.0
- * Detoxificación quirúrgica para prevenir auto-destrucción
+ * SISTEMA DE DESINTOXICACIÓN DE EMERGENCIA v2.0
+ * Con circuit breaker y debouncing integrado
  */
 
 interface DetoxConfig {
@@ -18,6 +18,11 @@ export class EmergencyDetox {
   private originalLocalStorage: Storage;
   private internalWhitelist: Set<string>;
   private config: DetoxConfig;
+  private lastActivation: number = 0;
+  private activationCount: number = 0;
+  private readonly COOLDOWN_PERIOD = 30000; // 30 segundos
+  private readonly MAX_ACTIVATIONS = 2; // Máximo 2 activaciones
+  private circuitBreakerOpen: boolean = false;
 
   private constructor() {
     this.originalLocalStorage = window.localStorage;
@@ -50,103 +55,116 @@ export class EmergencyDetox {
     return EmergencyDetox.instance;
   }
 
-  public activateEmergencyMode(): void {
-    if (this.emergencyMode) return;
+  public activateEmergencyMode(): boolean {
+    const now = Date.now();
     
-    console.log('🚨 ACTIVANDO MODO DE EMERGENCIA - Desintoxicación iniciada');
+    // Circuit breaker: si está abierto, no hacer nada
+    if (this.circuitBreakerOpen) {
+      console.log('🚫 Emergency circuit breaker abierto - Activación bloqueada');
+      return false;
+    }
+
+    // Debouncing: evitar activaciones muy frecuentes
+    if (now - this.lastActivation < this.COOLDOWN_PERIOD) {
+      console.log('🕐 Emergencia en cooldown - Ignorando activación');
+      return false;
+    }
+
+    // Contador de activaciones
+    this.activationCount++;
+    this.lastActivation = now;
+
+    // Si hay demasiadas activaciones, abrir circuit breaker
+    if (this.activationCount >= this.MAX_ACTIVATIONS) {
+      this.circuitBreakerOpen = true;
+      console.log('🚨 EMERGENCY CIRCUIT BREAKER ABIERTO');
+      
+      // Cerrar circuit breaker después de 5 minutos y resetear
+      setTimeout(() => {
+        this.circuitBreakerOpen = false;
+        this.activationCount = 0;
+        this.emergencyMode = false;
+        this.isDetoxing = false;
+        this.config.safeMode = false;
+        console.log('✅ Emergency circuit breaker cerrado - Sistema restaurado');
+      }, 300000);
+      
+      return false;
+    }
+
+    if (this.emergencyMode) return false;
+    
+    console.log('🚨 ACTIVANDO MODO DE EMERGENCIA CONTROLADO');
     this.emergencyMode = true;
     this.isDetoxing = true;
+    this.config.safeMode = true;
 
-    // Restaurar localStorage original inmediatamente
+    // Restaurar localStorage original
     this.restoreOriginalStorage();
     
-    // Detener todos los intervalos anti-tracking
-    this.clearAllIntervals();
-    
-    // Modo seguro por 10 segundos
+    // Modo seguro por tiempo limitado
     setTimeout(() => {
       this.startControlledRestart();
-    }, 10000);
+    }, 5000); // 5 segundos
+
+    return true;
   }
 
   private restoreOriginalStorage(): void {
     try {
-      // Restaurar localStorage sin proxies
       Object.defineProperty(window, 'localStorage', {
         value: this.originalLocalStorage,
         writable: true,
         configurable: true
       });
       
-      console.log('✅ Storage original restaurado');
+      console.log('✅ Storage original restaurado con circuit breaker');
     } catch (error) {
       console.error('Error restaurando storage:', error);
     }
   }
 
-  private clearAllIntervals(): void {
-    // Limpiar todos los intervalos posibles
-    for (let i = 1; i < 99999; i++) {
-      clearInterval(i);
-      clearTimeout(i);
-    }
-    console.log('✅ Intervalos limpiados');
-  }
-
   private startControlledRestart(): void {
-    console.log('🔄 Iniciando reinicio controlado...');
+    console.log('🔄 Iniciando reinicio controlado con circuit breaker...');
     
-    this.config.safeMode = true;
     this.isDetoxing = false;
     
-    // Reiniciar con parámetros seguros
+    // Reiniciar con parámetros ultra-seguros
     setTimeout(() => {
       this.restartAntiTrackingSystem();
-    }, 5000);
+    }, 3000);
   }
 
   private restartAntiTrackingSystem(): void {
     try {
-      // Solo bloquear tracking real, no funcionalidad interna
-      this.setupSafeTracking();
+      // Solo monitoreo pasivo después de emergencia
+      this.setupPassiveMonitoring();
       
       this.emergencyMode = false;
-      console.log('✅ Sistema anti-tracking reiniciado en modo seguro');
+      console.log('✅ Sistema anti-tracking reiniciado en modo pasivo');
     } catch (error) {
       console.error('Error en reinicio:', error);
-      // Mantener modo seguro si hay problemas
       this.config.safeMode = true;
     }
   }
 
-  private setupSafeTracking(): void {
-    const self = this;
-    
-    // Override solo para URLs externas de tracking
+  private setupPassiveMonitoring(): void {
+    // Solo logging, sin bloqueos
     const originalFetch = window.fetch;
     window.fetch = function(...args) {
       const url = args[0] as string;
       
-      // Solo bloquear URLs externas conocidas de tracking
-      if (self.isExternalTrackingUrl(url)) {
-        console.log(`🚫 Blocked external tracking: ${url}`);
-        return Promise.reject(new Error('Blocked external tracking'));
+      if (url && typeof url === 'string') {
+        const externalTrackers = ['google-analytics.com', 'facebook.com'];
+        const isTracking = externalTrackers.some(tracker => url.includes(tracker));
+        
+        if (isTracking) {
+          console.log(`📊 Tracking detectado (no bloqueado): ${url}`);
+        }
       }
       
       return originalFetch.apply(this, args);
     };
-  }
-
-  private isExternalTrackingUrl(url: string): boolean {
-    const externalTrackers = [
-      'google-analytics.com',
-      'facebook.com',
-      'doubleclick.net',
-      'googlesyndication.com',
-      'amazon-adsystem.com'
-    ];
-    
-    return externalTrackers.some(tracker => url.includes(tracker));
   }
 
   public isInternalKey(key: string): boolean {
@@ -156,7 +174,7 @@ export class EmergencyDetox {
   }
 
   public isSafeMode(): boolean {
-    return this.config.safeMode || this.emergencyMode;
+    return this.config.safeMode || this.emergencyMode || this.circuitBreakerOpen;
   }
 
   public getDetoxStatus() {
@@ -164,6 +182,9 @@ export class EmergencyDetox {
       isDetoxing: this.isDetoxing,
       emergencyMode: this.emergencyMode,
       safeMode: this.config.safeMode,
+      circuitBreakerOpen: this.circuitBreakerOpen,
+      activationCount: this.activationCount,
+      lastActivation: this.lastActivation,
       whitelistSize: this.internalWhitelist.size
     };
   }
@@ -172,8 +193,10 @@ export class EmergencyDetox {
     this.emergencyMode = false;
     this.isDetoxing = false;
     this.config.safeMode = false;
+    this.circuitBreakerOpen = false;
+    this.activationCount = 0;
     this.restoreOriginalStorage();
-    console.log('🔄 Reset forzado completado');
+    console.log('🔄 Reset forzado con circuit breaker completado');
   }
 }
 
