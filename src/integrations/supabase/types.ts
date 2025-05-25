@@ -1092,6 +1092,16 @@ export type Database = {
         }
         Relationships: []
       }
+      skill_distribution_ciencias_tp_2024: {
+        Row: {
+          area_cientifica: string | null
+          modulo: string | null
+          porcentaje: number | null
+          preguntas_validas: number | null
+          total_preguntas: number | null
+        }
+        Relationships: []
+      }
       skill_distribution_matematica_m2_2024: {
         Row: {
           areas_contenido: string | null
@@ -1150,6 +1160,10 @@ export type Database = {
       }
       obtener_estadisticas_respuestas_examen: {
         Args: { codigo_examen: string }
+        Returns: Json
+      }
+      obtener_examen_ciencias_completo: {
+        Args: { codigo_examen_param: string }
         Returns: Json
       }
       obtener_examen_completo: {
