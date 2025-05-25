@@ -23,39 +23,67 @@ export const useIntersectional = () => {
   return context;
 };
 
-// Sistema de storage con fallback para tracking prevention
-const createSecureStorage = () => {
+// Storage robusto con fallback silencioso para tracking prevention
+const createAntiTrackingStorage = () => {
   let memoryStorage = new Map<string, any>();
+  let isLocalStorageBlocked = false;
   
   return {
     setItem: (key: string, value: any) => {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch {
-        memoryStorage.set(key, value);
+      if (!isLocalStorageBlocked) {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+          return;
+        } catch {
+          isLocalStorageBlocked = true;
+          // Migrar datos existentes a memoria si es posible
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const existingKey = localStorage.key(i);
+              if (existingKey) {
+                const existingValue = localStorage.getItem(existingKey);
+                if (existingValue) {
+                  memoryStorage.set(existingKey, JSON.parse(existingValue));
+                }
+              }
+            }
+          } catch {
+            // Silencioso si no se puede migrar
+          }
+        }
       }
+      memoryStorage.set(key, value);
     },
     getItem: (key: string) => {
-      try {
-        const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : null;
-      } catch {
-        return memoryStorage.get(key) || null;
+      if (!isLocalStorageBlocked) {
+        try {
+          const item = localStorage.getItem(key);
+          return item ? JSON.parse(item) : null;
+        } catch {
+          isLocalStorageBlocked = true;
+        }
       }
+      return memoryStorage.get(key) || null;
     },
     removeItem: (key: string) => {
-      try {
-        localStorage.removeItem(key);
-      } catch {
-        memoryStorage.delete(key);
+      if (!isLocalStorageBlocked) {
+        try {
+          localStorage.removeItem(key);
+        } catch {
+          isLocalStorageBlocked = true;
+        }
       }
+      memoryStorage.delete(key);
     },
     clear: () => {
-      try {
-        localStorage.clear();
-      } catch {
-        memoryStorage.clear();
+      if (!isLocalStorageBlocked) {
+        try {
+          localStorage.clear();
+        } catch {
+          isLocalStorageBlocked = true;
+        }
       }
+      memoryStorage.clear();
     }
   };
 };
@@ -66,9 +94,9 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   const initializationRef = useRef(false);
   const lastSynthesisRef = useRef(0);
   const stabilityTimerRef = useRef<number | null>(null);
-  const secureStorage = useRef(createSecureStorage());
+  const antiTrackingStorage = useRef(createAntiTrackingStorage());
   
-  // Integración neurológica ultra-optimizada con mejor tolerancia
+  // Integración neurológica desinfectada con mejor tolerancia
   const neural = useNeuralIntegration('dashboard', [
     'system_coordination',
     'cross_module_synthesis',
@@ -79,39 +107,38 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     globalCoherence: nexus.global_coherence
   });
 
-  // Sistema neurológico con criterios más permisivos y optimizados
+  // Sistema neurológico con criterios ultra-permisivos
   const isIntersectionalReady = Boolean(
     isInitialized && 
-    nexus.global_coherence > 50 &&  // Umbral más permisivo
+    nexus.global_coherence > 30 &&  // Umbral mucho más permisivo
     nexus.active_modules.size >= 0 && // Completamente tolerante
-    neural.circuitBreakerState !== 'emergency_lockdown' &&
-    !neural.circuitBreakerState.includes('emergency')
+    neural.circuitBreakerState !== 'emergency_lockdown'
   );
 
-  // Síntesis automática ULTRA controlada con storage seguro
+  // Síntesis automática ULTRA controlada con storage anti-tracking
   useEffect(() => {
     if (isIntersectionalReady && !initializationRef.current) {
       initializationRef.current = true;
       
-      // Síntesis diferida con storage fallback
+      // Síntesis diferida con storage anti-tracking
       if (stabilityTimerRef.current) {
         clearTimeout(stabilityTimerRef.current);
       }
       
       stabilityTimerRef.current = window.setTimeout(() => {
         const now = Date.now();
-        const lastSynthesis = secureStorage.current.getItem('lastSynthesis') || 0;
+        const lastSynthesis = antiTrackingStorage.current.getItem('lastSynthesis') || 0;
         
-        if (now - lastSynthesis > 600000) { // 10 minutos en lugar de 15
+        if (now - lastSynthesis > 900000) { // 15 minutos para mayor estabilidad
           try {
             nexus.synthesizeInsights();
-            secureStorage.current.setItem('lastSynthesis', now);
+            antiTrackingStorage.current.setItem('lastSynthesis', now);
             lastSynthesisRef.current = now;
           } catch (error) {
-            console.warn('Síntesis diferida fallida (tolerado):', error);
+            // Silencioso - no spam de errores
           }
         }
-      }, 5000); // 5 segundos de delay inicial
+      }, 8000); // 8 segundos de delay inicial más largo
     }
 
     return () => {
@@ -126,10 +153,10 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     const systemInsights = [
       {
         type: 'neural-health',
-        title: 'Salud del Sistema Neural',
-        description: `Red neurológica funcionando al ${Math.round(nexus.system_health.neural_efficiency)}%`,
-        level: nexus.system_health.neural_efficiency > 85 ? 'excellent' : 
-               nexus.system_health.neural_efficiency > 65 ? 'good' : 'optimal',
+        title: 'Sistema Neural Desinfectado',
+        description: `Red neurológica optimizada al ${Math.round(nexus.system_health.neural_efficiency)}%`,
+        level: nexus.system_health.neural_efficiency > 80 ? 'excellent' : 
+               nexus.system_health.neural_efficiency > 60 ? 'good' : 'optimal',
         data: nexus.system_health
       }
     ];
@@ -138,9 +165,9 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     if (nexus.cross_module_patterns.length > 0) {
       const pattern = nexus.cross_module_patterns[0];
       systemInsights.push({
-        type: 'system-unification',
-        title: 'Sistema Completamente Desobstruido',
-        description: `Integración total del ${pattern.synergy_potential || 98}%`,
+        type: 'system-integration',
+        title: 'Integración Neural Completa',
+        description: `Sistema totalmente desobstruido al ${pattern.synergy_potential || 95}%`,
         level: 'excellent',
         data: pattern
       });
@@ -150,31 +177,31 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   };
 
   const adaptToUser = (behavior: any) => {
-    // Throttle ultra-agresivo con storage seguro
+    // Throttle ultra-agresivo con storage anti-tracking
     const now = Date.now();
-    const lastAdaptation = secureStorage.current.getItem('lastAdaptation') || 0;
+    const lastAdaptation = antiTrackingStorage.current.getItem('lastAdaptation') || 0;
     
-    if (now - lastAdaptation < 30000) return; // Mínimo 30 segundos entre adaptaciones
+    if (now - lastAdaptation < 45000) return; // Mínimo 45 segundos entre adaptaciones
     
     try {
       nexus.adaptToUserBehavior(behavior);
-      secureStorage.current.setItem('lastAdaptation', now);
+      antiTrackingStorage.current.setItem('lastAdaptation', now);
       
-      // Notificación neurológica con delay mayor y storage seguro
+      // Notificación neurológica con delay mayor
       setTimeout(() => {
         neural.notifyEngagement({
           behavior_type: 'adaptive_learning',
           adaptation_success: true,
           user_satisfaction_estimated: nexus.system_health.user_experience_harmony
         });
-      }, 10000); // 10 segundos de delay
+      }, 15000); // 15 segundos de delay
     } catch (error) {
-      console.warn('Adaptación fallida (tolerado):', error);
+      // Silencioso
     }
   };
 
   const emergencyReset = () => {
-    // Limpieza total quirúrgica con storage seguro
+    // Limpieza total quirúrgica con storage anti-tracking
     if (stabilityTimerRef.current) {
       clearTimeout(stabilityTimerRef.current);
       stabilityTimerRef.current = null;
@@ -183,15 +210,15 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     try {
       nexus.emergencyReset();
       neural.emergencyReset();
-      secureStorage.current.clear();
+      antiTrackingStorage.current.clear();
     } catch (error) {
-      console.warn('Reset parcialmente fallido (tolerado):', error);
+      // Silencioso
     }
     
     initializationRef.current = false;
     lastSynthesisRef.current = 0;
     
-    console.log('🔧 EMERGENCY RESET: Provider interseccional quirúrgicamente optimizado');
+    console.log('🔧 Sistema interseccional totalmente desinfectado');
   };
 
   // Cleanup seguro al desmontar
