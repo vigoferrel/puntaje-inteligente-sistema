@@ -1,10 +1,32 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { UnifiedPAESData, PAESCompetencia, PAESRecomendacion } from '@/types/unified-paes-types';
+import { 
+  UnifiedPAESData, 
+  PAESCompetencia, 
+  PAESRecomendacion,
+  PAESUser,
+  PAESProgress,
+  PAESDiagnostico,
+  PAESPlan
+} from '@/types/unified-paes-types';
 
-interface UnifiedPAESStore extends UnifiedPAESData {
-  // State management
+interface IntersectionalMetrics {
+  superPaesCompatibility: number;
+  universeAlignment: number;
+  diagnosticAccuracy: number;
+  planEffectiveness: number;
+  overallSynergy: number;
+}
+
+interface UnifiedPAESStore {
+  // State
+  user: PAESUser;
+  progress: PAESProgress;
+  competencias: PAESCompetencia[];
+  recomendaciones: PAESRecomendacion[];
+  diagnostico: PAESDiagnostico | null;
+  plan: PAESPlan | null;
   isInitialized: boolean;
   loading: boolean;
   error: string | null;
@@ -22,14 +44,6 @@ interface UnifiedPAESStore extends UnifiedPAESData {
   getIntersectionalMetrics: () => IntersectionalMetrics;
   generateCrossModuleRecommendations: () => PAESRecomendacion[];
   calculateGlobalCompatibility: () => number;
-}
-
-interface IntersectionalMetrics {
-  superPaesCompatibility: number;
-  universeAlignment: number;
-  diagnosticAccuracy: number;
-  planEffectiveness: number;
-  overallSynergy: number;
 }
 
 export const useUnifiedPAES = create<UnifiedPAESStore>()(
@@ -70,10 +84,8 @@ export const useUnifiedPAES = create<UnifiedPAESStore>()(
           set({ loading: true, error: null });
           
           try {
-            // Simulate data loading from various sources
             console.log('🚀 Inicializando sistema unificado PAES');
             
-            // Mock initialization
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             set({
@@ -116,22 +128,22 @@ export const useUnifiedPAES = create<UnifiedPAESStore>()(
         },
 
         updateProgress: (area: string, value: number) => {
-          set(state => ({
-            progress: {
-              ...state.progress,
-              bySubject: {
-                ...state.progress.bySubject,
-                [area]: value
-              },
-              overall: Object.values({
-                ...state.progress.bySubject,
-                [area]: value
-              }).reduce((a, b) => a + b, 0) / Object.keys({
-                ...state.progress.bySubject,
-                [area]: value
-              }).length || 0
-            }
-          }));
+          set(state => {
+            const newBySubject = {
+              ...state.progress.bySubject,
+              [area]: value
+            };
+            const values = Object.values(newBySubject);
+            const overall = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+            
+            return {
+              progress: {
+                ...state.progress,
+                bySubject: newBySubject,
+                overall
+              }
+            };
+          });
         },
 
         syncWithSuper: (superData: any) => {

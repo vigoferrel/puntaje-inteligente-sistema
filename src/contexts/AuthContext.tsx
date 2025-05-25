@@ -4,10 +4,17 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 interface User {
   id: string;
   email: string;
+  user_metadata?: {
+    name?: string;
+    full_name?: string;
+    avatar_url?: string;
+  };
 }
 
 interface Profile {
+  id: string;
   name: string;
+  email?: string;
   role: 'student' | 'parent' | 'admin';
 }
 
@@ -32,11 +39,17 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>({
     id: 'demo-user',
-    email: 'estudiante@demo.com'
+    email: 'estudiante@demo.com',
+    user_metadata: {
+      name: 'Estudiante Demo',
+      full_name: 'Estudiante Demo PAES'
+    }
   });
   
   const [profile, setProfile] = useState<Profile | null>({
+    id: 'demo-user',
     name: 'Estudiante Demo',
+    email: 'estudiante@demo.com',
     role: 'student'
   });
   
@@ -46,8 +59,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     // Simular login
     setTimeout(() => {
-      setUser({ id: 'demo-user', email });
-      setProfile({ name: 'Estudiante Demo', role: 'student' });
+      setUser({ 
+        id: 'demo-user', 
+        email,
+        user_metadata: {
+          name: 'Estudiante Demo',
+          full_name: 'Estudiante Demo PAES'
+        }
+      });
+      setProfile({ 
+        id: 'demo-user',
+        name: 'Estudiante Demo', 
+        email,
+        role: 'student' 
+      });
       setIsLoading(false);
     }, 1000);
   };
