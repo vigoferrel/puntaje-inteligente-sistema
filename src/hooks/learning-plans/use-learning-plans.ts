@@ -115,13 +115,11 @@ export const useLearningPlans = () => {
     setError(null);
 
     try {
-      // Pasar todos los argumentos requeridos a originalCreatePlan
+      // Llamar con los tres argumentos requeridos: userId, title, description
       const newPlan = await originalCreatePlan(
         userId, 
         title, 
-        description || '', 
-        targetDate, 
-        skillPriorities
+        description || ''
       );
       
       // Actualizar cache
