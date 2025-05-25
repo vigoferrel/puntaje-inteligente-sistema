@@ -91,7 +91,7 @@ export const useLearningPlans = () => {
     }
   }, [shouldFetchPlans, loadFromCache, originalFetchPlans, setPlanProgress]);
 
-  // Función de retry que acepta userId
+  // Función de retry que acepta userId - CORREGIDO: llamar con los 3 argumentos requeridos
   const retryFetchPlans = useCallback((userId: string) => {
     if (!userId) {
       console.warn('Cannot retry fetch: no userId provided');
@@ -100,7 +100,8 @@ export const useLearningPlans = () => {
     
     console.log('🔄 Retrying fetch plans for user:', userId);
     hasLoadedRef.current = false;
-    originalRetryFetchPlans(userId);
+    // Llamar con todos los argumentos requeridos: userId, setError, setLoading
+    originalRetryFetchPlans(userId, setError, setLoading);
   }, [originalRetryFetchPlans]);
 
   const createPlan = useCallback(async (

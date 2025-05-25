@@ -6,11 +6,11 @@ import { TrainingHeader } from "@/components/training/TrainingHeader";
 import { TrainingStats } from "@/components/training/TrainingStats";
 import { TrainingTabs } from "@/components/training/TrainingTabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTraining } from "@/hooks/use-training";
+import { useTrainingEnhanced } from "@/hooks/use-training-enhanced";
 
 const Entrenamiento = () => {
   const { profile } = useAuth();
-  const { sessionStats } = useTraining();
+  const { sessionStats } = useTrainingEnhanced();
   const [activeTab, setActiveTab] = useState("personalizado");
 
   return (
