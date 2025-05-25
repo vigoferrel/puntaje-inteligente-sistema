@@ -1,5 +1,5 @@
 
-import React from 'react';
+import { useEffect } from 'react';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
@@ -167,11 +167,11 @@ export const useCrossModuleDataSync = create<CrossModuleDataState & CrossModuleD
   )
 );
 
-// Hook para usar la sincronización automática
+// Hook corregido para usar la sincronización automática
 export const useAutomaticSync = (interval: number = 300000) => { // 5 minutos
   const { syncAllModules, isSyncing } = useCrossModuleDataSync();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isSyncing) return;
 
     const timer = setInterval(() => {
