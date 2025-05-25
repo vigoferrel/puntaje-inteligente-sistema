@@ -1,11 +1,9 @@
+
 import React from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { AppHeader } from "@/components/app-header";
 import { useLocation, useAuth } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { LayoutDashboard, Brain, Target, ClipboardList, TrendingUp, BookOpen } from "@heroicons/react/24/outline";
+import { LayoutDashboard, Brain, Target, ClipboardList, TrendingUp, BookOpen } from "lucide-react";
 
 interface AppLayoutProps {
   children: React.ReactNode;

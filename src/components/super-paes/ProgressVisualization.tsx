@@ -68,9 +68,9 @@ export const ProgressVisualization: React.FC<ProgressVisualizationProps> = ({
                     >
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-slate-300 text-sm">{nivel}</span>
-                        <span className="text-blue-400 font-medium">{puntaje}%</span>
+                        <span className="text-blue-400 font-medium">{String(puntaje)}%</span>
                       </div>
-                      <Progress value={puntaje as number} className="h-2" />
+                      <Progress value={Number(puntaje)} className="h-2" />
                     </motion.div>
                   ))}
                 </div>
