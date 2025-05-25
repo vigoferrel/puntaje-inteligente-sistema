@@ -2,6 +2,8 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { CinematicAudioProvider, CinematicControls } from '@/components/cinematic/UniversalCinematicSystem';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
 import { AppHeader } from '@/components/app-header';
 import Index from '@/pages/Index';
 import LectoGuia from '@/pages/LectoGuia';
@@ -24,16 +26,21 @@ import Dashboard from '@/pages/Dashboard';
 import PAES from '@/pages/PAES';
 import NotFound from '@/pages/NotFound';
 
-// Layout neurológico unificado - UN SOLO HEADER
+// Layout neurológico unificado con Sidebar integrado
 const NeuralLayout: React.FC = () => (
   <CinematicAudioProvider>
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <AppHeader />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      <CinematicControls />
-    </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <AppHeader />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <CinematicControls />
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   </CinematicAudioProvider>
 );
 
