@@ -1,7 +1,6 @@
 
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { LearningPlanProvider } from '@/contexts/learning-plan';
+import { UnifiedAppProvider } from '@/contexts/UnifiedAppProvider';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import { Toaster } from './components/ui/toaster';
@@ -9,12 +8,10 @@ import { Toaster } from './components/ui/toaster';
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <LearningPlanProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </LearningPlanProvider>
-      </AuthProvider>
+      <UnifiedAppProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </UnifiedAppProvider>
     </ThemeProvider>
   );
 }

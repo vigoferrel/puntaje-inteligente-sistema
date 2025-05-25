@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
+import { AppInitializer } from "@/components/AppInitializer";
 import { WelcomeHeader } from "@/components/dashboard/welcome-header";
 import { WelcomeTour } from "@/components/dashboard/welcome-tour";
 import { StatCards } from "@/components/dashboard/stat-cards";
@@ -111,69 +112,71 @@ const Index = () => {
   };
 
   return (
-    <AppLayout>
-      {showTour && (
-        <WelcomeTour 
-          userName={user?.name}
-          onComplete={() => setShowTour(false)}
-        />
-      )}
-      
-      <motion.div 
-        className="p-6"
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-      >
-        <motion.div variants={itemVariants}>
-          <WelcomeHeader 
-            userName={user?.name} 
-            loading={loading}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
+    <AppInitializer>
+      <AppLayout>
+        {showTour && (
+          <WelcomeTour 
+            userName={user?.name}
+            onComplete={() => setShowTour(false)}
           />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <StatCards
-            loading={loading}
-            stats={stats}
-            completedExercises={completedExercises}
-            accuracyPercentage={accuracyPercentage}
-            totalTimeMinutes={totalTimeMinutes}
-            className="mb-8"
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <DashboardContentGrid 
-            loading={loading}
-            topSkills={topSkills}
-            skillLevels={skillLevels}
-            currentPhase={currentPhase}
-            nextRecommendedNodeId={nextRecommendedNodeId}
-            className="mb-8"
-          />
-        </motion.div>
+        )}
         
-        {/* Diagnóstico y Recomendaciones */}
-        <motion.div variants={itemVariants}>
-          <div className="grid gap-6 md:grid-cols-2 mb-8">
-            <DiagnosticSummary 
-              loading={diagnosticLoading}
-              latestResult={latestResult}
-              hasAvailableDiagnostics={availableDiagnostics > 0}
-              pendingDiagnostics={pendingDiagnostics}
+        <motion.div 
+          className="p-6"
+          variants={pageVariants}
+          initial="initial"
+          animate="animate"
+        >
+          <motion.div variants={itemVariants}>
+            <WelcomeHeader 
+              userName={user?.name} 
+              loading={loading}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
             />
-            <FeatureCards />
-          </div>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <StatCards
+              loading={loading}
+              stats={stats}
+              completedExercises={completedExercises}
+              accuracyPercentage={accuracyPercentage}
+              totalTimeMinutes={totalTimeMinutes}
+              className="mb-8"
+            />
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <DashboardContentGrid 
+              loading={loading}
+              topSkills={topSkills}
+              skillLevels={skillLevels}
+              currentPhase={currentPhase}
+              nextRecommendedNodeId={nextRecommendedNodeId}
+              className="mb-8"
+            />
+          </motion.div>
+          
+          {/* Diagnóstico y Recomendaciones */}
+          <motion.div variants={itemVariants}>
+            <div className="grid gap-6 md:grid-cols-2 mb-8">
+              <DiagnosticSummary 
+                loading={diagnosticLoading}
+                latestResult={latestResult}
+                hasAvailableDiagnostics={availableDiagnostics > 0}
+                pendingDiagnostics={pendingDiagnostics}
+              />
+              <FeatureCards />
+            </div>
+          </motion.div>
+          
+          <motion.div variants={itemVariants}>
+            <AIFeatures />
+          </motion.div>
         </motion.div>
-        
-        <motion.div variants={itemVariants}>
-          <AIFeatures />
-        </motion.div>
-      </motion.div>
-    </AppLayout>
+      </AppLayout>
+    </AppInitializer>
   );
 };
 

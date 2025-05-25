@@ -1,6 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { AppLayout } from "@/components/app-layout";
+import { AppInitializer } from "@/components/AppInitializer";
 import { toast } from "@/components/ui/use-toast";
 import { useLearningPlan } from "@/hooks/use-learning-plan";
 import { LoadingState } from "@/components/plan/LoadingState";
@@ -145,65 +145,67 @@ const Plan = () => {
   });
   
   return (
-    <AppLayout>
-      <div className="min-h-screen bg-gray-900">
-        <div className="container mx-auto py-8 px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">Mi Plan</h1>
-            <p className="text-gray-400">Gestiona tu preparación PAES de manera inteligente</p>
+    <AppInitializer>
+      <AppLayout>
+        <div className="min-h-screen bg-gray-900">
+          <div className="container mx-auto py-8 px-4">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold text-white mb-2">Mi Plan</h1>
+              <p className="text-gray-400">Gestiona tu preparación PAES de manera inteligente</p>
+            </div>
+            
+            {/* Meta Section */}
+            <PlanMeta 
+              profile={profile}
+              currentPlan={currentPlan}
+              currentPlanProgress={currentPlanProgress}
+            />
+            
+            {/* Main Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-8">
+              <TabsList className="grid w-full grid-cols-2 bg-gray-800 border-gray-700">
+                <TabsTrigger 
+                  value="personalizado" 
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-300"
+                >
+                  Plan Personalizado
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="inteligente"
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
+                >
+                  Plan Inteligente
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="personalizado" className="mt-6">
+                <PlanPersonalizado 
+                  plans={plans}
+                  currentPlan={currentPlan}
+                  currentPlanProgress={currentPlanProgress}
+                  progressLoading={progressLoading}
+                  recommendedNodeId={recommendedNodeId}
+                  onCreatePlan={handleCreatePlan}
+                  onSelectPlan={selectPlan}
+                  onUpdateProgress={updateCurrentPlanProgress}
+                  streakData={streakData}
+                  onStudyActivity={updateStreak}
+                />
+              </TabsContent>
+              
+              <TabsContent value="inteligente" className="mt-6">
+                <PlanInteligente 
+                  profile={profile}
+                  nodeProgress={nodeProgress}
+                  onCreatePlan={handleCreatePlan}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
-          
-          {/* Meta Section */}
-          <PlanMeta 
-            profile={profile}
-            currentPlan={currentPlan}
-            currentPlanProgress={currentPlanProgress}
-          />
-          
-          {/* Main Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-8">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-800 border-gray-700">
-              <TabsTrigger 
-                value="personalizado" 
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-300"
-              >
-                Plan Personalizado
-              </TabsTrigger>
-              <TabsTrigger 
-                value="inteligente"
-                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
-              >
-                Plan Inteligente
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="personalizado" className="mt-6">
-              <PlanPersonalizado 
-                plans={plans}
-                currentPlan={currentPlan}
-                currentPlanProgress={currentPlanProgress}
-                progressLoading={progressLoading}
-                recommendedNodeId={recommendedNodeId}
-                onCreatePlan={handleCreatePlan}
-                onSelectPlan={selectPlan}
-                onUpdateProgress={updateCurrentPlanProgress}
-                streakData={streakData}
-                onStudyActivity={updateStreak}
-              />
-            </TabsContent>
-            
-            <TabsContent value="inteligente" className="mt-6">
-              <PlanInteligente 
-                profile={profile}
-                nodeProgress={nodeProgress}
-                onCreatePlan={handleCreatePlan}
-              />
-            </TabsContent>
-          </Tabs>
         </div>
-      </div>
-    </AppLayout>
+      </AppLayout>
+    </AppInitializer>
   );
 };
 
