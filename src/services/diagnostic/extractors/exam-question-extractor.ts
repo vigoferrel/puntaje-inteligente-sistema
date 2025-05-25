@@ -1,10 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from "@/types/diagnostic";
-import { mapDifficultyToSpanish } from "@/utils/difficulty-mapper";
-
-// Define explicit types to avoid recursion
-type TPAESHabilidad = 'INTERPRET_RELATE' | 'TRACK_LOCATE' | 'EVALUATE_REFLECT' | 'SOLVE_PROBLEMS' | 'REPRESENT' | 'MODEL' | 'ARGUE_COMMUNICATE';
 
 export class ExamQuestionExtractor {
   private static instance: ExamQuestionExtractor;
@@ -59,7 +55,7 @@ export class ExamQuestionExtractor {
       options: this.extractOptions(exercise),
       correctAnswer: this.extractCorrectAnswer(exercise),
       explanation: exercise.explanation || exercise.explicacion || 'Explicación no disponible',
-      difficulty: mapDifficultyToSpanish('INTERMEDIO'),
+      difficulty: 'INTERMEDIO' as const,
       skill: this.getSkillString(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {

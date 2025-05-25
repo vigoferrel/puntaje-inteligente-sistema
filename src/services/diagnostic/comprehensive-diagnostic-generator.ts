@@ -1,10 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
-import { mapDifficultyToSpanish } from "@/utils/difficulty-mapper";
 
 // Define types explicitly to avoid recursion
 type TPAESPrueba = 'COMPETENCIA_LECTORA' | 'MATEMATICA_1' | 'MATEMATICA_2' | 'CIENCIAS' | 'HISTORIA';
-type TPAESHabilidad = 'INTERPRET_RELATE' | 'TRACK_LOCATE' | 'EVALUATE_REFLECT' | 'SOLVE_PROBLEMS' | 'REPRESENT' | 'MODEL' | 'ARGUE_COMMUNICATE' | 'IDENTIFY_THEORIES' | 'PROCESS_ANALYZE' | 'APPLY_PRINCIPLES' | 'SCIENTIFIC_ARGUMENT' | 'TEMPORAL_THINKING' | 'SOURCE_ANALYSIS' | 'MULTICAUSAL_ANALYSIS' | 'CRITICAL_THINKING' | 'REFLECTION';
 
 export class ComprehensiveDiagnosticGenerator {
   private static instance: ComprehensiveDiagnosticGenerator;
@@ -124,7 +123,7 @@ export class ComprehensiveDiagnosticGenerator {
       options: this.parseOptions(exercise.options),
       correctAnswer: exercise.correct_answer || 'Opción A',
       explanation: exercise.explanation || '',
-      difficulty: mapDifficultyToSpanish(exercise.difficulty || 'intermediate'),
+      difficulty: 'INTERMEDIO' as const,
       skill: this.getSkillString(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {
@@ -193,7 +192,7 @@ export class ComprehensiveDiagnosticGenerator {
       ],
       correctAnswer: 'Opción A: Primera alternativa',
       explanation: `Esta pregunta evalúa habilidades fundamentales de ${this.getPruebaDisplayName(prueba)}.`,
-      difficulty: mapDifficultyToSpanish(targetLevel),
+      difficulty: 'INTERMEDIO' as const,
       skill: this.getDefaultSkillForPrueba(prueba),
       prueba,
       metadata: {
