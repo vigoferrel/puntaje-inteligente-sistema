@@ -56,7 +56,8 @@ export const fetchPAESHistoriaExam = async (): Promise<PAESHistoriaExamComplete 
     }
 
     console.log('✅ PAES Historia exam loaded via RPC:', data);
-    return data as PAESHistoriaExamComplete;
+    // Fix the type conversion by casting to unknown first, then to the target type
+    return data as unknown as PAESHistoriaExamComplete;
 
   } catch (error) {
     console.error('Error in fetchPAESHistoriaExam:', error);
