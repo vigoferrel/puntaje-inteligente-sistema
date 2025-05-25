@@ -18,11 +18,9 @@ export const useCalendarIntegration = () => {
   const { currentPlan } = useLearningPlans();
   const diagnosticSystem = useDiagnosticSystem();
 
-  // Obtener elementos para programar desde diferentes sistemas
   const getSchedulableItems = useCallback((): CalendarIntegrationItem[] => {
     const items: CalendarIntegrationItem[] = [];
 
-    // Nodos de alta prioridad
     diagnosticSystem.tier1Nodes.slice(0, 10).forEach((node, index) => {
       items.push({
         id: `node-${node.id}`,
@@ -34,12 +32,11 @@ export const useCalendarIntegration = () => {
       });
     });
 
-    // Ejercicios del plan actual
     if (currentPlan && currentPlan.nodes) {
       currentPlan.nodes.slice(0, 5).forEach((planNode) => {
         items.push({
           id: `plan-${planNode.id}`,
-          title: `Plan: ${planNode.title}`,
+          title: `Plan: ${planNode.nodeName || 'Nodo de plan'}`,
           type: 'exercise',
           estimatedTime: 30,
           priority: planNode.isCompleted ? 'low' : 'medium',
@@ -51,7 +48,6 @@ export const useCalendarIntegration = () => {
     return items;
   }, [diagnosticSystem.tier1Nodes, currentPlan]);
 
-  // Programar automáticamente un elemento
   const scheduleItem = useCallback(async (
     item: CalendarIntegrationItem,
     preferredDate?: Date,
@@ -59,8 +55,7 @@ export const useCalendarIntegration = () => {
   ) => {
     const scheduleDate = preferredDate || new Date();
     
-    // Configurar horario según slot preferido
-    let hour = 10; // Default morning
+    let hour = 10;
     if (timeSlot === 'afternoon') hour = 14;
     if (timeSlot === 'evening') hour = 18;
     
@@ -72,7 +67,7 @@ export const useCalendarIntegration = () => {
     const eventData = {
       title: item.title,
       description: `Programado automáticamente desde ${item.source}`,
-      event_type: item.type === 'node' ? 'study_session' : 'reminder' as const,
+      event_type: item.type === 'node' ? 'study_session' as const : 'reminder' as const,
       start_date: scheduleDate.toISOString(),
       end_date: endDate.toISOString(),
       all_day: false,
@@ -83,7 +78,6 @@ export const useCalendarIntegration = () => {
     return await createEvent(eventData);
   }, [createEvent]);
 
-  // Sugerir horarios óptimos basados en eventos existentes
   const suggestOptimalTimes = useCallback((targetDate: Date) => {
     const dayEvents = events.filter(event => {
       const eventDate = new Date(event.start_date);
@@ -122,7 +116,6 @@ export const useCalendarIntegration = () => {
     return suggestions;
   }, [events]);
 
-  // Crear sesión de estudio inteligente
   const createSmartStudySession = useCallback(async (duration: number = 45) => {
     const nextNodes = diagnosticSystem.tier1Nodes.slice(0, 3);
     if (nextNodes.length === 0) return null;
@@ -152,16 +145,11 @@ export const useCalendarIntegration = () => {
   }, [diagnosticSystem.tier1Nodes, suggestOptimalTimes, createEvent]);
 
   return {
-    // Datos
     events,
     schedulableItems: getSchedulableItems(),
-    
-    // Funciones
     scheduleItem,
     suggestOptimalTimes,
     createSmartStudySession,
-    
-    // Estados
     hasUpcomingEvents: events.filter(e => new Date(e.start_date) > new Date()).length > 0,
     todayEvents: events.filter(e => {
       const eventDate = new Date(e.start_date);

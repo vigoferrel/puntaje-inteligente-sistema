@@ -1,18 +1,12 @@
 
-import React from "react";
-import { AppLayout } from "@/components/app-layout";
-import { LectoGuiaUnified } from "@/components/lectoguia/LectoGuiaUnified";
-import { Toaster } from "@/components/ui/toaster";
+import React from 'react';
+import { AppLayout } from '@/components/app-layout';
+import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
 
-/**
- * Página principal de LectoGuía rediseñada
- * Hub central del sistema educativo
- */
-const LectoGuia = () => {
+const LectoGuia: React.FC = () => {
   return (
     <AppLayout>
       <LectoGuiaUnified />
-      <Toaster />
     </AppLayout>
   );
 };

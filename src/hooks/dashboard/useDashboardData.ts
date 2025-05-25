@@ -47,10 +47,10 @@ export const useDashboardData = () => {
     systemCoherence: 100
   });
 
-  // Hooks de sistemas
+  // Hooks de sistemas - corregir nombres de propiedades
   const diagnosticSystem = useDiagnosticSystem();
-  const { plans, currentPlan, isLoading: plansLoading } = useLearningPlans();
-  const { events, isLoading: eventsLoading } = useCalendarEvents();
+  const { plans, currentPlan, loading: plansLoading } = useLearningPlans();
+  const { events, loading: eventsLoading } = useCalendarEvents();
   const lectoGuiaSystem = useLectoGuiaUnified(user?.id);
 
   // Calcular métricas unificadas
@@ -58,7 +58,7 @@ export const useDashboardData = () => {
     if (!diagnosticSystem.isSystemReady) return;
 
     const completedNodes = diagnosticSystem.learningNodes.filter(
-      node => (node as any).progress >= 80
+      node => node.status === 'completed' || (node as any).progress >= 80
     ).length;
     
     const upcomingEvents = events.filter(
@@ -73,22 +73,20 @@ export const useDashboardData = () => {
     const weeklyProgress = totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
 
     setMetrics({
-      totalStudyTime: completedNodes * 45, // Estimación basada en nodos completados
+      totalStudyTime: completedNodes * 45,
       completedNodes,
       weeklyProgress,
       nextDeadline: nextDeadline ? new Date(nextDeadline.start_date) : null,
-      currentStreak: Math.floor(completedNodes / 5), // Racha cada 5 nodos
+      currentStreak: Math.floor(completedNodes / 5),
       skillsImproved: diagnosticSystem.tier1Nodes.length,
       systemCoherence: lectoGuiaSystem.validationStatus.isValid ? 100 : 75
     });
   }, [diagnosticSystem, events, lectoGuiaSystem]);
 
-  // Actualizar métricas cuando cambien los datos
   useEffect(() => {
     calculateMetrics();
   }, [calculateMetrics]);
 
-  // Estado del sistema
   const systemStatus: SystemStatus = {
     diagnostic: {
       status: diagnosticSystem.isSystemReady ? 'ready' : 'loading',
@@ -108,7 +106,6 @@ export const useDashboardData = () => {
     }
   };
 
-  // Funciones de navegación integrada
   const navigateToSection = useCallback((section: string, context?: any) => {
     switch (section) {
       case 'diagnostic':
@@ -119,16 +116,20 @@ export const useDashboardData = () => {
         return '/calendario';
       case 'lectoguia':
         return '/lectoguia';
+      case 'paes':
+        return '/paes';
+      case 'ejercicios':
+        return '/ejercicios';
+      case 'finanzas':
+        return '/finanzas';
       default:
         return '/';
     }
   }, []);
 
-  // Obtener recomendaciones inteligentes
   const getSmartRecommendations = useCallback(() => {
     const recommendations = [];
 
-    // Recomendación de diagnóstico
     if (!diagnosticSystem.isSystemReady || diagnosticSystem.learningNodes.length < 10) {
       recommendations.push({
         id: 'run-diagnostic',
@@ -139,7 +140,6 @@ export const useDashboardData = () => {
       });
     }
 
-    // Recomendación de plan
     if (!currentPlan) {
       recommendations.push({
         id: 'create-plan',
@@ -150,7 +150,6 @@ export const useDashboardData = () => {
       });
     }
 
-    // Recomendación de calendario
     if (events.length < 3) {
       recommendations.push({
         id: 'schedule-sessions',
@@ -161,7 +160,6 @@ export const useDashboardData = () => {
       });
     }
 
-    // Recomendación de nodo siguiente
     if (diagnosticSystem.tier1Nodes.length > 0) {
       const nextNode = diagnosticSystem.tier1Nodes[0];
       recommendations.push({
@@ -181,21 +179,14 @@ export const useDashboardData = () => {
   }, [diagnosticSystem, currentPlan, events, navigateToSection]);
 
   return {
-    // Datos centralizados
     metrics,
     systemStatus,
-    
-    // Estados de carga
     isLoading: plansLoading || eventsLoading,
     isSystemReady: diagnosticSystem.isSystemReady && lectoGuiaSystem.systemState.phase === 'ready',
-    
-    // Datos de sistemas
     diagnosticData: diagnosticSystem,
     planData: { plans, currentPlan },
     calendarData: { events },
     lectoGuiaData: lectoGuiaSystem,
-    
-    // Funciones de utilidad
     navigateToSection,
     getSmartRecommendations: getSmartRecommendations(),
     calculateMetrics

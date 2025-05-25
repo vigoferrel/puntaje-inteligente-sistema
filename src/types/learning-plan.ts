@@ -8,6 +8,11 @@ export interface LearningPlan {
   createdAt: string;
   updatedAt?: string;
   nodes: LearningPlanNode[];
+  progress?: {
+    percentage: number;
+    completedNodes: number;
+    totalNodes: number;
+  };
 }
 
 export interface LearningPlanNode {
@@ -19,6 +24,8 @@ export interface LearningPlanNode {
   nodeDifficulty?: string;
   nodeSkill?: string;
   planId?: string;
+  isCompleted?: boolean;
+  progress?: number;
 }
 
 export interface PlanProgress {
@@ -26,5 +33,5 @@ export interface PlanProgress {
   completedNodes: number;
   inProgressNodes: number;
   overallProgress: number;
-  nodeProgress: Record<string, number>; // Map of nodeId -> progress value (0-100)
+  nodeProgress: Record<string, number>;
 }

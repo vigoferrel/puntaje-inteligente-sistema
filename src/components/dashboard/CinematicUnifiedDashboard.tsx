@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,61 +17,30 @@ import {
   Zap,
   Users,
   Award,
-  ChevronRight
+  ChevronRight,
+  Calculator,
+  DollarSign,
+  Star
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useDiagnosticSystem } from '@/hooks/diagnostic/useDiagnosticSystem';
-import { useLearningPlans } from '@/hooks/learning-plans/use-learning-plans';
-import { useCalendarEvents } from '@/hooks/calendar/useCalendarEvents';
-import { useLectoGuiaUnified } from '@/hooks/lectoguia/useLectoGuiaUnified';
-import { useAuth } from '@/contexts/AuthContext';
+import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
 
 export const CinematicUnifiedDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<string>('overview');
   
-  // Hooks para datos reales
-  const diagnosticSystem = useDiagnosticSystem();
-  const { plans, currentPlan, isLoading: plansLoading } = useLearningPlans();
-  const { events, isLoading: eventsLoading } = useCalendarEvents();
-  const lectoGuiaSystem = useLectoGuiaUnified(user?.id);
-
-  // Estado local para métricas calculadas
-  const [metrics, setMetrics] = useState({
-    totalStudyTime: 0,
-    completedNodes: 0,
-    weeklyProgress: 0,
-    nextDeadline: null as Date | null,
-    currentStreak: 0,
-    skillsImproved: 0
-  });
-
-  // Calcular métricas en tiempo real
-  useEffect(() => {
-    if (diagnosticSystem.isSystemReady && currentPlan && events.length > 0) {
-      const completedNodes = diagnosticSystem.learningNodes.filter(
-        node => node.progress >= 80
-      ).length;
-      
-      const upcomingEvents = events.filter(
-        event => new Date(event.start_date) > new Date()
-      );
-      
-      const nextDeadline = upcomingEvents.length > 0 
-        ? new Date(upcomingEvents[0].start_date)
-        : null;
-
-      setMetrics({
-        totalStudyTime: completedNodes * 45, // Estimación
-        completedNodes,
-        weeklyProgress: Math.min((completedNodes / diagnosticSystem.learningNodes.length) * 100, 100),
-        nextDeadline,
-        currentStreak: Math.floor(completedNodes / 5),
-        skillsImproved: diagnosticSystem.tier1Nodes.length
-      });
-    }
-  }, [diagnosticSystem, currentPlan, events]);
+  const {
+    metrics,
+    systemStatus,
+    isLoading,
+    isSystemReady,
+    diagnosticData,
+    planData,
+    calendarData,
+    lectoGuiaData,
+    navigateToSection,
+    getSmartRecommendations
+  } = useDashboardData();
 
   const quickActions = [
     {
@@ -93,6 +61,22 @@ export const CinematicUnifiedDashboard: React.FC = () => {
       action: () => navigate('/diagnostico')
     },
     {
+      id: 'paes-dashboard',
+      title: 'Dashboard PAES',
+      description: 'Monitorea tu preparación integral',
+      icon: Target,
+      color: 'from-red-500 to-pink-500',
+      action: () => navigate('/paes')
+    },
+    {
+      id: 'exercises',
+      title: 'Generar Ejercicios',
+      description: 'Practica con ejercicios personalizados',
+      icon: Zap,
+      color: 'from-yellow-500 to-orange-500',
+      action: () => navigate('/ejercicios')
+    },
+    {
       id: 'calendar',
       title: 'Ver Calendario',
       description: 'Gestiona tu horario de estudio',
@@ -104,30 +88,35 @@ export const CinematicUnifiedDashboard: React.FC = () => {
       id: 'plan',
       title: 'Mi Plan de Estudio',
       description: 'Revisa tu progreso y objetivos',
-      icon: Target,
-      color: 'from-orange-500 to-red-500',
+      icon: BookOpen,
+      color: 'from-indigo-500 to-purple-500',
       action: () => navigate('/plan')
+    },
+    {
+      id: 'financial',
+      title: 'Centro Financiero',
+      description: 'Planifica tu futuro universitario',
+      icon: DollarSign,
+      color: 'from-cyan-500 to-blue-500',
+      action: () => navigate('/finanzas')
     }
   ];
 
-  const systemStatus = {
-    diagnostic: {
-      status: diagnosticSystem.isSystemReady ? 'ready' : 'loading',
-      data: `${diagnosticSystem.learningNodes.length} nodos disponibles`
-    },
-    plan: {
-      status: currentPlan ? 'active' : 'pending',
-      data: currentPlan ? currentPlan.title : 'Sin plan activo'
-    },
-    calendar: {
-      status: events.length > 0 ? 'active' : 'empty',
-      data: `${events.length} eventos programados`
-    },
-    lectoguia: {
-      status: lectoGuiaSystem.systemState.phase === 'ready' ? 'ready' : 'initializing',
-      data: lectoGuiaSystem.validationStatus.isValid ? 'Sistema coherente' : 'Validando...'
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <h2 className="text-xl font-semibold text-white">Cargando Dashboard</h2>
+          <p className="text-gray-300">Sincronizando datos del sistema...</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
@@ -146,6 +135,29 @@ export const CinematicUnifiedDashboard: React.FC = () => {
             <p className="text-xl text-cyan-200 mb-8">
               Tu comando centralizado para el éxito académico
             </p>
+            
+            {/* Estado del sistema */}
+            <div className="flex items-center justify-center gap-4 mb-8">
+              {isSystemReady ? (
+                <Badge variant="default" className="bg-green-600 text-white">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Sistema Operativo
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-yellow-600 text-white">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Sincronizando...
+                </Badge>
+              )}
+              
+              <Badge variant="outline" className="text-white border-white/20">
+                Nodos: {diagnosticData.learningNodes.length}
+              </Badge>
+              
+              <Badge variant="outline" className="text-white border-white/20">
+                Planes: {planData.plans.length}
+              </Badge>
+            </div>
             
             {/* Métricas principales */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
@@ -188,7 +200,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
       {/* Panel de navegación */}
       <div className="px-8 py-6">
         <div className="flex flex-wrap gap-4 justify-center mb-8">
-          {['overview', 'study', 'progress', 'schedule'].map((section) => (
+          {['overview', 'study', 'progress', 'schedule', 'tools'].map((section) => (
             <Button
               key={section}
               onClick={() => setActiveSection(section)}
@@ -205,6 +217,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
               {section === 'study' && 'Estudio'}
               {section === 'progress' && 'Progreso'}
               {section === 'schedule' && 'Calendario'}
+              {section === 'tools' && 'Herramientas'}
             </Button>
           ))}
         </div>
@@ -218,7 +231,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
         >
           {activeSection === 'overview' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {/* Acciones rápidas */}
+              {/* Acciones rápidas principales */}
               <Card className="lg:col-span-2 bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
@@ -228,7 +241,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {quickActions.map((action) => (
+                    {quickActions.slice(0, 4).map((action) => (
                       <motion.div
                         key={action.id}
                         whileHover={{ scale: 1.02 }}
@@ -260,7 +273,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Estado del sistema */}
+              {/* Estado del sistema mejorado */}
               <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
@@ -286,6 +299,92 @@ export const CinematicUnifiedDashboard: React.FC = () => {
                   ))}
                 </CardContent>
               </Card>
+
+              {/* Recomendaciones inteligentes */}
+              <Card className="lg:col-span-3 bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-purple-400" />
+                    Recomendaciones Inteligentes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getSmartRecommendations.slice(0, 6).map((rec) => (
+                      <motion.div
+                        key={rec.id}
+                        whileHover={{ scale: 1.02 }}
+                        className={`
+                          p-4 rounded-lg border cursor-pointer transition-all
+                          ${rec.priority === 'urgent' 
+                            ? 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20' 
+                            : rec.priority === 'high'
+                            ? 'bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20'
+                            : 'bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20'
+                          }
+                        `}
+                        onClick={rec.action}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${
+                              rec.priority === 'urgent' ? 'border-red-400 text-red-300' :
+                              rec.priority === 'high' ? 'border-orange-400 text-orange-300' :
+                              'border-blue-400 text-blue-300'
+                            }`}
+                          >
+                            {rec.priority}
+                          </Badge>
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <h4 className="font-medium text-white mb-1">{rec.title}</h4>
+                        <p className="text-sm text-gray-400">{rec.description}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeSection === 'tools' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {/* Herramientas adicionales */}
+              <Card className="lg:col-span-3 bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Calculator className="w-5 h-5 text-cyan-400" />
+                    Herramientas Especializadas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {quickActions.map((action) => (
+                      <motion.div
+                        key={action.id}
+                        whileHover={{ scale: 1.02 }}
+                        className={`
+                          relative p-4 rounded-lg cursor-pointer transition-all duration-300
+                          bg-gradient-to-r ${action.color} hover:shadow-lg
+                        `}
+                        onClick={action.action}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white/20 rounded-lg">
+                            <action.icon className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-white">{action.title}</h4>
+                            <p className="text-sm text-white/80">{action.description}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-white/60" />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -301,7 +400,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {diagnosticSystem.tier1Nodes.slice(0, 5).map((node, index) => (
+                    {diagnosticData.tier1Nodes.slice(0, 5).map((node, index) => (
                       <motion.div
                         key={node.id}
                         whileHover={{ scale: 1.02 }}
@@ -335,21 +434,21 @@ export const CinematicUnifiedDashboard: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {currentPlan ? (
+                  {planData.currentPlan ? (
                     <div className="space-y-4">
                       <div>
-                        <h4 className="text-white font-medium">{currentPlan.title}</h4>
-                        <p className="text-sm text-gray-400">{currentPlan.description}</p>
+                        <h4 className="text-white font-medium">{planData.currentPlan.title}</h4>
+                        <p className="text-sm text-gray-400">{planData.currentPlan.description}</p>
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-400">Progreso</span>
-                          <span className="text-cyan-400">{currentPlan.progress?.percentage || 0}%</span>
+                          <span className="text-cyan-400">{planData.currentPlan.progress?.percentage || 0}%</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-2">
                           <div 
                             className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full"
-                            style={{ width: `${currentPlan.progress?.percentage || 0}%` }}
+                            style={{ width: `${planData.currentPlan.progress?.percentage || 0}%` }}
                           />
                         </div>
                       </div>
@@ -391,7 +490,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="text-center p-4 bg-gray-700/50 rounded-lg">
                       <div className="text-2xl font-bold text-cyan-400 mb-2">
-                        {diagnosticSystem.learningNodes.length}
+                        {diagnosticData.learningNodes.length}
                       </div>
                       <div className="text-sm text-gray-400">Nodos Totales</div>
                     </div>
@@ -468,9 +567,9 @@ export const CinematicUnifiedDashboard: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {events.length > 0 ? (
+                  {calendarData.events.length > 0 ? (
                     <div className="space-y-3">
-                      {events.slice(0, 5).map((event) => (
+                      {calendarData.events.slice(0, 5).map((event) => (
                         <div key={event.id} className="p-3 bg-gray-700/50 rounded-lg">
                           <div className="flex items-center justify-between">
                             <div>
