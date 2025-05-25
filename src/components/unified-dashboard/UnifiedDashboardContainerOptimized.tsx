@@ -7,11 +7,15 @@ import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
 import { UnifiedNavigationCore } from '@/components/navigation/UnifiedNavigationCore';
 import { CinematicSkeletonOptimized } from './CinematicSkeletonOptimized';
 import { OptimizedCacheProvider, CachePerformanceMonitor } from '@/core/performance/OptimizedCacheSystem';
+import { OptimizedSuspenseWrapper } from '@/components/optimization/OptimizedSuspenseWrapper';
+import { PerformanceMonitor } from '@/components/optimization/PerformanceMonitor';
 import { useSystemMetrics } from './SystemMetrics';
 import { StudyCalendarIntegration } from '@/components/calendar/StudyCalendarIntegration';
 import { PAESFinancialCalculator } from '@/components/financial/PAESFinancialCalculator';
 import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
+import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
 import { useAuth } from '@/contexts/AuthContext';
+import { loadValidator } from '@/core/performance/LoadValidationSystem';
 
 interface UnifiedDashboardContainerOptimizedProps {
   initialTool?: string | null;
@@ -22,6 +26,7 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const { markLoadComplete, optimizedCallback, optimizedMemo } = usePerformanceOptimization('UnifiedDashboardContainer');
   
   const { 
     currentTool, 
@@ -36,101 +41,112 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
   
   const systemMetrics = useSystemMetrics();
 
-  // Inicialización optimizada
+  // Inicialización optimizada con validación
   useEffect(() => {
+    loadValidator.markNavigationStart();
+    
     if (initialTool && initialTool !== currentTool) {
       navigateToTool(initialTool);
     }
+    
+    loadValidator.markNavigationEnd();
   }, [initialTool, currentTool, navigateToTool]);
 
-  // Carga optimizada
+  // Carga optimizada con métricas
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 400); // Reducido para mejor UX
+      markLoadComplete();
+    }, 300); // Reducido para mejor UX
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [markLoadComplete]);
 
-  // Manejo unificado de herramientas
-  const handleToolChange = useCallback((tool: string, toolContext?: any) => {
+  // Manejo unificado de herramientas optimizado
+  const handleToolChange = optimizedCallback((tool: string, toolContext?: any) => {
+    loadValidator.markNavigationStart();
     navigateToTool(tool, toolContext);
-  }, [navigateToTool]);
+    loadValidator.markNavigationEnd();
+  });
 
-  // Manejo de cambio de materia
-  const handleSubjectChange = useCallback((subject: string) => {
+  // Manejo de cambio de materia optimizado
+  const handleSubjectChange = optimizedCallback((subject: string) => {
     updateContext({ subject });
-  }, [updateContext]);
+  });
 
-  // Renderizado optimizado de herramientas
-  const renderCurrentTool = useMemo(() => {
+  // Renderizado optimizado de herramientas con lazy loading
+  const renderCurrentTool = optimizedMemo(() => {
     const activeSubject = context.subject || 'COMPETENCIA_LECTORA';
     
-    switch (currentTool) {
-      case 'dashboard':
-        return (
+    const toolComponents = {
+      dashboard: () => (
+        <OptimizedSuspenseWrapper fallbackMessage="Cargando Dashboard Neural" componentName="OptimizedDashboard">
           <OptimizedDashboard onNavigateToTool={handleToolChange} />
-        );
+        </OptimizedSuspenseWrapper>
+      ),
       
-      case 'lectoguia':
-        return (
+      lectoguia: () => (
+        <OptimizedSuspenseWrapper fallbackMessage="Inicializando LectoGuía IA" componentName="LectoGuiaUnified">
           <LectoGuiaUnified
             initialSubject={activeSubject}
             onNavigateToTool={handleToolChange}
           />
-        );
+        </OptimizedSuspenseWrapper>
+      ),
       
-      case 'navigation':
-        return (
+      navigation: () => (
+        <OptimizedSuspenseWrapper fallbackMessage="Cargando Navegación Neural" componentName="UnifiedNavigationCore">
           <UnifiedNavigationCore
             onNavigate={handleToolChange}
             currentTool={currentTool}
           />
-        );
+        </OptimizedSuspenseWrapper>
+      ),
       
-      case 'calendar':
-        return <StudyCalendarIntegration />;
+      calendar: () => (
+        <OptimizedSuspenseWrapper fallbackMessage="Inicializando Calendario" componentName="StudyCalendarIntegration">
+          <StudyCalendarIntegration />
+        </OptimizedSuspenseWrapper>
+      ),
       
-      case 'financial':
-        return <PAESFinancialCalculator />;
+      financial: () => (
+        <OptimizedSuspenseWrapper fallbackMessage="Cargando Calculadora PAES" componentName="PAESFinancialCalculator">
+          <PAESFinancialCalculator />
+        </OptimizedSuspenseWrapper>
+      ),
         
-      case 'exercises':
-      case 'diagnostic':
-      case 'plan':
-        return (
-          <div className="p-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center space-y-4"
-            >
-              <h2 className="text-2xl font-bold text-white cinematic-text-glow poppins-title">
-                {currentTool === 'exercises' && 'Ejercicios Adaptativos'}
-                {currentTool === 'diagnostic' && 'Evaluación Diagnóstica'}
-                {currentTool === 'plan' && 'Plan de Estudio Personalizado'}
-              </h2>
-              <p className="text-white/70 poppins-body">
-                Sistema optimizado para {activeSubject}
-              </p>
-              <UnifiedNavigationCore
-                onNavigate={handleToolChange}
-                currentTool={currentTool}
-              />
-            </motion.div>
-          </div>
-        );
-      
-      default:
-        return (
-          <OptimizedDashboard onNavigateToTool={handleToolChange} />
-        );
-    }
+      default: () => (
+        <div className="p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center space-y-4"
+          >
+            <h2 className="text-2xl font-bold text-white cinematic-text-glow poppins-title">
+              {currentTool === 'exercises' && 'Ejercicios Adaptativos'}
+              {currentTool === 'diagnostic' && 'Evaluación Diagnóstica'}
+              {currentTool === 'plan' && 'Plan de Estudio Personalizado'}
+            </h2>
+            <p className="text-white/70 poppins-body">
+              Sistema optimizado para {activeSubject}
+            </p>
+            <UnifiedNavigationCore
+              onNavigate={handleToolChange}
+              currentTool={currentTool}
+            />
+          </motion.div>
+        </div>
+      )
+    };
+
+    const ToolComponent = toolComponents[currentTool as keyof typeof toolComponents] || toolComponents.default;
+    return <ToolComponent />;
   }, [currentTool, context.subject, handleToolChange]);
 
   if (isLoading) {
     return (
       <CinematicSkeletonOptimized 
-        message="Inicializando Sistema Optimizado" 
+        message="Inicializando Sistema Neural Optimizado" 
         progress={95} 
         variant="full"
       />
@@ -159,7 +175,7 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ 
-                duration: 0.2, 
+                duration: 0.15, // Reducido para mejor performance
                 ease: [0.4, 0, 0.2, 1] 
               }}
               className="min-h-[calc(100vh-80px)]"
@@ -169,7 +185,10 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
           </AnimatePresence>
         </main>
         
-        {/* Monitor de performance en desarrollo */}
+        {/* Monitor de performance en desarrollo y producción */}
+        <PerformanceMonitor />
+        
+        {/* Monitor de cache solo en desarrollo */}
         {process.env.NODE_ENV === 'development' && (
           <CachePerformanceMonitor />
         )}
