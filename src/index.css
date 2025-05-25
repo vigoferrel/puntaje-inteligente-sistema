@@ -93,7 +93,7 @@
   }
   
   body {
-    @apply bg-background text-foreground antialiased overflow-x-hidden;
+    @apply bg-background text-foreground antialiased overflow-x-hidden font-luxury;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
   }
 
@@ -103,6 +103,27 @@
 }
 
 @layer components {
+  /* Tipografía Lujosa Global */
+  .luxury-heading {
+    @apply font-luxury font-bold tracking-wide;
+  }
+  
+  .luxury-title {
+    @apply font-luxury font-semibold tracking-wide;
+  }
+  
+  .luxury-subtitle {
+    @apply font-luxury font-medium tracking-normal;
+  }
+  
+  .luxury-body {
+    @apply font-luxury font-normal;
+  }
+  
+  .luxury-caption {
+    @apply font-luxury font-light text-sm tracking-wide;
+  }
+
   .glass-morphism {
     @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)];
   }
@@ -336,7 +357,7 @@
   animation: particle-float 8s linear infinite;
 }
 
-/* Enhanced scrollbar for cinematic experience */
+/* Enhanced scrollbar for cinematic experience with luxury typography */
 .cinematic-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--primary)) transparent;
@@ -361,9 +382,9 @@
   background: linear-gradient(180deg, hsl(var(--primary))/0.8, hsl(var(--primary))/0.3);
 }
 
-/* Text gradients for cinematic headers */
+/* Text gradients for cinematic headers with luxury font */
 .text-gradient-cinematic {
-  @apply bg-gradient-to-r from-white via-primary/90 to-white bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-white via-primary/90 to-white bg-clip-text text-transparent font-luxury;
 }
 
 /* Holographic button effects */
@@ -659,4 +680,17 @@
     rgba(139, 92, 246, 1)
   );
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Luxury Typography Enhancements */
+.luxury-cinematic-title {
+  @apply font-luxury font-bold text-4xl tracking-wide cinematic-glow-text;
+}
+
+.luxury-cinematic-subtitle {
+  @apply font-luxury font-semibold text-xl tracking-normal text-cyan-200;
+}
+
+.luxury-cinematic-body {
+  @apply font-luxury font-light text-gray-300;
 }

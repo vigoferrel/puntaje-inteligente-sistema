@@ -9,16 +9,18 @@ import { Toaster } from './components/ui/toaster';
 
 function App() {
   return (
-    <UnifiedAppProvider>
-      <SuperContextProvider>
-        <CinematicThemeProvider>
-          <ThemeProvider>
-            <RouterProvider router={router} />
-            <Toaster />
-          </ThemeProvider>
-        </CinematicThemeProvider>
-      </SuperContextProvider>
-    </UnifiedAppProvider>
+    <div className="font-luxury antialiased">
+      <UnifiedAppProvider>
+        <SuperContextProvider>
+          <CinematicThemeProvider>
+            <ThemeProvider>
+              <RouterProvider router={router} />
+              <Toaster />
+            </ThemeProvider>
+          </CinematicThemeProvider>
+        </SuperContextProvider>
+      </UnifiedAppProvider>
+    </div>
   );
 }
 

@@ -35,17 +35,17 @@ export function AppHeader() {
 
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === '/') return 'Inicio';
+    if (path === '/') return 'Centro de Comando';
     if (path === '/dashboard') return 'Dashboard';
     if (path === '/paes-dashboard') return 'PAES Dashboard';
-    if (path === '/lectoguia') return 'LectoGuía';
-    if (path === '/diagnostico') return 'Diagnóstico';
-    if (path === '/plan') return 'Mi Plan';
-    return 'StudyPlatform';
+    if (path === '/lectoguia') return 'LectoGuía IA';
+    if (path === '/diagnostico') return 'Diagnóstico Inteligente';
+    if (path === '/plan') return 'Plan Estratégico';
+    return 'PAES Command';
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 font-luxury">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         {/* Left section */}
         <div className="flex items-center gap-4">
@@ -57,7 +57,7 @@ export function AppHeader() {
           
           <div className="flex items-center gap-2">
             <Home className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-semibold text-foreground">
+            <h1 className="text-lg font-semibold text-foreground font-luxury tracking-wide">
               {getPageTitle()}
             </h1>
           </div>
@@ -90,28 +90,28 @@ export function AppHeader() {
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuContent className="w-56 font-luxury" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   {!loading && profile && (
                     <>
-                      <p className="text-sm font-medium leading-none">{profile.name}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        Estudiante
+                      <p className="text-sm font-semibold leading-none">{profile.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground font-light">
+                        Estudiante PAES
                       </p>
                     </>
                   )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/perfil")}>
+              <DropdownMenuItem onClick={() => navigate("/perfil")} className="font-medium">
                 Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/configuracion")}>
+              <DropdownMenuItem onClick={() => navigate("/configuracion")} className="font-medium">
                 Configuración
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive font-medium">
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar Sesión
               </DropdownMenuItem>

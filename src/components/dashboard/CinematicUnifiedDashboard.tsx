@@ -60,7 +60,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
 
   if (!dashboardData.system.isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center font-luxury">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -68,10 +68,10 @@ export const CinematicUnifiedDashboard: React.FC = () => {
         >
           <div className="w-24 h-24 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" />
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-white cinematic-glow-text">
+            <h2 className="text-3xl font-bold text-white cinematic-glow-text font-luxury">
               Inicializando Sistema Cinematográfico
             </h2>
-            <p className="text-cyan-200">Cargando experiencia unificada...</p>
+            <p className="text-cyan-200 font-light">Cargando experiencia unificada...</p>
           </div>
         </motion.div>
       </div>
@@ -79,7 +79,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen cinematic-particle-bg">
+    <div className="min-h-screen cinematic-particle-bg font-luxury">
       {/* Header Cinematográfico */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -90,16 +90,16 @@ export const CinematicUnifiedDashboard: React.FC = () => {
         <div className="relative z-10 container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <h1 className="text-4xl font-bold text-white cinematic-glow-text">
+              <h1 className="text-4xl font-bold text-white cinematic-glow-text font-luxury tracking-wide">
                 Centro de Comando PAES
               </h1>
-              <p className="text-cyan-200">Sistema educativo cinematográfico unificado</p>
+              <p className="text-cyan-200 font-light text-lg">Sistema educativo cinematográfico unificado</p>
             </div>
             
             {!dashboardData.ui.cinematicMode && (
               <Button
                 onClick={enableCinematicMode}
-                className="cinematic-button"
+                className="cinematic-button font-medium"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Activar Experiencia Completa
@@ -125,18 +125,18 @@ export const CinematicUnifiedDashboard: React.FC = () => {
                     <div className={`p-3 rounded-lg bg-gradient-to-r ${stat.color} bg-opacity-20`}>
                       <stat.icon className="h-6 w-6 text-white" />
                     </div>
-                    <Badge variant="outline" className="text-cyan-400 border-cyan-400/30">
+                    <Badge variant="outline" className="text-cyan-400 border-cyan-400/30 font-medium">
                       {Math.round((stat.value / stat.max) * 100)}%
                     </Badge>
                   </div>
                   
                   <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-gray-300">{stat.title}</h3>
-                    <div className="text-3xl font-bold text-white cinematic-glow-text">
+                    <h3 className="text-sm font-semibold text-gray-300 font-luxury">{stat.title}</h3>
+                    <div className="text-3xl font-bold text-white cinematic-glow-text font-luxury">
                       {stat.value}
-                      <span className="text-lg text-gray-400">/{stat.max}</span>
+                      <span className="text-lg text-gray-400 font-medium">/{stat.max}</span>
                     </div>
-                    <p className="text-xs text-gray-400">{stat.description}</p>
+                    <p className="text-xs text-gray-400 font-light">{stat.description}</p>
                   </div>
                   
                   {/* Barra de progreso holográfica */}
@@ -167,17 +167,17 @@ export const CinematicUnifiedDashboard: React.FC = () => {
           >
             <Card className="cinematic-card">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 font-luxury">
                   <Zap className="h-5 w-5 text-yellow-400" />
-                  <span className="text-white">Centro Financiero</span>
-                  <Badge variant="destructive">PAES 2025</Badge>
+                  <span className="text-white font-semibold">Centro Financiero</span>
+                  <Badge variant="destructive" className="font-medium">PAES 2025</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 mb-4">
+                <p className="text-gray-300 mb-4 font-light">
                   Gestión inteligente de becas y beneficios estudiantiles
                 </p>
-                <Button className="w-full cinematic-button">
+                <Button className="w-full cinematic-button font-medium">
                   <Rocket className="w-4 h-4 mr-2" />
                   Acceder
                 </Button>
@@ -193,16 +193,16 @@ export const CinematicUnifiedDashboard: React.FC = () => {
           >
             <Card className="cinematic-card">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 font-luxury">
                   <Brain className="h-5 w-5 text-cyan-400" />
-                  <span className="text-white">LectoGuía IA</span>
+                  <span className="text-white font-semibold">LectoGuía IA</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 mb-4">
+                <p className="text-gray-300 mb-4 font-light">
                   Asistente inteligente para aprendizaje personalizado
                 </p>
-                <Button className="w-full cinematic-button">
+                <Button className="w-full cinematic-button font-medium">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Continuar Estudio
                 </Button>
@@ -218,16 +218,16 @@ export const CinematicUnifiedDashboard: React.FC = () => {
           >
             <Card className="cinematic-card">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 font-luxury">
                   <TrendingUp className="h-5 w-5 text-green-400" />
-                  <span className="text-white">Análisis Predictivo</span>
+                  <span className="text-white font-semibold">Análisis Predictivo</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 mb-4">
+                <p className="text-gray-300 mb-4 font-light">
                   Evaluación inteligente y predicción de resultados
                 </p>
-                <Button className="w-full cinematic-button">
+                <Button className="w-full cinematic-button font-medium">
                   <Shield className="w-4 h-4 mr-2" />
                   Evaluar Progreso
                 </Button>
