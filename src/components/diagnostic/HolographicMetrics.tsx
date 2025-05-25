@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
@@ -30,12 +29,12 @@ const DataVisualization3D: React.FC<{ metrics: any }> = ({ metrics }) => {
     if (!metrics) return [];
     
     return [
-      { position: [0, 2, 0], value: metrics.overallProgress, color: '#3B82F6', label: 'Progreso' },
-      { position: [2, 0, 2], value: metrics.completedNodes, color: '#10B981', label: 'Nodos' },
-      { position: [-2, 0, 2], value: metrics.aiPrediction, color: '#8B5CF6', label: 'IA' },
-      { position: [0, -2, 0], value: metrics.totalNodes, color: '#F59E0B', label: 'Total' },
-      { position: [2, 0, -2], value: 75, color: '#EF4444', label: 'Eficiencia' },
-      { position: [-2, 0, -2], value: 88, color: '#06B6D4', label: 'Velocidad' }
+      { position: [0, 2, 0] as [number, number, number], value: metrics.overallProgress, color: '#3B82F6', label: 'Progreso' },
+      { position: [2, 0, 2] as [number, number, number], value: metrics.completedNodes, color: '#10B981', label: 'Nodos' },
+      { position: [-2, 0, 2] as [number, number, number], value: metrics.aiPrediction, color: '#8B5CF6', label: 'IA' },
+      { position: [0, -2, 0] as [number, number, number], value: metrics.totalNodes, color: '#F59E0B', label: 'Total' },
+      { position: [2, 0, -2] as [number, number, number], value: 75, color: '#EF4444', label: 'Eficiencia' },
+      { position: [-2, 0, -2] as [number, number, number], value: 88, color: '#06B6D4', label: 'Velocidad' }
     ];
   }, [metrics]);
 

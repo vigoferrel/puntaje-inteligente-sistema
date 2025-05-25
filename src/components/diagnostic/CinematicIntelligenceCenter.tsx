@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
@@ -49,7 +48,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
     generatePersonalizedExercises
   } = useUnifiedDiagnostic();
 
-  const { sendMessage: askLectoGuia } = useLectoGuia();
+  const { handleSendMessage } = useLectoGuia();
   
   const [activeMode, setActiveMode] = useState<'portal' | 'command' | 'combat' | 'matrix'>('portal');
   const [systemPower, setSystemPower] = useState(0);
@@ -323,7 +322,7 @@ export const CinematicIntelligenceCenter: React.FC = () => {
       <AnimatePresence>
         {assistantActive && (
           <IntelligentAssistant
-            onAskQuestion={askLectoGuia}
+            onAskQuestion={handleSendMessage}
             systemMetrics={systemMetrics}
             weakestArea={systemMetrics?.weakestArea}
             onClose={() => setAssistantActive(false)}
