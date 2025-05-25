@@ -1,7 +1,7 @@
 
 /**
- * FIREWALL ANTI-TRACKING EXTREMO v1.1
- * Blindaje quirúrgico contra todas las formas de tracking
+ * FIREWALL ANTI-TRACKING EXTREMO v2.0 - REPARACIÓN QUIRÚRGICA
+ * Blindaje selectivo con modo observación por defecto
  */
 
 interface TrackingFirewallConfig {
@@ -9,262 +9,174 @@ interface TrackingFirewallConfig {
   whitelist: string[];
   blacklist: string[];
   aggressiveMode: boolean;
+  observationMode: boolean;
 }
 
 class TrackingFirewall {
+  private static instance: TrackingFirewall | null = null;
   private config: TrackingFirewallConfig;
   private blockedAttempts: number = 0;
   private lastCleanup: number = 0;
+  private isActive: boolean = false;
+  private originalFetch: typeof fetch;
+  private originalXHR: typeof XMLHttpRequest;
 
-  // Lista negra ultra-agresiva de dominios de tracking
-  private readonly TRACKING_BLACKLIST = [
+  // Lista negra ULTRACONSERVADORA - solo trackers obvios
+  private readonly OBVIOUS_TRACKERS = [
     'google-analytics.com',
     'googletagmanager.com',
-    'facebook.com',
+    'facebook.com/tr',
     'doubleclick.net',
-    'googlesyndication.com',
-    'amazon-adsystem.com',
-    'googleadservices.com',
-    'adsystem.amazon.com',
-    'scorecardresearch.com',
-    'outbrain.com',
-    'taboola.com',
-    'hotjar.com',
-    'mixpanel.com',
-    'segment.com',
-    'fullstory.com',
-    'logrocket.com',
-    'amplitude.com',
-    'heap.io',
-    'intercom.io',
-    'zendesk.com',
-    'crisp.chat',
-    'tawk.to',
-    'drift.com',
-    'cloudflareinsights.com',
-    'beacon.min.js',
-    'analytics',
-    'tracking',
-    'pixel',
-    'beacon'
+    'googlesyndication.com'
   ];
 
-  constructor(config: Partial<TrackingFirewallConfig> = {}) {
+  private constructor(config: Partial<TrackingFirewallConfig> = {}) {
     this.config = {
-      blockAll: true,
-      whitelist: ['lovable.dev', 'gpteng.co'],
-      blacklist: this.TRACKING_BLACKLIST,
-      aggressiveMode: true,
+      blockAll: false, // Deshabilitado por defecto
+      whitelist: ['lovable.dev', 'gpteng.co', 'localhost', '127.0.0.1'],
+      blacklist: this.OBVIOUS_TRACKERS,
+      aggressiveMode: false,
+      observationMode: true, // Modo observación por defecto
       ...config
     };
 
-    this.initializeFirewall();
+    this.originalFetch = window.fetch;
+    this.originalXHR = window.XMLHttpRequest;
+
+    if (!this.config.observationMode) {
+      this.initializeFirewall();
+    } else {
+      this.initializeObservationMode();
+    }
+  }
+
+  public static getInstance(config?: Partial<TrackingFirewallConfig>): TrackingFirewall {
+    if (!TrackingFirewall.instance) {
+      TrackingFirewall.instance = new TrackingFirewall(config);
+    }
+    return TrackingFirewall.instance;
+  }
+
+  private initializeObservationMode(): void {
+    // Solo observar, no bloquear
+    this.startPassiveMonitoring();
+    console.log('👁️ FIREWALL ANTI-TRACKING - Modo observación activado');
   }
 
   private initializeFirewall(): void {
-    // Interceptor de Network Requests
-    this.interceptNetworkRequests();
-    
-    // Bloqueador de Storage Access
-    this.blockStorageAccess();
-    
-    // Limpiador de cookies de tracking
-    this.blockTrackingCookies();
-    
-    // Monitor de scripts maliciosos
-    this.monitorScriptLoading();
+    if (this.isActive) return;
 
-    console.log('🛡️ FIREWALL ANTI-TRACKING ACTIVADO - Modo quirúrgico extremo');
+    try {
+      // Solo interceptar si realmente es necesario
+      this.interceptOnlyObviousTracking();
+      this.isActive = true;
+      console.log('🛡️ FIREWALL ANTI-TRACKING ACTIVADO - Modo selectivo');
+    } catch (error) {
+      console.error('Error inicializando firewall:', error);
+      this.fallbackToObservation();
+    }
   }
 
-  private interceptNetworkRequests(): void {
-    // Override fetch para bloquear requests de tracking
-    const originalFetch = window.fetch;
-    const self = this;
+  private fallbackToObservation(): void {
+    this.config.observationMode = true;
+    this.isActive = false;
+    this.restoreOriginalAPIs();
+    this.initializeObservationMode();
+  }
+
+  private startPassiveMonitoring(): void {
+    // Monitoreo pasivo de requests sin interferir
+    const originalFetch = this.originalFetch;
     
     window.fetch = function(...args: Parameters<typeof fetch>) {
       const url = args[0] as string;
       
-      if (self.isTrackingUrl(url)) {
-        self.blockedAttempts++;
-        console.log(`🚫 Blocked tracking request: ${url}`);
-        return Promise.reject(new Error('Blocked by anti-tracking firewall'));
+      // Solo logging, no bloqueo
+      if (url && typeof url === 'string') {
+        for (const tracker of TrackingFirewall.instance?.OBVIOUS_TRACKERS || []) {
+          if (url.includes(tracker)) {
+            console.log(`📊 Tracking request observado (no bloqueado): ${url}`);
+            break;
+          }
+        }
       }
       
       return originalFetch.apply(this, args);
     };
-
-    // Override XMLHttpRequest
-    const originalXHR = window.XMLHttpRequest;
-    const OriginalXHRClass = class extends originalXHR {
-      open(method: string, url: string, async: boolean = true, username?: string | null, password?: string | null) {
-        if (self.isTrackingUrl(url)) {
-          self.blockedAttempts++;
-          console.log(`🚫 Blocked XHR tracking request: ${url}`);
-          throw new Error('Blocked by anti-tracking firewall');
-        }
-        return super.open(method, url, async, username, password);
-      }
-    };
-    
-    window.XMLHttpRequest = OriginalXHRClass as any;
   }
 
-  private isTrackingUrl(url: string): boolean {
-    const urlLower = url.toLowerCase();
-    
-    return this.config.blacklist.some(blocked => 
-      urlLower.includes(blocked.toLowerCase())
-    );
-  }
-
-  private blockStorageAccess(): void {
-    // Crear proxy para localStorage que filtra tracking
-    const originalLocalStorage = window.localStorage;
+  private interceptOnlyObviousTracking(): void {
     const self = this;
     
-    const storageHandler: ProxyHandler<Storage> = {
-      set(target: Storage, key: string | symbol, value: any): boolean {
-        const keyStr = String(key);
-        if (keyStr === 'setItem') {
-          return true; // Permitir acceso al método
-        }
-        
-        if (self.isTrackingKey(keyStr)) {
-          console.log(`🚫 Blocked tracking storage: ${keyStr}`);
-          return true;
-        }
-        
-        (target as any)[key] = value;
-        return true;
-      },
+    // Override fetch SOLO para trackers obvios
+    window.fetch = function(...args: Parameters<typeof fetch>) {
+      const url = args[0] as string;
       
-      get(target: Storage, key: string | symbol): any {
-        const keyStr = String(key);
-        
-        if (keyStr === 'setItem') {
-          return function(this: Storage, storageKey: string, storageValue: string) {
-            if (self.isTrackingKey(storageKey)) {
-              console.log(`🚫 Blocked tracking storage: ${storageKey}`);
-              return;
-            }
-            return originalLocalStorage.setItem.call(this, storageKey, storageValue);
-          };
-        }
-        
-        if (keyStr === 'getItem') {
-          return function(this: Storage, storageKey: string) {
-            if (self.isTrackingKey(storageKey)) {
-              return null;
-            }
-            return originalLocalStorage.getItem.call(this, storageKey);
-          };
-        }
-        
-        return (target as any)[key];
+      if (self.isObviousTrackingUrl(url)) {
+        self.blockedAttempts++;
+        console.log(`🚫 Blocked obvious tracking: ${url}`);
+        return Promise.reject(new Error('Blocked obvious tracking'));
       }
+      
+      return self.originalFetch.apply(this, args);
     };
-
-    const storageProxy = new Proxy(originalLocalStorage, storageHandler);
-
-    // Protección anti-fingerprinting
-    Object.defineProperty(window, 'localStorage', {
-      value: storageProxy,
-      writable: false,
-      configurable: false
-    });
   }
 
-  private isTrackingKey(key: string): boolean {
-    const trackingKeys = [
-      '_ga', '_gid', '_gat', 'fb', 'utm_', 'analytics',
-      'tracking', 'pixel', 'beacon', 'fingerprint'
-    ];
+  private isObviousTrackingUrl(url: string): boolean {
+    if (!url || typeof url !== 'string') return false;
     
-    return trackingKeys.some(trackingKey => 
-      key.toLowerCase().includes(trackingKey)
+    const urlLower = url.toLowerCase();
+    return this.OBVIOUS_TRACKERS.some(tracker => 
+      urlLower.includes(tracker.toLowerCase())
     );
   }
 
-  private blockTrackingCookies(): void {
-    // Interceptar document.cookie
-    let cookieValue = '';
-    Object.defineProperty(document, 'cookie', {
-      get: () => cookieValue,
-      set: (value: string) => {
-        if (!this.isTrackingCookie(value)) {
-          cookieValue = value;
-        } else {
-          console.log(`🚫 Blocked tracking cookie: ${value}`);
-        }
-      }
-    });
+  private restoreOriginalAPIs(): void {
+    try {
+      window.fetch = this.originalFetch;
+      window.XMLHttpRequest = this.originalXHR;
+    } catch (error) {
+      console.warn('No se pudieron restaurar APIs originales:', error);
+    }
   }
 
-  private isTrackingCookie(cookie: string): boolean {
-    const trackingCookies = ['_ga', '_gid', '_gat', 'fb', 'utm'];
-    return trackingCookies.some(tc => cookie.includes(tc));
-  }
-
-  private monitorScriptLoading(): void {
-    // Observer para scripts dinámicos
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const element = node as Element;
-            if (element.tagName === 'SCRIPT') {
-              const src = element.getAttribute('src');
-              if (src && this.isTrackingUrl(src)) {
-                element.remove();
-                this.blockedAttempts++;
-                console.log(`🚫 Removed tracking script: ${src}`);
-              }
-            }
-          }
-        });
-      });
-    });
-
-    observer.observe(document.head, { childList: true, subtree: true });
-    observer.observe(document.body, { childList: true, subtree: true });
+  public escalateToActiveMode(): void {
+    if (!this.config.observationMode) return;
+    
+    console.log('🚨 Escalando firewall a modo activo');
+    this.config.observationMode = false;
+    this.initializeFirewall();
   }
 
   public getFirewallStats() {
     return {
       blockedAttempts: this.blockedAttempts,
-      mode: this.config.aggressiveMode ? 'EXTREMO' : 'NORMAL',
-      lastCleanup: this.lastCleanup
+      mode: this.config.observationMode ? 'OBSERVACIÓN' : 
+            this.config.aggressiveMode ? 'AGRESIVO' : 'SELECTIVO',
+      lastCleanup: this.lastCleanup,
+      isActive: this.isActive,
+      observationMode: this.config.observationMode
     };
   }
 
   public emergencyPurge(): void {
-    // Limpiar TODO el storage de tracking
-    const keysToRemove: string[] = [];
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && this.isTrackingKey(key)) {
-        keysToRemove.push(key);
-      }
-    }
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    
-    // Limpiar cookies de tracking
-    document.cookie.split(';').forEach(cookie => {
-      const [name] = cookie.split('=');
-      if (this.isTrackingCookie(name)) {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-      }
-    });
-
+    // Purga ultraconservadora
+    console.log('🧹 PURGA DE EMERGENCIA FIREWALL - Modo conservador');
+    this.blockedAttempts = 0;
     this.lastCleanup = Date.now();
-    console.log('🧹 PURGA DE EMERGENCIA ANTI-TRACKING COMPLETADA');
+  }
+
+  public destroy(): void {
+    this.restoreOriginalAPIs();
+    this.isActive = false;
+    TrackingFirewall.instance = null;
+    console.log('🛡️ Firewall anti-tracking destruido');
   }
 }
 
-export const trackingFirewall = new TrackingFirewall({
-  blockAll: true,
-  aggressiveMode: true
+// Instancia global con configuración ultraconservadora
+export const trackingFirewall = TrackingFirewall.getInstance({
+  blockAll: false,
+  aggressiveMode: false,
+  observationMode: true
 });

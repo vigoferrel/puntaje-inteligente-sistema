@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useIntersectionalNexus } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
@@ -33,18 +34,19 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   const lastSynthesisRef = useRef(0);
   const stabilityTimerRef = useRef<number | null>(null);
   
-  // Sistema respiratorio con protección anti-autodestrucción
+  // Sistema respiratorio con singleton robusto
   const respiratorySystem = useRef<RespiratorySystem | null>(null);
   
-  // Inicializar sistema respiratorio de forma segura
+  // Inicializar sistema respiratorio con control de instancias
   useEffect(() => {
     if (!respiratorySystem.current) {
       try {
-        respiratorySystem.current = new RespiratorySystem({
-          breathsPerMinute: 12,
+        // Usar el singleton para evitar instancias múltiples
+        respiratorySystem.current = RespiratorySystem.getInstance({
+          breathsPerMinute: 8, // Más lento y seguro
           oxygenThreshold: 85,
-          purificationLevel: emergencyDetox.isSafeMode() ? 'safe_mode' : 'advanced',
-          antiTrackingMode: !emergencyDetox.isSafeMode(),
+          purificationLevel: emergencyDetox.isSafeMode() ? 'safe_mode' : 'observation',
+          antiTrackingMode: false, // Deshabilitado por defecto
           emergencyMode: false
         });
       } catch (error) {
@@ -58,33 +60,41 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   useEffect(() => {
     if (!initializationRef.current) {
       initializationRef.current = true;
-      initializeAntiTrackingSystem();
+      
+      // Inicialización diferida y segura
+      setTimeout(() => {
+        try {
+          initializeAntiTrackingSystem();
+        } catch (error) {
+          console.error('Error en inicialización anti-tracking:', error);
+        }
+      }, 2000);
     }
   }, []);
   
-  // Integración neurológica cardiovascular-respiratoria
+  // Integración neurológica cardiovascular-respiratoria CONSERVADORA
   const neural = useNeuralIntegration('dashboard', [
     'respiratory_coordination',
     'oxygen_distribution',
-    'purification_control',
-    'anti_tracking_protection'
+    'safe_mode_operation'
   ], {
     isInitialized,
     activeModules: nexus.active_modules.size,
     globalCoherence: nexus.global_coherence,
-    respiratoryHealth: respiratorySystem.current?.getHealth()
+    respiratoryHealth: respiratorySystem.current?.getHealth(),
+    conservativeMode: true
   });
 
-  // Sistema con criterios respiratorios seguros
+  // Sistema con criterios respiratorios ultraconservativos
   const isIntersectionalReady = Boolean(
     isInitialized && 
-    nexus.global_coherence > 30 &&
+    nexus.global_coherence > 20 && // Umbral más bajo
     nexus.active_modules.size >= 0 && 
     respiratorySystem.current && 
-    respiratorySystem.current.getHealth().oxygenLevel > 60
+    respiratorySystem.current.getHealth().oxygenLevel > 50 // Umbral más bajo
   );
 
-  // Síntesis respiratoria protegida
+  // Síntesis respiratoria ULTRACONSERVADORA
   useEffect(() => {
     if (isIntersectionalReady && !emergencyDetox.isSafeMode()) {
       if (stabilityTimerRef.current) {
@@ -94,14 +104,16 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       stabilityTimerRef.current = window.setTimeout(() => {
         const now = Date.now();
         
-        if (now - lastSynthesisRef.current > 900000) { // 15 minutos
+        // Síntesis muy espaciada - cada 20 minutos
+        if (now - lastSynthesisRef.current > 1200000) {
           try {
             if (respiratorySystem.current) {
               const systemData = {
                 nexus_state: nexus.system_health,
                 active_modules: nexus.active_modules.size,
                 coherence: nexus.global_coherence,
-                detox_status: emergencyDetox.getDetoxStatus()
+                detox_status: emergencyDetox.getDetoxStatus(),
+                conservative_mode: true
               };
 
               const inhaled = respiratorySystem.current.breatheIn(systemData);
@@ -115,7 +127,7 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
             emergencyDetox.activateEmergencyMode();
           }
         }
-      }, 8000);
+      }, 15000); // 15 segundos de espera
     }
 
     return () => {
@@ -135,9 +147,9 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     const systemInsights = [
       {
         type: 'system-health',
-        title: detoxStatus.safeMode ? 'Sistema en Modo Seguro' : 'Sistema Anti-Tracking Blindado',
-        description: `Protección al ${Math.round(respiratoryHealth.oxygenLevel)}% - ${detoxStatus.safeMode ? 'Modo Seguro Activo' : 'Tracking 100% bloqueado'}`,
-        level: respiratoryHealth.oxygenLevel > 85 ? 'excellent' : 'good',
+        title: detoxStatus.safeMode ? 'Sistema en Modo Seguro' : 'Sistema en Modo Observación',
+        description: `Estabilidad al ${Math.round(respiratoryHealth.oxygenLevel)}% - ${detoxStatus.safeMode ? 'Modo Seguro Activo' : 'Modo Observación Activo'}`,
+        level: respiratoryHealth.oxygenLevel > 80 ? 'excellent' : 'good',
         data: {
           ...nexus.system_health,
           respiratory: respiratoryHealth,
@@ -150,10 +162,10 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       const pattern = nexus.cross_module_patterns[0];
       systemInsights.push({
         type: 'cardiovascular-integration',
-        title: 'Integración Cardiovascular Anti-Tracking',
-        description: `Sistema circulatorio blindado al ${pattern.synergy_potential || 95}%`,
-        level: 'excellent',
-        data: { ...pattern, antiTrackingProtected: true }
+        title: 'Integración Cardiovascular Conservadora',
+        description: `Sistema circulatorio estable al ${pattern.synergy_potential || 85}%`,
+        level: 'good',
+        data: { ...pattern, conservativeMode: true }
       });
     }
 
@@ -164,23 +176,18 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     const now = Date.now();
     
     try {
-      const sanitizedBehavior = {
-        ...behavior,
-        tracking_data: undefined,
-        analytics_data: undefined,
-        fingerprint_data: undefined
+      // Adaptación ultraconservadora
+      const ultraSanitizedBehavior = {
+        timestamp: now,
+        user_context: 'safe_adaptation',
+        safe_mode: true,
+        conservative_mode: true
       };
 
       if (respiratorySystem.current) {
-        const breathed = respiratorySystem.current.breatheIn({
-          behavior: sanitizedBehavior,
-          timestamp: now,
-          user_context: 'adaptation',
-          safe_mode: emergencyDetox.isSafeMode()
-        });
-
+        const breathed = respiratorySystem.current.breatheIn(ultraSanitizedBehavior);
         if (breathed) {
-          nexus.adaptToUserBehavior(sanitizedBehavior);
+          nexus.adaptToUserBehavior(ultraSanitizedBehavior);
         }
       }
     } catch (error) {
@@ -196,11 +203,23 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     }
     
     try {
+      // Reset ultraconservador
       nexus.emergencyReset();
       neural.emergencyReset();
-      if (respiratorySystem.current) {
-        respiratorySystem.current.emergencyPurge();
-      }
+      
+      // Destruir todas las instancias respiratorias y crear una nueva
+      RespiratorySystem.destroyAllInstances();
+      respiratorySystem.current = null;
+      
+      // Recrear instancia única
+      setTimeout(() => {
+        respiratorySystem.current = RespiratorySystem.getInstance({
+          purificationLevel: 'safe_mode',
+          antiTrackingMode: false,
+          emergencyMode: false
+        });
+      }, 1000);
+      
       emergencyDetox.activateEmergencyMode();
     } catch (error) {
       console.error('Error en reset de emergencia:', error);
@@ -209,20 +228,19 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     initializationRef.current = false;
     lastSynthesisRef.current = 0;
     
-    console.log('🫁 Sistema interseccional reiniciado con detoxificación');
+    console.log('🫁 Sistema interseccional reiniciado de forma conservadora');
   };
 
-  // Cleanup seguro
+  // Cleanup seguro y conservador
   useEffect(() => {
     return () => {
       if (stabilityTimerRef.current) {
         clearTimeout(stabilityTimerRef.current);
         stabilityTimerRef.current = null;
       }
-      if (respiratorySystem.current) {
-        respiratorySystem.current.destroy();
-        respiratorySystem.current = null;
-      }
+      
+      // No destruir instancia aquí - el singleton se encarga
+      respiratorySystem.current = null;
     };
   }, []);
 
@@ -232,11 +250,12 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       ...nexus.system_health,
       respiratory: respiratorySystem.current?.getHealth() || {
         breathingRate: 0,
-        oxygenLevel: 0,
-        airQuality: 'contaminated' as const,
+        oxygenLevel: 50,
+        airQuality: 'filtered' as const,
         antiTrackingActive: false
       },
-      detoxStatus: emergencyDetox.getDetoxStatus()
+      detoxStatus: emergencyDetox.getDetoxStatus(),
+      conservativeMode: true
     },
     generateIntersectionalInsights,
     harmonizeExperience: nexus.harmonizeExperience,
@@ -244,18 +263,18 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     emergencyReset,
     systemVitals: {
       cardiovascular: neural.systemHealth.cardiovascular?.cardiovascular || {
-        heartRate: 0,
+        heartRate: 60,
         bloodPressure: 'optimal' as const,
-        circulation: 100,
+        circulation: 85,
         oxygenation: 95
       },
       respiratory: respiratorySystem.current?.getHealth() || {
         breathingRate: 0,
-        oxygenLevel: 0,
-        airQuality: 'contaminated' as const,
+        oxygenLevel: 50,
+        airQuality: 'filtered' as const,
         antiTrackingActive: false
       },
-      overallHealth: emergencyDetox.isSafeMode() ? 'fair' as const : 'excellent' as const,
+      overallHealth: emergencyDetox.isSafeMode() ? 'good' as const : 'excellent' as const,
       lastCheckup: Date.now()
     }
   };

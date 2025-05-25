@@ -1,7 +1,7 @@
 
 /**
- * CAPA DE PROTECCIÓN DE STORAGE ANTI-TRACKING v1.0
- * Blindaje extremo contra accesos maliciosos al storage
+ * CAPA DE PROTECCIÓN DE STORAGE ANTI-TRACKING v2.0 - REPARACIÓN QUIRÚRGICA
+ * Blindaje extremo con corrección de contexto y estrategia de proxy
  */
 
 interface StorageProtectionConfig {
@@ -9,25 +9,52 @@ interface StorageProtectionConfig {
   autoCleanup: boolean;
   trackingProtection: boolean;
   maxStorageSize: number;
+  observationMode: boolean;
 }
 
 class StorageProtectionLayer {
+  private static instance: StorageProtectionLayer | null = null;
   private config: StorageProtectionConfig;
   private protectedKeys = new Set<string>();
   private encryptionKey: string;
-  private cleanupInterval: number;
+  private cleanupInterval: number | null = null;
+  private originalStorage: Storage;
+  private isActive: boolean = false;
 
-  constructor(config: Partial<StorageProtectionConfig> = {}) {
+  // Whitelist interna ultra-conservadora
+  private readonly INTERNAL_WHITELIST = new Set([
+    'paes-', 'auth-', 'user-', 'neural-', 'intersectional-',
+    'lectoguia-', 'plan-', 'diagnostic-', 'theme', 'settings',
+    'lovable-', 'vite-', 'react-', '__reactInternalInstance',
+    '__reactFiber', '__reactInternalMemoizedMaskedChildContext',
+    '__reactInternalMemoizedUnmaskedChildContext'
+  ]);
+
+  private constructor(config: Partial<StorageProtectionConfig> = {}) {
     this.config = {
-      enableEncryption: true,
+      enableEncryption: false, // Deshabilitado por defecto
       autoCleanup: true,
       trackingProtection: true,
-      maxStorageSize: 1024 * 1024, // 1MB
+      maxStorageSize: 1024 * 1024,
+      observationMode: true, // Modo observación por defecto
       ...config
     };
 
     this.encryptionKey = this.generateEncryptionKey();
-    this.initializeProtection();
+    this.originalStorage = window.localStorage;
+    
+    if (!this.config.observationMode) {
+      this.initializeProtection();
+    } else {
+      this.initializeObservationMode();
+    }
+  }
+
+  public static getInstance(config?: Partial<StorageProtectionConfig>): StorageProtectionLayer {
+    if (!StorageProtectionLayer.instance) {
+      StorageProtectionLayer.instance = new StorageProtectionLayer(config);
+    }
+    return StorageProtectionLayer.instance;
   }
 
   private generateEncryptionKey(): string {
@@ -35,147 +62,226 @@ class StorageProtectionLayer {
                 Math.random().toString(36).substring(2, 15));
   }
 
-  private initializeProtection(): void {
-    this.wrapStorageAPI();
-    
-    if (this.config.autoCleanup) {
-      this.startAutoCleanup();
-    }
-
-    console.log('🔐 PROTECCIÓN DE STORAGE ACTIVADA - Modo anti-tracking extremo');
+  private initializeObservationMode(): void {
+    // Solo observar, no interferir
+    this.startPassiveMonitoring();
+    console.log('🔍 PROTECCIÓN DE STORAGE - Modo observación activado');
   }
 
-  private wrapStorageAPI(): void {
-    const originalSetItem = Storage.prototype.setItem;
-    const originalGetItem = Storage.prototype.getItem;
-    const originalRemoveItem = Storage.prototype.removeItem;
-
-    Storage.prototype.setItem = function(key: string, value: string) {
-      // Verificar si es tracking
-      if (this.isTrackingAttempt(key, value)) {
-        console.log(`🚫 Blocked tracking storage attempt: ${key}`);
-        return;
+  private initializeProtection(): void {
+    if (this.isActive) return;
+    
+    try {
+      this.wrapStorageAPIWithProxy();
+      
+      if (this.config.autoCleanup) {
+        this.startAutoCleanup();
       }
 
-      // Encriptar si es necesario
-      const finalValue = this.config.enableEncryption ? 
-        this.encrypt(value) : value;
+      this.isActive = true;
+      console.log('🔐 PROTECCIÓN DE STORAGE ACTIVADA - Modo protección completo');
+    } catch (error) {
+      console.error('Error inicializando protección de storage:', error);
+      this.fallbackToObservation();
+    }
+  }
 
-      this.protectedKeys.add(key);
-      return originalSetItem.call(this, key, finalValue);
-    }.bind(this);
+  private fallbackToObservation(): void {
+    this.config.observationMode = true;
+    this.isActive = false;
+    this.initializeObservationMode();
+  }
 
-    Storage.prototype.getItem = function(key: string) {
-      const value = originalGetItem.call(this, key);
-      
-      if (!value) return value;
+  private startPassiveMonitoring(): void {
+    // Monitoreo pasivo sin interferir
+    const monitorInterval = setInterval(() => {
+      this.detectSuspiciousActivity();
+    }, 30000); // Cada 30 segundos
 
-      // Desencriptar si es necesario
-      if (this.config.enableEncryption && this.protectedKeys.has(key)) {
-        try {
-          return this.decrypt(value);
-        } catch {
-          return null; // Valor corrupto
+    // Cleanup
+    setTimeout(() => {
+      clearInterval(monitorInterval);
+    }, 300000); // 5 minutos máximo
+  }
+
+  private detectSuspiciousActivity(): void {
+    let suspiciousCount = 0;
+    
+    try {
+      for (let i = 0; i < this.originalStorage.length; i++) {
+        const key = this.originalStorage.key(i);
+        if (key && this.isObviousTrackingKey(key)) {
+          suspiciousCount++;
         }
       }
 
-      return value;
-    }.bind(this);
-
-    Storage.prototype.removeItem = function(key: string) {
-      this.protectedKeys.delete(key);
-      return originalRemoveItem.call(this, key);
-    }.bind(this);
-  }
-
-  private isTrackingAttempt(key: string, value: string): boolean {
-    if (!this.config.trackingProtection) return false;
-
-    const trackingPatterns = [
-      /_ga/, /_gid/, /_gat/, /utm_/, /fbp/, /fbc/,
-      /analytics/, /tracking/, /pixel/, /beacon/,
-      /fingerprint/, /session_id/, /user_id/
-    ];
-
-    return trackingPatterns.some(pattern => 
-      pattern.test(key.toLowerCase()) || 
-      pattern.test(value.toLowerCase())
-    );
-  }
-
-  private encrypt(value: string): string {
-    try {
-      return btoa(encodeURIComponent(value + '::' + this.encryptionKey));
-    } catch {
-      return value;
+      if (suspiciousCount > 10) {
+        console.log(`⚠️ Actividad sospechosa detectada: ${suspiciousCount} claves de tracking`);
+        // Escalación gradual si es necesario
+        if (suspiciousCount > 50) {
+          this.escalateProtection();
+        }
+      }
+    } catch (error) {
+      // Silencioso
     }
   }
 
-  private decrypt(value: string): string {
+  private escalateProtection(): void {
+    if (!this.config.observationMode) return;
+    
+    console.log('🚨 Escalando a modo protección por actividad excesiva');
+    this.config.observationMode = false;
+    this.initializeProtection();
+  }
+
+  private wrapStorageAPIWithProxy(): void {
+    const self = this;
+    
+    // Estrategia de proxy en lugar de sobrescribir prototypes
+    const storageProxy = new Proxy(this.originalStorage, {
+      get(target: Storage, prop: string | symbol): any {
+        const origMethod = (target as any)[prop];
+        
+        if (prop === 'setItem') {
+          return function(key: string, value: string) {
+            if (self.shouldBlockStorage(key, value)) {
+              console.log(`🚫 Blocked tracking storage: ${key}`);
+              return;
+            }
+            return origMethod.call(target, key, value);
+          };
+        }
+        
+        if (prop === 'getItem') {
+          return function(key: string) {
+            if (self.shouldBlockStorage(key, '')) {
+              return null;
+            }
+            return origMethod.call(target, key);
+          };
+        }
+        
+        if (prop === 'removeItem') {
+          return function(key: string) {
+            self.protectedKeys.delete(key);
+            return origMethod.call(target, key);
+          };
+        }
+        
+        return typeof origMethod === 'function' ? origMethod.bind(target) : origMethod;
+      },
+      
+      set(target: Storage, prop: string | symbol, value: any): boolean {
+        if (typeof prop === 'string' && prop !== 'setItem' && prop !== 'getItem' && prop !== 'removeItem') {
+          if (self.shouldBlockStorage(prop, String(value))) {
+            console.log(`🚫 Blocked direct storage assignment: ${prop}`);
+            return true;
+          }
+        }
+        (target as any)[prop] = value;
+        return true;
+      }
+    });
+
+    // Reemplazar localStorage con el proxy SOLO si no está ya envuelto
+    if (!this.isStorageAlreadyWrapped()) {
+      try {
+        Object.defineProperty(window, 'localStorage', {
+          value: storageProxy,
+          writable: false,
+          configurable: true
+        });
+      } catch (error) {
+        console.warn('No se pudo sobrescribir localStorage, usando modo observación');
+        this.fallbackToObservation();
+      }
+    }
+  }
+
+  private isStorageAlreadyWrapped(): boolean {
+    // Verificar si localStorage ya fue modificado
+    return window.localStorage !== this.originalStorage;
+  }
+
+  private shouldBlockStorage(key: string, value: string): boolean {
+    if (!this.config.trackingProtection) return false;
+    
+    // Permitir TODAS las claves internas
+    if (this.isInternalKey(key)) {
+      return false;
+    }
+    
+    // Solo bloquear tracking obvio y confirmado
+    return this.isObviousTrackingKey(key) || this.isObviousTrackingValue(value);
+  }
+
+  private isInternalKey(key: string): boolean {
+    const keyLower = key.toLowerCase();
+    return Array.from(this.INTERNAL_WHITELIST).some(prefix => 
+      keyLower.startsWith(prefix.toLowerCase())
+    );
+  }
+
+  private isObviousTrackingKey(key: string): boolean {
+    const obviousTrackers = ['_ga', '_gid', '_gat', 'fbp', 'fbc', 'utm_'];
+    return obviousTrackers.some(tracker => key.includes(tracker));
+  }
+
+  private isObviousTrackingValue(value: string): boolean {
+    if (value.length > 1000) return false; // Skip large values
+    
     try {
-      const decoded = decodeURIComponent(atob(value));
-      const [originalValue] = decoded.split('::');
-      return originalValue;
+      const valueLower = value.toLowerCase();
+      const trackingIndicators = ['google-analytics', 'facebook.com', 'doubleclick'];
+      return trackingIndicators.some(indicator => valueLower.includes(indicator));
     } catch {
-      throw new Error('Decryption failed');
+      return false;
     }
   }
 
   private startAutoCleanup(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+    
     this.cleanupInterval = window.setInterval(() => {
-      this.performCleanup();
+      this.performSafeCleanup();
     }, 300000); // Cada 5 minutos
   }
 
-  private performCleanup(): void {
-    let totalSize = 0;
+  private performSafeCleanup(): void {
+    if (this.config.observationMode) return;
+    
     const itemsToRemove: string[] = [];
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key) continue;
+    try {
+      for (let i = 0; i < this.originalStorage.length; i++) {
+        const key = this.originalStorage.key(i);
+        if (!key) continue;
 
-      const value = localStorage.getItem(key);
-      if (!value) continue;
-
-      totalSize += key.length + value.length;
-
-      // Marcar items de tracking para remoción
-      if (this.isTrackingAttempt(key, value)) {
-        itemsToRemove.push(key);
+        // Solo remover tracking obvio, nunca claves internas
+        if (!this.isInternalKey(key) && this.isObviousTrackingKey(key)) {
+          itemsToRemove.push(key);
+        }
       }
-    }
 
-    // Remover items de tracking
-    itemsToRemove.forEach(key => {
-      localStorage.removeItem(key);
-      this.protectedKeys.delete(key);
-    });
+      // Remover solo items confirmados de tracking
+      itemsToRemove.forEach(key => {
+        try {
+          this.originalStorage.removeItem(key);
+          this.protectedKeys.delete(key);
+        } catch (error) {
+          // Silencioso
+        }
+      });
 
-    // Si excede el tamaño máximo, remover items más antiguos
-    if (totalSize > this.config.maxStorageSize) {
-      this.removeOldestItems();
-    }
-
-    if (itemsToRemove.length > 0) {
-      console.log(`🧹 Limpieza anti-tracking: ${itemsToRemove.length} items removidos`);
-    }
-  }
-
-  private removeOldestItems(): void {
-    // Implementación simple - remover 25% de items
-    const itemCount = localStorage.length;
-    const toRemove = Math.floor(itemCount * 0.25);
-
-    for (let i = 0; i < toRemove && localStorage.length > 0; i++) {
-      const key = localStorage.key(0);
-      if (key) {
-        localStorage.removeItem(key);
-        this.protectedKeys.delete(key);
+      if (itemsToRemove.length > 0) {
+        console.log(`🧹 Limpieza segura: ${itemsToRemove.length} items de tracking removidos`);
       }
+    } catch (error) {
+      // Limpieza silenciosa
     }
-
-    console.log(`🗑️ Limpieza de espacio: ${toRemove} items removidos`);
   }
 
   public getProtectionStats() {
@@ -183,56 +289,83 @@ class StorageProtectionLayer {
       protectedKeys: this.protectedKeys.size,
       totalStorageSize: this.getTotalStorageSize(),
       encryptionEnabled: this.config.enableEncryption,
-      autoCleanupEnabled: this.config.autoCleanup
+      autoCleanupEnabled: this.config.autoCleanup,
+      observationMode: this.config.observationMode,
+      isActive: this.isActive
     };
   }
 
   private getTotalStorageSize(): number {
     let total = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      const value = localStorage.getItem(key);
-      if (key && value) {
-        total += key.length + value.length;
+    try {
+      for (let i = 0; i < this.originalStorage.length; i++) {
+        const key = this.originalStorage.key(i);
+        const value = this.originalStorage.getItem(key || '');
+        if (key && value) {
+          total += key.length + value.length;
+        }
       }
+    } catch {
+      total = 0;
     }
     return total;
   }
 
   public emergencyWipe(): void {
-    // Limpiar TODO excepto claves esenciales
-    const essentialKeys = ['auth-token', 'user-settings', 'theme'];
-    const keysToKeep: {[key: string]: string} = {};
+    // Wipe ultra-conservador - solo tracking obvio
+    const trackingKeys: string[] = [];
 
-    essentialKeys.forEach(key => {
-      const value = localStorage.getItem(key);
-      if (value) {
-        keysToKeep[key] = value;
+    try {
+      for (let i = 0; i < this.originalStorage.length; i++) {
+        const key = this.originalStorage.key(i);
+        if (key && !this.isInternalKey(key) && this.isObviousTrackingKey(key)) {
+          trackingKeys.push(key);
+        }
       }
-    });
 
-    localStorage.clear();
-    this.protectedKeys.clear();
+      trackingKeys.forEach(key => {
+        try {
+          this.originalStorage.removeItem(key);
+        } catch (error) {
+          // Silencioso
+        }
+      });
 
-    // Restaurar claves esenciales
-    Object.entries(keysToKeep).forEach(([key, value]) => {
-      localStorage.setItem(key, value);
-      this.protectedKeys.add(key);
-    });
-
-    console.log('🚨 EMERGENCY WIPE: Storage completamente desinfectado');
+      this.protectedKeys.clear();
+      console.log(`🚨 EMERGENCY WIPE CONSERVADOR: ${trackingKeys.length} claves de tracking removidas`);
+    } catch (error) {
+      console.error('Error en emergency wipe:', error);
+    }
   }
 
   public destroy(): void {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
     }
+    
     this.protectedKeys.clear();
+    this.isActive = false;
+    
+    // Restaurar localStorage original si es posible
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        value: this.originalStorage,
+        writable: true,
+        configurable: true
+      });
+    } catch (error) {
+      // Silencioso
+    }
+    
+    StorageProtectionLayer.instance = null;
   }
 }
 
-export const storageProtection = new StorageProtectionLayer({
-  enableEncryption: true,
+// Instancia global con configuración conservadora
+export const storageProtection = StorageProtectionLayer.getInstance({
+  enableEncryption: false,
   autoCleanup: true,
-  trackingProtection: true
+  trackingProtection: true,
+  observationMode: true // Modo seguro por defecto
 });
