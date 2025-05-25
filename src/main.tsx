@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LectoGuiaProvider } from "@/contexts/lectoguia";
 import { CinematicThemeProvider } from "@/contexts/CinematicThemeProvider";
+import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
 import { NeuralRouter } from "@/router/NeuralRouter";
 import './index.css'
 
@@ -24,15 +25,17 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <LectoGuiaProvider>
-        <CinematicThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <NeuralRouter />
-          </TooltipProvider>
-        </CinematicThemeProvider>
-      </LectoGuiaProvider>
+      <IntersectionalProvider>
+        <LectoGuiaProvider>
+          <CinematicThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <NeuralRouter />
+            </TooltipProvider>
+          </CinematicThemeProvider>
+        </LectoGuiaProvider>
+      </IntersectionalProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
