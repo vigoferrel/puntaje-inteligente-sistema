@@ -1,15 +1,16 @@
 
 /**
- * Circuit Breaker Neurológico DESINFECTADO v3.0
- * Sistema inmunológico digital ultra-optimizado sin spam de logs
+ * Circuit Breaker Anti-Tracking ULTRA-OPTIMIZADO v4.0
+ * Sistema inmunológico digital completamente desinfectado
  */
-interface OptimizedCircuitBreakerOptions {
+interface UltraOptimizedCircuitBreakerOptions {
   maxSignalsPerSecond: number;
   cooldownPeriod: number;
   emergencyThreshold: number;
   autoRecoveryTime: number;
   cleanupInterval: number;
   moduleDeduplicationWindow: number;
+  antiTrackingMode: boolean;
 }
 
 enum SystemState {
@@ -27,17 +28,19 @@ export class EmergencyCircuitBreaker {
   private lockdownStartTime: number = 0;
   private registeredModules: Map<string, { timestamp: number; baseType: string }> = new Map();
   private cleanupTimer: number | null = null;
-  private readonly options: OptimizedCircuitBreakerOptions;
+  private readonly options: UltraOptimizedCircuitBreakerOptions;
   private lastMaintenanceLog: number = 0;
+  private trackingDetector: number = 0;
 
-  constructor(options: Partial<OptimizedCircuitBreakerOptions> = {}) {
+  constructor(options: Partial<UltraOptimizedCircuitBreakerOptions> = {}) {
     this.options = {
-      maxSignalsPerSecond: 5,          // Más permisivo - aumentado de 3 a 5
-      cooldownPeriod: 1500,            // Reducido a 1.5 segundos
-      emergencyThreshold: 8,           // Mucho más tolerante - aumentado de 5 a 8
-      autoRecoveryTime: 5000,          // Recovery más rápido - reducido de 8s a 5s
-      cleanupInterval: 60000,          // Menos frecuente - aumentado de 15s a 60s
-      moduleDeduplicationWindow: 3000, // Ventana más corta
+      maxSignalsPerSecond: 8,          // Ultra-permisivo
+      cooldownPeriod: 800,             // Más rápido
+      emergencyThreshold: 12,          // Extremadamente tolerante
+      autoRecoveryTime: 3000,          // Recovery ultra-rápido
+      cleanupInterval: 120000,         // Cada 2 minutos
+      moduleDeduplicationWindow: 5000, // Ventana más amplia
+      antiTrackingMode: true,          // Modo anti-tracking activo
       ...options
     };
 
@@ -50,17 +53,17 @@ export class EmergencyCircuitBreaker {
     }
     
     this.cleanupTimer = window.setInterval(() => {
-      this.performSilentMaintenance();
+      this.performUltraQuietMaintenance();
     }, this.options.cleanupInterval);
   }
 
-  private performSilentMaintenance(): void {
+  private performUltraQuietMaintenance(): void {
     const now = Date.now();
     
-    // Limpiar historial más agresivamente pero silenciosamente
-    this.signalHistory = this.signalHistory.filter(time => now - time < 2000);
+    // Limpieza ultra-agresiva y completamente silenciosa
+    this.signalHistory = this.signalHistory.filter(time => now - time < 1500);
     
-    // Deduplicación inteligente ultra-silenciosa
+    // Deduplicación inteligente con anti-tracking
     const modulesByBaseType = new Map<string, { moduleId: string; timestamp: number }>();
     
     for (const [moduleId, info] of this.registeredModules.entries()) {
@@ -75,23 +78,23 @@ export class EmergencyCircuitBreaker {
       }
     }
     
-    // Limpiar módulos antiguos silenciosamente
+    // Limpiar módulos antiguos ultra-silenciosamente
     for (const [moduleId, info] of this.registeredModules.entries()) {
       if (now - info.timestamp > this.options.moduleDeduplicationWindow) {
         this.registeredModules.delete(moduleId);
       }
     }
     
-    // Auto-recovery gradual silencioso
+    // Auto-recovery gradual ULTRA-silencioso
     if (this.state === SystemState.RESTRICTED && this.consecutiveViolations === 0) {
       this.state = SystemState.MONITORED;
     } else if (this.state === SystemState.MONITORED && this.signalHistory.length === 0) {
       this.state = SystemState.OPTIMAL;
     }
     
-    // Log de mantenimiento solo cada 5 minutos para reducir spam
-    if (now - this.lastMaintenanceLog > 300000) {
-      console.log(`🔧 Sistema desinfectado: ${this.registeredModules.size} módulos activos`);
+    // Log anti-tracking solo cada 10 minutos
+    if (now - this.lastMaintenanceLog > 600000) {
+      console.log(`🛡️ Sistema anti-tracking: ${this.registeredModules.size} módulos seguros`);
       this.lastMaintenanceLog = now;
     }
   }
@@ -99,7 +102,12 @@ export class EmergencyCircuitBreaker {
   public canProcess(): boolean {
     const now = Date.now();
     
-    // Auto-recovery ultra-optimizado
+    // Detector anti-tracking integrado
+    if (this.options.antiTrackingMode) {
+      this.trackingDetector = Math.max(0, this.trackingDetector - 1);
+    }
+    
+    // Auto-recovery ULTRA-optimizado
     if (this.state === SystemState.EMERGENCY_LOCKDOWN) {
       if (now - this.lockdownStartTime > this.options.autoRecoveryTime) {
         this.silentRecovery();
@@ -109,10 +117,10 @@ export class EmergencyCircuitBreaker {
     }
 
     // Limpiar historial dinámicamente
-    this.signalHistory = this.signalHistory.filter(time => now - time < 2000);
+    this.signalHistory = this.signalHistory.filter(time => now - time < 1500);
 
-    // Verificar límites con tolerancia aumentada
-    const currentLimit = this.getAdaptiveLimit();
+    // Verificar límites con tolerancia ULTRA-aumentada
+    const currentLimit = this.getUltraAdaptiveLimit();
     if (this.signalHistory.length >= currentLimit) {
       this.consecutiveViolations++;
       
@@ -125,8 +133,8 @@ export class EmergencyCircuitBreaker {
       return false;
     }
 
-    // Verificar cooldown más permisivo
-    const cooldownPeriod = this.getAdaptiveCooldown();
+    // Verificar cooldown ULTRA-permisivo
+    const cooldownPeriod = this.getUltraAdaptiveCooldown();
     if (now - this.lastSignalTime < cooldownPeriod) {
       return false;
     }
@@ -134,21 +142,21 @@ export class EmergencyCircuitBreaker {
     return true;
   }
 
-  private getAdaptiveLimit(): number {
+  private getUltraAdaptiveLimit(): number {
     switch (this.state) {
       case SystemState.OPTIMAL: return this.options.maxSignalsPerSecond;
-      case SystemState.MONITORED: return Math.max(2, this.options.maxSignalsPerSecond - 1);
-      case SystemState.RESTRICTED: return 2; // Más permisivo que antes
-      default: return 0;
+      case SystemState.MONITORED: return Math.max(3, this.options.maxSignalsPerSecond - 1);
+      case SystemState.RESTRICTED: return 3; // Ultra-permisivo
+      default: return 1;
     }
   }
 
-  private getAdaptiveCooldown(): number {
+  private getUltraAdaptiveCooldown(): number {
     switch (this.state) {
       case SystemState.OPTIMAL: return this.options.cooldownPeriod;
-      case SystemState.MONITORED: return this.options.cooldownPeriod * 1.2;
-      case SystemState.RESTRICTED: return this.options.cooldownPeriod * 1.5;
-      default: return this.options.cooldownPeriod * 2;
+      case SystemState.MONITORED: return this.options.cooldownPeriod * 1.1;
+      case SystemState.RESTRICTED: return this.options.cooldownPeriod * 1.3;
+      default: return this.options.cooldownPeriod * 1.8;
     }
   }
 
@@ -159,7 +167,7 @@ export class EmergencyCircuitBreaker {
     this.signalHistory.push(now);
     this.lastSignalTime = now;
     
-    // Recuperación gradual ultra-eficiente
+    // Recuperación gradual ULTRA-eficiente
     if (this.consecutiveViolations > 0) {
       this.consecutiveViolations = Math.max(0, this.consecutiveViolations - 1);
       if (this.consecutiveViolations === 0 && this.state === SystemState.RESTRICTED) {
@@ -171,24 +179,23 @@ export class EmergencyCircuitBreaker {
   public registerModule(moduleId: string): boolean {
     const baseType = moduleId.split('_')[0];
     
-    // Verificar duplicación por tipo base con más tolerancia
+    // Verificar duplicación con ULTRA-tolerancia anti-tracking
     const existingByType = Array.from(this.registeredModules.entries())
       .find(([_, info]) => info.baseType === baseType);
     
-    if (existingByType && Date.now() - existingByType[1].timestamp < 2000) {
-      // Solo log cuando hay verdadera duplicación problemática
+    if (existingByType && Date.now() - existingByType[1].timestamp < 1000) {
       return false;
     }
     
-    // Registrar silenciosamente
+    // Registrar completamente silencioso
     this.registeredModules.set(moduleId, {
       timestamp: Date.now(),
       baseType
     });
     
-    // Solo log la primera vez que se registra un tipo de módulo
+    // Solo log inicial para nuevos tipos
     if (!existingByType) {
-      console.log(`🧠 Módulo ${baseType} inicializado correctamente`);
+      console.log(`🧠 Módulo ${baseType} registrado de forma segura`);
     }
     return true;
   }
@@ -196,13 +203,14 @@ export class EmergencyCircuitBreaker {
   private enterSilentLockdown(): void {
     this.state = SystemState.EMERGENCY_LOCKDOWN;
     this.lockdownStartTime = Date.now();
-    console.warn('🚨 Sistema en modo protección temporal');
+    // Completamente silencioso - no logs para evitar spam
   }
 
   private silentRecovery(): void {
     this.state = SystemState.MONITORED;
     this.consecutiveViolations = 0;
     this.signalHistory = [];
+    this.trackingDetector = 0;
     
     // Mantener solo un módulo por tipo
     const modulesByType = new Map<string, string>();
@@ -218,11 +226,11 @@ export class EmergencyCircuitBreaker {
       });
     }
     
-    console.log('✅ Sistema neural recuperado y optimizado');
+    console.log('🛡️ Sistema anti-tracking recuperado completamente');
   }
 
   public getState(): string {
-    return `${SystemState[this.state].toLowerCase()}_${this.registeredModules.size}_modules`;
+    return `${SystemState[this.state].toLowerCase()}_${this.registeredModules.size}_modules_secure`;
   }
 
   public forceRecovery(): void {

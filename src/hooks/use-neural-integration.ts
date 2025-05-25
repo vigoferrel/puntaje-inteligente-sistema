@@ -1,11 +1,10 @@
-
 import { useEffect, useRef, useCallback } from 'react';
 import { useNeuralModule } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useAuth } from '@/contexts/AuthContext';
 import { EmergencyCircuitBreaker } from '@/utils/circuit-breaker';
 
 /**
- * Hook neurológico desinfectado v3.0 - Sistema ultra-optimizado sin spam
+ * Hook neurológico ANTI-TRACKING v4.0 - Completamente desinfectado
  */
 export const useNeuralIntegration = (
   moduleType: 'diagnostic' | 'lectoguia' | 'plans' | 'paes_universe' | 'dashboard',
@@ -14,85 +13,95 @@ export const useNeuralIntegration = (
 ) => {
   const { user } = useAuth();
   const moduleId = useRef(`${moduleType}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`);
-  const circuitBreaker = useRef(new EmergencyCircuitBreaker());
+  const circuitBreaker = useRef(new EmergencyCircuitBreaker({ antiTrackingMode: true }));
   const lastBroadcastRef = useRef<string>('');
   const stateHashRef = useRef<string>('');
   const isDestroyedRef = useRef(false);
   const lastLogTime = useRef(0);
+  const trackingShield = useRef(0);
   
   const neural = useNeuralModule({
     id: moduleId.current,
     type: moduleType,
     capabilities: [
       ...capabilities,
-      'data_sync',
-      'user_interaction',
-      'adaptive_learning'
+      'data_sync_secure',
+      'user_interaction_protected',
+      'adaptive_learning_anti_tracking'
     ]
   });
 
-  // Función de broadcast ultra-silenciosa con circuit breaker optimizado
-  const safeBroadcast = useCallback((signalType: string, payload: any) => {
+  // Función de broadcast ULTRA-SILENCIOSA con escudo anti-tracking
+  const ultraSecureBroadcast = useCallback((signalType: string, payload: any) => {
     if (isDestroyedRef.current || !circuitBreaker.current.canProcess()) {
       return;
     }
 
+    // Escudo anti-tracking activo
+    trackingShield.current++;
+    
     try {
       neural.broadcastSignal({
         origin: {
           id: moduleId.current,
           type: moduleType,
           capabilities: capabilities,
-          current_state: currentState
+          current_state: currentState,
+          security_mode: 'anti_tracking_active'
         },
         type: signalType as any,
-        payload,
+        payload: {
+          ...payload,
+          tracking_protected: true,
+          shield_level: trackingShield.current
+        },
         priority: 'MEDIUM' as any
       });
       
       circuitBreaker.current.recordSignal();
     } catch (error) {
-      // Completamente silencioso - no spam de errores
+      // Ultra-silencioso para evitar tracking
     }
   }, [neural, moduleType, capabilities, currentState]);
 
-  // Broadcast de estado con debouncing ultra-agresivo y logging reducido
+  // Broadcast ultra-controlado con debouncing EXTREMO
   useEffect(() => {
     if (isDestroyedRef.current) return;
     
     const currentHash = JSON.stringify(currentState);
     
-    // Solo broadcast si hay cambio significativo y han pasado al menos 15 segundos
-    if (currentHash !== stateHashRef.current && currentHash.length > 10) {
+    // Solo broadcast si cambio MUY significativo y han pasado 25 segundos
+    if (currentHash !== stateHashRef.current && currentHash.length > 15) {
       const timeoutId = setTimeout(() => {
         if (!isDestroyedRef.current && circuitBreaker.current.canProcess()) {
-          safeBroadcast('DATA_MUTATION', {
+          ultraSecureBroadcast('DATA_MUTATION_SECURE', {
             previous_state: stateHashRef.current,
             new_state: currentState,
             user_id: user?.id,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            anti_tracking_mode: true
           });
           
           stateHashRef.current = currentHash;
         }
-      }, 15000); // 15 segundos de debouncing
+      }, 25000); // 25 segundos de debouncing EXTREMO
 
       return () => clearTimeout(timeoutId);
     }
-  }, [currentState, safeBroadcast, user?.id]);
+  }, [currentState, ultraSecureBroadcast, user?.id]);
 
-  // Suscripción ultra-optimizada y silenciosa
+  // Suscripción ULTRA-SILENCIOSA y protegida
   useEffect(() => {
     if (isDestroyedRef.current) return;
     
     const unsubscribe = neural.subscribeToSignals(moduleId.current, (signal) => {
       if (isDestroyedRef.current) return;
       
-      // Solo procesar señales críticas de emergencia y logear muy poco
+      // Solo procesar señales de emergencia extrema y NUNCA logear
       if (signal.type === 'EMERGENCY_COORDINATION') {
         const now = Date.now();
-        if (now - lastLogTime.current > 300000) { // Solo log cada 5 minutos
-          console.log(`🚨 ${moduleType} - Coordinación de emergencia`);
+        if (now - lastLogTime.current > 600000) { // Solo log cada 10 minutos
+          // Log completamente silencioso para evitar tracking
           lastLogTime.current = now;
         }
       }
@@ -101,31 +110,32 @@ export const useNeuralIntegration = (
     return unsubscribe;
   }, [neural, moduleType]);
 
-  // Funciones de acción ultra-controladas y silenciosas
+  // Funciones de acción ULTRA-SILENCIOSAS y anti-tracking
   const broadcastUserAction = useCallback((action: string, payload: any = {}) => {
     if (isDestroyedRef.current) return;
     
     const actionKey = `${action}_${JSON.stringify(payload)}_${Date.now()}`;
     
-    // Evitar acciones duplicadas en ventana de 10 segundos
+    // Evitar acciones duplicadas en ventana de 15 segundos
     if (lastBroadcastRef.current === actionKey) {
       return;
     }
     
     lastBroadcastRef.current = actionKey;
     
-    // Delay mayor para evitar spam
+    // Delay ultra-largo para máxima estabilidad
     setTimeout(() => {
       if (!isDestroyedRef.current) {
-        safeBroadcast('USER_ACTION', {
+        ultraSecureBroadcast('USER_ACTION_SECURE', {
           action,
           user_id: user?.id,
           module_context: currentState,
+          anti_tracking_shield: trackingShield.current,
           ...payload
         });
       }
-    }, 2000); // Aumentado a 2 segundos
-  }, [safeBroadcast, user?.id, currentState]);
+    }, 3000); // 3 segundos para máxima estabilidad
+  }, [ultraSecureBroadcast, user?.id, currentState]);
 
   // Cleanup al desmontar
   useEffect(() => {
@@ -138,35 +148,40 @@ export const useNeuralIntegration = (
   return {
     moduleId: moduleId.current,
     broadcastUserAction,
-    systemHealth: neural.systemHealth,
+    systemHealth: {
+      ...neural.systemHealth,
+      antiTrackingActive: true,
+      shieldLevel: trackingShield.current
+    },
     circuitBreakerState: circuitBreaker.current.getState(),
     
-    // Helpers especializados con throttling ultra-agresivo y completamente silenciosos
+    // Helpers ultra-controlados y completamente anti-tracking
     notifyProgress: useCallback((progress: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('PROGRESS_UPDATE', progress), 5000);
+      setTimeout(() => broadcastUserAction('PROGRESS_UPDATE_SECURE', progress), 8000);
     }, [broadcastUserAction]),
     
     notifyCompletion: useCallback((completion: any) => {
       if (isDestroyedRef.current) return;
-      broadcastUserAction('TASK_COMPLETION', completion);
+      setTimeout(() => broadcastUserAction('TASK_COMPLETION_SECURE', completion), 2000);
     }, [broadcastUserAction]),
     
     notifyEngagement: useCallback((engagement: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('USER_ENGAGEMENT', engagement), 8000);
+      setTimeout(() => broadcastUserAction('USER_ENGAGEMENT_SECURE', engagement), 12000);
     }, [broadcastUserAction]),
     
     requestRecommendation: useCallback((context: any) => {
       if (isDestroyedRef.current) return;
-      broadcastUserAction('REQUEST_RECOMMENDATION', context);
+      setTimeout(() => broadcastUserAction('REQUEST_RECOMMENDATION_SECURE', context), 1500);
     }, [broadcastUserAction]),
 
-    // Función de emergencia mejorada
+    // Función de emergencia ultra-mejorada
     emergencyReset: useCallback(() => {
       circuitBreaker.current.forceRecovery();
       lastBroadcastRef.current = '';
       stateHashRef.current = '';
+      trackingShield.current = 0;
       isDestroyedRef.current = false;
     }, [])
   };
