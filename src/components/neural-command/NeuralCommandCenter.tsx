@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Stars, Text, Html } from '@react-three/drei';
@@ -11,12 +10,13 @@ import { Button } from '@/components/ui/button';
 import { 
   Brain, Zap, Target, Sparkles, Globe, Play, Rocket, 
   Star, Crown, Trophy, TrendingUp, BarChart3, Calendar,
-  Settings, User, BookOpen, Gamepad2
+  Settings, User, BookOpen, Gamepad2, PieChart, Activity
 } from 'lucide-react';
 import { NeuralBrain } from '../universe/NeuralBrain';
 import { SubjectGalaxy } from '../universe/SubjectGalaxy';
 import { ProgressNebula } from '../universe/ProgressNebula';
 import { CinematicAudioProvider, CinematicControls } from '../cinematic/UniversalCinematicSystem';
+import { NeuralDimensionRenderer } from './NeuralDimensionRenderer';
 import { UniverseMode, Galaxy, UniverseMetrics } from '@/types/universe-types';
 
 type NeuralDimension = 
@@ -27,7 +27,9 @@ type NeuralDimension =
   | 'battle_mode'
   | 'financial_center'
   | 'calendar_management'
-  | 'settings_control';
+  | 'settings_control'
+  | 'analisis_avanzado'
+  | 'entrenamiento_adaptativo';
 
 interface NeuralCommandProps {
   initialDimension?: NeuralDimension;
@@ -133,6 +135,20 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
       description: 'Ejercita tu mente con IA adaptativa'
     },
     {
+      id: 'analisis_avanzado' as NeuralDimension,
+      name: 'Análisis Avanzado',
+      icon: PieChart,
+      color: '#00FF88',
+      description: 'Métricas predictivas y análisis profundo'
+    },
+    {
+      id: 'entrenamiento_adaptativo' as NeuralDimension,
+      name: 'Entrenamiento Adaptativo',
+      icon: Activity,
+      color: '#FF8800',
+      description: 'IA que se adapta a tu estilo de aprendizaje'
+    },
+    {
       id: 'vocational_prediction' as NeuralDimension,
       name: 'Predicción Vocacional',
       icon: Target,
@@ -190,6 +206,14 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
     handleDimensionTransition('neural_training');
   }, [handleDimensionTransition]);
 
+  const handleNavigateToAnalysis = useCallback(() => {
+    handleDimensionTransition('analisis_avanzado');
+  }, [handleDimensionTransition]);
+
+  const handleNavigateToTraining = useCallback(() => {
+    handleDimensionTransition('entrenamiento_adaptativo');
+  }, [handleDimensionTransition]);
+
   if (!isIntersectionalReady) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-indigo-900 flex items-center justify-center">
@@ -203,8 +227,8 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />
-          <div className="text-4xl font-bold">Iniciando Centro de Comando Neural</div>
-          <div className="text-cyan-300">Conectando al multiverso educativo...</div>
+          <div className="text-4xl font-bold">Centro de Comando Neural Optimizado</div>
+          <div className="text-cyan-300">Todas las funcionalidades integradas...</div>
         </motion.div>
       </div>
     );
@@ -261,6 +285,10 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
                   <Star className="w-3 h-3 mr-1" />
                   IA Adaptativa
                 </Badge>
+                <Badge className="bg-gradient-to-r from-emerald-600 to-teal-600">
+                  <PieChart className="w-3 h-3 mr-1" />
+                  Sistema Unificado
+                </Badge>
               </div>
             </div>
           </div>
@@ -277,7 +305,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
             <CardContent className="p-6 space-y-4">
               <div className="text-center">
                 <h3 className="text-xl font-bold text-white mb-2">Control Dimensional</h3>
-                <div className="text-sm text-cyan-400">Navega entre realidades educativas</div>
+                <div className="text-sm text-cyan-400">Todas las funcionalidades unificadas</div>
               </div>
 
               <div className="space-y-3">
@@ -432,11 +460,23 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
                 anchorY="middle"
                 font="/fonts/orbitron-bold.woff"
               >
-                CENTRO DE COMANDO NEURAL
+                CENTRO DE COMANDO NEURAL UNIFICADO
               </Text>
             )}
           </Canvas>
         </div>
+
+        {/* RENDERER DE DIMENSIONES EXPANDIDO */}
+        <NeuralDimensionRenderer
+          activeDimension={activeDimension}
+          selectedGalaxy={selectedGalaxy}
+          neuralMetrics={neuralMetrics}
+          onStartTraining={() => handleDimensionTransition('neural_training')}
+          onViewAnalysis={handleNavigateToAnalysis}
+          onEnterBattle={() => handleDimensionTransition('battle_mode')}
+          onNavigateToAnalysis={handleNavigateToAnalysis}
+          onNavigateToTraining={handleNavigateToTraining}
+        />
 
         {/* Controles Cinematográficos */}
         <CinematicControls />
@@ -484,16 +524,16 @@ export const NeuralCommandCenter: React.FC<NeuralCommandProps> = ({
                 </div>
                 <div>
                   <div className="text-white font-medium">Asistente Neural</div>
-                  <div className="text-xs text-cyan-400">IA Adaptativa Activa</div>
+                  <div className="text-xs text-cyan-400">Sistema Completamente Unificado</div>
                 </div>
               </div>
               <div className="text-white text-sm">
-                Bienvenido al futuro de la educación. Tu centro de comando neural está listo para 
-                transformar tu experiencia de aprendizaje en una aventura épica.
+                Todas las funcionalidades han sido quirúrgicamente integradas en una experiencia 
+                neural unificada. Análisis, entrenamiento y más, todo centralizado.
               </div>
               <Button className="w-full mt-3 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700">
                 <Play className="w-4 h-4 mr-2" />
-                Iniciar Sesión Neural
+                Explorar Sistema Unificado
               </Button>
             </CardContent>
           </Card>

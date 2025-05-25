@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Brain, Target, BarChart3, Calendar, Settings, 
-  Trophy, Gamepad2, Zap, Star, Crown, Rocket
+  Trophy, Gamepad2, Zap, Star, Crown, Rocket,
+  TrendingUp, PieChart, LineChart, Activity
 } from 'lucide-react';
 
 type NeuralDimension = 
@@ -18,7 +18,9 @@ type NeuralDimension =
   | 'battle_mode'
   | 'financial_center'
   | 'calendar_management'
-  | 'settings_control';
+  | 'settings_control'
+  | 'analisis_avanzado'
+  | 'entrenamiento_adaptativo';
 
 interface NeuralDimensionRendererProps {
   activeDimension: NeuralDimension;
@@ -27,6 +29,8 @@ interface NeuralDimensionRendererProps {
   onStartTraining: () => void;
   onViewAnalysis: () => void;
   onEnterBattle: () => void;
+  onNavigateToAnalysis?: () => void;
+  onNavigateToTraining?: () => void;
 }
 
 export const NeuralDimensionRenderer: React.FC<NeuralDimensionRendererProps> = ({
@@ -35,10 +39,114 @@ export const NeuralDimensionRenderer: React.FC<NeuralDimensionRendererProps> = (
   neuralMetrics,
   onStartTraining,
   onViewAnalysis,
-  onEnterBattle
+  onEnterBattle,
+  onNavigateToAnalysis,
+  onNavigateToTraining
 }) => {
   const renderDimensionContent = () => {
     switch (activeDimension) {
+      case 'analisis_avanzado':
+        return (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute bottom-4 left-4 right-4 z-40 pointer-events-auto"
+          >
+            <Card className="bg-black/50 backdrop-blur-xl border-emerald-500/30">
+              <CardContent className="p-6">
+                <div className="text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <PieChart className="w-8 h-8 text-emerald-400" />
+                    <div>
+                      <h3 className="text-2xl font-bold">Análisis Neural Avanzado</h3>
+                      <p className="text-emerald-300">Métricas predictivas y análisis profundo</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-emerald-500/20 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-emerald-400">94%</div>
+                      <div className="text-sm">Precisión Predictiva</div>
+                    </div>
+                    <div className="bg-blue-500/20 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-400">127</div>
+                      <div className="text-sm">Patrones Detectados</div>
+                    </div>
+                    <div className="bg-purple-500/20 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-400">89%</div>
+                      <div className="text-sm">Coherencia Neural</div>
+                    </div>
+                    <div className="bg-orange-500/20 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-400">+15%</div>
+                      <div className="text-sm">Mejora Semanal</div>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <Button onClick={onViewAnalysis} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600">
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Análisis Completo
+                    </Button>
+                    <Button variant="outline" className="border-white/30 text-white">
+                      <LineChart className="w-4 h-4 mr-2" />
+                      Exportar Datos
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+
+      case 'entrenamiento_adaptativo':
+        return (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute bottom-4 left-4 right-4 z-40 pointer-events-auto"
+          >
+            <Card className="bg-black/50 backdrop-blur-xl border-violet-500/30">
+              <CardContent className="p-6">
+                <div className="text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Activity className="w-8 h-8 text-violet-400" />
+                    <div>
+                      <h3 className="text-2xl font-bold">Entrenamiento Adaptativo Neural</h3>
+                      <p className="text-violet-300">IA que se adapta a tu estilo de aprendizaje</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-violet-500/20 p-4 rounded-lg">
+                      <div className="text-3xl font-bold text-violet-400">92%</div>
+                      <div className="text-sm">Adaptación IA</div>
+                    </div>
+                    <div className="bg-pink-500/20 p-4 rounded-lg">
+                      <div className="text-3xl font-bold text-pink-400">234</div>
+                      <div className="text-sm">Sesiones Completadas</div>
+                    </div>
+                    <div className="bg-indigo-500/20 p-4 rounded-lg">
+                      <div className="text-3xl font-bold text-indigo-400">67</div>
+                      <div className="text-sm">Días Consecutivos</div>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <Button onClick={onStartTraining} className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600">
+                      <Brain className="w-4 h-4 mr-2" />
+                      Iniciar Entrenamiento
+                    </Button>
+                    <Button variant="outline" className="border-white/30 text-white">
+                      <Target className="w-4 h-4 mr-2" />
+                      Configurar IA
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+
       case 'neural_training':
         return (
           <motion.div
