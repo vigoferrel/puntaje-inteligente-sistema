@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,7 +34,7 @@ export const SuperPAESMain: React.FC = () => {
   // Convert competencias to skills format for the 3D map
   const skillsForMap = mapaCompetencias.map(competencia => ({
     name: competencia.nombre,
-    level: competencia.nivel / 100, // Convert to 0-1 range
+    level: Number(competencia.nivel) / 100, // Convert to 0-1 range with proper type conversion
     color: competencia.colorVisualizacion || '#3B82F6'
   }));
 
