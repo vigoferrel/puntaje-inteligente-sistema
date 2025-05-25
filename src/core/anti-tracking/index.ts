@@ -13,13 +13,13 @@ export const initializeAntiTrackingSystem = () => {
   try {
     console.log('🛡️ SISTEMA ANTI-TRACKING v2.0 INICIADO - Con protección anti-autodestrucción');
     
-    // Verificar si necesitamos modo de emergencia
-    const { emergencyDetox } = require('./EmergencyDetox');
-    
-    if (emergencyDetox.isSafeMode()) {
-      console.log('⚠️ Sistema iniciado en MODO SEGURO');
-      return;
-    }
+    // Verificar si necesitamos modo de emergencia usando import directo
+    import('./EmergencyDetox').then(({ emergencyDetox }) => {
+      if (emergencyDetox.isSafeMode()) {
+        console.log('⚠️ Sistema iniciado en MODO SEGURO');
+        return;
+      }
+    });
     
     // Las instancias se inicializan automáticamente al importar
     console.log('✅ Firewall Anti-Tracking: ACTIVO');
@@ -31,26 +31,31 @@ export const initializeAntiTrackingSystem = () => {
     console.error('Error inicializando anti-tracking:', error);
     
     // Activar modo de emergencia si hay problemas en la inicialización
-    const { emergencyDetox } = require('./EmergencyDetox');
-    emergencyDetox.activateEmergencyMode();
+    import('./EmergencyDetox').then(({ emergencyDetox }) => {
+      emergencyDetox.activateEmergencyMode();
+    }).catch(err => {
+      console.error('Error crítico en emergencyDetox:', err);
+    });
   }
 };
 
 // Emergency reset global mejorado
-export const emergencyAntiTrackingReset = () => {
+export const emergencyAntiTrackingReset = async () => {
   console.log('🚨 RESET DE EMERGENCIA ANTI-TRACKING GLOBAL v2.0');
   
   try {
-    const { emergencyDetox } = require('./EmergencyDetox');
+    const { emergencyDetox } = await import('./EmergencyDetox');
     
     // Activar desintoxicación de emergencia
     emergencyDetox.activateEmergencyMode();
     
     // Intentar reset tradicional después de detox
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        const { trackingFirewall } = require('./TrackingFirewall');
-        const { storageProtection } = require('./StorageProtectionLayer');
+        const [{ trackingFirewall }, { storageProtection }] = await Promise.all([
+          import('./TrackingFirewall'),
+          import('./StorageProtectionLayer')
+        ]);
         
         trackingFirewall.emergencyPurge();
         storageProtection.emergencyWipe();
@@ -72,11 +77,13 @@ export const emergencyAntiTrackingReset = () => {
 };
 
 // Función de salud del sistema
-export const getAntiTrackingHealth = () => {
+export const getAntiTrackingHealth = async () => {
   try {
-    const { emergencyDetox } = require('./EmergencyDetox');
-    const { trackingFirewall } = require('./TrackingFirewall');
-    const { storageProtection } = require('./StorageProtectionLayer');
+    const [{ emergencyDetox }, { trackingFirewall }, { storageProtection }] = await Promise.all([
+      import('./EmergencyDetox'),
+      import('./TrackingFirewall'),
+      import('./StorageProtectionLayer')
+    ]);
     
     return {
       detoxStatus: emergencyDetox.getDetoxStatus(),
