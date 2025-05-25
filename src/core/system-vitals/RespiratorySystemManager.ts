@@ -1,7 +1,7 @@
 
 /**
- * ADMINISTRADOR SINGLETON GLOBAL v1.0
- * Control absoluto de instancias del sistema respiratorio
+ * ADMINISTRADOR QUIRÚRGICO SINGLETON v6.0
+ * Control absoluto post-cirugía de emergencia
  */
 
 import { RespiratorySystem } from './RespiratorySystem';
@@ -9,7 +9,7 @@ import { RespiratorySystem } from './RespiratorySystem';
 interface RespiratoryConfig {
   breathsPerMinute: number;
   oxygenThreshold: number;
-  purificationLevel: 'basic' | 'advanced' | 'maximum' | 'safe_mode' | 'observation';
+  purificationLevel: 'basic' | 'advanced' | 'maximum' | 'safe_mode' | 'surgical_recovery';
   antiTrackingMode: boolean;
   emergencyMode: boolean;
 }
@@ -18,22 +18,13 @@ class RespiratorySystemManager {
   private static globalInstance: RespiratorySystem | null = null;
   private static isInitializing: boolean = false;
   private static initializationPromise: Promise<RespiratorySystem> | null = null;
-  private static lastEmergencyActivation: number = 0;
-  private static emergencyActivationCount: number = 0;
-  private static readonly EMERGENCY_COOLDOWN = 30000; // 30 segundos
-  private static readonly MAX_EMERGENCY_ACTIVATIONS = 3;
-  private static circuitBreakerOpen: boolean = false;
+  private static surgicalMode: boolean = false;
+  private static lastSurgery: number = 0;
+  private static readonly SURGERY_COOLDOWN = 60000; // 1 minuto post-cirugía
 
-  // Validación de React Strict Mode
-  private static isStrictMode(): boolean {
-    return process.env.NODE_ENV === 'development' && 
-           typeof window !== 'undefined' && 
-           (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
-  }
-
-  // Factory method estático principal
+  // Factory method post-quirúrgico
   public static async getInstance(config?: Partial<RespiratoryConfig>): Promise<RespiratorySystem> {
-    // Si ya hay una instancia válida, retornarla
+    // Si ya hay una instancia válida post-cirugía, retornarla
     if (RespiratorySystemManager.globalInstance && 
         !RespiratorySystemManager.globalInstance.isDestroyed()) {
       return RespiratorySystemManager.globalInstance;
@@ -44,9 +35,9 @@ class RespiratorySystemManager {
       return RespiratorySystemManager.initializationPromise;
     }
 
-    // Inicializar nueva instancia
+    // Inicializar nueva instancia post-quirúrgica
     RespiratorySystemManager.isInitializing = true;
-    RespiratorySystemManager.initializationPromise = RespiratorySystemManager.createInstance(config);
+    RespiratorySystemManager.initializationPromise = RespiratorySystemManager.createSurgicalInstance(config);
 
     try {
       const instance = await RespiratorySystemManager.initializationPromise;
@@ -58,87 +49,65 @@ class RespiratorySystemManager {
     }
   }
 
-  private static async createInstance(config?: Partial<RespiratoryConfig>): Promise<RespiratorySystem> {
-    // Destruir cualquier instancia previa
+  private static async createSurgicalInstance(config?: Partial<RespiratoryConfig>): Promise<RespiratorySystem> {
+    // Destruir cualquier instancia previa quirúrgicamente
     if (RespiratorySystemManager.globalInstance) {
       RespiratorySystemManager.globalInstance.destroy();
       RespiratorySystemManager.globalInstance = null;
     }
 
-    // Configuración ultra-conservadora
-    const safeConfig: RespiratoryConfig = {
-      breathsPerMinute: 6, // Muy lento
-      oxygenThreshold: 50, // Umbral bajo
-      purificationLevel: 'observation', // Solo observar
-      antiTrackingMode: false, // Deshabilitado
+    // Configuración post-quirúrgica ultra-estable
+    const surgicalConfig: RespiratoryConfig = {
+      breathsPerMinute: 4, // Ultra-lento post-cirugía
+      oxygenThreshold: 60, // Umbral conservador
+      purificationLevel: 'surgical_recovery', // Modo recuperación
+      antiTrackingMode: false, // Deshabilitado durante recuperación
       emergencyMode: false,
       ...config
     };
 
-    // Crear nueva instancia con delay para evitar race conditions
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Delay quirúrgico para estabilización
+    await new Promise(resolve => setTimeout(resolve, 200));
     
-    const instance = new RespiratorySystem(safeConfig);
-    console.log('🫁 SINGLETON GLOBAL: Nueva instancia creada con control absoluto');
+    const instance = new RespiratorySystem(surgicalConfig);
+    console.log('🫁 SISTEMA RESPIRATORIO POST-CIRUGÍA v6.0: Instancia estabilizada');
     
     return instance;
   }
 
-  // Modo de emergencia con circuit breaker
-  public static activateEmergencyMode(): boolean {
+  // Activación quirúrgica controlada
+  public static activateSurgicalMode(): boolean {
     const now = Date.now();
     
-    // Circuit breaker: si está abierto, no hacer nada
-    if (RespiratorySystemManager.circuitBreakerOpen) {
-      console.log('🚫 Circuit breaker abierto - Emergencia bloqueada');
+    // Prevenir cirugías muy frecuentes
+    if (now - RespiratorySystemManager.lastSurgery < RespiratorySystemManager.SURGERY_COOLDOWN) {
+      console.log('🕐 Cirugía en cooldown - Esperando estabilización');
       return false;
     }
 
-    // Debouncing: evitar activaciones muy frecuentes
-    if (now - RespiratorySystemManager.lastEmergencyActivation < RespiratorySystemManager.EMERGENCY_COOLDOWN) {
-      console.log('🕐 Emergencia en cooldown - Ignorando activación');
-      return false;
-    }
+    RespiratorySystemManager.surgicalMode = true;
+    RespiratorySystemManager.lastSurgery = now;
 
-    // Contador de activaciones
-    RespiratorySystemManager.emergencyActivationCount++;
-    RespiratorySystemManager.lastEmergencyActivation = now;
-
-    // Si hay demasiadas activaciones, abrir circuit breaker
-    if (RespiratorySystemManager.emergencyActivationCount >= RespiratorySystemManager.MAX_EMERGENCY_ACTIVATIONS) {
-      RespiratorySystemManager.circuitBreakerOpen = true;
-      console.log('🚨 CIRCUIT BREAKER ABIERTO - Demasiadas emergencias');
-      
-      // Cerrar circuit breaker después de 5 minutos
-      setTimeout(() => {
-        RespiratorySystemManager.circuitBreakerOpen = false;
-        RespiratorySystemManager.emergencyActivationCount = 0;
-        console.log('✅ Circuit breaker cerrado - Sistema restaurado');
-      }, 300000);
-      
-      return false;
-    }
-
-    console.log('🚨 MODO DE EMERGENCIA ACTIVADO - Con control de cascada');
+    console.log('🚨 MODO QUIRÚRGICO v6.0 ACTIVADO');
     
-    // Destruir instancia actual y recrear en modo seguro
+    // Recrear instancia en modo quirúrgico
     setTimeout(async () => {
       try {
         await RespiratorySystemManager.destroyAllInstances();
         await RespiratorySystemManager.getInstance({
-          purificationLevel: 'safe_mode',
+          purificationLevel: 'surgical_recovery',
           antiTrackingMode: false,
-          emergencyMode: true
+          emergencyMode: false
         });
       } catch (error) {
-        console.error('Error en modo de emergencia:', error);
+        console.error('Error en modo quirúrgico:', error);
       }
-    }, 1000);
+    }, 500);
 
     return true;
   }
 
-  // Destrucción controlada
+  // Destrucción quirúrgica controlada
   public static async destroyAllInstances(): Promise<void> {
     RespiratorySystemManager.isInitializing = false;
     RespiratorySystemManager.initializationPromise = null;
@@ -148,28 +117,22 @@ class RespiratorySystemManager {
       RespiratorySystemManager.globalInstance = null;
     }
 
-    // Limpiar cualquier instancia fantasma
+    // Limpiar memoria quirúrgicamente
     if (typeof window !== 'undefined') {
       (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ = null;
     }
 
-    console.log('🫁 SINGLETON GLOBAL: Todas las instancias destruidas');
+    console.log('🫁 LIMPIEZA QUIRÚRGICA COMPLETADA');
   }
 
-  // Obtener instancia actual sin crear nueva
-  public static getCurrentInstance(): RespiratorySystem | null {
-    return RespiratorySystemManager.globalInstance;
-  }
-
-  // Estado del sistema
-  public static getSystemStatus() {
+  // Estado post-quirúrgico
+  public static getSurgicalStatus() {
     return {
       hasInstance: !!RespiratorySystemManager.globalInstance,
       isInitializing: RespiratorySystemManager.isInitializing,
-      circuitBreakerOpen: RespiratorySystemManager.circuitBreakerOpen,
-      emergencyActivationCount: RespiratorySystemManager.emergencyActivationCount,
-      lastEmergencyActivation: RespiratorySystemManager.lastEmergencyActivation,
-      isStrictMode: RespiratorySystemManager.isStrictMode()
+      surgicalMode: RespiratorySystemManager.surgicalMode,
+      lastSurgery: RespiratorySystemManager.lastSurgery,
+      isInRecovery: (Date.now() - RespiratorySystemManager.lastSurgery) < RespiratorySystemManager.SURGERY_COOLDOWN
     };
   }
 }

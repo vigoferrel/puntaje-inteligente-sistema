@@ -1,16 +1,15 @@
 
 /**
- * SISTEMA RESPIRATORIO ANTI-TRACKING v5.0 - SINGLETON VERDADERO
- * Control absoluto de instancias con RespiratorySystemManager
+ * SISTEMA RESPIRATORIO POST-CIRUGÍA v6.0
+ * Optimizado para recuperación vascular
  */
 
 import { RespiratoryHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
-import { emergencyDetox } from '@/core/anti-tracking/EmergencyDetox';
 
 interface BreathingOptions {
   breathsPerMinute: number;
   oxygenThreshold: number;
-  purificationLevel: 'basic' | 'advanced' | 'maximum' | 'safe_mode' | 'observation';
+  purificationLevel: 'basic' | 'advanced' | 'maximum' | 'safe_mode' | 'surgical_recovery';
   antiTrackingMode: boolean;
   emergencyMode: boolean;
 }
@@ -21,15 +20,14 @@ enum LungState {
   HOLDING = 'holding',
   PURIFYING = 'purifying',
   SAFE_MODE = 'safe_mode',
-  DETOXING = 'detoxing',
-  EMERGENCY_CLEANING = 'emergency_cleaning',
-  OBSERVATION = 'observation'
+  SURGICAL_RECOVERY = 'surgical_recovery',
+  POST_SURGERY = 'post_surgery'
 }
 
 export class RespiratorySystem {
   private static instanceCount = 0;
   private instanceId: string;
-  private state: LungState = LungState.OBSERVATION;
+  private state: LungState = LungState.SURGICAL_RECOVERY;
   private oxygenLevel: number = 100;
   private breathingRate: number = 0;
   private lastBreath: number = 0;
@@ -44,62 +42,62 @@ export class RespiratorySystem {
 
   constructor(options: Partial<BreathingOptions> = {}) {
     RespiratorySystem.instanceCount++;
-    this.instanceId = `respiratory-singleton-${Date.now()}`;
+    this.instanceId = `respiratory-surgical-${Date.now()}`;
     
-    // Marcar en window para tracking global
+    // Marcar en window para tracking post-quirúrgico
     if (typeof window !== 'undefined') {
       (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ = this;
     }
 
     this.options = {
-      breathsPerMinute: 6, // Ultra-conservador
-      oxygenThreshold: 50,
-      purificationLevel: 'observation', // Solo observar por defecto
-      antiTrackingMode: false, // Deshabilitado
+      breathsPerMinute: 4, // Ultra-conservador post-cirugía
+      oxygenThreshold: 60,
+      purificationLevel: 'surgical_recovery',
+      antiTrackingMode: false, // Deshabilitado durante recuperación
       emergencyMode: false,
       ...options
     };
 
-    this.initializeRespiratory();
+    this.initializePostSurgery();
   }
 
-  private initializeRespiratory(): void {
+  private initializePostSurgery(): void {
     if (this.destroyed) return;
 
-    // Solo modo observación por defecto
-    this.state = LungState.OBSERVATION;
-    this.initializeObservationMode();
+    // Modo recuperación post-quirúrgica
+    this.state = LungState.SURGICAL_RECOVERY;
+    this.initializeSurgicalRecovery();
     
-    console.log(`🫁 SISTEMA RESPIRATORIO v5.0 SINGLETON [${this.instanceId}] - Modo: ${this.state}`);
+    console.log(`🫁 SISTEMA RESPIRATORIO POST-CIRUGÍA v6.0 [${this.instanceId}] - Recuperación iniciada`);
   }
 
-  private initializeObservationMode(): void {
-    // Respiración muy lenta y pasiva
+  private initializeSurgicalRecovery(): void {
+    // Respiración ultra-lenta post-quirúrgica
     this.breathingInterval = window.setInterval(() => {
       if (!this.destroyed) {
-        this.passiveBreath();
+        this.postSurgicalBreath();
       }
-    }, 15000); // 15 segundos - ultra-conservador
+    }, 20000); // 20 segundos - ultra-conservador
   }
 
-  private passiveBreath(): void {
-    this.state = LungState.OBSERVATION;
-    this.oxygenLevel = Math.min(100, this.oxygenLevel + 0.1);
+  private postSurgicalBreath(): void {
+    this.state = LungState.POST_SURGERY;
+    this.oxygenLevel = Math.min(100, this.oxygenLevel + 0.05); // Incremento mínimo
     
-    // Solo monitoreo pasivo
-    this.emitPassiveBreath();
+    // Monitoreo post-quirúrgico pasivo
+    this.emitPostSurgicalBreath();
   }
 
-  private emitPassiveBreath(): void {
+  private emitPostSurgicalBreath(): void {
     const event: CirculatoryEvent = {
       type: 'breath',
       source: 'lungs',
       data: {
         state: this.state,
         instanceId: this.instanceId,
-        passiveMode: true,
+        postSurgicalMode: true,
         oxygenLevel: this.oxygenLevel,
-        singleton: true
+        recoveryMode: true
       },
       timestamp: Date.now()
     };
@@ -108,7 +106,7 @@ export class RespiratorySystem {
       try {
         listener(event);
       } catch (error) {
-        // Listener silencioso
+        // Listener silencioso durante recuperación
       }
     });
   }
@@ -116,26 +114,26 @@ export class RespiratorySystem {
   public breatheIn(data: any): boolean {
     if (this.destroyed) return false;
 
-    // En modo observación, aceptar todo sin procesamiento
-    this.oxygenLevel = Math.max(50, this.oxygenLevel);
+    // En modo recuperación, aceptar todo sin procesamiento pesado
+    this.oxygenLevel = Math.max(60, this.oxygenLevel);
     return true;
   }
 
   public breatheOut(signal: any): any {
     if (this.destroyed) return signal;
 
-    // Retornar señal sin modificaciones en modo observación
+    // Retornar señal sin modificaciones durante recuperación
     return signal;
   }
 
   public oxygenate(module: EnhancedModuleIdentity): EnhancedModuleIdentity {
     if (this.destroyed) return module;
 
-    // Oxigenación mínima y segura
-    const oxygenatedModule: EnhancedModuleIdentity = {
+    // Oxigenación post-quirúrgica ultra-conservadora
+    const recoveryModule: EnhancedModuleIdentity = {
       ...module,
       security_context: {
-        security_mode: 'normal',
+        security_mode: 'recovery',
         tracking_protected: false,
         shield_level: 1,
         encryption_enabled: false,
@@ -143,19 +141,20 @@ export class RespiratorySystem {
         storage_protected: false,
         purification_level: this.options.purificationLevel,
         emergency_mode: false,
+        surgical_recovery: true,
         ...module.security_context
       }
     };
 
-    return oxygenatedModule;
+    return recoveryModule;
   }
 
   public getHealth(): RespiratoryHealth {
     return {
       breathingRate: this.breathingRate,
       oxygenLevel: this.oxygenLevel,
-      airQuality: 'pure', // Siempre puro en modo observación
-      antiTrackingActive: false // Siempre deshabilitado
+      airQuality: 'surgical_clean', // Aire post-quirúrgico
+      antiTrackingActive: false // Deshabilitado durante recuperación
     };
   }
 
@@ -171,17 +170,17 @@ export class RespiratorySystem {
     };
   }
 
-  public emergencyPurge(): void {
+  public surgicalPurge(): void {
     if (this.destroyed) return;
 
-    // Purga ultra-conservadora
+    // Purga post-quirúrgica ultra-conservadora
     this.secureStorage.clear();
     this.oxygenLevel = 100;
     this.breathHistory = [];
-    this.state = LungState.OBSERVATION;
+    this.state = LungState.SURGICAL_RECOVERY;
     this.purificationActive = false;
     
-    console.log(`🚨 PURGA DE EMERGENCIA SINGLETON COMPLETADA [${this.instanceId}]`);
+    console.log(`🚨 PURGA QUIRÚRGICA COMPLETADA [${this.instanceId}]`);
   }
 
   public isDestroyed(): boolean {
@@ -199,22 +198,21 @@ export class RespiratorySystem {
     this.eventListeners = [];
     this.secureStorage.clear();
     
-    // Limpiar referencia global
+    // Limpiar referencia global post-quirúrgica
     if (typeof window !== 'undefined' && (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ === this) {
       (window as any).__RESPIRATORY_SYSTEM_GLOBAL__ = null;
     }
     
-    console.log(`🫁 Sistema respiratorio singleton destruido [${this.instanceId}]`);
+    console.log(`🫁 Sistema respiratorio post-cirugía destruido [${this.instanceId}]`);
   }
 
-  // Factory method estático que usa el manager
+  // Factory method estático que usa el manager quirúrgico
   public static async getInstance(options?: Partial<BreathingOptions>): Promise<RespiratorySystem> {
-    // Importación dinámica para evitar dependencias circulares
     const { RespiratorySystemManager } = await import('./RespiratorySystemManager');
     return RespiratorySystemManager.getInstance(options);
   }
 
-  // Método estático para destruir todas las instancias
+  // Método estático para destruir todas las instancias quirúrgicamente
   public static async destroyAllInstances(): Promise<void> {
     const { RespiratorySystemManager } = await import('./RespiratorySystemManager');
     return RespiratorySystemManager.destroyAllInstances();
