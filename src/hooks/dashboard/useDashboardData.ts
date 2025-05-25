@@ -57,8 +57,9 @@ export const useDashboardData = () => {
   const calculateMetrics = useCallback(() => {
     if (!diagnosticSystem.isSystemReady) return;
 
+    // Corregir el acceso a propiedades del nodo
     const completedNodes = diagnosticSystem.learningNodes.filter(
-      node => node.progress >= 80 || (node as any).isCompleted
+      node => (node as any).progress >= 80 || (node as any).isCompleted
     ).length;
     
     const upcomingEvents = events.filter(
