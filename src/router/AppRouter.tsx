@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { AppLayout } from '@/components/app-layout';
@@ -8,6 +7,7 @@ import Index from '@/pages/Index';
 import LectoGuia from '@/pages/LectoGuia';
 import Diagnostico from '@/pages/Diagnostico';
 import Plan from '@/pages/Plan';
+import Progreso from '@/pages/Progreso';
 import PAESDashboard from '@/pages/PAESDashboard';
 import PAESUniversePage from '@/pages/PAESUniversePage';
 import SubjectDetail from '@/pages/SubjectDetail';
@@ -78,6 +78,14 @@ const router = createBrowserRouter([
         element: (
           <CinematicPageWrapper scene="plan">
             <Plan />
+          </CinematicPageWrapper>
+        )
+      },
+      { 
+        path: '/progreso', 
+        element: (
+          <CinematicPageWrapper scene="progress">
+            <Progreso />
           </CinematicPageWrapper>
         )
       },
