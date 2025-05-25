@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnifiedApp } from '@/contexts/UnifiedAppProvider';
@@ -11,6 +10,7 @@ import { CircuitBreaker } from '@/utils/circuit-breaker';
 const initCircuitBreaker = new CircuitBreaker({
   failureThreshold: 3,
   resetTimeout: 60000, // 1 minuto
+  maxConsecutiveFailures: 2, // Agregamos la propiedad faltante
   onOpen: () => console.log('🚫 Circuit breaker opened - preventing initialization'),
   onClose: () => console.log('✅ Circuit breaker closed - allowing initialization')
 });
