@@ -3,6 +3,9 @@
  * Main module exporting all system types from their respective modules
  */
 
+// Import types for local use
+import { TPAESPrueba } from './paes-types';
+
 // Export types from paes-types.ts
 export {
   getPruebaDisplayName,
