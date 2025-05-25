@@ -1,6 +1,6 @@
+
 import React from "react";
 import { AppLayout } from "@/components/app-layout";
-import { AppInitializer } from "@/components/AppInitializer";
 import { HeroSection } from "@/components/home/HeroSection";
 import { SubjectProgressGrid } from "@/components/home/SubjectProgressGrid";
 import { SmartRecommendations } from "@/components/home/SmartRecommendations";
