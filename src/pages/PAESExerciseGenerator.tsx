@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/app-layout';
 import { AppInitializer } from '@/components/AppInitializer';
-import { ExerciseGeneratorCore } from '@/components/exercise-generator/ExerciseGeneratorCore';
+import { LearningMaterialGenerator } from '@/components/learning-material-generator';
 import { ExerciseResults } from '@/components/exercise-generator/ExerciseResults';
 import { SubjectSelector } from '@/components/exercise-generator/SubjectSelector';
 import { useExerciseGeneration } from '@/hooks/exercise/use-exercise-generation';
@@ -104,9 +103,9 @@ const PAESExerciseGenerator = () => {
                   <SubjectIcon className="w-6 h-6" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold">Generador de Ejercicios PAES</h1>
+                  <h1 className="text-3xl font-bold">Generador de Material Educativo PAES</h1>
                   <p className="text-muted-foreground">
-                    Sistema integrado basado en 277 nodos de aprendizaje
+                    Sistema integral del ciclo de aprendizaje - 277 nodos educativos
                   </p>
                 </div>
               </div>
@@ -131,12 +130,11 @@ const PAESExerciseGenerator = () => {
 
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Exercise Generator */}
+            {/* Learning Material Generator - Now replaces ExerciseGeneratorCore */}
             <div className="lg:col-span-1">
-              <ExerciseGeneratorCore
+              <LearningMaterialGenerator
                 selectedSubject={selectedSubject}
                 subjects={subjects}
-                showSettings={showSettings}
                 onGenerate={generateExercises}
                 isGenerating={isGenerating}
               />
@@ -158,7 +156,7 @@ const PAESExerciseGenerator = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5" />
-                Sistema PAES - 277 Nodos de Aprendizaje
+                Sistema PAES - Ciclo de Aprendizaje Integral
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -181,6 +179,32 @@ const PAESExerciseGenerator = () => {
                     </div>
                   );
                 })}
+              </div>
+              
+              <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                <h4 className="font-semibold text-sm mb-2 text-primary">🎯 Nuevo: Generación Integral de Material</h4>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                  <div className="text-center">
+                    <div className="font-semibold">📝 Ejercicios</div>
+                    <div className="text-muted-foreground">Práctica dirigida</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold">📖 Estudio</div>
+                    <div className="text-muted-foreground">Contenido teórico</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold">🔬 Evaluaciones</div>
+                    <div className="text-muted-foreground">Tests diagnósticos</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold">🗺️ Guías</div>
+                    <div className="text-muted-foreground">Paso a paso</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold">🎭 Simulacros</div>
+                    <div className="text-muted-foreground">Formato PAES</div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
