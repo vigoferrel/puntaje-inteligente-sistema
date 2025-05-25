@@ -73,7 +73,7 @@ export class TestService {
     }
   }
 
-  private static createFallbackTests(): DiagnosticTest[] {
+  static createFallbackTests(): DiagnosticTest[] {
     return [
       {
         id: 'fallback-cl-2024',
