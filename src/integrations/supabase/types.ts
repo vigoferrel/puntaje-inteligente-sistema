@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          color: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          event_type: string
+          id: string
+          is_recurring: boolean
+          location: string | null
+          metadata: Json | null
+          priority: string
+          recurrence_pattern: Json | null
+          related_node_id: string | null
+          related_plan_id: string | null
+          start_date: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          color?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          event_type: string
+          id?: string
+          is_recurring?: boolean
+          location?: string | null
+          metadata?: Json | null
+          priority?: string
+          recurrence_pattern?: Json | null
+          related_node_id?: string | null
+          related_plan_id?: string | null
+          start_date: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_day?: boolean
+          color?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          is_recurring?: boolean
+          location?: string | null
+          metadata?: Json | null
+          priority?: string
+          recurrence_pattern?: Json | null
+          related_node_id?: string | null
+          related_plan_id?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       diagnostic_tests: {
         Row: {
           created_at: string | null
@@ -430,6 +493,54 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          email_timing: Json
+          event_type: string
+          id: string
+          push_enabled: boolean
+          push_timing: Json
+          quiet_hours: Json
+          sms_enabled: boolean
+          sms_timing: Json
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          email_timing?: Json
+          event_type: string
+          id?: string
+          push_enabled?: boolean
+          push_timing?: Json
+          quiet_hours?: Json
+          sms_enabled?: boolean
+          sms_timing?: Json
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          email_timing?: Json
+          event_type?: string
+          id?: string
+          push_enabled?: boolean
+          push_timing?: Json
+          quiet_hours?: Json
+          sms_enabled?: boolean
+          sms_timing?: Json
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       opciones_respuesta: {
         Row: {
           contenido: string
@@ -678,6 +789,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          is_active: boolean
+          p256dh: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          p256dh: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          p256dh?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       question_node_mapping: {
         Row: {
           cognitive_demand: string
@@ -725,6 +869,50 @@ export type Database = {
             columns: ["node_id"]
             isOneToOne: false
             referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_notifications: {
+        Row: {
+          content: Json
+          created_at: string
+          event_id: string
+          id: string
+          notification_type: string
+          send_at: string
+          sent_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          event_id: string
+          id?: string
+          notification_type: string
+          send_at: string
+          sent_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          event_id?: string
+          id?: string
+          notification_type?: string
+          send_at?: string
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
             referencedColumns: ["id"]
           },
         ]

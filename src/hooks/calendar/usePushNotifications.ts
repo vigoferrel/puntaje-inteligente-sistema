@@ -8,87 +8,72 @@ export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
-  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const { profile } = useAuth();
 
   useEffect(() => {
-    checkSupport();
-    checkPermission();
-    registerServiceWorker();
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setIsSupported(true);
+      setPermission(Notification.permission);
+      checkSubscription();
+    }
   }, []);
 
-  const checkSupport = () => {
-    const supported = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
-    setIsSupported(supported);
-  };
+  const checkSubscription = async () => {
+    if (!profile || !isSupported) return;
 
-  const checkPermission = () => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-    }
-  };
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (subscription) {
+        // Verificar si la suscripción existe en la base de datos
+        const { data, error } = await supabase
+          .from('push_subscriptions')
+          .select('*')
+          .eq('user_id', profile.id)
+          .eq('endpoint', subscription.endpoint)
+          .eq('is_active', true)
+          .single();
 
-  const registerServiceWorker = async () => {
-    if ('serviceWorker' in navigator) {
-      try {
-        const reg = await navigator.serviceWorker.register('/sw.js');
-        setRegistration(reg);
-        
-        // Verificar si ya está suscrito
-        const subscription = await reg.pushManager.getSubscription();
-        setIsSubscribed(!!subscription);
-      } catch (error) {
-        console.error('Error registering service worker:', error);
+        setIsSubscribed(!error && !!data);
+      } else {
+        setIsSubscribed(false);
       }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      setIsSubscribed(false);
     }
-  };
-
-  const requestPermission = async (): Promise<NotificationPermission> => {
-    if (!isSupported) {
-      throw new Error('Push notifications not supported');
-    }
-
-    const permission = await Notification.requestPermission();
-    setPermission(permission);
-    
-    if (permission === 'granted') {
-      toast({
-        title: "Notificaciones habilitadas",
-        description: "Ahora recibirás notificaciones push"
-      });
-    } else {
-      toast({
-        title: "Notificaciones bloqueadas",
-        description: "No se pueden enviar notificaciones push",
-        variant: "destructive"
-      });
-    }
-
-    return permission;
   };
 
   const subscribe = async () => {
-    if (!registration || !profile) {
-      throw new Error('Service worker not registered or user not logged in');
-    }
-
-    if (permission !== 'granted') {
-      const newPermission = await requestPermission();
-      if (newPermission !== 'granted') {
-        throw new Error('Permission not granted');
-      }
-    }
+    if (!profile || !isSupported) return;
 
     try {
-      // Generar VAPID keys en el servidor (esto debería estar en las variables de entorno)
-      const vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa40HI0DLLfdUNzNoaMjc5FMwm__sB1r2_71DXoJoSkJzP2FWuQG5vSB5pqHtI'; // Clave pública VAPID
-      
+      // Solicitar permiso
+      const permission = await Notification.requestPermission();
+      setPermission(permission);
+
+      if (permission !== 'granted') {
+        toast({
+          title: "Permisos requeridos",
+          description: "Se necesitan permisos para enviar notificaciones",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Obtener service worker registration
+      const registration = await navigator.serviceWorker.ready;
+
+      // Crear suscripción
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+        applicationServerKey: urlBase64ToUint8Array(
+          'BEl62iUYgUivxIkv69yViEuiBIa40HI0DLdgC8oXVFq_CtaShz9CPnZvZ5bA1I8R8FWQ3sGMVE_J8bjJ3e5sJZU'
+        )
       });
 
-      // Guardar la suscripción en la base de datos
+      // Guardar suscripción en la base de datos
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({
@@ -96,45 +81,40 @@ export const usePushNotifications = () => {
           endpoint: subscription.endpoint,
           p256dh: arrayBufferToBase64(subscription.getKey('p256dh')!),
           auth: arrayBufferToBase64(subscription.getKey('auth')!),
-          user_agent: navigator.userAgent
-        }, {
-          onConflict: 'user_id,endpoint'
+          is_active: true
         });
 
       if (error) throw error;
 
       setIsSubscribed(true);
-      
       toast({
-        title: "Suscripción exitosa",
-        description: "Recibirás notificaciones push de PAES Command"
+        title: "Notificaciones activadas",
+        description: "Las notificaciones push han sido activadas correctamente"
       });
-
-      return subscription;
     } catch (error) {
       console.error('Error subscribing to push notifications:', error);
       toast({
-        title: "Error de suscripción",
-        description: "No se pudo activar las notificaciones push",
+        title: "Error",
+        description: "No se pudieron activar las notificaciones push",
         variant: "destructive"
       });
-      throw error;
     }
   };
 
   const unsubscribe = async () => {
-    if (!registration || !profile) return;
+    if (!profile || !isSupported) return;
 
     try {
+      const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
-      
+
       if (subscription) {
         await subscription.unsubscribe();
-        
-        // Eliminar de la base de datos
+
+        // Desactivar suscripción en la base de datos
         const { error } = await supabase
           .from('push_subscriptions')
-          .delete()
+          .update({ is_active: false })
           .eq('user_id', profile.id)
           .eq('endpoint', subscription.endpoint);
 
@@ -142,22 +122,21 @@ export const usePushNotifications = () => {
       }
 
       setIsSubscribed(false);
-      
       toast({
-        title: "Suscripción cancelada",
-        description: "Ya no recibirás notificaciones push"
+        title: "Notificaciones desactivadas",
+        description: "Las notificaciones push han sido desactivadas"
       });
     } catch (error) {
       console.error('Error unsubscribing from push notifications:', error);
       toast({
         title: "Error",
-        description: "No se pudo cancelar la suscripción",
+        description: "No se pudieron desactivar las notificaciones push",
         variant: "destructive"
       });
     }
   };
 
-  // Utilidades
+  // Utility functions
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
@@ -186,9 +165,8 @@ export const usePushNotifications = () => {
     isSupported,
     isSubscribed,
     permission,
-    registration,
-    requestPermission,
     subscribe,
-    unsubscribe
+    unsubscribe,
+    checkSubscription
   };
 };

@@ -23,6 +23,28 @@ interface CalendarEvent {
   metadata?: any;
 }
 
+// Tipo para datos de la base de datos
+interface CalendarEventRow {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  event_type: string;
+  start_date: string;
+  end_date: string | null;
+  all_day: boolean;
+  color: string;
+  priority: string;
+  location: string | null;
+  is_recurring: boolean;
+  recurrence_pattern: any;
+  related_node_id: string | null;
+  related_plan_id: string | null;
+  metadata: any;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useCalendarEvents = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +54,9 @@ export const useCalendarEvents = () => {
     if (!profile) return;
 
     try {
-      // Usar el cliente de Supabase directamente con el tipo correcto
+      setIsLoading(true);
+      
+      // Usar consulta genérica para evitar problemas de tipos
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
@@ -41,22 +65,22 @@ export const useCalendarEvents = () => {
 
       if (error) throw error;
 
-      // Mapear los datos de la base de datos al tipo local
-      const mappedEvents: CalendarEvent[] = (data || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
+      // Mapear los datos de forma segura
+      const mappedEvents: CalendarEvent[] = (data || []).map((item: any) => ({
+        id: String(item.id),
+        title: item.title || '',
+        description: item.description || undefined,
         event_type: item.event_type as 'study_session' | 'paes_date' | 'deadline' | 'reminder',
         start_date: item.start_date,
-        end_date: item.end_date,
-        all_day: item.all_day,
+        end_date: item.end_date || undefined,
+        all_day: Boolean(item.all_day),
         color: item.color || '#4F46E5',
         priority: item.priority as 'low' | 'medium' | 'high' | 'critical',
-        location: item.location,
-        is_recurring: item.is_recurring || false,
+        location: item.location || undefined,
+        is_recurring: Boolean(item.is_recurring),
         recurrence_pattern: item.recurrence_pattern,
-        related_node_id: item.related_node_id,
-        related_plan_id: item.related_plan_id,
+        related_node_id: item.related_node_id || undefined,
+        related_plan_id: item.related_plan_id || undefined,
         metadata: item.metadata
       }));
 
@@ -77,33 +101,49 @@ export const useCalendarEvents = () => {
     if (!profile) return;
 
     try {
+      // Preparar datos para inserción
+      const insertData = {
+        user_id: profile.id,
+        title: eventData.title || '',
+        description: eventData.description || null,
+        event_type: eventData.event_type || 'study_session',
+        start_date: eventData.start_date || new Date().toISOString(),
+        end_date: eventData.end_date || null,
+        all_day: eventData.all_day || false,
+        color: eventData.color || '#4F46E5',
+        priority: eventData.priority || 'medium',
+        location: eventData.location || null,
+        is_recurring: eventData.is_recurring || false,
+        recurrence_pattern: eventData.recurrence_pattern || null,
+        related_node_id: eventData.related_node_id || null,
+        related_plan_id: eventData.related_plan_id || null,
+        metadata: eventData.metadata || null
+      };
+
       const { data, error } = await supabase
         .from('calendar_events')
-        .insert([{
-          ...eventData,
-          user_id: profile.id
-        }])
+        .insert([insertData])
         .select()
         .single();
 
       if (error) throw error;
 
-      // Mapear el resultado al tipo local
+      // Mapear el resultado
       const newEvent: CalendarEvent = {
-        id: data.id,
+        id: String(data.id),
         title: data.title,
-        description: data.description,
+        description: data.description || undefined,
         event_type: data.event_type as 'study_session' | 'paes_date' | 'deadline' | 'reminder',
         start_date: data.start_date,
-        end_date: data.end_date,
-        all_day: data.all_day,
+        end_date: data.end_date || undefined,
+        all_day: Boolean(data.all_day),
         color: data.color || '#4F46E5',
         priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
-        location: data.location,
-        is_recurring: data.is_recurring || false,
+        location: data.location || undefined,
+        is_recurring: Boolean(data.is_recurring),
         recurrence_pattern: data.recurrence_pattern,
-        related_node_id: data.related_node_id,
-        related_plan_id: data.related_plan_id,
+        related_node_id: data.related_node_id || undefined,
+        related_plan_id: data.related_plan_id || undefined,
         metadata: data.metadata
       };
 
@@ -128,31 +168,49 @@ export const useCalendarEvents = () => {
 
   const updateEvent = async (eventId: string, eventData: Partial<CalendarEvent>) => {
     try {
+      // Preparar datos para actualización
+      const updateData: any = {};
+      
+      if (eventData.title !== undefined) updateData.title = eventData.title;
+      if (eventData.description !== undefined) updateData.description = eventData.description;
+      if (eventData.event_type !== undefined) updateData.event_type = eventData.event_type;
+      if (eventData.start_date !== undefined) updateData.start_date = eventData.start_date;
+      if (eventData.end_date !== undefined) updateData.end_date = eventData.end_date;
+      if (eventData.all_day !== undefined) updateData.all_day = eventData.all_day;
+      if (eventData.color !== undefined) updateData.color = eventData.color;
+      if (eventData.priority !== undefined) updateData.priority = eventData.priority;
+      if (eventData.location !== undefined) updateData.location = eventData.location;
+      if (eventData.is_recurring !== undefined) updateData.is_recurring = eventData.is_recurring;
+      if (eventData.recurrence_pattern !== undefined) updateData.recurrence_pattern = eventData.recurrence_pattern;
+      if (eventData.related_node_id !== undefined) updateData.related_node_id = eventData.related_node_id;
+      if (eventData.related_plan_id !== undefined) updateData.related_plan_id = eventData.related_plan_id;
+      if (eventData.metadata !== undefined) updateData.metadata = eventData.metadata;
+
       const { data, error } = await supabase
         .from('calendar_events')
-        .update(eventData)
+        .update(updateData)
         .eq('id', eventId)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Mapear el resultado al tipo local
+      // Mapear el resultado
       const updatedEvent: CalendarEvent = {
-        id: data.id,
+        id: String(data.id),
         title: data.title,
-        description: data.description,
+        description: data.description || undefined,
         event_type: data.event_type as 'study_session' | 'paes_date' | 'deadline' | 'reminder',
         start_date: data.start_date,
-        end_date: data.end_date,
-        all_day: data.all_day,
+        end_date: data.end_date || undefined,
+        all_day: Boolean(data.all_day),
         color: data.color || '#4F46E5',
         priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
-        location: data.location,
-        is_recurring: data.is_recurring || false,
+        location: data.location || undefined,
+        is_recurring: Boolean(data.is_recurring),
         recurrence_pattern: data.recurrence_pattern,
-        related_node_id: data.related_node_id,
-        related_plan_id: data.related_plan_id,
+        related_node_id: data.related_node_id || undefined,
+        related_plan_id: data.related_plan_id || undefined,
         metadata: data.metadata
       };
 
