@@ -9,6 +9,554 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      alternativas_respuesta: {
+        Row: {
+          concepto_erroneo_asociado: string | null
+          contenido: string
+          contenido_html: string | null
+          created_at: string | null
+          efectividad_pedagogica: number | null
+          es_correcta: boolean | null
+          explicacion_por_que_incorrecta: string | null
+          id: string
+          imagen_url: string | null
+          letra: string
+          orden: number
+          plausibilidad_distractor: number | null
+          porcentaje_seleccion: number | null
+          pregunta_id: string | null
+          puntaje_asignado: number | null
+          seleccionada_por_nivel: Json | null
+          tipo_distractor: string | null
+          updated_at: string | null
+          veces_seleccionada: number | null
+        }
+        Insert: {
+          concepto_erroneo_asociado?: string | null
+          contenido: string
+          contenido_html?: string | null
+          created_at?: string | null
+          efectividad_pedagogica?: number | null
+          es_correcta?: boolean | null
+          explicacion_por_que_incorrecta?: string | null
+          id?: string
+          imagen_url?: string | null
+          letra: string
+          orden: number
+          plausibilidad_distractor?: number | null
+          porcentaje_seleccion?: number | null
+          pregunta_id?: string | null
+          puntaje_asignado?: number | null
+          seleccionada_por_nivel?: Json | null
+          tipo_distractor?: string | null
+          updated_at?: string | null
+          veces_seleccionada?: number | null
+        }
+        Update: {
+          concepto_erroneo_asociado?: string | null
+          contenido?: string
+          contenido_html?: string | null
+          created_at?: string | null
+          efectividad_pedagogica?: number | null
+          es_correcta?: boolean | null
+          explicacion_por_que_incorrecta?: string | null
+          id?: string
+          imagen_url?: string | null
+          letra?: string
+          orden?: number
+          plausibilidad_distractor?: number | null
+          porcentaje_seleccion?: number | null
+          pregunta_id?: string | null
+          puntaje_asignado?: number | null
+          seleccionada_por_nivel?: Json | null
+          tipo_distractor?: string | null
+          updated_at?: string | null
+          veces_seleccionada?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alternativas_respuesta_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "banco_preguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analisis_evaluacion: {
+        Row: {
+          alertas_academicas: string[] | null
+          algoritmo_utilizado: string | null
+          brechas_identificadas: Json | null
+          comparacion_con_pares: Json | null
+          competencias_debiles: string[] | null
+          competencias_fuertes: string[] | null
+          confiabilidad_estimacion: number | null
+          confianza_analisis: number | null
+          created_at: string | null
+          datos_entrenamiento_modelo: string | null
+          debilidades_identificadas: Json | null
+          distribucion_tiempo_recomendada: Json | null
+          error_estandar_medicion: number | null
+          errores_sistematicos: string[] | null
+          estilo_aprendizaje_predominante: string | null
+          evaluacion_id: string | null
+          evolucion_historica: Json | null
+          factores_riesgo: string[] | null
+          fecha_analisis: string | null
+          fortalezas_identificadas: Json | null
+          frecuencia_evaluacion_recomendada: string | null
+          habilidades_cognitivas: Json | null
+          hitos_seguimiento: Json | null
+          horas_estudio_recomendadas_semanal: number | null
+          id: string
+          intervalo_confianza_inferior: number | null
+          intervalo_confianza_superior: number | null
+          intervalo_prediccion_inferior: number | null
+          intervalo_prediccion_superior: number | null
+          logros_desbloqueados: string[] | null
+          misconceptos_identificados: string[] | null
+          modalidades_practica: string[] | null
+          nivel_clasificado: string | null
+          nivel_distraccion_estimado: number | null
+          nivel_gamificacion: number | null
+          nivel_habilidad_estimado: number | null
+          nivel_paes_estimado: string | null
+          nodos_deficitarios: string[] | null
+          nodos_dominados: string[] | null
+          nodos_en_desarrollo: string[] | null
+          objetivos_corto_plazo: Json | null
+          objetivos_largo_plazo: Json | null
+          objetivos_mediano_plazo: Json | null
+          oportunidades_mejora: string[] | null
+          parametros_algoritmo: Json | null
+          patron_resolucion_problemas: string | null
+          percentil_poblacional: number | null
+          persistencia_ante_dificultad: string | null
+          probabilidad_ingreso_carrera: Json | null
+          puntaje_paes_predicho: number | null
+          puntos_experiencia: number | null
+          racha_estudio_actual: number | null
+          recursos_estudio_prioritarios: Json | null
+          secuencia_estudio_sugerida: string[] | null
+          sesion_id: string | null
+          stanine: number | null
+          tecnicas_estudio_sugeridas: string[] | null
+          tiempo_procesamiento_ms: number | null
+          tipos_errores_frecuentes: Json | null
+          updated_at: string | null
+          user_id: string
+          velocidad_procesamiento: string | null
+          version_modelo: string | null
+        }
+        Insert: {
+          alertas_academicas?: string[] | null
+          algoritmo_utilizado?: string | null
+          brechas_identificadas?: Json | null
+          comparacion_con_pares?: Json | null
+          competencias_debiles?: string[] | null
+          competencias_fuertes?: string[] | null
+          confiabilidad_estimacion?: number | null
+          confianza_analisis?: number | null
+          created_at?: string | null
+          datos_entrenamiento_modelo?: string | null
+          debilidades_identificadas?: Json | null
+          distribucion_tiempo_recomendada?: Json | null
+          error_estandar_medicion?: number | null
+          errores_sistematicos?: string[] | null
+          estilo_aprendizaje_predominante?: string | null
+          evaluacion_id?: string | null
+          evolucion_historica?: Json | null
+          factores_riesgo?: string[] | null
+          fecha_analisis?: string | null
+          fortalezas_identificadas?: Json | null
+          frecuencia_evaluacion_recomendada?: string | null
+          habilidades_cognitivas?: Json | null
+          hitos_seguimiento?: Json | null
+          horas_estudio_recomendadas_semanal?: number | null
+          id?: string
+          intervalo_confianza_inferior?: number | null
+          intervalo_confianza_superior?: number | null
+          intervalo_prediccion_inferior?: number | null
+          intervalo_prediccion_superior?: number | null
+          logros_desbloqueados?: string[] | null
+          misconceptos_identificados?: string[] | null
+          modalidades_practica?: string[] | null
+          nivel_clasificado?: string | null
+          nivel_distraccion_estimado?: number | null
+          nivel_gamificacion?: number | null
+          nivel_habilidad_estimado?: number | null
+          nivel_paes_estimado?: string | null
+          nodos_deficitarios?: string[] | null
+          nodos_dominados?: string[] | null
+          nodos_en_desarrollo?: string[] | null
+          objetivos_corto_plazo?: Json | null
+          objetivos_largo_plazo?: Json | null
+          objetivos_mediano_plazo?: Json | null
+          oportunidades_mejora?: string[] | null
+          parametros_algoritmo?: Json | null
+          patron_resolucion_problemas?: string | null
+          percentil_poblacional?: number | null
+          persistencia_ante_dificultad?: string | null
+          probabilidad_ingreso_carrera?: Json | null
+          puntaje_paes_predicho?: number | null
+          puntos_experiencia?: number | null
+          racha_estudio_actual?: number | null
+          recursos_estudio_prioritarios?: Json | null
+          secuencia_estudio_sugerida?: string[] | null
+          sesion_id?: string | null
+          stanine?: number | null
+          tecnicas_estudio_sugeridas?: string[] | null
+          tiempo_procesamiento_ms?: number | null
+          tipos_errores_frecuentes?: Json | null
+          updated_at?: string | null
+          user_id: string
+          velocidad_procesamiento?: string | null
+          version_modelo?: string | null
+        }
+        Update: {
+          alertas_academicas?: string[] | null
+          algoritmo_utilizado?: string | null
+          brechas_identificadas?: Json | null
+          comparacion_con_pares?: Json | null
+          competencias_debiles?: string[] | null
+          competencias_fuertes?: string[] | null
+          confiabilidad_estimacion?: number | null
+          confianza_analisis?: number | null
+          created_at?: string | null
+          datos_entrenamiento_modelo?: string | null
+          debilidades_identificadas?: Json | null
+          distribucion_tiempo_recomendada?: Json | null
+          error_estandar_medicion?: number | null
+          errores_sistematicos?: string[] | null
+          estilo_aprendizaje_predominante?: string | null
+          evaluacion_id?: string | null
+          evolucion_historica?: Json | null
+          factores_riesgo?: string[] | null
+          fecha_analisis?: string | null
+          fortalezas_identificadas?: Json | null
+          frecuencia_evaluacion_recomendada?: string | null
+          habilidades_cognitivas?: Json | null
+          hitos_seguimiento?: Json | null
+          horas_estudio_recomendadas_semanal?: number | null
+          id?: string
+          intervalo_confianza_inferior?: number | null
+          intervalo_confianza_superior?: number | null
+          intervalo_prediccion_inferior?: number | null
+          intervalo_prediccion_superior?: number | null
+          logros_desbloqueados?: string[] | null
+          misconceptos_identificados?: string[] | null
+          modalidades_practica?: string[] | null
+          nivel_clasificado?: string | null
+          nivel_distraccion_estimado?: number | null
+          nivel_gamificacion?: number | null
+          nivel_habilidad_estimado?: number | null
+          nivel_paes_estimado?: string | null
+          nodos_deficitarios?: string[] | null
+          nodos_dominados?: string[] | null
+          nodos_en_desarrollo?: string[] | null
+          objetivos_corto_plazo?: Json | null
+          objetivos_largo_plazo?: Json | null
+          objetivos_mediano_plazo?: Json | null
+          oportunidades_mejora?: string[] | null
+          parametros_algoritmo?: Json | null
+          patron_resolucion_problemas?: string | null
+          percentil_poblacional?: number | null
+          persistencia_ante_dificultad?: string | null
+          probabilidad_ingreso_carrera?: Json | null
+          puntaje_paes_predicho?: number | null
+          puntos_experiencia?: number | null
+          racha_estudio_actual?: number | null
+          recursos_estudio_prioritarios?: Json | null
+          secuencia_estudio_sugerida?: string[] | null
+          sesion_id?: string | null
+          stanine?: number | null
+          tecnicas_estudio_sugeridas?: string[] | null
+          tiempo_procesamiento_ms?: number | null
+          tipos_errores_frecuentes?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          velocidad_procesamiento?: string | null
+          version_modelo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analisis_evaluacion_evaluacion_id_fkey"
+            columns: ["evaluacion_id"]
+            isOneToOne: false
+            referencedRelation: "evaluaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analisis_evaluacion_sesion_id_fkey"
+            columns: ["sesion_id"]
+            isOneToOne: false
+            referencedRelation: "sesiones_evaluacion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banco_preguntas: {
+        Row: {
+          ano_publicacion: number | null
+          audio_url: string | null
+          autor_texto: string | null
+          codigo_pregunta: string
+          comentarios_revision: string | null
+          competencia_especifica: string | null
+          competencias_evaluadas: string[] | null
+          constantes_fisicas: Json | null
+          contenido_dinamico: Json | null
+          contexto_historico: string | null
+          contexto_situacional: string | null
+          created_at: string | null
+          created_by: string | null
+          cronologia: Json | null
+          datos_tabla: Json | null
+          disponible_evaluaciones: string[] | null
+          distribucion_respuestas: Json | null
+          documento_fuente: string | null
+          efectividad_distractores: Json | null
+          enunciado: string
+          error_estandar_parametros: number | null
+          escala_grafico: Json | null
+          extension_palabras: number | null
+          fecha_validacion: string | null
+          formato_respuesta_numerica: string | null
+          formulas_relevantes: string[] | null
+          frecuencia_uso_recomendada: string | null
+          fuente_texto: string | null
+          genero_textual: string | null
+          id: string
+          imagen_principal_url: string | null
+          imagen_secundaria_url: string | null
+          indice_dificultad: number | null
+          indice_discriminacion: number | null
+          instrucciones_especificas: string | null
+          lugares_geograficos: string[] | null
+          mapa_imagen_url: string | null
+          motivo_rechazo: string | null
+          nivel_bloom: string | null
+          nivel_complejidad_lexica: string | null
+          nivel_dificultad: string
+          nodo_code: string
+          nodo_id: string | null
+          num_alternativas: number | null
+          palabras_clave: string[] | null
+          parametro_adivinanza: number | null
+          parametro_descuido: number | null
+          parametro_dificultad: number | null
+          parametro_discriminacion: number | null
+          periodo_historico: string | null
+          permite_respuesta_parcial: boolean | null
+          personajes_involucrados: string[] | null
+          porcentaje_acierto: number | null
+          pregunta_original_id: string | null
+          prerrequisitos_conceptuales: string[] | null
+          prueba_paes: string
+          recursos_interactivos: Json | null
+          requiere_supervision: boolean | null
+          revisor_id: string | null
+          tags_cognitivos: string[] | null
+          tags_contenido: string[] | null
+          tags_curriculares: string[] | null
+          texto_base: string | null
+          tiempo_estimado_segundos: number | null
+          tiempo_lectura_adicional: number | null
+          tiempo_promedio_respuesta: number | null
+          tipo_documento: string | null
+          tipo_grafico: string | null
+          tipo_pregunta: string | null
+          tipo_texto: string | null
+          tolerancia_numerica: number | null
+          unidades_trabajo: string | null
+          updated_at: string | null
+          validada: boolean | null
+          variables_involucradas: string[] | null
+          veces_respondida_correctamente: number | null
+          veces_utilizada: number | null
+          version_pregunta: number | null
+          video_url: string | null
+        }
+        Insert: {
+          ano_publicacion?: number | null
+          audio_url?: string | null
+          autor_texto?: string | null
+          codigo_pregunta: string
+          comentarios_revision?: string | null
+          competencia_especifica?: string | null
+          competencias_evaluadas?: string[] | null
+          constantes_fisicas?: Json | null
+          contenido_dinamico?: Json | null
+          contexto_historico?: string | null
+          contexto_situacional?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          cronologia?: Json | null
+          datos_tabla?: Json | null
+          disponible_evaluaciones?: string[] | null
+          distribucion_respuestas?: Json | null
+          documento_fuente?: string | null
+          efectividad_distractores?: Json | null
+          enunciado: string
+          error_estandar_parametros?: number | null
+          escala_grafico?: Json | null
+          extension_palabras?: number | null
+          fecha_validacion?: string | null
+          formato_respuesta_numerica?: string | null
+          formulas_relevantes?: string[] | null
+          frecuencia_uso_recomendada?: string | null
+          fuente_texto?: string | null
+          genero_textual?: string | null
+          id?: string
+          imagen_principal_url?: string | null
+          imagen_secundaria_url?: string | null
+          indice_dificultad?: number | null
+          indice_discriminacion?: number | null
+          instrucciones_especificas?: string | null
+          lugares_geograficos?: string[] | null
+          mapa_imagen_url?: string | null
+          motivo_rechazo?: string | null
+          nivel_bloom?: string | null
+          nivel_complejidad_lexica?: string | null
+          nivel_dificultad: string
+          nodo_code: string
+          nodo_id?: string | null
+          num_alternativas?: number | null
+          palabras_clave?: string[] | null
+          parametro_adivinanza?: number | null
+          parametro_descuido?: number | null
+          parametro_dificultad?: number | null
+          parametro_discriminacion?: number | null
+          periodo_historico?: string | null
+          permite_respuesta_parcial?: boolean | null
+          personajes_involucrados?: string[] | null
+          porcentaje_acierto?: number | null
+          pregunta_original_id?: string | null
+          prerrequisitos_conceptuales?: string[] | null
+          prueba_paes: string
+          recursos_interactivos?: Json | null
+          requiere_supervision?: boolean | null
+          revisor_id?: string | null
+          tags_cognitivos?: string[] | null
+          tags_contenido?: string[] | null
+          tags_curriculares?: string[] | null
+          texto_base?: string | null
+          tiempo_estimado_segundos?: number | null
+          tiempo_lectura_adicional?: number | null
+          tiempo_promedio_respuesta?: number | null
+          tipo_documento?: string | null
+          tipo_grafico?: string | null
+          tipo_pregunta?: string | null
+          tipo_texto?: string | null
+          tolerancia_numerica?: number | null
+          unidades_trabajo?: string | null
+          updated_at?: string | null
+          validada?: boolean | null
+          variables_involucradas?: string[] | null
+          veces_respondida_correctamente?: number | null
+          veces_utilizada?: number | null
+          version_pregunta?: number | null
+          video_url?: string | null
+        }
+        Update: {
+          ano_publicacion?: number | null
+          audio_url?: string | null
+          autor_texto?: string | null
+          codigo_pregunta?: string
+          comentarios_revision?: string | null
+          competencia_especifica?: string | null
+          competencias_evaluadas?: string[] | null
+          constantes_fisicas?: Json | null
+          contenido_dinamico?: Json | null
+          contexto_historico?: string | null
+          contexto_situacional?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          cronologia?: Json | null
+          datos_tabla?: Json | null
+          disponible_evaluaciones?: string[] | null
+          distribucion_respuestas?: Json | null
+          documento_fuente?: string | null
+          efectividad_distractores?: Json | null
+          enunciado?: string
+          error_estandar_parametros?: number | null
+          escala_grafico?: Json | null
+          extension_palabras?: number | null
+          fecha_validacion?: string | null
+          formato_respuesta_numerica?: string | null
+          formulas_relevantes?: string[] | null
+          frecuencia_uso_recomendada?: string | null
+          fuente_texto?: string | null
+          genero_textual?: string | null
+          id?: string
+          imagen_principal_url?: string | null
+          imagen_secundaria_url?: string | null
+          indice_dificultad?: number | null
+          indice_discriminacion?: number | null
+          instrucciones_especificas?: string | null
+          lugares_geograficos?: string[] | null
+          mapa_imagen_url?: string | null
+          motivo_rechazo?: string | null
+          nivel_bloom?: string | null
+          nivel_complejidad_lexica?: string | null
+          nivel_dificultad?: string
+          nodo_code?: string
+          nodo_id?: string | null
+          num_alternativas?: number | null
+          palabras_clave?: string[] | null
+          parametro_adivinanza?: number | null
+          parametro_descuido?: number | null
+          parametro_dificultad?: number | null
+          parametro_discriminacion?: number | null
+          periodo_historico?: string | null
+          permite_respuesta_parcial?: boolean | null
+          personajes_involucrados?: string[] | null
+          porcentaje_acierto?: number | null
+          pregunta_original_id?: string | null
+          prerrequisitos_conceptuales?: string[] | null
+          prueba_paes?: string
+          recursos_interactivos?: Json | null
+          requiere_supervision?: boolean | null
+          revisor_id?: string | null
+          tags_cognitivos?: string[] | null
+          tags_contenido?: string[] | null
+          tags_curriculares?: string[] | null
+          texto_base?: string | null
+          tiempo_estimado_segundos?: number | null
+          tiempo_lectura_adicional?: number | null
+          tiempo_promedio_respuesta?: number | null
+          tipo_documento?: string | null
+          tipo_grafico?: string | null
+          tipo_pregunta?: string | null
+          tipo_texto?: string | null
+          tolerancia_numerica?: number | null
+          unidades_trabajo?: string | null
+          updated_at?: string | null
+          validada?: boolean | null
+          variables_involucradas?: string[] | null
+          veces_respondida_correctamente?: number | null
+          veces_utilizada?: number | null
+          version_pregunta?: number | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banco_preguntas_nodo_id_fkey"
+            columns: ["nodo_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "banco_preguntas_nodo_id_fkey"
+            columns: ["nodo_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           all_day: boolean
@@ -115,6 +663,141 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      evaluaciones: {
+        Row: {
+          acceso_publico: boolean | null
+          codigo: string
+          created_at: string | null
+          created_by: string | null
+          criterio_finalizacion: string | null
+          descripcion: string | null
+          distribucion_dificultad: Json | null
+          duracion_minutos: number
+          es_oficial: boolean | null
+          esta_activo: boolean | null
+          feedback_inmediato: boolean | null
+          id: string
+          instrucciones_especiales: string | null
+          instrucciones_iniciales: string | null
+          logros_desbloqueables: string[] | null
+          modalidad: string | null
+          mostrar_explicaciones: boolean | null
+          mostrar_puntaje_parcial: boolean | null
+          mostrar_respuestas_correctas: boolean | null
+          nivel_dificultad: string | null
+          nodos_incluidos: string[] | null
+          nombre: string
+          parametros_irt: Json | null
+          permite_navegacion_libre: boolean | null
+          permite_pausa: boolean | null
+          permite_retroceder: boolean | null
+          preguntas_por_nodo: number | null
+          prueba_paes: string | null
+          requiere_autenticacion: boolean | null
+          requiere_validacion: boolean | null
+          roles_permitidos: string[] | null
+          seleccion_preguntas: string | null
+          sistema_puntos: Json | null
+          subtipo: string | null
+          tiempo_minimo_pregunta: number | null
+          tiempo_por_pregunta: number | null
+          tipo_evaluacion: string
+          total_preguntas: number
+          updated_at: string | null
+          usa_gamificacion: boolean | null
+          usa_irt: boolean | null
+          version: string | null
+        }
+        Insert: {
+          acceso_publico?: boolean | null
+          codigo: string
+          created_at?: string | null
+          created_by?: string | null
+          criterio_finalizacion?: string | null
+          descripcion?: string | null
+          distribucion_dificultad?: Json | null
+          duracion_minutos: number
+          es_oficial?: boolean | null
+          esta_activo?: boolean | null
+          feedback_inmediato?: boolean | null
+          id?: string
+          instrucciones_especiales?: string | null
+          instrucciones_iniciales?: string | null
+          logros_desbloqueables?: string[] | null
+          modalidad?: string | null
+          mostrar_explicaciones?: boolean | null
+          mostrar_puntaje_parcial?: boolean | null
+          mostrar_respuestas_correctas?: boolean | null
+          nivel_dificultad?: string | null
+          nodos_incluidos?: string[] | null
+          nombre: string
+          parametros_irt?: Json | null
+          permite_navegacion_libre?: boolean | null
+          permite_pausa?: boolean | null
+          permite_retroceder?: boolean | null
+          preguntas_por_nodo?: number | null
+          prueba_paes?: string | null
+          requiere_autenticacion?: boolean | null
+          requiere_validacion?: boolean | null
+          roles_permitidos?: string[] | null
+          seleccion_preguntas?: string | null
+          sistema_puntos?: Json | null
+          subtipo?: string | null
+          tiempo_minimo_pregunta?: number | null
+          tiempo_por_pregunta?: number | null
+          tipo_evaluacion: string
+          total_preguntas: number
+          updated_at?: string | null
+          usa_gamificacion?: boolean | null
+          usa_irt?: boolean | null
+          version?: string | null
+        }
+        Update: {
+          acceso_publico?: boolean | null
+          codigo?: string
+          created_at?: string | null
+          created_by?: string | null
+          criterio_finalizacion?: string | null
+          descripcion?: string | null
+          distribucion_dificultad?: Json | null
+          duracion_minutos?: number
+          es_oficial?: boolean | null
+          esta_activo?: boolean | null
+          feedback_inmediato?: boolean | null
+          id?: string
+          instrucciones_especiales?: string | null
+          instrucciones_iniciales?: string | null
+          logros_desbloqueables?: string[] | null
+          modalidad?: string | null
+          mostrar_explicaciones?: boolean | null
+          mostrar_puntaje_parcial?: boolean | null
+          mostrar_respuestas_correctas?: boolean | null
+          nivel_dificultad?: string | null
+          nodos_incluidos?: string[] | null
+          nombre?: string
+          parametros_irt?: Json | null
+          permite_navegacion_libre?: boolean | null
+          permite_pausa?: boolean | null
+          permite_retroceder?: boolean | null
+          preguntas_por_nodo?: number | null
+          prueba_paes?: string | null
+          requiere_autenticacion?: boolean | null
+          requiere_validacion?: boolean | null
+          roles_permitidos?: string[] | null
+          seleccion_preguntas?: string | null
+          sistema_puntos?: Json | null
+          subtipo?: string | null
+          tiempo_minimo_pregunta?: number | null
+          tiempo_por_pregunta?: number | null
+          tipo_evaluacion?: string
+          total_preguntas?: number
+          updated_at?: string | null
+          usa_gamificacion?: boolean | null
+          usa_irt?: boolean | null
+          version?: string | null
+        }
+        Relationships: []
       }
       examenes: {
         Row: {
@@ -241,6 +924,110 @@ export type Database = {
             columns: ["test_id"]
             isOneToOne: false
             referencedRelation: "paes_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      explicaciones_pregunta: {
+        Row: {
+          analisis_distractores: Json | null
+          competencias_desarrolladas: string[] | null
+          conceptos_clave_involucrados: string[] | null
+          consejos_resolucion: string[] | null
+          created_at: string | null
+          ejercicios_similares_ids: string[] | null
+          enlaces_estudio: string[] | null
+          errores_comunes_identificados: string[] | null
+          estrategias_mejora: string[] | null
+          explicacion_respuesta_correcta: string
+          feedback_estudiante_avanzado: string | null
+          feedback_estudiante_basico: string | null
+          feedback_estudiante_intermedio: string | null
+          feedback_respuesta_correcta: string | null
+          feedback_respuesta_incorrecta: string | null
+          feedback_respuesta_parcial: string | null
+          feedback_sin_respuesta: string | null
+          habilidades_reforzar: string[] | null
+          id: string
+          logro_desbloqueado: string | null
+          mensaje_motivacional: string | null
+          nodos_repasar: string[] | null
+          objetivos_aprendizaje_relacionados: string[] | null
+          pregunta_id: string | null
+          puntos_bonus_explicacion: number | null
+          razonamiento_paso_a_paso: string[] | null
+          tips_examen: string[] | null
+          updated_at: string | null
+          videos_explicativos: string[] | null
+        }
+        Insert: {
+          analisis_distractores?: Json | null
+          competencias_desarrolladas?: string[] | null
+          conceptos_clave_involucrados?: string[] | null
+          consejos_resolucion?: string[] | null
+          created_at?: string | null
+          ejercicios_similares_ids?: string[] | null
+          enlaces_estudio?: string[] | null
+          errores_comunes_identificados?: string[] | null
+          estrategias_mejora?: string[] | null
+          explicacion_respuesta_correcta: string
+          feedback_estudiante_avanzado?: string | null
+          feedback_estudiante_basico?: string | null
+          feedback_estudiante_intermedio?: string | null
+          feedback_respuesta_correcta?: string | null
+          feedback_respuesta_incorrecta?: string | null
+          feedback_respuesta_parcial?: string | null
+          feedback_sin_respuesta?: string | null
+          habilidades_reforzar?: string[] | null
+          id?: string
+          logro_desbloqueado?: string | null
+          mensaje_motivacional?: string | null
+          nodos_repasar?: string[] | null
+          objetivos_aprendizaje_relacionados?: string[] | null
+          pregunta_id?: string | null
+          puntos_bonus_explicacion?: number | null
+          razonamiento_paso_a_paso?: string[] | null
+          tips_examen?: string[] | null
+          updated_at?: string | null
+          videos_explicativos?: string[] | null
+        }
+        Update: {
+          analisis_distractores?: Json | null
+          competencias_desarrolladas?: string[] | null
+          conceptos_clave_involucrados?: string[] | null
+          consejos_resolucion?: string[] | null
+          created_at?: string | null
+          ejercicios_similares_ids?: string[] | null
+          enlaces_estudio?: string[] | null
+          errores_comunes_identificados?: string[] | null
+          estrategias_mejora?: string[] | null
+          explicacion_respuesta_correcta?: string
+          feedback_estudiante_avanzado?: string | null
+          feedback_estudiante_basico?: string | null
+          feedback_estudiante_intermedio?: string | null
+          feedback_respuesta_correcta?: string | null
+          feedback_respuesta_incorrecta?: string | null
+          feedback_respuesta_parcial?: string | null
+          feedback_sin_respuesta?: string | null
+          habilidades_reforzar?: string[] | null
+          id?: string
+          logro_desbloqueado?: string | null
+          mensaje_motivacional?: string | null
+          nodos_repasar?: string[] | null
+          objetivos_aprendizaje_relacionados?: string[] | null
+          pregunta_id?: string | null
+          puntos_bonus_explicacion?: number | null
+          razonamiento_paso_a_paso?: string[] | null
+          tips_examen?: string[] | null
+          updated_at?: string | null
+          videos_explicativos?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "explicaciones_pregunta_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "banco_preguntas"
             referencedColumns: ["id"]
           },
         ]
@@ -873,6 +1660,163 @@ export type Database = {
           },
         ]
       }
+      respuestas_evaluacion: {
+        Row: {
+          algoritmo_puntuacion: string | null
+          alternativa_id: string | null
+          created_at: string | null
+          error_estandar_anterior: number | null
+          error_estandar_posterior: number | null
+          es_correcta: boolean | null
+          es_parcialmente_correcta: boolean | null
+          flags_comportamiento: string[] | null
+          habilidad_estimada_antes: number | null
+          habilidad_estimada_despues: number | null
+          id: string
+          indicadores_adivinanza: boolean | null
+          indicadores_conocimiento: boolean | null
+          informacion_aportada: number | null
+          momento_respuesta: string | null
+          nivel_confianza_estimado: number | null
+          notas_automaticas: string | null
+          numero_cambios_respuesta: number | null
+          numero_clics_alternativas: number | null
+          numero_clics_pregunta: number | null
+          numero_relecturas: number | null
+          orden_respuesta: number | null
+          patron_movimiento_mouse: Json | null
+          patron_scroll: Json | null
+          porcentaje_texto_leido: number | null
+          pregunta_id: string | null
+          puntaje_maximo: number | null
+          puntaje_obtenido: number | null
+          respuesta_seleccionada: string | null
+          secuencia_alternativas_visitadas: string[] | null
+          sesion_id: string | null
+          tiempo_decision_final: number | null
+          tiempo_en_texto_base: number | null
+          tiempo_entre_cambios: number[] | null
+          tiempo_lectura_segundos: number | null
+          tiempo_por_alternativa: Json | null
+          tiempo_primera_seleccion: number | null
+          tiempo_reflexion_segundos: number | null
+          tiempo_respuesta_segundos: number | null
+          user_id: string
+          va_a_pregunta: number | null
+          viene_de_pregunta: number | null
+        }
+        Insert: {
+          algoritmo_puntuacion?: string | null
+          alternativa_id?: string | null
+          created_at?: string | null
+          error_estandar_anterior?: number | null
+          error_estandar_posterior?: number | null
+          es_correcta?: boolean | null
+          es_parcialmente_correcta?: boolean | null
+          flags_comportamiento?: string[] | null
+          habilidad_estimada_antes?: number | null
+          habilidad_estimada_despues?: number | null
+          id?: string
+          indicadores_adivinanza?: boolean | null
+          indicadores_conocimiento?: boolean | null
+          informacion_aportada?: number | null
+          momento_respuesta?: string | null
+          nivel_confianza_estimado?: number | null
+          notas_automaticas?: string | null
+          numero_cambios_respuesta?: number | null
+          numero_clics_alternativas?: number | null
+          numero_clics_pregunta?: number | null
+          numero_relecturas?: number | null
+          orden_respuesta?: number | null
+          patron_movimiento_mouse?: Json | null
+          patron_scroll?: Json | null
+          porcentaje_texto_leido?: number | null
+          pregunta_id?: string | null
+          puntaje_maximo?: number | null
+          puntaje_obtenido?: number | null
+          respuesta_seleccionada?: string | null
+          secuencia_alternativas_visitadas?: string[] | null
+          sesion_id?: string | null
+          tiempo_decision_final?: number | null
+          tiempo_en_texto_base?: number | null
+          tiempo_entre_cambios?: number[] | null
+          tiempo_lectura_segundos?: number | null
+          tiempo_por_alternativa?: Json | null
+          tiempo_primera_seleccion?: number | null
+          tiempo_reflexion_segundos?: number | null
+          tiempo_respuesta_segundos?: number | null
+          user_id: string
+          va_a_pregunta?: number | null
+          viene_de_pregunta?: number | null
+        }
+        Update: {
+          algoritmo_puntuacion?: string | null
+          alternativa_id?: string | null
+          created_at?: string | null
+          error_estandar_anterior?: number | null
+          error_estandar_posterior?: number | null
+          es_correcta?: boolean | null
+          es_parcialmente_correcta?: boolean | null
+          flags_comportamiento?: string[] | null
+          habilidad_estimada_antes?: number | null
+          habilidad_estimada_despues?: number | null
+          id?: string
+          indicadores_adivinanza?: boolean | null
+          indicadores_conocimiento?: boolean | null
+          informacion_aportada?: number | null
+          momento_respuesta?: string | null
+          nivel_confianza_estimado?: number | null
+          notas_automaticas?: string | null
+          numero_cambios_respuesta?: number | null
+          numero_clics_alternativas?: number | null
+          numero_clics_pregunta?: number | null
+          numero_relecturas?: number | null
+          orden_respuesta?: number | null
+          patron_movimiento_mouse?: Json | null
+          patron_scroll?: Json | null
+          porcentaje_texto_leido?: number | null
+          pregunta_id?: string | null
+          puntaje_maximo?: number | null
+          puntaje_obtenido?: number | null
+          respuesta_seleccionada?: string | null
+          secuencia_alternativas_visitadas?: string[] | null
+          sesion_id?: string | null
+          tiempo_decision_final?: number | null
+          tiempo_en_texto_base?: number | null
+          tiempo_entre_cambios?: number[] | null
+          tiempo_lectura_segundos?: number | null
+          tiempo_por_alternativa?: Json | null
+          tiempo_primera_seleccion?: number | null
+          tiempo_reflexion_segundos?: number | null
+          tiempo_respuesta_segundos?: number | null
+          user_id?: string
+          va_a_pregunta?: number | null
+          viene_de_pregunta?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "respuestas_evaluacion_alternativa_id_fkey"
+            columns: ["alternativa_id"]
+            isOneToOne: false
+            referencedRelation: "alternativas_respuesta"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "respuestas_evaluacion_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "banco_preguntas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "respuestas_evaluacion_sesion_id_fkey"
+            columns: ["sesion_id"]
+            isOneToOne: false
+            referencedRelation: "sesiones_evaluacion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_notifications: {
         Row: {
           content: Json
@@ -913,6 +1857,101 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sesiones_evaluacion: {
+        Row: {
+          codigo_sesion: string
+          created_at: string | null
+          estado: string | null
+          evaluacion_id: string | null
+          fecha_expiracion: string | null
+          fecha_finalizacion: string | null
+          fecha_inicio: string | null
+          fecha_primer_respuesta: string | null
+          id: string
+          navegador: string | null
+          nombre_sesion: string | null
+          numero_pausas: number | null
+          pregunta_actual: number | null
+          preguntas_marcadas_revision: number[] | null
+          preguntas_omitidas: number[] | null
+          preguntas_respondidas: number | null
+          preguntas_visitadas: number[] | null
+          resolucion_pantalla: string | null
+          sistema_operativo: string | null
+          tiempo_activo_segundos: number | null
+          tiempo_inactividad_segundos: number | null
+          tiempo_pausa_segundos: number | null
+          tiempo_total_segundos: number | null
+          tipo_dispositivo: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          codigo_sesion: string
+          created_at?: string | null
+          estado?: string | null
+          evaluacion_id?: string | null
+          fecha_expiracion?: string | null
+          fecha_finalizacion?: string | null
+          fecha_inicio?: string | null
+          fecha_primer_respuesta?: string | null
+          id?: string
+          navegador?: string | null
+          nombre_sesion?: string | null
+          numero_pausas?: number | null
+          pregunta_actual?: number | null
+          preguntas_marcadas_revision?: number[] | null
+          preguntas_omitidas?: number[] | null
+          preguntas_respondidas?: number | null
+          preguntas_visitadas?: number[] | null
+          resolucion_pantalla?: string | null
+          sistema_operativo?: string | null
+          tiempo_activo_segundos?: number | null
+          tiempo_inactividad_segundos?: number | null
+          tiempo_pausa_segundos?: number | null
+          tiempo_total_segundos?: number | null
+          tipo_dispositivo?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          codigo_sesion?: string
+          created_at?: string | null
+          estado?: string | null
+          evaluacion_id?: string | null
+          fecha_expiracion?: string | null
+          fecha_finalizacion?: string | null
+          fecha_inicio?: string | null
+          fecha_primer_respuesta?: string | null
+          id?: string
+          navegador?: string | null
+          nombre_sesion?: string | null
+          numero_pausas?: number | null
+          pregunta_actual?: number | null
+          preguntas_marcadas_revision?: number[] | null
+          preguntas_omitidas?: number[] | null
+          preguntas_respondidas?: number | null
+          preguntas_visitadas?: number[] | null
+          resolucion_pantalla?: string | null
+          sistema_operativo?: string | null
+          tiempo_activo_segundos?: number | null
+          tiempo_inactividad_segundos?: number | null
+          tiempo_pausa_segundos?: number | null
+          tiempo_total_segundos?: number | null
+          tipo_dispositivo?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sesiones_evaluacion_evaluacion_id_fkey"
+            columns: ["evaluacion_id"]
+            isOneToOne: false
+            referencedRelation: "evaluaciones"
             referencedColumns: ["id"]
           },
         ]
