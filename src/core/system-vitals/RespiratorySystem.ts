@@ -5,6 +5,8 @@
 
 import { RespiratoryHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
 import { emergencyDetox } from '@/core/anti-tracking/EmergencyDetox';
+import { trackingFirewall } from '@/core/anti-tracking/TrackingFirewall';
+import { storageProtection } from '@/core/anti-tracking/StorageProtectionLayer';
 
 interface BreathingOptions {
   breathsPerMinute: number;
@@ -20,7 +22,8 @@ enum LungState {
   HOLDING = 'holding',
   PURIFYING = 'purifying',
   SAFE_MODE = 'safe_mode',
-  DETOXING = 'detoxing'
+  DETOXING = 'detoxing',
+  EMERGENCY_CLEANING = 'emergency_cleaning'
 }
 
 export class RespiratorySystem {
@@ -224,8 +227,8 @@ export class RespiratorySystem {
         }
       }
 
-      // Purificación anti-tracking extrema
-      if (this.options.purificationLevel === 'anti_tracking_extreme') {
+      // Purificación anti-tracking extrema solo en modo máximo
+      if (this.options.purificationLevel === 'maximum') {
         this.performExtremeAntiTrackingPurification();
       }
 
@@ -240,19 +243,24 @@ export class RespiratorySystem {
   }
 
   private performExtremeAntiTrackingPurification(): void {
-    // Firewall stats y limpieza
-    const firewallStats = trackingFirewall.getFirewallStats();
-    const protectionStats = storageProtection.getProtectionStats();
-    
-    if (firewallStats.blockedAttempts > 50) {
-      trackingFirewall.emergencyPurge();
+    try {
+      // Firewall stats y limpieza
+      const firewallStats = trackingFirewall.getFirewallStats();
+      const protectionStats = storageProtection.getProtectionStats();
+      
+      if (firewallStats.blockedAttempts > 50) {
+        trackingFirewall.emergencyPurge();
+      }
+      
+      if (protectionStats.totalStorageSize > 500000) { // 500KB
+        storageProtection.emergencyWipe();
+      }
+      
+      console.log('🦠 PURIFICACIÓN ANTI-TRACKING EXTREMA EJECUTADA');
+    } catch (error) {
+      console.error('Error en purificación extrema:', error);
+      emergencyDetox.activateEmergencyMode();
     }
-    
-    if (protectionStats.totalStorageSize > 500000) { // 500KB
-      storageProtection.emergencyWipe();
-    }
-    
-    console.log('🦠 PURIFICACIÓN ANTI-TRACKING EXTREMA EJECUTADA');
   }
 
   private emitSafeBreath(): void {
