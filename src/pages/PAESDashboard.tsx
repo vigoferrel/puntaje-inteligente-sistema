@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/app-layout";
 import { AppInitializer } from "@/components/AppInitializer";
 import { PAESUnifiedDashboard } from "@/components/paes-unified/PAESUnifiedDashboard";
@@ -14,7 +15,8 @@ import {
   ArrowRight, 
   Sparkles,
   Brain,
-  Target
+  Target,
+  Rocket
 } from "lucide-react";
 
 const PAESDashboard = () => {
@@ -66,6 +68,20 @@ const PAESDashboard = () => {
                 <Badge className="ml-2 bg-yellow-500 text-black text-xs">
                   NUEVO
                 </Badge>
+              </Button>
+              
+              {/* Botón de acceso directo al PAES Universe */}
+              <Button
+                asChild
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+              >
+                <Link to="/paes-universe" className="flex items-center space-x-2">
+                  <Rocket className="w-4 h-4" />
+                  <span>PAES Universe</span>
+                  <Badge className="bg-orange-500 text-black text-xs font-bold">
+                    BETA
+                  </Badge>
+                </Link>
               </Button>
             </div>
           </div>
