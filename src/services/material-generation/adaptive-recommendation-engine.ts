@@ -56,7 +56,7 @@ export class AdaptiveRecommendationEngine {
     userProgress: UserProgressData,
     subject: string
   ): AdaptiveRecommendation[] {
-    const phaseRecommendations: Record<TLearningCyclePhase, AdaptiveRecommendation> = {
+    const phaseRecommendations: Partial<Record<TLearningCyclePhase, AdaptiveRecommendation>> = {
       'EXPERIENCIA_CONCRETA': {
         id: `phase-ec-${Date.now()}`,
         type: 'exercises',
@@ -132,10 +132,49 @@ export class AdaptiveRecommendationEngine {
           includeContext: false
         },
         reasoning: 'Fase de experimentación activa: aplicación práctica'
+      },
+      'DIAGNOSIS': {
+        id: `phase-diag-${Date.now()}`,
+        type: 'assessment',
+        title: 'Diagnóstico Inicial',
+        description: 'Evaluación para identificar tu nivel actual',
+        priority: 'high',
+        estimatedTime: 30,
+        config: {
+          materialType: 'assessment',
+          subject,
+          phase: userProgress.currentPhase,
+          count: 10,
+          difficulty: 'INTERMEDIO',
+          mode: 'official',
+          useOfficialContent: true,
+          includeContext: true
+        },
+        reasoning: 'Fase de diagnóstico: evaluación inicial'
+      },
+      'SKILL_TRAINING': {
+        id: `phase-st-${Date.now()}`,
+        type: 'exercises',
+        title: 'Entrenamiento de Habilidades',
+        description: 'Práctica dirigida en habilidades específicas',
+        priority: 'medium',
+        estimatedTime: 25,
+        config: {
+          materialType: 'exercises',
+          subject,
+          phase: userProgress.currentPhase,
+          count: 5,
+          difficulty: 'INTERMEDIO',
+          mode: 'hybrid',
+          useOfficialContent: true,
+          includeContext: true
+        },
+        reasoning: 'Fase de entrenamiento: desarrollo de habilidades'
       }
     };
 
-    return [phaseRecommendations[userProgress.currentPhase]];
+    const recommendation = phaseRecommendations[userProgress.currentPhase];
+    return recommendation ? [recommendation] : [];
   }
 
   private static createAssessmentRecommendation(subject: string): AdaptiveRecommendation {

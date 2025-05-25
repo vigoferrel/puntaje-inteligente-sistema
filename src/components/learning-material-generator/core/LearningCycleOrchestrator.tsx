@@ -23,7 +23,7 @@ export const LearningCycleOrchestrator: React.FC<LearningCycleOrchestratorProps>
   onGenerate,
   isGenerating: externalIsGenerating
 }) => {
-  const [currentPhase, setCurrentPhase] = useState<TLearningCyclePhase>('EXPERIENCIA_CONCRETA');
+  const [currentPhase, setCurrentPhase] = useState<TLearningCyclePhase>('DIAGNOSIS');
   
   const {
     isGenerating: internalIsGenerating,
@@ -93,10 +93,15 @@ export const LearningCycleOrchestrator: React.FC<LearningCycleOrchestratorProps>
       name: 'Experimentación Activa',
       description: 'Aplicación práctica y simulacros',
       color: 'bg-orange-100 text-orange-800'
+    },
+    'DIAGNOSIS': {
+      name: 'Diagnóstico',
+      description: 'Evaluación del nivel actual',
+      color: 'bg-red-100 text-red-800'
     }
   };
 
-  const currentPhaseInfo = phaseInfo[currentPhase];
+  const currentPhaseInfo = phaseInfo[currentPhase] || phaseInfo['DIAGNOSIS'];
 
   return (
     <div className="space-y-6">

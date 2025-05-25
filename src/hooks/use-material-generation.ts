@@ -84,7 +84,7 @@ export const useMaterialGeneration = () => {
   const getMockUserProgress = useCallback((subject: string): UserProgressData => {
     return {
       userId: 'user-123',
-      currentPhase: 'EXPERIENCIA_CONCRETA',
+      currentPhase: 'DIAGNOSIS',
       completedNodes: [],
       weakAreas: ['INTERPRET_RELATE', 'SOLVE_PROBLEMS'],
       strongAreas: ['TRACK_LOCATE'],

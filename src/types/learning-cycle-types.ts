@@ -15,7 +15,11 @@ export type TLearningCyclePhase =
   | 'PERIODIC_TESTS'
   | 'FEEDBACK_ANALYSIS'
   | 'REINFORCEMENT'
-  | 'FINAL_SIMULATIONS';
+  | 'FINAL_SIMULATIONS'
+  | 'EXPERIENCIA_CONCRETA'
+  | 'OBSERVACION_REFLEXIVA'
+  | 'CONCEPTUALIZACION_ABSTRACTA'
+  | 'EXPERIMENTACION_ACTIVA';
 
 export const LEARNING_CYCLE_PHASES_ORDER: TLearningCyclePhase[] = [
   'DIAGNOSIS',
@@ -57,6 +61,14 @@ export function getLearningCyclePhaseDisplayName(phase: TLearningCyclePhase): st
       return 'Práctica';
     case 'application':
       return 'Aplicación';
+    case 'EXPERIENCIA_CONCRETA':
+      return 'Experiencia Concreta';
+    case 'OBSERVACION_REFLEXIVA':
+      return 'Observación Reflexiva';
+    case 'CONCEPTUALIZACION_ABSTRACTA':
+      return 'Conceptualización Abstracta';
+    case 'EXPERIMENTACION_ACTIVA':
+      return 'Experimentación Activa';
     default:
       return phase;
   }
@@ -91,6 +103,14 @@ export function getLearningCyclePhaseDescription(phase: TLearningCyclePhase): st
       return 'Practica lo aprendido';
     case 'application':
       return 'Aplica en situaciones reales';
+    case 'EXPERIENCIA_CONCRETA':
+      return 'Práctica inicial con ejercicios básicos';
+    case 'OBSERVACION_REFLEXIVA':
+      return 'Análisis de patrones y estrategias';
+    case 'CONCEPTUALIZACION_ABSTRACTA':
+      return 'Teoría profunda y conceptos avanzados';
+    case 'EXPERIMENTACION_ACTIVA':
+      return 'Aplicación práctica y simulacros';
     default:
       return 'Fase del ciclo de aprendizaje';
   }
