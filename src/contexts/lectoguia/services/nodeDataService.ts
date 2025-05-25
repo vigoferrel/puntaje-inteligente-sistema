@@ -40,6 +40,9 @@ export class NodeDataService {
 
     // Transform data with improved mapping and auto-correction
     const transformedNodes: TLearningNode[] = data?.map(node => {
+      const cognitiveLevel = node.cognitive_level || 'COMPRENDER';
+      const subjectArea = node.subject_area || node.paes_tests?.code || 'COMPETENCIA_LECTORA';
+
       const mappedNode: TLearningNode = {
         id: node.id,
         title: node.title,
@@ -56,8 +59,10 @@ export class NodeDataService {
         createdAt: node.created_at,
         updatedAt: node.updated_at,
         // Required properties with safe defaults
-        cognitive_level: node.cognitive_level || 'COMPRENDER',
-        subject_area: node.subject_area || node.paes_tests?.code || 'COMPETENCIA_LECTORA'
+        cognitive_level: cognitiveLevel,
+        cognitiveLevel: cognitiveLevel,
+        subject_area: subjectArea,
+        subjectArea: subjectArea
       };
 
       // Apply auto-correction

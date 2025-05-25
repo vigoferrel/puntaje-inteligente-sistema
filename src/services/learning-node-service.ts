@@ -81,6 +81,9 @@ export const fetchNodesBySkills = async (skills: TPAESHabilidad[]): Promise<TLea
  * Maps a raw database node to the TLearningNode type with all required properties
  */
 const mapDbNodeToLearningNode = (data: any): TLearningNode => {
+  const cognitiveLevel = data.cognitive_level || 'COMPRENDER';
+  const subjectArea = data.subject_area || data.test?.code || 'COMPETENCIA_LECTORA';
+
   return {
     id: data.id,
     title: data.title,
@@ -96,9 +99,11 @@ const mapDbNodeToLearningNode = (data: any): TLearningNode => {
     dependsOn: data.depends_on || [],
     createdAt: data.created_at,
     updatedAt: data.updated_at,
-    // Propiedades ahora requeridas con valores seguros
-    cognitive_level: data.cognitive_level || 'COMPRENDER',
-    subject_area: data.subject_area || data.test?.code || 'COMPETENCIA_LECTORA',
+    // Propiedades duales requeridas
+    cognitive_level: cognitiveLevel,
+    cognitiveLevel: cognitiveLevel,
+    subject_area: subjectArea,
+    subjectArea: subjectArea,
     content: {
       theory: '',
       examples: [],

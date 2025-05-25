@@ -104,25 +104,32 @@ export function useNodes(userId?: string) {
       if (error) throw error;
 
       // Transformar datos al formato esperado con todas las propiedades requeridas
-      const transformedNodes: TLearningNode[] = data?.map(node => ({
-        id: node.id,
-        title: node.title,
-        description: node.description || '',
-        code: node.code || `${node.id.slice(0, 8)}`,
-        position: node.position || 0,
-        difficulty: node.difficulty as 'basic' | 'intermediate' | 'advanced',
-        estimatedTimeMinutes: node.estimated_time_minutes || 30,
-        skill: node.paes_skills?.code as any,
-        prueba: node.paes_tests?.code as TPAESPrueba,
-        skillId: node.skill_id || 1,
-        testId: node.test_id || 1,
-        dependsOn: node.depends_on || [],
-        createdAt: node.created_at,
-        updatedAt: node.updated_at,
-        // Propiedades ahora requeridas con valores seguros de la base de datos
-        cognitive_level: node.cognitive_level || 'COMPRENDER',
-        subject_area: node.subject_area || node.paes_tests?.code || 'COMPETENCIA_LECTORA'
-      })) || [];
+      const transformedNodes: TLearningNode[] = data?.map(node => {
+        const cognitiveLevel = node.cognitive_level || 'COMPRENDER';
+        const subjectArea = node.subject_area || node.paes_tests?.code || 'COMPETENCIA_LECTORA';
+
+        return {
+          id: node.id,
+          title: node.title,
+          description: node.description || '',
+          code: node.code || `${node.id.slice(0, 8)}`,
+          position: node.position || 0,
+          difficulty: node.difficulty as 'basic' | 'intermediate' | 'advanced',
+          estimatedTimeMinutes: node.estimated_time_minutes || 30,
+          skill: node.paes_skills?.code as any,
+          prueba: node.paes_tests?.code as TPAESPrueba,
+          skillId: node.skill_id || 1,
+          testId: node.test_id || 1,
+          dependsOn: node.depends_on || [],
+          createdAt: node.created_at,
+          updatedAt: node.updated_at,
+          // Propiedades duales requeridas
+          cognitive_level: cognitiveLevel,
+          cognitiveLevel: cognitiveLevel,
+          subject_area: subjectArea,
+          subjectArea: subjectArea
+        };
+      }) || [];
 
       console.log(`✅ Nodos cargados: ${transformedNodes.length} total`);
       

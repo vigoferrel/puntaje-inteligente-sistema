@@ -42,7 +42,7 @@ export const useValidationSystem = () => {
         warnings.push('No se encontraron planes de aprendizaje');
       }
 
-      // Validar coherencia de datos
+      // Validar coherencia de datos - CORREGIDO: usar subjectArea en lugar de subject_area
       const nodesWithoutSubject = diagnosticSystem.learningNodes.filter(node => 
         !node.subjectArea && !node.subject_area
       );

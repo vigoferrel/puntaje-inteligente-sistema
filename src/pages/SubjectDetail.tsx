@@ -102,7 +102,7 @@ const SubjectDetail: React.FC = () => {
     );
   }
 
-  // Filtrar nodos usando ambas propiedades para compatibilidad
+  // Filtrar nodos usando subjectArea corregido
   const subjectNodes = diagnosticSystem.learningNodes.filter(node => {
     const nodeSubject = node.subjectArea || node.subject_area || '';
     return nodeSubject.toLowerCase().includes(currentSubject.subjectArea.toLowerCase());
