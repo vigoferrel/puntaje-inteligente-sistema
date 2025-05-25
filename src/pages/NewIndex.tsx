@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AppLayout } from "@/components/app-layout";
 import { AppInitializer } from "@/components/AppInitializer";
@@ -6,6 +5,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { SubjectProgressGrid } from "@/components/home/SubjectProgressGrid";
 import { SmartRecommendations } from "@/components/home/SmartRecommendations";
 import { TierProgressVisualizer } from "@/components/home/TierProgressVisualizer";
+import { ExerciseGeneratorWidget } from "@/components/home/ExerciseGeneratorWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { useLearningNodes } from "@/hooks/use-learning-nodes";
@@ -23,7 +23,7 @@ const NewIndex = () => {
   } = useDashboardStats();
   const { currentPhase, nodes, nodeProgress } = useLearningNodes();
 
-  // Mock data basado en el sistema real de 277 nodos
+  // Datos actualizados del sistema de 277 nodos
   const mockSubjects = [
     {
       code: 'COMPETENCIA_LECTORA',
@@ -34,7 +34,8 @@ const NewIndex = () => {
       projectedScore: 675,
       criticalAreas: 3,
       strengths: 8,
-      priority: 'medium' as const
+      priority: 'medium' as const,
+      tier1: 14, tier2: 13, tier3: 3
     },
     {
       code: 'MATEMATICA_1',
@@ -45,7 +46,8 @@ const NewIndex = () => {
       projectedScore: 620,
       criticalAreas: 6,
       strengths: 4,
-      priority: 'high' as const
+      priority: 'high' as const,
+      tier1: 10, tier2: 10, tier3: 5
     },
     {
       code: 'MATEMATICA_2',
@@ -56,7 +58,8 @@ const NewIndex = () => {
       projectedScore: 590,
       criticalAreas: 8,
       strengths: 2,
-      priority: 'high' as const
+      priority: 'high' as const,
+      tier1: 13, tier2: 6, tier3: 3
     },
     {
       code: 'HISTORIA',
@@ -67,7 +70,8 @@ const NewIndex = () => {
       projectedScore: 640,
       criticalAreas: 12,
       strengths: 15,
-      priority: 'medium' as const
+      priority: 'medium' as const,
+      tier1: 19, tier2: 26, tier3: 20
     },
     {
       code: 'CIENCIAS',
@@ -78,7 +82,8 @@ const NewIndex = () => {
       projectedScore: 655,
       criticalAreas: 25,
       strengths: 28,
-      priority: 'low' as const
+      priority: 'low' as const,
+      tier1: 33, tier2: 53, tier3: 49
     }
   ];
 
@@ -92,8 +97,8 @@ const NewIndex = () => {
       estimatedTime: 45,
       impact: 'high' as const,
       action: {
-        label: 'Practicar ahora',
-        route: '/practice/algebra-basica'
+        label: 'Generar ejercicios',
+        route: '/ejercicios/matematica-m1'
       },
       aiReason: 'Detecté 3 errores consecutivos en esta área y es prerequisito para 8 nodos adicionales.'
     },
@@ -106,8 +111,8 @@ const NewIndex = () => {
       estimatedTime: 30,
       impact: 'medium' as const,
       action: {
-        label: 'Completar dominio',
-        route: '/practice/textos-argumentativos'
+        label: 'Practicar con ejercicios',
+        route: '/ejercicios/competencia-lectora'
       },
       aiReason: '85% de aciertos en esta área. Con 2-3 ejercicios más alcanzarías maestría completa.'
     },
@@ -120,24 +125,10 @@ const NewIndex = () => {
       estimatedTime: 60,
       impact: 'medium' as const,
       action: {
-        label: 'Comenzar nodo',
-        route: '/learning/probabilidad-condicional'
+        label: 'Generar ejercicios',
+        route: '/ejercicios/ciencias'
       },
       aiReason: 'Has completado todos los prerequisitos y este nodo tiene alta frecuencia en PAES.'
-    },
-    {
-      id: '4',
-      type: 'strength' as const,
-      title: 'Fortaleza en Historia',
-      description: 'Excelente dominio en Chile en el siglo XX.',
-      subject: 'Historia',
-      estimatedTime: 20,
-      impact: 'low' as const,
-      action: {
-        label: 'Reforzar ventaja',
-        route: '/practice/chile-siglo-xx'
-      },
-      aiReason: '95% de aciertos. Mantener este nivel te dará ventaja competitiva significativa.'
     }
   ];
 
@@ -229,6 +220,11 @@ const NewIndex = () => {
               completedNodes={completedNodes}
               projectedScore={projectedScore}
             />
+          </motion.section>
+
+          {/* Exercise Generator Widget */}
+          <motion.section variants={sectionVariants}>
+            <ExerciseGeneratorWidget subjects={mockSubjects} />
           </motion.section>
 
           {/* Tier Progress */}

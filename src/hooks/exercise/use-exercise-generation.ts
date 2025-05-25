@@ -1,205 +1,80 @@
 
-import { useState } from 'react';
-import { Exercise } from '@/types/ai-types';
-import { generateExercise as genExerciseFromAPI, generateExercisesBatch } from '@/services/openrouter/exercise-generation';
-import { TPAESHabilidad, TPAESPrueba, TLearningNode } from '@/types/system-types';
-import { ExerciseContentValidator } from '@/utils/exercise-content-validator';
-import { EducationalExerciseBank } from '@/utils/educational-exercise-bank';
-import { toast } from '@/components/ui/use-toast';
+import { useState, useCallback } from 'react';
 
-/**
- * Hook para manejar la generación de ejercicios con validación de contenido educativo
- */
-export function useExerciseGeneration() {
-  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+interface Exercise {
+  id: number;
+  node: string;
+  subject: string;
+  difficulty: string;
+  question: string;
+  alternatives: string[];
+  correctAnswer: string;
+  explanation: string;
+  estimatedTime: number;
+}
 
-  // Generar un ejercicio nuevo con validación
-  const generateExercise = async (
-    skill: TPAESHabilidad, 
-    prueba?: TPAESPrueba, 
-    difficulty: string = "INTERMEDIATE"
-  ): Promise<Exercise | null> => {
+interface GenerationConfig {
+  subject: string;
+  tier: string;
+  nodes: string[];
+  difficulty: string;
+  count: number;
+  apiKey: string;
+}
+
+export const useExerciseGeneration = () => {
+  const [exerciseResults, setExerciseResults] = useState<Exercise[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const generateMockExercises = (config: GenerationConfig): Exercise[] => {
+    return Array.from({ length: config.count }, (_, i) => ({
+      id: i + 1,
+      node: config.nodes[i % config.nodes.length],
+      subject: config.subject,
+      difficulty: config.difficulty,
+      question: `¿Cuál de las siguientes opciones mejor describe el concepto evaluado en el nodo ${config.nodes[i % config.nodes.length]}?`,
+      alternatives: [
+        'Primera alternativa de respuesta que podría ser correcta',
+        'Segunda alternativa que presenta una opción distinta',
+        'Tercera alternativa con contenido relacionado',
+        'Cuarta alternativa como distractor final'
+      ],
+      correctAnswer: 'A',
+      explanation: `La respuesta correcta es A porque evalúa directamente el objetivo de aprendizaje del nodo ${config.nodes[i % config.nodes.length]}. Este nodo se enfoca en desarrollar las competencias específicas de ${config.subject} en nivel ${config.difficulty}.`,
+      estimatedTime: Math.floor(Math.random() * 3) + 2
+    }));
+  };
+
+  const generateExercises = useCallback(async (config: GenerationConfig) => {
+    setIsGenerating(true);
+    setError(null);
+
     try {
-      setIsLoading(true);
+      // Simular llamada a la API (aquí iría la integración real con OpenRouter)
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      console.log(`Generando ejercicio educativo - skill=${skill}, prueba=${prueba || 'inferida'}, difficulty=${difficulty}`);
+      const mockExercises = generateMockExercises(config);
+      setExerciseResults(mockExercises);
       
-      // Si no se especifica una prueba, inferir según la habilidad
-      const effectivePrueba = prueba || inferPruebaFromSkill(skill);
-      
-      // Intentar generar ejercicio
-      const exercise = await genExerciseFromAPI(
-        skill, 
-        effectivePrueba, 
-        difficulty as 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
-      );
-      
-      if (exercise) {
-        // Validar contenido
-        const validation = ExerciseContentValidator.validateExercise(exercise);
-        
-        if (validation.isValid) {
-          // Ejercicio válido
-          exercise.prueba = effectivePrueba;
-          setCurrentExercise(exercise);
-          
-          toast({
-            title: "Ejercicio generado",
-            description: "Se ha creado un ejercicio educativo apropiado para tu nivel."
-          });
-          
-          return exercise;
-        } else {
-          // Ejercicio inválido, usar respaldo
-          console.warn('Ejercicio generado inválido, usando respaldo educativo:', validation.errors);
-          
-          const fallback = EducationalExerciseBank.getFallbackExercise(skill, effectivePrueba, difficulty);
-          if (fallback) {
-            setCurrentExercise(fallback);
-            
-            toast({
-              title: "Ejercicio educativo",
-              description: "Se ha proporcionado un ejercicio de nuestro banco educativo verificado."
-            });
-            
-            return fallback;
-          }
-        }
-      }
-      
-      // Si todo falla, generar respaldo garantizado
-      const emergency = EducationalExerciseBank.getFallbackExercise(skill, effectivePrueba, difficulty);
-      if (emergency) {
-        setCurrentExercise(emergency);
-        
-        toast({
-          title: "Ejercicio de respaldo",
-          description: "Se ha proporcionado un ejercicio educativo de nuestro banco de contenido.",
-          variant: "default"
-        });
-        
-        return emergency;
-      }
-      
-      // Último recurso
-      toast({
-        title: "Error",
-        description: "No se pudo generar un ejercicio apropiado en este momento. Por favor intenta más tarde.",
-        variant: "destructive"
-      });
-      
-      return null;
-      
-    } catch (error) {
-      console.error("Error al generar ejercicio:", error);
-      
-      // Siempre intentar proporcionar respaldo en caso de error
-      const effectivePrueba = prueba || inferPruebaFromSkill(skill);
-      const fallback = EducationalExerciseBank.getFallbackExercise(skill, effectivePrueba, difficulty);
-      
-      if (fallback) {
-        setCurrentExercise(fallback);
-        
-        toast({
-          title: "Ejercicio de respaldo",
-          description: "Se ha proporcionado un ejercicio educativo verificado de nuestro banco de contenido."
-        });
-        
-        return fallback;
-      }
-      
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al generar el ejercicio. Por favor intenta de nuevo.",
-        variant: "destructive"
-      });
-      
-      return null;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('Error generating exercises:', err);
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
-  };
-  
-  // Generar un ejercicio para un nodo de aprendizaje
-  const generateExerciseForNode = async (node: TLearningNode): Promise<Exercise | null> => {
-    if (!node || !node.skill || !node.prueba) {
-      console.error("Información insuficiente en el nodo para generar ejercicio");
-      
-      toast({
-        title: "Error",
-        description: "No se puede generar un ejercicio para este nodo. Información insuficiente.",
-        variant: "destructive"
-      });
-      
-      return null;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      // Generar ejercicio utilizando la información del nodo
-      const exercise = await generateExercise(
-        node.skill,
-        node.prueba,
-        node.difficulty || 'INTERMEDIATE'
-      );
-      
-      if (exercise) {
-        // Vincular el ejercicio con el nodo
-        exercise.nodeId = node.id;
-        exercise.nodeName = node.title;
-        exercise.prueba = node.prueba;
-        
-        setCurrentExercise(exercise);
-        return exercise;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error("Error al generar ejercicio para nodo:", error);
-      
-      toast({
-        title: "Error",
-        description: "No se pudo generar un ejercicio para este nodo.",
-        variant: "destructive"
-      });
-      
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Inferir el tipo de prueba según la habilidad
-  const inferPruebaFromSkill = (skill: TPAESHabilidad): TPAESPrueba => {
-    const skillToPruebaMap: Record<TPAESHabilidad, TPAESPrueba> = {
-      'TRACK_LOCATE': 'COMPETENCIA_LECTORA',
-      'INTERPRET_RELATE': 'COMPETENCIA_LECTORA',
-      'EVALUATE_REFLECT': 'COMPETENCIA_LECTORA',
-      'SOLVE_PROBLEMS': 'MATEMATICA_1',
-      'REPRESENT': 'MATEMATICA_1',
-      'MODEL': 'MATEMATICA_2',
-      'ARGUE_COMMUNICATE': 'MATEMATICA_2',
-      'IDENTIFY_THEORIES': 'CIENCIAS',
-      'PROCESS_ANALYZE': 'CIENCIAS',
-      'APPLY_PRINCIPLES': 'CIENCIAS',
-      'SCIENTIFIC_ARGUMENT': 'CIENCIAS',
-      'TEMPORAL_THINKING': 'HISTORIA',
-      'SOURCE_ANALYSIS': 'HISTORIA',
-      'MULTICAUSAL_ANALYSIS': 'HISTORIA',
-      'CRITICAL_THINKING': 'HISTORIA',
-      'REFLECTION': 'HISTORIA'
-    };
-    
-    return skillToPruebaMap[skill] || 'COMPETENCIA_LECTORA';
-  };
+  }, []);
+
+  const clearResults = useCallback(() => {
+    setExerciseResults([]);
+    setError(null);
+  }, []);
 
   return {
-    currentExercise,
-    setCurrentExercise,
-    generateExercise,
-    generateExerciseForNode,
-    isLoading
+    exerciseResults,
+    isGenerating,
+    error,
+    generateExercises,
+    clearResults
   };
-}
+};
