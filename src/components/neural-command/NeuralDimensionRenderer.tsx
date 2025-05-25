@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import {
   Trophy, Gamepad2, Zap, Star, Crown, Rocket,
   TrendingUp, PieChart, LineChart, Activity
 } from 'lucide-react';
+import { Galaxy, UniverseMetrics } from '@/types/universe-types';
 
 type NeuralDimension = 
   | 'universe_exploration' 
@@ -25,24 +27,42 @@ type NeuralDimension =
 interface NeuralDimensionRendererProps {
   activeDimension: NeuralDimension;
   selectedGalaxy: string | null;
-  neuralMetrics: any;
-  onStartTraining: () => void;
-  onViewAnalysis: () => void;
-  onEnterBattle: () => void;
+  galaxies: Galaxy[];
+  neuralMetrics: UniverseMetrics;
+  onGalaxyInteraction: (galaxyId: string) => void;
   onNavigateToAnalysis?: () => void;
   onNavigateToTraining?: () => void;
+  isTransitioning: boolean;
 }
 
 export const NeuralDimensionRenderer: React.FC<NeuralDimensionRendererProps> = ({
   activeDimension,
   selectedGalaxy,
+  galaxies,
   neuralMetrics,
-  onStartTraining,
-  onViewAnalysis,
-  onEnterBattle,
+  onGalaxyInteraction,
   onNavigateToAnalysis,
-  onNavigateToTraining
+  onNavigateToTraining,
+  isTransitioning
 }) => {
+  // Helper functions for backwards compatibility
+  const onStartTraining = () => {
+    if (onNavigateToTraining) {
+      onNavigateToTraining();
+    }
+  };
+
+  const onViewAnalysis = () => {
+    if (onNavigateToAnalysis) {
+      onNavigateToAnalysis();
+    }
+  };
+
+  const onEnterBattle = () => {
+    // Battle mode logic
+    console.log('Entering battle mode...');
+  };
+
   const renderDimensionContent = () => {
     switch (activeDimension) {
       case 'analisis_avanzado':
