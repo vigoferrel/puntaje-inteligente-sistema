@@ -1,100 +1,79 @@
 
 /**
- * SISTEMA ANTI-TRACKING UNIFICADO v2.0
- * Exportaciones centralizadas con desintoxicación de emergencia
+ * SISTEMA ANTI-TRACKING INTEGRISTA v8.0
+ * Exportación simplificada - Todo el detox está en CardiovascularSystem
  */
 
-export { trackingFirewall } from './TrackingFirewall';
-export { storageProtection } from './StorageProtectionLayer';
-export { emergencyDetox, EmergencyDetox } from './EmergencyDetox';
+import { CardiovascularSystem } from '../system-vitals/CardiovascularSystem';
+import { StorageProtectionLayer } from './StorageProtectionLayer';
+import { TrackingFirewall } from './TrackingFirewall';
 
-// Función de inicialización global anti-tracking con protección
+// SINGLETON CARDIOVASCULAR INTEGRISTA COMO SISTEMA DE DETOX
+export const getIntegristaDetoxSystem = () => {
+  return CardiovascularSystem.getInstance({
+    maxBeatsPerSecond: 6,
+    restingPeriod: 3000,
+    recoveryTime: 8000,
+    emergencyThreshold: 10,
+    purificationLevel: 'maximum',
+    oxygenThreshold: 75
+  });
+};
+
+// INICIALIZACIÓN SIMPLIFICADA DEL SISTEMA ANTI-TRACKING
 export const initializeAntiTrackingSystem = () => {
   try {
-    console.log('🛡️ SISTEMA ANTI-TRACKING v2.0 INICIADO - Con protección anti-autodestrucción');
+    console.log('🛡️ Inicializando sistema anti-tracking integrista v8.0');
     
-    // Verificar si necesitamos modo de emergencia usando import directo
-    import('./EmergencyDetox').then(({ emergencyDetox }) => {
-      if (emergencyDetox.isSafeMode()) {
-        console.log('⚠️ Sistema iniciado en MODO SEGURO');
-        return;
-      }
-    });
+    // Inicializar el sistema cardiovascular integrista (incluye detox)
+    const cardiovascularDetox = getIntegristaDetoxSystem();
     
-    // Las instancias se inicializan automáticamente al importar
-    console.log('✅ Firewall Anti-Tracking: ACTIVO');
-    console.log('✅ Protección de Storage: ACTIVA');
-    console.log('✅ Purificación Respiratoria: ACTIVA');
-    console.log('✅ Desintoxicación de Emergencia: STANDBY');
+    // Sistemas complementarios
+    const storageProtection = new StorageProtectionLayer();
+    const trackingFirewall = new TrackingFirewall();
     
-  } catch (error) {
-    console.error('Error inicializando anti-tracking:', error);
+    // Configurar protecciones
+    storageProtection.initialize();
+    trackingFirewall.initialize();
     
-    // Activar modo de emergencia si hay problemas en la inicialización
-    import('./EmergencyDetox').then(({ emergencyDetox }) => {
-      emergencyDetox.activateEmergencyMode();
-    }).catch(err => {
-      console.error('Error crítico en emergencyDetox:', err);
-    });
-  }
-};
-
-// Emergency reset global mejorado
-export const emergencyAntiTrackingReset = async () => {
-  console.log('🚨 RESET DE EMERGENCIA ANTI-TRACKING GLOBAL v2.0');
-  
-  try {
-    const { emergencyDetox } = await import('./EmergencyDetox');
-    
-    // Activar desintoxicación de emergencia
-    emergencyDetox.activateEmergencyMode();
-    
-    // Intentar reset tradicional después de detox
-    setTimeout(async () => {
-      try {
-        const [{ trackingFirewall }, { storageProtection }] = await Promise.all([
-          import('./TrackingFirewall'),
-          import('./StorageProtectionLayer')
-        ]);
-        
-        trackingFirewall.emergencyPurge();
-        storageProtection.emergencyWipe();
-      } catch (error) {
-        console.error('Error en reset tradicional:', error);
-      }
-    }, 5000);
-    
-  } catch (error) {
-    console.error('Error en reset de emergencia:', error);
-    
-    // Último recurso: reload de la página
-    setTimeout(() => {
-      window.location.reload();
-    }, 10000);
-  }
-  
-  console.log('✅ Reset de emergencia v2.0 completado');
-};
-
-// Función de salud del sistema
-export const getAntiTrackingHealth = async () => {
-  try {
-    const [{ emergencyDetox }, { trackingFirewall }, { storageProtection }] = await Promise.all([
-      import('./EmergencyDetox'),
-      import('./TrackingFirewall'),
-      import('./StorageProtectionLayer')
-    ]);
+    console.log('✅ Sistema anti-tracking integrista v8.0 inicializado');
     
     return {
-      detoxStatus: emergencyDetox.getDetoxStatus(),
-      firewallStats: trackingFirewall.getFirewallStats(),
-      protectionStats: storageProtection.getProtectionStats(),
-      overallHealth: emergencyDetox.isSafeMode() ? 'safe_mode' : 'active'
+      cardiovascularDetox,
+      storageProtection,
+      trackingFirewall,
+      version: 'v8.0-integrista'
     };
+    
   } catch (error) {
+    console.error('❌ Error inicializando sistema anti-tracking integrista:', error);
+    
+    // Fallback usando solo el sistema cardiovascular
     return {
-      overallHealth: 'error',
-      error: error.message
+      cardiovascularDetox: getIntegristaDetoxSystem(),
+      version: 'v8.0-integrista-fallback'
     };
   }
 };
+
+// ACTIVACIÓN DE EMERGENCIA DIRECTA AL SISTEMA CARDIOVASCULAR
+export const activateEmergencyDetox = () => {
+  const cardiovascularDetox = getIntegristaDetoxSystem();
+  cardiovascularDetox.activateIntegratedEmergencyMode();
+};
+
+// VERIFICACIÓN DE MODO SEGURO
+export const isSafeMode = () => {
+  const cardiovascularDetox = getIntegristaDetoxSystem();
+  return cardiovascularDetox.isSafeMode();
+};
+
+// ESTADO DEL SISTEMA INTEGRADO
+export const getSystemStatus = () => {
+  const cardiovascularDetox = getIntegristaDetoxSystem();
+  return cardiovascularDetox.getIntegratedSystemStatus();
+};
+
+// Compatibilidad con importaciones antiguas
+export const emergencyDetox = getIntegristaDetoxSystem();
+export { getIntegristaDetoxSystem as EmergencyDetox };

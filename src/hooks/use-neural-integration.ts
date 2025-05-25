@@ -1,16 +1,16 @@
 
 /**
- * Hook neurológico CARDIOVASCULAR UNIFICADO v7.2 - SINGLETON ESTRICTO
- * Post-cirugía completa con singleton enforcement y logging throttled
+ * Hook neurológico CARDIOVASCULAR INTEGRISTA v8.0 - SISTEMA UNIFICADO
+ * Post-cirugía completa con arquitectura monolítica cardiovascular
  */
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useNeuralModule } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useAuth } from '@/contexts/AuthContext';
-import { CirculatorySystem } from '@/core/system-vitals/CirculatorySystem';
+import { CardiovascularSystem } from '@/core/system-vitals/CardiovascularSystem';
 
-// SINGLETON GLOBAL ESTRICTO para CirculatorySystem
-let globalCirculatorySystemInstance: CirculatorySystem | null = null;
+// SINGLETON CARDIOVASCULAR INTEGRISTA GLOBAL
+let globalCardiovascularInstance: CardiovascularSystem | null = null;
 let instanceCreationLock = false;
 
 export const useNeuralIntegration = (
@@ -20,67 +20,74 @@ export const useNeuralIntegration = (
 ) => {
   const { user } = useAuth();
   const moduleId = useRef(`${moduleType}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`);
-  const circulatorySystem = useRef<CirculatorySystem | null>(null);
+  const cardiovascularSystem = useRef<CardiovascularSystem | null>(null);
   const lastBroadcastRef = useRef<string>('');
   const isDestroyedRef = useRef(false);
   const lastLogTime = useRef(0);
-  const logThrottle = 60000; // 1 minuto entre logs
+  const logThrottle = 120000; // 2 minutos entre logs
   
   const neural = useNeuralModule({
     id: moduleId.current,
     type: moduleType,
     capabilities: [
       ...capabilities,
-      'cardiovascular_integration_v7_2',
-      'singleton_enforcement',
-      'emergency_response'
+      'cardiovascular_integrista_v8_0',
+      'detox_integration',
+      'anti_tracking_unified',
+      'emergency_response_integrated'
     ]
   });
 
-  // Inicialización singleton del sistema circulatorio
+  // Inicialización del sistema cardiovascular integrista
   useEffect(() => {
-    if (!circulatorySystem.current && !globalCirculatorySystemInstance && !instanceCreationLock) {
+    if (!cardiovascularSystem.current && !globalCardiovascularInstance && !instanceCreationLock) {
       instanceCreationLock = true;
       
       try {
-        globalCirculatorySystemInstance = new CirculatorySystem();
-        circulatorySystem.current = globalCirculatorySystemInstance;
+        globalCardiovascularInstance = CardiovascularSystem.getInstance({
+          maxBeatsPerSecond: 5,  // Más conservador para v8.0
+          restingPeriod: 3000,   // Más espaciado
+          recoveryTime: 8000,    // Recovery más largo
+          emergencyThreshold: 8, // Más tolerante
+          purificationLevel: 'maximum',
+          oxygenThreshold: 80
+        });
+        cardiovascularSystem.current = globalCardiovascularInstance;
         
         const now = Date.now();
         if (now - lastLogTime.current > logThrottle) {
-          console.log('🫀 SISTEMA CIRCULATORIO SINGLETON v7.2 INICIALIZADO');
+          console.log('🫀 SISTEMA CARDIOVASCULAR INTEGRISTA v8.0 INICIALIZADO (Detox incluido)');
           lastLogTime.current = now;
         }
       } catch (error) {
-        console.error('Error inicializando sistema circulatorio singleton:', error);
+        console.error('Error inicializando sistema cardiovascular integrista:', error);
       } finally {
         instanceCreationLock = false;
       }
-    } else if (globalCirculatorySystemInstance) {
-      // Reutilizar instancia singleton existente
-      circulatorySystem.current = globalCirculatorySystemInstance;
+    } else if (globalCardiovascularInstance) {
+      cardiovascularSystem.current = globalCardiovascularInstance;
     }
 
     return () => {
-      // NO destruir el singleton, solo marcar como no utilizado
       isDestroyedRef.current = true;
     };
   }, []);
 
-  // Broadcast cardiovascular throttled
+  // Broadcast cardiovascular integrista throttled
   const cardiovascularBroadcast = useCallback((signalType: string, payload: any) => {
-    if (isDestroyedRef.current || !circulatorySystem.current) {
+    if (isDestroyedRef.current || !cardiovascularSystem.current) {
       return;
     }
 
-    const processed = circulatorySystem.current.processSignal({
+    const processed = cardiovascularSystem.current.processSignal({
       type: signalType,
       payload,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      integrista_version: 'v8.0'
     });
 
     if (processed) {
-      const oxygenatedModule = circulatorySystem.current.oxygenateModule({
+      const oxygenatedModule = cardiovascularSystem.current.oxygenate({
         id: moduleId.current,
         type: moduleType,
         capabilities: capabilities,
@@ -92,35 +99,36 @@ export const useNeuralIntegration = (
         type: signalType as any,
         payload: {
           ...payload,
-          cardiovascular_processed_v7_2: true,
-          singleton_enforced: true,
-          vitals: circulatorySystem.current.getSystemVitals()
+          cardiovascular_integrista_v8_0: true,
+          detox_integrated: true,
+          vitals: cardiovascularSystem.current.getIntegratedSystemStatus()
         },
         priority: 'MEDIUM' as any
       });
     }
   }, [neural, moduleType, capabilities, currentState]);
 
-  // Broadcast ultra-controlado con mayor delay
+  // Broadcast ultra-controlado con mayor delay para v8.0
   useEffect(() => {
-    if (isDestroyedRef.current || !circulatorySystem.current) return;
+    if (isDestroyedRef.current || !cardiovascularSystem.current) return;
     
     const currentHash = JSON.stringify(currentState);
     
     if (currentHash.length > 15) {
       const timeoutId = setTimeout(() => {
         if (!isDestroyedRef.current && 
-            circulatorySystem.current && 
-            circulatorySystem.current.canProcessSignal()) {
+            cardiovascularSystem.current && 
+            cardiovascularSystem.current.canPump()) {
           
-          cardiovascularBroadcast('DATA_MUTATION_CARDIOVASCULAR_V7_2', {
+          cardiovascularBroadcast('DATA_MUTATION_INTEGRISTA_V8_0', {
             new_state: currentState,
             user_id: user?.id,
             timestamp: Date.now(),
-            system_health: 'singleton_optimized'
+            system_health: 'integrista_optimized',
+            detox_status: cardiovascularSystem.current.getIntegratedDetoxStatus()
           });
         }
-      }, 45000); // Aumentado a 45 segundos
+      }, 60000); // Aumentado a 60 segundos para v8.0
 
       return () => clearTimeout(timeoutId);
     }
@@ -136,7 +144,7 @@ export const useNeuralIntegration = (
       if (signal.type === 'EMERGENCY_COORDINATION') {
         const now = Date.now();
         if (now - lastLogTime.current > logThrottle) {
-          console.log('🫀 Sistema cardiovascular singleton procesando emergencia v7.2');
+          console.log('🫀 Sistema cardiovascular integrista procesando emergencia v8.0');
           lastLogTime.current = now;
         }
       }
@@ -145,9 +153,9 @@ export const useNeuralIntegration = (
     return unsubscribe;
   }, [neural, moduleType]);
 
-  // Acciones cardiovasculares con delay aumentado
+  // Acciones cardiovasculares integradas con delay aumentado
   const broadcastUserAction = useCallback((action: string, payload: any = {}) => {
-    if (isDestroyedRef.current || !circulatorySystem.current) return;
+    if (isDestroyedRef.current || !cardiovascularSystem.current) return;
     
     const actionKey = `${action}_${Date.now()}`;
     
@@ -159,26 +167,25 @@ export const useNeuralIntegration = (
     
     setTimeout(() => {
       if (!isDestroyedRef.current && 
-          circulatorySystem.current && 
-          circulatorySystem.current.canProcessSignal()) {
+          cardiovascularSystem.current && 
+          cardiovascularSystem.current.canPump()) {
         
-        cardiovascularBroadcast('USER_ACTION_CARDIOVASCULAR_V7_2', {
+        cardiovascularBroadcast('USER_ACTION_INTEGRISTA_V8_0', {
           action,
           user_id: user?.id,
           module_context: currentState,
-          system_vitals: circulatorySystem.current.getSystemVitals(),
-          singleton_info: 'v7_2_enforced',
+          system_vitals: cardiovascularSystem.current.getIntegratedSystemStatus(),
+          integrista_info: 'v8_0_unified',
           ...payload
         });
       }
-    }, 5000); // Aumentado a 5 segundos
+    }, 8000); // Aumentado a 8 segundos para v8.0
   }, [cardiovascularBroadcast, user?.id, currentState]);
 
   // Cleanup NO destructivo del singleton
   useEffect(() => {
     return () => {
       isDestroyedRef.current = true;
-      // NO destruir el singleton global
     };
   }, []);
 
@@ -187,40 +194,55 @@ export const useNeuralIntegration = (
     broadcastUserAction,
     systemHealth: {
       ...neural.systemHealth,
-      cardiovascular: circulatorySystem.current?.getSystemVitals() || null,
-      singleton_status: 'v7_2_enforced'
+      cardiovascular: cardiovascularSystem.current?.getIntegratedSystemStatus() || null,
+      integrista_status: 'v8_0_unified'
     },
     
-    // Helpers cardiovasculares con delays aumentados
+    // Helpers cardiovasculares integrados con delays aumentados
     notifyProgress: useCallback((progress: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('PROGRESS_CARDIOVASCULAR_V7_2', progress), 15000);
+      setTimeout(() => broadcastUserAction('PROGRESS_INTEGRISTA_V8_0', progress), 20000);
     }, [broadcastUserAction]),
     
     notifyCompletion: useCallback((completion: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('COMPLETION_CARDIOVASCULAR_V7_2', completion), 8000);
+      setTimeout(() => broadcastUserAction('COMPLETION_INTEGRISTA_V8_0', completion), 12000);
     }, [broadcastUserAction]),
     
     notifyEngagement: useCallback((engagement: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('ENGAGEMENT_CARDIOVASCULAR_V7_2', engagement), 20000);
+      setTimeout(() => broadcastUserAction('ENGAGEMENT_INTEGRISTA_V8_0', engagement), 25000);
     }, [broadcastUserAction]),
     
     requestRecommendation: useCallback((context: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('RECOMMENDATION_CARDIOVASCULAR_V7_2', context), 3000);
+      setTimeout(() => broadcastUserAction('RECOMMENDATION_INTEGRISTA_V8_0', context), 5000);
     }, [broadcastUserAction]),
 
-    // Sistema de emergencia cardiovascular singleton
+    // Sistema de emergencia cardiovascular integrista
     emergencyReset: useCallback(() => {
-      if (circulatorySystem.current) {
-        circulatorySystem.current.emergencyReset();
+      if (cardiovascularSystem.current) {
+        cardiovascularSystem.current.emergencyReset();
       }
       lastBroadcastRef.current = '';
       isDestroyedRef.current = false;
       lastLogTime.current = 0;
-      console.log('🫀 Sistema cardiovascular singleton reiniciado v7.2');
+      console.log('🫀 Sistema cardiovascular integrista reiniciado v8.0');
+    }, []),
+
+    // Nuevos métodos específicos del sistema integrista
+    activateEmergencyDetox: useCallback(() => {
+      if (cardiovascularSystem.current) {
+        cardiovascularSystem.current.activateIntegratedEmergencyMode();
+      }
+    }, []),
+
+    getDetoxStatus: useCallback(() => {
+      return cardiovascularSystem.current?.getIntegratedDetoxStatus() || null;
+    }, []),
+
+    isSafeMode: useCallback(() => {
+      return cardiovascularSystem.current?.isSafeMode() || false;
     }, [])
   };
 };
