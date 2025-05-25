@@ -30,3 +30,14 @@ export type {
   GeneratedMaterial, 
   PhaseConfig 
 } from '../components/learning-material-generator/types/learning-material-types';
+
+// Define TPAESTest type for PAES Universe
+export interface TPAESTest {
+  id: number;
+  code: TPAESPrueba;
+  name: string;
+  description?: string;
+  skillsCount: number;
+  nodesCount: number;
+  userProgress: number;
+}

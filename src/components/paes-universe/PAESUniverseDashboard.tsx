@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, Environment, Text, Html } from '@react-three/drei';
@@ -18,6 +17,7 @@ import { TemporalProgressFlow } from './TemporalProgressFlow';
 import { CognitiveMatrix } from './CognitiveMatrix';
 import { BattleDashboard } from './BattleDashboard';
 import { QuantumInsights } from './QuantumInsights';
+import { TPAESTest } from '@/types/system-types';
 
 interface UniverseMode {
   mode: 'galaxy' | 'battle' | 'temporal' | 'cognitive' | 'quantum';
@@ -26,7 +26,7 @@ interface UniverseMode {
 
 export const PAESUniverseDashboard: React.FC = () => {
   const { user, profile } = useAuth();
-  const { tests, skills, loading } = usePAESData();
+  const { tests: paesTestsData, skills: paesSkillsData, loading } = usePAESData();
   const { nodes, nodeProgress } = useLearningNodes();
   
   const [universeMode, setUniverseMode] = useState<UniverseMode>({ mode: 'galaxy' });
@@ -40,6 +40,19 @@ export const PAESUniverseDashboard: React.FC = () => {
   });
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Transform PAESTestInfo to TPAESTest format
+  const tests: TPAESTest[] = React.useMemo(() => {
+    return paesTestsData.map(test => ({
+      id: test.id,
+      code: test.code as any, // Type assertion for now since we know the mapping
+      name: test.name,
+      description: test.description,
+      skillsCount: test.skillsCount,
+      nodesCount: test.nodesCount,
+      userProgress: test.userProgress
+    }));
+  }, [paesTestsData]);
 
   // Calcular métricas cinematográficas
   const cinematicMetrics = React.useMemo(() => {
@@ -227,7 +240,7 @@ export const PAESUniverseDashboard: React.FC = () => {
       case 'cognitive':
         return (
           <CognitiveMatrix
-            skills={skills}
+            skills={paesSkillsData}
             nodes={nodes}
             cognitiveLevel={cinematicMetrics.cognitiveLevel}
             onMatrixSelect={(skill) => console.log('Matrix skill:', skill)}

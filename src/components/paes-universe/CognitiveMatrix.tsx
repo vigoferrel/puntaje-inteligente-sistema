@@ -2,10 +2,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
-import { TLearningNode, TPAESHabilidad } from '@/types/system-types';
+import { TLearningNode } from '@/types/system-types';
+import { PAESSkillInfo } from '@/hooks/use-paes-data';
 
 interface CognitiveMatrixProps {
-  skills: TPAESHabilidad[];
+  skills: PAESSkillInfo[];
   nodes: TLearningNode[];
   cognitiveLevel: number;
   onMatrixSelect: (skill: string) => void;
@@ -37,6 +38,9 @@ export const CognitiveMatrix: React.FC<CognitiveMatrixProps> = ({
               <div className="text-2xl font-bold mb-4">Matrix Cognitiva</div>
               <div className="text-gray-400">
                 Nivel cognitivo actual: {cognitiveLevel}
+              </div>
+              <div className="text-gray-400 mt-2">
+                Skills analizadas: {skills.length}
               </div>
             </div>
           </CardContent>
