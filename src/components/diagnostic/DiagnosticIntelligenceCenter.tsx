@@ -1,69 +1,51 @@
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Brain, 
-  Target, 
-  TrendingUp, 
-  AlertTriangle, 
-  BookOpen,
-  Zap,
-  ChartBar,
-  Calendar,
-  Award,
-  Users
-} from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { usePAESData } from '@/hooks/use-paes-data';
-import { useDiagnosticIntelligence } from '@/hooks/diagnostic/use-diagnostic-intelligence';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, AlertCircle, TrendingUp, ChartBar, Brain, Zap, Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useUnifiedDiagnostic } from '@/hooks/diagnostic/use-unified-diagnostic';
+import { TPAESPrueba } from '@/types/system-types';
+
+// Importar componentes específicos
 import { InitialAssessmentPanel } from './InitialAssessmentPanel';
+import { IntelligenceOverview } from './IntelligenceOverview';
 import { ProgressTrackerPanel } from './ProgressTrackerPanel';
 import { SkillAnalysisPanel } from './SkillAnalysisPanel';
 import { PersonalizedStrategiesPanel } from './PersonalizedStrategiesPanel';
 import { PredictiveScoringPanel } from './PredictiveScoringPanel';
-import { TPAESPrueba, getPruebaDisplayName } from '@/types/system-types';
 
 export const DiagnosticIntelligenceCenter: React.FC = () => {
-  const { user } = useAuth();
-  const { tests, skills } = usePAESData();
   const {
+    data,
+    isLoading,
+    tests,
+    skills,
     baselineScores,
     currentScores,
     progressTrends,
     skillAnalysis,
     personalizedStrategies,
     predictedScores,
-    isLoading,
     needsInitialAssessment,
     lastAssessmentDate,
     nextRecommendedAssessment,
     performInitialAssessment,
     scheduleProgressAssessment,
     generatePersonalizedExercises
-  } = useDiagnosticIntelligence(user?.id);
+  } = useUnifiedDiagnostic();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedPrueba, setSelectedPrueba] = useState<TPAESPrueba>('COMPETENCIA_LECTORA');
 
-  // Calcular métricas principales
+  // Calcular métricas para el banner de estado
   const overallProgress = currentScores && baselineScores 
     ? Object.keys(currentScores).reduce((total, prueba) => {
         const improvement = currentScores[prueba as TPAESPrueba] - baselineScores[prueba as TPAESPrueba];
         return total + improvement;
       }, 0) / Object.keys(currentScores).length
     : 0;
-
-  const strongestArea = currentScores 
-    ? Object.entries(currentScores).reduce((max, [prueba, score]) => 
-        score > max.score ? { prueba: prueba as TPAESPrueba, score } : max, 
-        { prueba: 'COMPETENCIA_LECTORA' as TPAESPrueba, score: 0 }
-      )
-    : null;
 
   const weakestArea = currentScores 
     ? Object.entries(currentScores).reduce((min, [prueba, score]) => 
@@ -90,82 +72,32 @@ export const DiagnosticIntelligenceCenter: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Principal */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-lg text-white"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Centro de Inteligencia Diagnóstica</h1>
-            <p className="text-blue-100">
-              Sistema integral de evaluación, seguimiento y estrategias personalizadas
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-4xl font-bold">{Math.round(overallProgress)}%</div>
-            <div className="text-sm text-blue-200">Progreso General</div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Métricas Principales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              <div>
-                <div className="text-2xl font-bold text-green-700">+{Math.round(overallProgress)}</div>
-                <div className="text-sm text-green-600">Mejora Promedio</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Award className="w-5 h-5 text-blue-600" />
-              <div>
-                <div className="text-sm font-medium text-blue-700">Área Más Fuerte</div>
-                <div className="text-xs text-blue-600">
-                  {strongestArea ? getPruebaDisplayName(strongestArea.prueba) : 'N/A'}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-5 h-5 text-orange-600" />
-              <div>
-                <div className="text-sm font-medium text-orange-700">Requiere Atención</div>
-                <div className="text-xs text-orange-600">
-                  {weakestArea ? getPruebaDisplayName(weakestArea.prueba) : 'N/A'}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Target className="w-5 h-5 text-purple-600" />
-              <div>
-                <div className="text-sm font-medium text-purple-700">Puntaje Predicho</div>
-                <div className="text-xs text-purple-600">
-                  {predictedScores ? Math.round(Object.values(predictedScores).reduce((a, b) => a + b, 0) / Object.values(predictedScores).length) : 'Calculando...'}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Back button */}
+      <div className="mb-4">
+        <Button variant="ghost" size="sm" asChild className="gap-1">
+          <Link to="/">
+            <ArrowLeft className="h-4 w-4" />
+            Volver al inicio
+          </Link>
+        </Button>
       </div>
+
+      {/* System Status Banner */}
+      {currentScores && (
+        <Alert className="mb-6 bg-green-50 border-green-200">
+          <TrendingUp className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-700">
+            <div className="flex items-center justify-between">
+              <span>
+                Sistema de Inteligencia Diagnóstica activo: Progreso general +{Math.round(overallProgress)}%
+              </span>
+              <span className="text-sm">
+                Última evaluación: {lastAssessmentDate ? new Date(lastAssessmentDate).toLocaleDateString('es') : 'N/A'}
+              </span>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Tabs Principales */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -192,79 +124,16 @@ export const DiagnosticIntelligenceCenter: React.FC = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Resumen de Puntajes */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <ChartBar className="w-5 h-5" />
-                  <span>Puntajes por Prueba</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {tests.map((test) => {
-                  const prueba = test.code as TPAESPrueba;
-                  const baseline = baselineScores?.[prueba] || 0;
-                  const current = currentScores?.[prueba] || 0;
-                  const improvement = current - baseline;
-                  
-                  return (
-                    <div key={test.id} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">{getPruebaDisplayName(prueba)}</span>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={improvement > 0 ? "default" : "secondary"}>
-                            {improvement > 0 ? `+${improvement}` : improvement}
-                          </Badge>
-                          <span className="font-bold">{current}</span>
-                        </div>
-                      </div>
-                      <Progress value={(current / 850) * 100} className="h-2" />
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-
-            {/* Próximas Evaluaciones */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Calendar className="w-5 h-5" />
-                  <span>Evaluaciones Programadas</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-sm text-blue-600 mb-2">Próxima Evaluación</div>
-                  <div className="font-bold text-blue-800">
-                    {nextRecommendedAssessment ? 
-                      new Date(nextRecommendedAssessment).toLocaleDateString('es') : 
-                      'Por programar'
-                    }
-                  </div>
-                </div>
-                
-                <Button 
-                  onClick={scheduleProgressAssessment}
-                  className="w-full"
-                >
-                  <Brain className="w-4 h-4 mr-2" />
-                  Realizar Evaluación Ahora
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => generatePersonalizedExercises(selectedPrueba)}
-                  className="w-full"
-                >
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Ejercicios Personalizados
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="overview">
+          <IntelligenceOverview
+            tests={tests}
+            baselineScores={baselineScores}
+            currentScores={currentScores}
+            predictedScores={predictedScores}
+            nextRecommendedAssessment={nextRecommendedAssessment}
+            onScheduleAssessment={scheduleProgressAssessment}
+            onGenerateExercises={generatePersonalizedExercises}
+          />
         </TabsContent>
 
         <TabsContent value="progress">
@@ -304,6 +173,23 @@ export const DiagnosticIntelligenceCenter: React.FC = () => {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-8 p-4 bg-gray-100 rounded text-xs">
+          <strong>Debug Info:</strong>
+          <br />
+          Tests loaded: {tests.length}
+          <br />
+          Skills loaded: {skills.length}
+          <br />
+          Baseline scores: {baselineScores ? 'Yes' : 'No'}
+          <br />
+          Current scores: {currentScores ? 'Yes' : 'No'}
+          <br />
+          Progress trends: {progressTrends.length}
+        </div>
+      )}
     </div>
   );
 };
