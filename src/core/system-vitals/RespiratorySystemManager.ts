@@ -14,12 +14,24 @@ interface RespiratoryConfig {
   emergencyMode: boolean;
 }
 
+interface SystemStatus {
+  hasInstance: boolean;
+  isInitializing: boolean;
+  surgicalMode: boolean;
+  lastSurgery: number;
+  isInRecovery: boolean;
+  emergencyActivationCount: number;
+  lastEmergencyActivation: number;
+}
+
 class RespiratorySystemManager {
   private static globalInstance: RespiratorySystem | null = null;
   private static isInitializing: boolean = false;
   private static initializationPromise: Promise<RespiratorySystem> | null = null;
   private static surgicalMode: boolean = false;
   private static lastSurgery: number = 0;
+  private static emergencyActivationCount: number = 0;
+  private static lastEmergencyActivation: number = 0;
   private static readonly SURGERY_COOLDOWN = 60000; // 1 minuto post-cirugía
 
   // Factory method post-quirúrgico
@@ -107,6 +119,18 @@ class RespiratorySystemManager {
     return true;
   }
 
+  // Activación de emergencia
+  public static activateEmergencyMode(): boolean {
+    const now = Date.now();
+    RespiratorySystemManager.emergencyActivationCount++;
+    RespiratorySystemManager.lastEmergencyActivation = now;
+    
+    console.log('🚨 MODO DE EMERGENCIA ACTIVADO v6.0');
+    
+    // Activar modo quirúrgico inmediatamente
+    return RespiratorySystemManager.activateSurgicalMode();
+  }
+
   // Destrucción quirúrgica controlada
   public static async destroyAllInstances(): Promise<void> {
     RespiratorySystemManager.isInitializing = false;
@@ -133,6 +157,16 @@ class RespiratorySystemManager {
       surgicalMode: RespiratorySystemManager.surgicalMode,
       lastSurgery: RespiratorySystemManager.lastSurgery,
       isInRecovery: (Date.now() - RespiratorySystemManager.lastSurgery) < RespiratorySystemManager.SURGERY_COOLDOWN
+    };
+  }
+
+  // Alias para compatibilidad
+  public static getSystemStatus(): SystemStatus {
+    const surgical = RespiratorySystemManager.getSurgicalStatus();
+    return {
+      ...surgical,
+      emergencyActivationCount: RespiratorySystemManager.emergencyActivationCount,
+      lastEmergencyActivation: RespiratorySystemManager.lastEmergencyActivation
     };
   }
 }

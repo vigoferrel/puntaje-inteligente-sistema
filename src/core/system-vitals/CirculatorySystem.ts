@@ -176,7 +176,7 @@ export class CirculatorySystem {
     console.log('🚨 INTERVENCIÓN DE EMERGENCIA: Reiniciando sistemas cardiovascular-respiratorio');
     
     this.heart.emergencyReset();
-    this.lungs.emergencyPurge();
+    this.lungs.emergencyPurge(); // Usar método disponible
     this.bloodFlow.clear();
     this.isHealthy = true;
   }

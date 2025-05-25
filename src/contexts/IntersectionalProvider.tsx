@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useIntersectionalNexus } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
@@ -44,7 +45,7 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
           const instance = await RespiratorySystemManager.getInstance({
             breathsPerMinute: 6, // Ultra-conservador
             oxygenThreshold: 50,
-            purificationLevel: 'observation', // Solo observación
+            purificationLevel: 'safe_mode', // Usar valor válido
             antiTrackingMode: false,
             emergencyMode: false
           });
@@ -147,7 +148,7 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       setTimeout(async () => {
         try {
           respiratorySystemRef.current = await RespiratorySystemManager.getInstance({
-            purificationLevel: 'observation',
+            purificationLevel: 'safe_mode', // Usar valor válido
             antiTrackingMode: false,
             emergencyMode: false
           });

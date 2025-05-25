@@ -133,7 +133,7 @@ export class RespiratorySystem {
     const recoveryModule: EnhancedModuleIdentity = {
       ...module,
       security_context: {
-        security_mode: 'recovery',
+        security_mode: 'normal', // Usar valor válido
         tracking_protected: false,
         shield_level: 1,
         encryption_enabled: false,
@@ -153,7 +153,7 @@ export class RespiratorySystem {
     return {
       breathingRate: this.breathingRate,
       oxygenLevel: this.oxygenLevel,
-      airQuality: 'surgical_clean', // Aire post-quirúrgico
+      airQuality: 'pure', // Usar valor válido
       antiTrackingActive: false // Deshabilitado durante recuperación
     };
   }
@@ -181,6 +181,11 @@ export class RespiratorySystem {
     this.purificationActive = false;
     
     console.log(`🚨 PURGA QUIRÚRGICA COMPLETADA [${this.instanceId}]`);
+  }
+
+  // Método de emergencia para compatibilidad
+  public emergencyPurge(): void {
+    this.surgicalPurge();
   }
 
   public isDestroyed(): boolean {
