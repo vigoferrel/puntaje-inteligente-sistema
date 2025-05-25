@@ -9,6 +9,24 @@ interface Message {
   timestamp: Date;
 }
 
+interface Exercise {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+  difficulty: string;
+  subject: string;
+}
+
+interface Stats {
+  exercisesCompleted: number;
+  averageScore: number;
+  streak: number;
+  totalMessages: number;
+  todayStudyTime: number;
+}
+
 export const useLectoGuiaSimplified = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
@@ -21,6 +39,11 @@ export const useLectoGuiaSimplified = () => {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [activeSubject, setActiveSubject] = useState('COMPETENCIA_LECTORA');
+  const [activeTab, setActiveTab] = useState<'chat' | 'exercise' | 'progress'>('chat');
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string>('');
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messageIdRef = useRef(2);
 
   const handleSendMessage = useCallback(async (content: string) => {
@@ -80,12 +103,121 @@ export const useLectoGuiaSimplified = () => {
     setMessages(prev => [...prev, changeMessage]);
   }, []);
 
+  const generateExercise = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const exercise: Exercise = {
+        id: `exercise-${Date.now()}`,
+        question: `Ejercicio de ${getSubjectName(activeSubject)} - Pregunta adaptada a tu nivel`,
+        options: [
+          'Opción A: Respuesta correcta basada en contexto',
+          'Opción B: Distractor plausible',
+          'Opción C: Distractor común',
+          'Opción D: Distractor avanzado'
+        ],
+        correctAnswer: 'Opción A: Respuesta correcta basada en contexto',
+        explanation: 'Esta es la respuesta correcta porque aplica los conceptos fundamentales de la materia.',
+        difficulty: 'intermediate',
+        subject: activeSubject
+      };
+
+      setCurrentExercise(exercise);
+      setSelectedOption('');
+      setShowFeedback(false);
+      setActiveTab('exercise');
+      
+      return exercise;
+    } catch (error) {
+      console.error('Error generando ejercicio:', error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeSubject]);
+
+  const handleNewExercise = useCallback(async () => {
+    const exercise = await generateExercise();
+    if (exercise) {
+      const confirmMessage: Message = {
+        id: messageIdRef.current.toString(),
+        type: 'ai',
+        content: `✅ He generado un nuevo ejercicio de ${getSubjectName(activeSubject)}. Puedes verlo en la pestaña de Ejercicios.`,
+        timestamp: new Date()
+      };
+      messageIdRef.current++;
+      setMessages(prev => [...prev, confirmMessage]);
+    }
+  }, [generateExercise, activeSubject]);
+
+  const handleOptionSelect = useCallback((option: string | number) => {
+    const selectedOptionText = typeof option === 'number' && currentExercise
+      ? currentExercise.options[option]
+      : option.toString();
+    
+    setSelectedOption(selectedOptionText);
+    setShowFeedback(true);
+
+    const isCorrect = selectedOptionText === currentExercise?.correctAnswer;
+    const feedbackMessage: Message = {
+      id: messageIdRef.current.toString(),
+      type: 'ai',
+      content: isCorrect 
+        ? '¡Excelente! Has seleccionado la respuesta correcta. ¿Te gustaría intentar otro ejercicio?'
+        : `No es la respuesta correcta. La respuesta era: ${currentExercise?.correctAnswer}. ¡Sigue practicando!`,
+      timestamp: new Date()
+    };
+    messageIdRef.current++;
+    setMessages(prev => [...prev, feedbackMessage]);
+  }, [currentExercise]);
+
+  const getStats = useCallback((): Stats => {
+    const completedExercises = messages.filter(m => 
+      m.type === 'ai' && m.content.includes('correcta')
+    ).length;
+    
+    return {
+      exercisesCompleted: completedExercises,
+      averageScore: Math.min(85, 60 + completedExercises * 5),
+      streak: Math.min(7, Math.floor(completedExercises / 2)),
+      totalMessages: messages.length,
+      todayStudyTime: Math.min(120, messages.length * 3)
+    };
+  }, [messages]);
+
+  // Alias para compatibilidad con componentes legacy
+  const chatHistory = messages.map(msg => ({
+    role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
+    content: msg.content
+  }));
+
   return {
+    // Chat
     messages,
     isTyping,
     handleSendMessage,
+    chatHistory,
+    
+    // Subject management
     activeSubject,
-    handleSubjectChange
+    handleSubjectChange,
+    
+    // Tab management
+    activeTab,
+    setActiveTab,
+    
+    // Exercise management
+    currentExercise,
+    selectedOption,
+    showFeedback,
+    handleOptionSelect,
+    handleNewExercise,
+    generateExercise,
+    isLoading,
+    
+    // Stats
+    getStats
   };
 };
 
