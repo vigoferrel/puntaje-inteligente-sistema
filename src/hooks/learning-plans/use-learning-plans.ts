@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { LearningPlan, PlanProgress } from "@/types/learning-plan";
 import { useUnifiedApp } from '@/contexts/UnifiedAppProvider';
@@ -7,18 +8,17 @@ import { usePlanProgress } from "./plan-progress";
 import { usePlanCache } from "./plan-cache";
 
 export const useLearningPlans = () => {
-  const { setInitializationFlag, hasInitialized } = useUnifiedApp();
+  const { hasInitialized } = useUnifiedApp();
   const [plans, setPlans] = useState<LearningPlan[]>([]);
   const [currentPlan, setCurrentPlan] = useState<LearningPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   
-  const isLoadingRef = useRef(false);
   const hasLoadedRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
 
-  const { loadFromCache, updateCache, clearCache } = usePlanCache();
+  const { loadFromCache, updateCache } = usePlanCache();
   const { fetchPlans: originalFetchPlans, retryFetchPlans } = usePlanFetching({
     plans,
     setPlans,
@@ -43,11 +43,10 @@ export const useLearningPlans = () => {
     getPlanProgress 
   } = usePlanProgress();
 
+  // Guard más eficiente
   const shouldFetchPlans = useCallback((userId: string) => {
-    if (!userId) return false;
-    if (isLoadingRef.current) return false;
+    if (!userId || !hasInitialized) return false;
     if (hasLoadedRef.current && lastUserIdRef.current === userId) return false;
-    if (!hasInitialized) return false;
     return true;
   }, [hasInitialized]);
 
@@ -58,38 +57,39 @@ export const useLearningPlans = () => {
     }
 
     console.log('🔄 Fetching learning plans...');
-    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
+      // Intentar cache primero
       const cachedData = loadFromCache();
       if (cachedData && lastUserIdRef.current === userId) {
         console.log('📦 Using cached learning plans');
         setPlans(cachedData.plans);
         setCurrentPlan(cachedData.currentPlan);
         setPlanProgress(cachedData.planProgress);
-        setInitializationFlag('learningPlans', true);
         hasLoadedRef.current = true;
-        return;
+        return cachedData.plans;
       }
 
+      // Fetch fresco
       const fetchedPlans = await originalFetchPlans(userId);
       
       hasLoadedRef.current = true;
       lastUserIdRef.current = userId;
-      setInitializationFlag('learningPlans', true);
       
       console.log('✅ Learning plans loaded successfully');
+      return fetchedPlans;
+      
     } catch (err) {
       console.error('❌ Error fetching learning plans:', err);
       setError('Error al cargar los planes de estudio');
       hasLoadedRef.current = false;
+      return [];
     } finally {
-      isLoadingRef.current = false;
       setLoading(false);
     }
-  }, [shouldFetchPlans, setInitializationFlag, loadFromCache, originalFetchPlans]);
+  }, [shouldFetchPlans, loadFromCache, originalFetchPlans, setPlanProgress]);
 
   const createPlan = useCallback(async (
     userId: string, 
@@ -98,26 +98,44 @@ export const useLearningPlans = () => {
     targetDate?: string,
     skillPriorities?: Record<any, number>
   ): Promise<LearningPlan | null> => {
-    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
       const newPlan = await originalCreatePlan(userId, title, description, targetDate, skillPriorities);
+      
+      // Actualizar cache
+      if (newPlan) {
+        const updatedPlans = [...plans, newPlan];
+        updateCache({
+          plans: updatedPlans,
+          currentPlan: newPlan,
+          planProgress
+        });
+      }
+      
       return newPlan;
     } catch (err) {
       console.error('❌ Error creating learning plan:', err);
       setError('Error al crear el plan de estudio');
       return null;
     } finally {
-      isLoadingRef.current = false;
       setLoading(false);
     }
-  }, [originalCreatePlan]);
+  }, [originalCreatePlan, plans, planProgress, updateCache]);
 
   const getPlanById = useCallback((planId: string): LearningPlan | undefined => {
     return plans.find(plan => plan.id === planId);
   }, [plans]);
+
+  // Reset cuando cambia el usuario
+  useEffect(() => {
+    return () => {
+      if (lastUserIdRef.current !== null) {
+        hasLoadedRef.current = false;
+      }
+    };
+  }, []);
 
   return {
     plans,
@@ -132,8 +150,7 @@ export const useLearningPlans = () => {
     loadPlanProgress,
     setCurrentPlan,
     getPlanById,
-    getPlanProgress,
-    clearCache
+    getPlanProgress
   };
 };
 
