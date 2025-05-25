@@ -15,7 +15,8 @@ export function useExerciseState() {
     setCurrentExercise,
     generateExercise,
     generateExerciseForNode,
-    isLoading
+    isLoading,
+    error
   } = useExerciseGeneration();
   
   const {
@@ -35,7 +36,11 @@ export function useExerciseState() {
   };
   
   // Función mejorada para generar un ejercicio con manejo de estados
-  const generateExerciseWithState = async (skill: TPAESHabilidad, prueba?: TPAESPrueba, difficulty: string = "INTERMEDIATE") => {
+  const generateExerciseWithState = async (
+    skill: TPAESHabilidad, 
+    prueba?: TPAESPrueba, 
+    difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' = "INTERMEDIATE"
+  ) => {
     setProcessingAction(true);
     try {
       const result = await generateExercise(skill, prueba, difficulty);
@@ -65,6 +70,7 @@ export function useExerciseState() {
     handleOptionSelect,
     resetExercise,
     setCurrentExercise,
-    isLoading: isLoading || processingAction
+    isLoading: isLoading || processingAction,
+    error
   };
 }

@@ -4,11 +4,12 @@
  */
 
 export interface Exercise {
-  id?: string;
+  id?: string | number;
   question: string;
   text?: string; 
   context?: string;
   options: string[];
+  alternatives?: string[]; // Para compatibilidad con el generador PAES
   correctAnswer: string;
   explanation?: string;
   skill: string;
@@ -20,6 +21,9 @@ export interface Exercise {
   hasVisualContent?: boolean;
   nodeId?: string;
   nodeName?: string;
+  node?: string; // Para compatibilidad con el generador PAES
+  subject?: string; // Para compatibilidad con el generador PAES
+  estimatedTime?: number; // Para compatibilidad con el generador PAES
 }
 
 /**

@@ -1,7 +1,19 @@
 
 import { useState, useCallback } from 'react';
+import { Exercise } from '@/types/ai-types';
+import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
+import { generateExercise as generateExerciseApi, generateExercisesBatch } from '@/services/openrouter/exercise-generation';
 
-interface Exercise {
+interface GenerationConfig {
+  subject: string;
+  tier: string;
+  nodes: string[];
+  difficulty: string;
+  count: number;
+  apiKey: string;
+}
+
+interface ExerciseFromGeneration {
   id: number;
   node: string;
   subject: string;
@@ -13,21 +25,14 @@ interface Exercise {
   estimatedTime: number;
 }
 
-interface GenerationConfig {
-  subject: string;
-  tier: string;
-  nodes: string[];
-  difficulty: string;
-  count: number;
-  apiKey: string;
-}
-
 export const useExerciseGeneration = () => {
-  const [exerciseResults, setExerciseResults] = useState<Exercise[]>([]);
+  const [exerciseResults, setExerciseResults] = useState<ExerciseFromGeneration[]>([]);
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generateMockExercises = (config: GenerationConfig): Exercise[] => {
+  const generateMockExercises = (config: GenerationConfig): ExerciseFromGeneration[] => {
     return Array.from({ length: config.count }, (_, i) => ({
       id: i + 1,
       node: config.nodes[i % config.nodes.length],
@@ -65,14 +70,64 @@ export const useExerciseGeneration = () => {
     }
   }, []);
 
+  // Función para generar un ejercicio individual
+  const generateExercise = useCallback(async (
+    skill: TPAESHabilidad, 
+    prueba?: TPAESPrueba, 
+    difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' = 'INTERMEDIATE'
+  ): Promise<Exercise | null> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const exercise = await generateExerciseApi(skill, prueba, difficulty);
+      setCurrentExercise(exercise);
+      return exercise;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error generating exercise');
+      console.error('Error generating single exercise:', err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Función para generar ejercicio para un nodo específico
+  const generateExerciseForNode = useCallback(async (node: any): Promise<Exercise | null> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Mapear nodo a skill y prueba
+      const skill = node.skill || 'COMPETENCIA_LECTORA';
+      const prueba = node.prueba || 'COMPETENCIA_LECTORA';
+      
+      const exercise = await generateExerciseApi(skill, prueba, 'INTERMEDIATE');
+      setCurrentExercise(exercise);
+      return exercise;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error generating exercise for node');
+      console.error('Error generating exercise for node:', err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const clearResults = useCallback(() => {
     setExerciseResults([]);
+    setCurrentExercise(null);
     setError(null);
   }, []);
 
   return {
     exerciseResults,
+    currentExercise,
+    setCurrentExercise,
+    generateExercise,
+    generateExerciseForNode,
     isGenerating,
+    isLoading,
     error,
     generateExercises,
     clearResults
