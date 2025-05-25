@@ -28,9 +28,24 @@ export const SimplifiedDashboard: React.FC = () => {
 
   const { 
     isInitialized,
-    realTimeMetrics,
-    adaptiveRecommendations 
+    progress,
+    recomendaciones
   } = useUnifiedPAES();
+
+  // Mapear datos reales del sistema neural a métricas en tiempo real
+  const realTimeMetrics = React.useMemo(() => ({
+    overallProgress: progress.overall,
+    subjectProgress: progress.bySubject,
+    studyStreak: progress.streak,
+    totalStudyTime: progress.totalStudyTime,
+    lastActivity: progress.lastActivity,
+    achievements: progress.achievements
+  }), [progress]);
+
+  // Usar recomendaciones existentes del store
+  const adaptiveRecommendations = React.useMemo(() => 
+    recomendaciones.slice(0, 5), [recomendaciones]
+  );
 
   // Sistema neurológico completamente activo
   React.useEffect(() => {
