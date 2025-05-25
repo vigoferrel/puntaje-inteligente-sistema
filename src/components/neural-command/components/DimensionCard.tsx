@@ -4,13 +4,13 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play } from 'lucide-react';
-import { NeuralDimensionConfig, NeuralDimension } from '../config/neuralTypes';
+import { NeuralDimensionConfig } from '../config/neuralTypes';
 
 interface DimensionCardProps {
   dimension: NeuralDimensionConfig;
   isActive: boolean;
   metrics: number;
-  onActivate: (dimensionId: NeuralDimension) => void;
+  onActivate: (dimensionId: string) => void;
   index: number;
 }
 
@@ -21,8 +21,6 @@ export const DimensionCard: React.FC<DimensionCardProps> = ({
   onActivate,
   index
 }) => {
-  const Icon = dimension.icon;
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -40,7 +38,7 @@ export const DimensionCard: React.FC<DimensionCardProps> = ({
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className={`p-3 rounded-xl bg-gradient-to-r ${dimension.color} group-hover:scale-110 transition-transform`}>
-              <Icon className="w-6 h-6 text-white" />
+              <div className="text-white text-xl">{dimension.icon}</div>
             </div>
             <div className="text-right">
               <div className="text-lg font-bold text-white font-poppins">{metrics}%</div>
@@ -48,7 +46,7 @@ export const DimensionCard: React.FC<DimensionCardProps> = ({
             </div>
           </div>
           
-          <h4 className="text-lg font-bold text-white mb-2 font-poppins">{dimension.name}</h4>
+          <h4 className="text-lg font-bold text-white mb-2 font-poppins">{dimension.title}</h4>
           <p className="text-white/70 text-sm mb-4 font-poppins">{dimension.description}</p>
           
           <Button 

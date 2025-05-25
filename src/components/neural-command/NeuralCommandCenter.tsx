@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Configuración y tipos actualizados
+// Import from the correct source
 import { NEURAL_DIMENSIONS, getDimensionsByPhase } from './config/neuralDimensions';
-import { NeuralCommandCenterProps } from './config/neuralTypes';
+import { NeuralCommandCenterProps, NeuralDimensionConfig } from './config/neuralTypes';
 
 // Hooks modulares - AHORA CON DATOS REALES
 import { useNeuralNavigation } from './hooks/useNeuralNavigation';
@@ -19,7 +19,6 @@ import { NeuralBreadcrumb } from './components/NeuralBreadcrumb';
 import { NeuralHeader } from './components/NeuralHeader';
 import { NeuralMetrics } from './components/NeuralMetrics';
 import { NeuralPhases } from './components/NeuralPhases';
-import { NeuralInsights } from './components/NeuralInsights';
 import { DimensionContentRenderer } from './renderers/DimensionContentRenderer';
 import { CinematicSkeletonOptimized } from '@/components/unified-dashboard/CinematicSkeletonOptimized';
 
@@ -44,9 +43,22 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
     getMetricForDimension 
   } = useRealNeuralMetrics();
 
-  // Configuración actualizada
+  // Convert NeuralDimension to NeuralDimensionConfig format
+  const convertToConfig = (dimension: any): NeuralDimensionConfig => ({
+    ...dimension,
+    name: dimension.title // Map title to name for compatibility
+  });
+
+  // Configuración actualizada con conversión de tipos
   const activeDimensionData = NEURAL_DIMENSIONS.find(d => d.id === activeDimension);
-  const dimensionsByPhase = getDimensionsByPhase();
+  const rawDimensionsByPhase = getDimensionsByPhase();
+  
+  // Convert to the expected format
+  const dimensionsByPhase: Record<string, NeuralDimensionConfig[]> = {
+    foundation: rawDimensionsByPhase.foundation.map(convertToConfig),
+    intelligence: rawDimensionsByPhase.intelligence.map(convertToConfig),
+    evolution: rawDimensionsByPhase.evolution.map(convertToConfig)
+  };
 
   // Manejar navegación externa
   const handleExternalNavigation = (tool: string, context?: any) => {
@@ -71,7 +83,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
 
     const dimensionId = toolToDimensionMap[tool];
     if (dimensionId) {
-      handleDimensionActivation(dimensionId as any);
+      handleDimensionActivation(dimensionId);
     }
   };
 
@@ -125,7 +137,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
         
         <DimensionContentRenderer 
           activeDimension={activeDimension}
-          activeDimensionData={activeDimensionData}
+          activeDimensionData={convertToConfig(activeDimensionData)}
         />
       </NeuralLayout>
     );

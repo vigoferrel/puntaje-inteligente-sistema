@@ -56,39 +56,33 @@ export interface NavigationAnalytics {
   };
 }
 
-// Nuevos tipos exportados necesarios
-export type NeuralDimension = 
-  | 'neural_command'
-  | 'educational_universe'
-  | 'neural_training'
-  | 'progress_analysis'
-  | 'paes_simulation'
-  | 'personalized_feedback'
-  | 'battle_mode'
-  | 'achievement_system'
-  | 'vocational_prediction'
-  | 'financial_center'
-  | 'calendar_management'
-  | 'settings_control';
-
+// Use the same structure as NeuralDimension from neuralDimensions.ts
 export interface NeuralDimensionConfig {
-  id: NeuralDimension;
-  name: string;
+  id: string;
+  title: string;
   description: string;
-  color: string;
-  icon: any;
-  status: 'active' | 'developing' | 'conceptual';
   phase: 'foundation' | 'intelligence' | 'evolution';
+  color: string;
+  glowColor: string;
+  icon: string;
+  status: 'active' | 'developing' | 'conceptual';
+  complexity: number;
+  dependencies: string[];
+  features: string[];
+  // Added for compatibility
+  name?: string;
 }
+
+export type NeuralDimension = string;
 
 // Legacy compatibility
 export interface NeuralMetrics {
   neural_efficiency: number;
-  adaptive_learning_score: number;
-  cross_pollination_rate: number;
-  user_experience_harmony: number;
+  adaptive_learning_rate: number;
+  system_coherence: number;
+  user_satisfaction: number;
   paes_simulation_accuracy: number;
   universe_exploration_depth: number;
-  superpaes_coordination_level: number;
+  prediction_accuracy: number;
   gamification_engagement: number;
 }

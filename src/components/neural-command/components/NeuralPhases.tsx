@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { NeuralDimensionConfig, NeuralDimension } from '../config/neuralTypes';
+import { NeuralDimensionConfig } from '../config/neuralTypes';
 
 interface NeuralPhasesProps {
   dimensionsByPhase: Record<string, NeuralDimensionConfig[]>;
-  activeDimension: NeuralDimension;
-  onDimensionActivation: (dimensionId: NeuralDimension) => void;
-  getMetricForDimension: (dimensionId: NeuralDimension) => number;
+  activeDimension: string;
+  onDimensionActivation: (dimensionId: string) => void;
+  getMetricForDimension: (dimensionId: string) => number;
 }
 
 export const NeuralPhases: React.FC<NeuralPhasesProps> = ({
@@ -73,7 +73,6 @@ export const NeuralPhases: React.FC<NeuralPhasesProps> = ({
           <CardContent className="pt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {dimensions.map((dimension) => {
-                const Icon = dimension.icon;
                 const isActive = activeDimension === dimension.id;
                 const progress = getMetricForDimension(dimension.id);
                 
@@ -102,10 +101,9 @@ export const NeuralPhases: React.FC<NeuralPhasesProps> = ({
                       
                       <div className="flex flex-col items-center space-y-3 relative z-10">
                         <div className="relative">
-                          <Icon 
-                            className="w-8 h-8 transition-colors duration-300" 
-                            style={{ color: isActive ? '#FFFFFF' : '#4F46E5' }} 
-                          />
+                          <div className="text-2xl">
+                            {dimension.icon}
+                          </div>
                           {isActive && (
                             <motion.div
                               className="absolute inset-0 w-8 h-8 rounded-full border-2 border-white"
@@ -117,7 +115,7 @@ export const NeuralPhases: React.FC<NeuralPhasesProps> = ({
                         
                         <div className="text-center">
                           <div className="font-medium text-sm leading-tight">
-                            {dimension.name}
+                            {dimension.title}
                           </div>
                           <div className="text-xs opacity-70 mt-1 line-clamp-2">
                             {dimension.description}
