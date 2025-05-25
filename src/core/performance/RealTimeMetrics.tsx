@@ -46,8 +46,8 @@ export const RealTimeMetricsPanel: React.FC = () => {
   }, []);
 
   const getStatusColor = (value: number, thresholds: [number, number]) => {
-    if (value < thresholds[0]) return 'success';
-    if (value < thresholds[1]) return 'warning';
+    if (value < thresholds[0]) return 'default';
+    if (value < thresholds[1]) return 'secondary';
     return 'destructive';
   };
 

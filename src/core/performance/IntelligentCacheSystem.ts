@@ -1,5 +1,5 @@
 
-import { usePredictivePreloading } from './PredictivePreloader';
+import React, { useState, useEffect } from 'react';
 
 interface CacheEntry<T = any> {
   data: T;
@@ -130,11 +130,11 @@ export const useIntelligentCache = <T>(
   ttl: number = 3600000,
   priority: 'low' | 'medium' | 'high' = 'medium'
 ) => {
-  const [data, setData] = React.useState<T | null>(null);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const loadData = async () => {
       // Intentar obtener del cache primero
       const cached = intelligentCache.get<T>(key);
