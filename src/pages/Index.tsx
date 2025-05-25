@@ -11,7 +11,7 @@ const Index: React.FC = () => {
   if (loading && !hasInitialized) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <LoadingState message="Cargando dashboard..." />
+        <LoadingState message="Activando sistema neurológico..." />
       </div>
     );
   }
@@ -24,6 +24,7 @@ const Index: React.FC = () => {
     );
   }
 
+  // IMPORTANTE: Sin wrapper adicional - SimplifiedDashboard maneja su propio layout
   return <SimplifiedDashboard />;
 };
 
