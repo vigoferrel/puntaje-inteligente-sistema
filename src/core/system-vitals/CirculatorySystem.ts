@@ -1,7 +1,7 @@
 
 /**
- * SISTEMA CIRCULATORIO SIMPLIFICADO v7.0 - POST-CIRUGÍA RADICAL
- * Responsabilidad única: Coordinación cardiovascular unificada
+ * SISTEMA CIRCULATORIO SINGLETON v7.2 - POST-CIRUGÍA ESTABILIZACIÓN
+ * Responsabilidad única: Coordinación cardiovascular unificada con singleton estricto
  */
 
 import { CardiovascularSystem } from './CardiovascularSystem';
@@ -12,13 +12,16 @@ export class CirculatorySystem {
   private bloodFlow: Map<string, any> = new Map();
   private lastSystemCheck: number = 0;
   private isHealthy: boolean = true;
+  private lastLogTime: number = 0;
+  private logThrottle: number = 30000; // 30 segundos
 
   constructor() {
-    this.heart = new CardiovascularSystem({
-      maxBeatsPerSecond: 8,
-      restingPeriod: 1200,
-      recoveryTime: 4000,
-      emergencyThreshold: 12,
+    // USAR SINGLETON ESTRICTO v7.2
+    this.heart = CardiovascularSystem.getInstance({
+      maxBeatsPerSecond: 6,     // Más conservador
+      restingPeriod: 2500,      // Más espaciado
+      recoveryTime: 6000,       // Recovery más largo
+      emergencyThreshold: 10,   // Más tolerante
       purificationLevel: 'maximum',
       oxygenThreshold: 75
     });
@@ -27,17 +30,17 @@ export class CirculatorySystem {
   }
 
   private connectSystems(): void {
-    // El corazón ahora maneja toda la funcionalidad
+    // El corazón singleton maneja toda la funcionalidad
     this.heart.subscribe((event: CirculatoryEvent) => {
       if (event.type === 'heartbeat') {
         this.regulateCirculation(event.data);
       }
     });
 
-    // Monitoreo de salud cada 30 segundos
+    // Monitoreo de salud cada 60 segundos (reducido)
     setInterval(() => {
       this.performHealthCheck();
-    }, 30000);
+    }, 60000);
   }
 
   private regulateCirculation(heartData: any): void {
@@ -55,23 +58,29 @@ export class CirculatorySystem {
 
   private performHealthCheck(): void {
     const now = Date.now();
+    const shouldLog = now - this.lastLogTime > this.logThrottle;
+    
     this.lastSystemCheck = now;
 
     const heartHealth = this.heart.getHealth();
 
     this.isHealthy = 
-      heartHealth.circulation > 50 && 
-      heartHealth.oxygenation > 60 &&
+      heartHealth.circulation > 40 &&  // Más permisivo
+      heartHealth.oxygenation > 50 &&  // Más permisivo
       heartHealth.bloodPressure !== 'emergency';
 
-    // Limpiar flujo sanguíneo de datos antiguos
+    // Limpiar flujo sanguíneo de datos antiguos (más agresivo)
     for (const [key, value] of this.bloodFlow.entries()) {
-      if (now - value.timestamp > 120000) {
+      if (now - value.timestamp > 180000) { // 3 minutos
         this.bloodFlow.delete(key);
       }
     }
 
     if (!this.isHealthy && heartHealth.bloodPressure === 'emergency') {
+      if (shouldLog) {
+        console.log('🚨 Intervención circulatoria necesaria v7.2');
+        this.lastLogTime = now;
+      }
       this.emergencyIntervention();
     }
   }
@@ -85,7 +94,7 @@ export class CirculatorySystem {
       return false;
     }
 
-    // El corazón unificado procesa todo
+    // El corazón singleton procesa todo
     const pumped = this.heart.pump();
     if (!pumped) return false;
 
@@ -129,21 +138,26 @@ export class CirculatorySystem {
   private calculateOverallHealth(): 'excellent' | 'good' | 'fair' | 'poor' | 'critical' {
     const heartHealth = this.heart.getHealth();
 
-    if (heartHealth.bloodPressure === 'emergency' || heartHealth.oxygenation < 50) {
+    if (heartHealth.bloodPressure === 'emergency' || heartHealth.oxygenation < 40) {
       return 'critical';
     }
 
     const avgHealth = (heartHealth.circulation + heartHealth.oxygenation) / 2;
     
-    if (avgHealth >= 90) return 'excellent';
-    if (avgHealth >= 75) return 'good';
-    if (avgHealth >= 60) return 'fair';
-    if (avgHealth >= 40) return 'poor';
+    if (avgHealth >= 85) return 'excellent';
+    if (avgHealth >= 70) return 'good';
+    if (avgHealth >= 50) return 'fair';
+    if (avgHealth >= 30) return 'poor';
     return 'critical';
   }
 
   private emergencyIntervention(): void {
-    console.log('🚨 INTERVENCIÓN DE EMERGENCIA v7.0: Reiniciando sistema cardiovascular unificado');
+    // Log throttled de emergencia
+    const now = Date.now();
+    if (now - this.lastLogTime > 10000) { // Solo cada 10 segundos en emergencia
+      console.log('🚨 INTERVENCIÓN DE EMERGENCIA CIRCULATORIA v7.2');
+      this.lastLogTime = now;
+    }
     
     this.heart.emergencyReset();
     this.heart.surgicalPurge();
@@ -156,7 +170,8 @@ export class CirculatorySystem {
   }
 
   public destroy(): void {
-    this.heart.destroy();
+    // NO destruir el singleton cardiovascular
     this.bloodFlow.clear();
+    console.log('🩸 Sistema circulatorio v7.2 limpiado (corazón singleton preservado)');
   }
 }

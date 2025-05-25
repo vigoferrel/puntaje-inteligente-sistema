@@ -1,7 +1,7 @@
-
 /**
- * SISTEMA CARDIOVASCULAR UNIFICADO v7.1 - POST-CIRUGÍA COMPLETA
+ * SISTEMA CARDIOVASCULAR UNIFICADO v7.2 - SINGLETON ESTRICTO POST-CIRUGÍA
  * Responsabilidad ampliada: Control de flujo, purificación, oxigenación y monitoreo completo
+ * NUEVA FUNCIONALIDAD: Singleton estricto para prevenir múltiples instancias
  */
 
 import { CardiovascularHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
@@ -23,7 +23,15 @@ enum HeartState {
   PURIFYING = 'purifying'
 }
 
+// SINGLETON GLOBAL ESTRICTO v7.2
+let globalCardiovascularInstance: CardiovascularSystem | null = null;
+let instanceCreationLock = false;
+const INSTANCE_CREATION_TIMEOUT = 5000;
+
 export class CardiovascularSystem {
+  private static instance: CardiovascularSystem | null = null;
+  private static creationTime: number = 0;
+  
   private state: HeartState = HeartState.NORMAL;
   private heartRate: number = 0;
   private lastBeat: number = 0;
@@ -36,19 +44,56 @@ export class CardiovascularSystem {
   private secureStorage = new Map<string, any>();
   private systemStatus: 'active' | 'degraded' | 'emergency' | 'offline' = 'active';
   private emergencyMode: boolean = false;
+  private lastLogTime: number = 0;
+  private logThrottle: number = 30000; // 30 segundos entre logs
 
   constructor(options: Partial<HeartbeatOptions> = {}) {
+    // SINGLETON ENFORCEMENT v7.2
+    if (globalCardiovascularInstance) {
+      console.log('🫀 Reutilizando instancia cardiovascular existente v7.2');
+      return globalCardiovascularInstance;
+    }
+
+    if (instanceCreationLock) {
+      console.warn('⚠️ Creación de instancia cardiovascular bloqueada por lock');
+      throw new Error('Cardiovascular instance creation locked');
+    }
+
+    instanceCreationLock = true;
+    
     this.options = {
-      maxBeatsPerSecond: 10,
-      restingPeriod: 1000,
-      recoveryTime: 3000,
-      emergencyThreshold: 15,
+      maxBeatsPerSecond: 8, // Más permisivo
+      restingPeriod: 2000,   // Más espaciado
+      recoveryTime: 5000,
+      emergencyThreshold: 12, // Más tolerante
       purificationLevel: 'safe_mode',
       oxygenThreshold: 60,
       ...options
     };
 
+    globalCardiovascularInstance = this;
+    CardiovascularSystem.instance = this;
+    CardiovascularSystem.creationTime = Date.now();
+
     this.startHeartbeat();
+    
+    // Log inicial controlado
+    console.log('🫀 SISTEMA CARDIOVASCULAR SINGLETON v7.2 INICIADO');
+    
+    instanceCreationLock = false;
+  }
+
+  // MÉTODO ESTÁTICO PARA OBTENER INSTANCIA SINGLETON
+  public static getInstance(options?: Partial<HeartbeatOptions>): CardiovascularSystem {
+    if (!CardiovascularSystem.instance || !globalCardiovascularInstance) {
+      new CardiovascularSystem(options);
+    }
+    return CardiovascularSystem.instance!;
+  }
+
+  // MÉTODO ESTÁTICO PARA VERIFICAR EXISTENCIA
+  public static hasInstance(): boolean {
+    return !!CardiovascularSystem.instance && !!globalCardiovascularInstance;
   }
 
   private startHeartbeat(): void {
@@ -99,6 +144,15 @@ export class CardiovascularSystem {
   }
 
   private emitHeartbeat(): void {
+    // THROTTLED LOGGING v7.2 - Solo log cada 30 segundos
+    const now = Date.now();
+    const shouldLog = now - this.lastLogTime > this.logThrottle;
+    
+    if (shouldLog && (this.state === HeartState.EMERGENCY || Math.random() > 0.95)) {
+      console.log(`🫀 Estado cardiovascular v7.2: ${this.state} | Rate: ${this.heartRate} | O2: ${this.oxygenLevel}%`);
+      this.lastLogTime = now;
+    }
+
     const event: CirculatoryEvent = {
       type: 'heartbeat',
       source: 'heart',
@@ -108,7 +162,7 @@ export class CardiovascularSystem {
         oxygenLevel: this.oxygenLevel,
         health: this.getHealth()
       },
-      timestamp: Date.now()
+      timestamp: now
     };
 
     this.eventListeners.forEach(listener => listener(event));
@@ -199,6 +253,11 @@ export class CardiovascularSystem {
     emergencyMode: boolean;
     purificationActive: boolean;
     timestamp: number;
+    singletonInfo: {
+      isSingleton: boolean;
+      creationTime: number;
+      instanceId: string;
+    };
   } {
     return {
       status: this.systemStatus,
@@ -206,7 +265,12 @@ export class CardiovascularSystem {
       oxygenLevel: this.oxygenLevel,
       emergencyMode: this.emergencyMode,
       purificationActive: this.purificationActive,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      singletonInfo: {
+        isSingleton: CardiovascularSystem.hasInstance(),
+        creationTime: CardiovascularSystem.creationTime,
+        instanceId: `singleton_${CardiovascularSystem.creationTime}`
+      }
     };
   }
 
@@ -216,9 +280,9 @@ export class CardiovascularSystem {
     this.state = HeartState.EMERGENCY;
     this.emergencyStartTime = Date.now();
     
-    console.log('🚨 MODO DE EMERGENCIA CARDIOVASCULAR ACTIVADO v7.1');
+    // Log de emergencia SIEMPRE se muestra
+    console.log('🚨 MODO DE EMERGENCIA CARDIOVASCULAR SINGLETON v7.2 ACTIVADO');
     
-    // Purificar inmediatamente
     this.surgicalPurge();
   }
 
@@ -227,7 +291,7 @@ export class CardiovascularSystem {
     this.systemStatus = 'active';
     this.state = HeartState.NORMAL;
     
-    console.log('✅ Modo de emergencia cardiovascular desactivado v7.1');
+    console.log('✅ Modo de emergencia cardiovascular singleton v7.2 desactivado');
   }
 
   public surgicalPurge(): void {
@@ -237,7 +301,7 @@ export class CardiovascularSystem {
     this.state = HeartState.NORMAL;
     this.purificationActive = false;
     
-    console.log('🚨 PURGA CARDIOVASCULAR COMPLETADA v7.1');
+    console.log('🚨 PURGA CARDIOVASCULAR SINGLETON v7.2 COMPLETADA');
   }
 
   private getRestingPeriod(): number {
@@ -289,10 +353,25 @@ export class CardiovascularSystem {
     this.purificationActive = false;
     this.emergencyMode = false;
     this.systemStatus = 'active';
+    this.lastLogTime = 0;
+    
+    console.log('🫀 RESET CARDIOVASCULAR SINGLETON v7.2 COMPLETADO');
   }
 
   public destroy(): void {
     this.eventListeners = [];
     this.secureStorage.clear();
+    
+    // NO DESTRUIR EL SINGLETON - Solo limpiar
+    console.log('🫀 Cardiovascular singleton v7.2 limpiado (no destruido)');
+  }
+
+  // MÉTODO ESTÁTICO PARA RESET GLOBAL
+  public static resetSingleton(): void {
+    if (CardiovascularSystem.instance) {
+      CardiovascularSystem.instance.emergencyReset();
+    }
+    // NO resetear las referencias singleton para mantener estabilidad
+    console.log('🫀 SINGLETON CARDIOVASCULAR v7.2 RESETEADO GLOBALMENTE');
   }
 }
