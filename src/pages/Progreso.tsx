@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Brain, TrendingUp, BarChart3, Activity, Zap, Target, Calendar, Award } from 'lucide-react';
+import { Brain, TrendingUp, BarChart3, Activity, Zap, Target, Calendar, Award, AlertCircle } from 'lucide-react';
 import { useIntersectional } from '@/contexts/IntersectionalProvider';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealProgressData } from '@/hooks/useRealProgressData';
