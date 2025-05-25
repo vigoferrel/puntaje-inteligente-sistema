@@ -188,62 +188,58 @@ const NewIndex = () => {
 
   if (loading) {
     return (
-      <AppInitializer>
-        <AppLayout>
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="text-muted-foreground">Cargando tu dashboard personalizado...</p>
-            </div>
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Cargando tu dashboard personalizado...</p>
           </div>
-        </AppLayout>
-      </AppInitializer>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <AppInitializer>
-      <AppLayout>
-        <motion.div 
-          className="space-y-8"
-          variants={pageVariants}
-          initial="initial"
-          animate="animate"
-        >
-          {/* Hero Section */}
-          <motion.section variants={sectionVariants}>
-            <HeroSection
-              userName={profile?.name || 'Estudiante'}
-              globalProgress={globalProgress}
-              currentPhase={currentPhase}
-              totalNodes={totalNodes}
-              completedNodes={completedNodes}
-              projectedScore={projectedScore}
-            />
-          </motion.section>
+    <AppLayout>
+      <motion.div 
+        className="space-y-8"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+      >
+        {/* Hero Section */}
+        <motion.section variants={sectionVariants}>
+          <HeroSection
+            userName={profile?.name || 'Estudiante'}
+            globalProgress={globalProgress}
+            currentPhase={currentPhase}
+            totalNodes={totalNodes}
+            completedNodes={completedNodes}
+            projectedScore={projectedScore}
+          />
+        </motion.section>
 
-          {/* Exercise Generator Widget */}
-          <motion.section variants={sectionVariants}>
-            <ExerciseGeneratorWidget subjects={mockSubjects} />
-          </motion.section>
+        {/* Exercise Generator Widget */}
+        <motion.section variants={sectionVariants}>
+          <ExerciseGeneratorWidget subjects={mockSubjects} />
+        </motion.section>
 
-          {/* Tier Progress */}
-          <motion.section variants={sectionVariants}>
-            <TierProgressVisualizer tierData={mockTierData} />
-          </motion.section>
+        {/* Tier Progress */}
+        <motion.section variants={sectionVariants}>
+          <TierProgressVisualizer tierData={mockTierData} />
+        </motion.section>
 
-          {/* Subject Progress */}
-          <motion.section variants={sectionVariants}>
-            <SubjectProgressGrid subjects={mockSubjects} />
-          </motion.section>
+        {/* Subject Progress */}
+        <motion.section variants={sectionVariants}>
+          <SubjectProgressGrid subjects={mockSubjects} />
+        </motion.section>
 
-          {/* Smart Recommendations */}
-          <motion.section variants={sectionVariants}>
-            <SmartRecommendations recommendations={mockRecommendations} />
-          </motion.section>
-        </motion.div>
-      </AppLayout>
-    </AppInitializer>
+        {/* Smart Recommendations */}
+        <motion.section variants={sectionVariants}>
+          <SmartRecommendations recommendations={mockRecommendations} />
+        </motion.section>
+      </motion.div>
+    </AppLayout>
   );
 };
 
