@@ -30,8 +30,8 @@ export const FeatureCards = () => {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={item} whileHover={{ scale: 1.03 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-        <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-purple-200 shadow hover:shadow-md transition-all duration-300 h-full">
+      <motion.div variants={item} className="w-full">
+        <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-purple-200 shadow transition-shadow duration-300 hover:shadow-md h-full">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Sparkles className="h-5 w-5 text-violet-500" />
@@ -55,8 +55,8 @@ export const FeatureCards = () => {
         </Card>
       </motion.div>
       
-      <motion.div variants={item} whileHover={{ scale: 1.03 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-        <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200 shadow hover:shadow-md transition-all duration-300 h-full">
+      <motion.div variants={item} className="w-full">
+        <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200 shadow transition-shadow duration-300 hover:shadow-md h-full">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
               <BarChart3 className="h-5 w-5 text-blue-500" />
@@ -80,8 +80,8 @@ export const FeatureCards = () => {
         </Card>
       </motion.div>
       
-      <motion.div variants={item} whileHover={{ scale: 1.03 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-        <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-emerald-200 shadow hover:shadow-md transition-all duration-300 h-full">
+      <motion.div variants={item} className="w-full">
+        <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-emerald-200 shadow transition-shadow duration-300 hover:shadow-md h-full">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Calendar className="h-5 w-5 text-emerald-500" />
