@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TPAESPrueba, TPAESHabilidad } from '@/types/system-types';
@@ -63,9 +62,9 @@ export const useDiagnosticIntelligence = (userId: string | undefined) => {
     setState(prev => ({ ...prev, isLoading: true }));
 
     try {
-      // Cargar resultados de diagnósticos
+      // Cargar resultados de diagnósticos - usando la tabla correcta
       const { data: diagnosticResults } = await supabase
-        .from('diagnostic_results')
+        .from('user_diagnostic_results')
         .select('*')
         .eq('user_id', userId)
         .order('completed_at', { ascending: false });
@@ -128,17 +127,24 @@ export const useDiagnosticIntelligence = (userId: string | undefined) => {
     const currentScores = latestResult?.results || {};
 
     // Calcular tendencias de progreso
-    const progressTrends = diagnosticResults.slice(0, 10).reverse().map((result, index) => ({
-      date: result.completed_at,
-      scores: result.results,
-      improvements: index > 0 ? 
-        Object.keys(result.results).reduce((acc, prueba) => {
-          const prevScore = diagnosticResults[diagnosticResults.length - index]?.results[prueba] || 0;
-          acc[prueba as TPAESPrueba] = result.results[prueba] - prevScore;
-          return acc;
-        }, {} as Record<TPAESPrueba, number>) : 
-        {}
-    }));
+    const progressTrends = diagnosticResults.slice(0, 10).reverse().map((result, index) => {
+      const prevResult = index > 0 ? diagnosticResults[diagnosticResults.length - index] : null;
+      const improvements: Record<TPAESPrueba, number> = {} as Record<TPAESPrueba, number>;
+      
+      if (prevResult) {
+        Object.keys(result.results).forEach(prueba => {
+          const currentScore = result.results[prueba] || 0;
+          const prevScore = prevResult.results[prueba] || 0;
+          improvements[prueba as TPAESPrueba] = currentScore - prevScore;
+        });
+      }
+      
+      return {
+        date: result.completed_at,
+        scores: result.results,
+        improvements
+      };
+    });
 
     // Análisis de habilidades basado en ejercicios
     const skillAnalysis = await analyzeSkillsFromExercises(exerciseAttempts);
@@ -189,21 +195,40 @@ export const useDiagnosticIntelligence = (userId: string | undefined) => {
       });
     });
 
-    // Convertir a formato final
-    const analysis: Record<TPAESHabilidad, any> = {};
+    // Convertir a formato final con todos los skills requeridos
+    const analysis: Record<TPAESHabilidad, any> = {
+      'TRACK_LOCATE': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'INTERPRET_RELATE': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'EVALUATE_REFLECT': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'SOLVE_PROBLEMS': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'REPRESENT': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'MODEL': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'ARGUE_COMMUNICATE': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'IDENTIFY_THEORIES': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'PROCESS_ANALYZE': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'APPLY_PRINCIPLES': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'SCIENTIFIC_ARGUMENT': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'TEMPORAL_THINKING': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'SOURCE_ANALYSIS': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'MULTICAUSAL_ANALYSIS': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'CRITICAL_THINKING': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] },
+      'REFLECTION': { level: 0, trend: 'stable', exercises_completed: 0, accuracy_rate: 0, time_spent_minutes: 0, recommendations: [] }
+    };
     
     Object.entries(skillStats).forEach(([skill, stats]) => {
       const accuracyRate = stats.total > 0 ? stats.correct / stats.total : 0;
       const recentTrend = calculateTrend(stats.recent);
       
-      analysis[skill as TPAESHabilidad] = {
-        level: accuracyRate,
-        trend: recentTrend,
-        exercises_completed: stats.total,
-        accuracy_rate: accuracyRate,
-        time_spent_minutes: Math.round(stats.timeSpent / 60000),
-        recommendations: generateSkillRecommendations(skill as TPAESHabilidad, accuracyRate, recentTrend)
-      };
+      if (skill in analysis) {
+        analysis[skill as TPAESHabilidad] = {
+          level: accuracyRate,
+          trend: recentTrend,
+          exercises_completed: stats.total,
+          accuracy_rate: accuracyRate,
+          time_spent_minutes: Math.round(stats.timeSpent / 60000),
+          recommendations: generateSkillRecommendations(skill as TPAESHabilidad, accuracyRate, recentTrend)
+        };
+      }
     });
 
     return analysis;

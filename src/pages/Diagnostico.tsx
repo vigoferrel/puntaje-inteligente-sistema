@@ -5,6 +5,7 @@ import { DiagnosticExecution } from "@/components/diagnostic/DiagnosticExecution
 import { DiagnosticResults } from "@/components/diagnostic/DiagnosticResults";
 import { DiagnosticProgressBar } from "@/components/diagnostic/DiagnosticProgressBar";
 import { HierarchicalMetrics } from "@/components/diagnostic/HierarchicalMetrics";
+import { DiagnosticIntelligenceCenter } from "@/components/diagnostic/DiagnosticIntelligenceCenter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
