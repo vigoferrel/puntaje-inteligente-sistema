@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UnifiedAppProvider } from "./contexts/UnifiedAppProvider";
-import { AppInitializer } from "./components/AppInitializer";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Diagnostico from "./pages/Diagnostico";
@@ -24,7 +23,16 @@ import Evaluaciones from "./pages/Evaluaciones";
 import Entrenamiento from "./pages/Entrenamiento";
 import Analisis from "./pages/Analisis";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      gcTime: 10 * 60 * 1000, // 10 minutos
+      retry: 1,
+      refetchOnWindowFocus: false
+    }
+  }
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -33,29 +41,27 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppInitializer>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/diagnostico" element={<Diagnostico />} />
-              <Route path="/plan" element={<Plan />} />
-              <Route path="/calendario" element={<Calendario />} />
-              <Route path="/lectoguia" element={<LectoGuia />} />
-              <Route path="/paes" element={<PAES />} />
-              <Route path="/paes-dashboard" element={<PAESDashboard />} />
-              <Route path="/paes-universe" element={<PAESUniversePage />} />
-              <Route path="/ejercicios" element={<Ejercicios />} />
-              <Route path="/finanzas" element={<Finanzas />} />
-              <Route path="/centro-financiero" element={<Finanzas />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/materia/:subject" element={<SubjectDetail />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/configuracion" element={<Settings />} />
-              <Route path="/evaluaciones" element={<Evaluaciones />} />
-              <Route path="/entrenamiento" element={<Entrenamiento />} />
-              <Route path="/analisis" element={<Analisis />} />
-            </Routes>
-          </AppInitializer>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/diagnostico" element={<Diagnostico />} />
+            <Route path="/plan" element={<Plan />} />
+            <Route path="/calendario" element={<Calendario />} />
+            <Route path="/lectoguia" element={<LectoGuia />} />
+            <Route path="/paes" element={<PAES />} />
+            <Route path="/paes-dashboard" element={<PAESDashboard />} />
+            <Route path="/paes-universe" element={<PAESUniversePage />} />
+            <Route path="/ejercicios" element={<Ejercicios />} />
+            <Route path="/finanzas" element={<Finanzas />} />
+            <Route path="/centro-financiero" element={<Finanzas />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/materia/:subject" element={<SubjectDetail />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/configuracion" element={<Settings />} />
+            <Route path="/evaluaciones" element={<Evaluaciones />} />
+            <Route path="/entrenamiento" element={<Entrenamiento />} />
+            <Route path="/analisis" element={<Analisis />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </UnifiedAppProvider>
