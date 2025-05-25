@@ -14,6 +14,8 @@ import { SuperPAESSkillMap3D } from './SuperPAESSkillMap3D';
 import { VocationalRecommendations } from './VocationalRecommendations';
 import { CompetencyAnalysis } from './CompetencyAnalysis';
 import { ProgressVisualization } from './ProgressVisualization';
+import { useCinematic, CinematicTransition } from '@/components/cinematic/CinematicTransitionSystem';
+import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
 
 export const SuperPAESMain: React.FC = () => {
   const {
@@ -29,7 +31,21 @@ export const SuperPAESMain: React.FC = () => {
     obtenerEstadisticas
   } = useSuperPAES();
 
+  const { startTransition } = useCinematic();
+  const { syncWithSuper, getIntersectionalMetrics } = useUnifiedPAES();
+
+  // Sync with unified system
+  React.useEffect(() => {
+    if (analisisVocacional && mapaCompetencias) {
+      syncWithSuper({
+        competencias: mapaCompetencias,
+        recomendaciones: recomendacionesVocacionales
+      });
+    }
+  }, [analisisVocacional, mapaCompetencias, recomendacionesVocacionales, syncWithSuper]);
+
   const estadisticas = obtenerEstadisticas();
+  const intersectionalMetrics = getIntersectionalMetrics();
 
   // Convert competencias to skills format for the 3D map
   const skillsForMap = mapaCompetencias.map(competencia => ({
@@ -40,7 +56,8 @@ export const SuperPAESMain: React.FC = () => {
 
   const handleSkillClick = (skillName: string) => {
     console.log('Skill clicked:', skillName);
-    // Could implement skill detail view here
+    // Enhanced skill interaction with cinematic transition
+    startTransition('universe', { duration: 600, preloadTarget: true });
   };
 
   if (loading && !analisisVocacional) {
@@ -85,143 +102,152 @@ export const SuperPAESMain: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      {/* Header SuperPAES */}
-      <motion.div 
-        className="relative overflow-hidden"
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-xl" />
-        <div className="relative container mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <motion.div
-                className="p-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl"
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Brain className="w-8 h-8 text-white" />
-              </motion.div>
-              <div>
-                <h1 className="text-4xl font-bold text-white">SuperPAES</h1>
-                <p className="text-purple-200">Sistema Avanzado de Orientación Vocacional</p>
-              </div>
-            </div>
-            
-            {estadisticas && (
-              <div className="flex space-x-4">
-                <motion.div 
-                  className="text-center"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <div className="text-3xl font-bold text-yellow-400">{estadisticas.competenciasDestacadas}</div>
-                  <div className="text-xs text-purple-200">Competencias Destacadas</div>
-                </motion.div>
-                <motion.div 
-                  className="text-center"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <div className="text-3xl font-bold text-green-400">{estadisticas.carrerasRecomendadas}</div>
-                  <div className="text-xs text-purple-200">Carreras Recomendadas</div>
-                </motion.div>
-                <motion.div 
-                  className="text-center"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <div className="text-3xl font-bold text-blue-400">{estadisticas.promedioCompatibilidad}%</div>
-                  <div className="text-xs text-purple-200">Compatibilidad</div>
-                </motion.div>
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Navegación de Vistas */}
-      <div className="container mx-auto px-6">
+    <CinematicTransition scene="superpaes">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        {/* Header SuperPAES */}
         <motion.div 
-          className="bg-black/20 backdrop-blur-xl rounded-2xl p-2 mb-8"
-          initial={{ opacity: 0, y: 20 }}
+          className="relative overflow-hidden"
+          initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.8 }}
         >
-          <div className="flex space-x-2">
-            {[
-              { id: 'overview', label: 'Resumen', icon: Eye },
-              { id: 'competencias', label: 'Competencias', icon: Target },
-              { id: 'mapa3d', label: 'Mapa 3D', icon: Map },
-              { id: 'recomendaciones', label: 'Carreras', icon: GraduationCap },
-              { id: 'analisis', label: 'Análisis', icon: BarChart3 }
-            ].map(({ id, label, icon: Icon }) => (
-              <motion.button
-                key={id}
-                onClick={() => cambiarVista(id as any)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 ${
-                  activeView === id 
-                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg' 
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{label}</span>
-              </motion.button>
-            ))}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-xl" />
+          <div className="relative container mx-auto px-6 py-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <motion.div
+                  className="p-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl"
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <Brain className="w-8 h-8 text-white" />
+                </motion.div>
+                <div>
+                  <h1 className="text-4xl font-bold text-white">SuperPAES</h1>
+                  <p className="text-purple-200">Sistema Avanzado de Orientación Vocacional</p>
+                </div>
+              </div>
+              
+              {estadisticas && (
+                <div className="flex space-x-4">
+                  <motion.div 
+                    className="text-center"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="text-3xl font-bold text-yellow-400">{estadisticas.competenciasDestacadas}</div>
+                    <div className="text-xs text-purple-200">Competencias Destacadas</div>
+                  </motion.div>
+                  <motion.div 
+                    className="text-center"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="text-3xl font-bold text-green-400">{estadisticas.carrerasRecomendadas}</div>
+                    <div className="text-xs text-purple-200">Carreras Recomendadas</div>
+                  </motion.div>
+                  <motion.div 
+                    className="text-center"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="text-3xl font-bold text-blue-400">{estadisticas.promedioCompatibilidad}%</div>
+                    <div className="text-xs text-purple-200">Compatibilidad</div>
+                  </motion.div>
+                  <motion.div 
+                    className="text-center"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="text-3xl font-bold text-cyan-400">{Math.round(intersectionalMetrics.overallSynergy)}%</div>
+                    <div className="text-xs text-purple-200">Sinergia Global</div>
+                  </motion.div>
+                </div>
+              )}
+            </div>
           </div>
         </motion.div>
 
-        {/* Contenido Principal */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeView}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.5 }}
+        {/* Navegación de Vistas */}
+        <div className="container mx-auto px-6">
+          <motion.div 
+            className="bg-black/20 backdrop-blur-xl rounded-2xl p-2 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            {activeView === 'overview' && (
-              <SuperPAESOverview 
-                analisis={analisisVocacional}
-                recomendaciones={recomendacionesVocacionales}
-                estadisticas={estadisticas}
-                onCambiarVista={cambiarVista}
-              />
-            )}
-            
-            {activeView === 'competencias' && (
-              <CompetencyAnalysis 
-                competencias={mapaCompetencias}
-                analisis={analisisVocacional}
-              />
-            )}
-            
-            {activeView === 'mapa3d' && (
-              <SuperPAESSkillMap3D 
-                skills={skillsForMap}
-                onSkillClick={handleSkillClick}
-              />
-            )}
-            
-            {activeView === 'recomendaciones' && (
-              <VocationalRecommendations 
-                recomendaciones={recomendacionesVocacionales}
-                onActualizar={generarNuevasRecomendaciones}
-              />
-            )}
-            
-            {activeView === 'analisis' && (
-              <ProgressVisualization 
-                analisis={analisisVocacional}
-                recomendaciones={recomendacionesVocacionales}
-              />
-            )}
+            <div className="flex space-x-2">
+              {[
+                { id: 'overview', label: 'Resumen', icon: Eye },
+                { id: 'competencias', label: 'Competencias', icon: Target },
+                { id: 'mapa3d', label: 'Mapa 3D', icon: Map },
+                { id: 'recomendaciones', label: 'Carreras', icon: GraduationCap },
+                { id: 'analisis', label: 'Análisis', icon: BarChart3 }
+              ].map(({ id, label, icon: Icon }) => (
+                <motion.button
+                  key={id}
+                  onClick={() => cambiarVista(id as any)}
+                  className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 ${
+                    activeView === id 
+                      ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg' 
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{label}</span>
+                </motion.button>
+              ))}
+            </div>
           </motion.div>
-        </AnimatePresence>
+
+          {/* Contenido Principal */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeView}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              {activeView === 'overview' && (
+                <SuperPAESOverview 
+                  analisis={analisisVocacional}
+                  recomendaciones={recomendacionesVocacionales}
+                  estadisticas={estadisticas}
+                  onCambiarVista={cambiarVista}
+                />
+              )}
+              
+              {activeView === 'competencias' && (
+                <CompetencyAnalysis 
+                  competencias={mapaCompetencias}
+                  analisis={analisisVocacional}
+                />
+              )}
+              
+              {activeView === 'mapa3d' && (
+                <SuperPAESSkillMap3D 
+                  skills={skillsForMap}
+                  onSkillClick={handleSkillClick}
+                />
+              )}
+              
+              {activeView === 'recomendaciones' && (
+                <VocationalRecommendations 
+                  recomendaciones={recomendacionesVocacionales}
+                  onActualizar={generarNuevasRecomendaciones}
+                />
+              )}
+              
+              {activeView === 'analisis' && (
+                <ProgressVisualization 
+                  analisis={analisisVocacional}
+                  recomendaciones={recomendacionesVocacionales}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </CinematicTransition>
   );
 };
 
