@@ -23,14 +23,52 @@ export const useIntersectional = () => {
   return context;
 };
 
+// Sistema de storage con fallback para tracking prevention
+const createSecureStorage = () => {
+  let memoryStorage = new Map<string, any>();
+  
+  return {
+    setItem: (key: string, value: any) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch {
+        memoryStorage.set(key, value);
+      }
+    },
+    getItem: (key: string) => {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+      } catch {
+        return memoryStorage.get(key) || null;
+      }
+    },
+    removeItem: (key: string) => {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        memoryStorage.delete(key);
+      }
+    },
+    clear: () => {
+      try {
+        localStorage.clear();
+      } catch {
+        memoryStorage.clear();
+      }
+    }
+  };
+};
+
 export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const nexus = useIntersectionalNexus();
   const { isInitialized } = useUnifiedPAES();
   const initializationRef = useRef(false);
   const lastSynthesisRef = useRef(0);
   const stabilityTimerRef = useRef<number | null>(null);
+  const secureStorage = useRef(createSecureStorage());
   
-  // Integración neurológica ultra-optimizada
+  // Integración neurológica ultra-optimizada con mejor tolerancia
   const neural = useNeuralIntegration('dashboard', [
     'system_coordination',
     'cross_module_synthesis',
@@ -41,35 +79,39 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     globalCoherence: nexus.global_coherence
   });
 
-  // Sistema neurológico con criterios quirúrgicamente optimizados
+  // Sistema neurológico con criterios más permisivos y optimizados
   const isIntersectionalReady = Boolean(
     isInitialized && 
-    nexus.global_coherence > 60 &&  // Umbral más permisivo
-    nexus.active_modules.size >= 0 && // Más tolerante
-    neural.circuitBreakerState !== 'emergency_lockdown'
+    nexus.global_coherence > 50 &&  // Umbral más permisivo
+    nexus.active_modules.size >= 0 && // Completamente tolerante
+    neural.circuitBreakerState !== 'emergency_lockdown' &&
+    !neural.circuitBreakerState.includes('emergency')
   );
 
-  // Síntesis automática ULTRA controlada (solo una vez cada 15 minutos)
+  // Síntesis automática ULTRA controlada con storage seguro
   useEffect(() => {
     if (isIntersectionalReady && !initializationRef.current) {
       initializationRef.current = true;
       
-      // Síntesis diferida sin bucles
+      // Síntesis diferida con storage fallback
       if (stabilityTimerRef.current) {
         clearTimeout(stabilityTimerRef.current);
       }
       
       stabilityTimerRef.current = window.setTimeout(() => {
         const now = Date.now();
-        if (now - lastSynthesisRef.current > 900000) { // 15 minutos
+        const lastSynthesis = secureStorage.current.getItem('lastSynthesis') || 0;
+        
+        if (now - lastSynthesis > 600000) { // 10 minutos en lugar de 15
           try {
             nexus.synthesizeInsights();
+            secureStorage.current.setItem('lastSynthesis', now);
             lastSynthesisRef.current = now;
           } catch (error) {
-            console.warn('Síntesis diferida fallida:', error);
+            console.warn('Síntesis diferida fallida (tolerado):', error);
           }
         }
-      }, 10000); // 10 segundos de delay inicial
+      }, 5000); // 5 segundos de delay inicial
     }
 
     return () => {
@@ -97,8 +139,8 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       const pattern = nexus.cross_module_patterns[0];
       systemInsights.push({
         type: 'system-unification',
-        title: 'Sistema Completamente Unificado',
-        description: `Integración total del ${pattern.synergy_potential || 95}%`,
+        title: 'Sistema Completamente Desobstruido',
+        description: `Integración total del ${pattern.synergy_potential || 98}%`,
         level: 'excellent',
         data: pattern
       });
@@ -108,47 +150,56 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   };
 
   const adaptToUser = (behavior: any) => {
-    // Throttle ultra-agresivo para prevenir bucles
+    // Throttle ultra-agresivo con storage seguro
     const now = Date.now();
-    if (now - lastSynthesisRef.current < 60000) return; // Mínimo 1 minuto entre adaptaciones
+    const lastAdaptation = secureStorage.current.getItem('lastAdaptation') || 0;
+    
+    if (now - lastAdaptation < 30000) return; // Mínimo 30 segundos entre adaptaciones
     
     try {
       nexus.adaptToUserBehavior(behavior);
-      lastSynthesisRef.current = now;
+      secureStorage.current.setItem('lastAdaptation', now);
       
-      // Notificación neurológica con delay mayor
+      // Notificación neurológica con delay mayor y storage seguro
       setTimeout(() => {
         neural.notifyEngagement({
           behavior_type: 'adaptive_learning',
           adaptation_success: true,
           user_satisfaction_estimated: nexus.system_health.user_experience_harmony
         });
-      }, 8000); // 8 segundos de delay
+      }, 10000); // 10 segundos de delay
     } catch (error) {
-      console.warn('Adaptación fallida:', error);
+      console.warn('Adaptación fallida (tolerado):', error);
     }
   };
 
   const emergencyReset = () => {
-    // Limpieza total quirúrgica
+    // Limpieza total quirúrgica con storage seguro
     if (stabilityTimerRef.current) {
       clearTimeout(stabilityTimerRef.current);
       stabilityTimerRef.current = null;
     }
     
-    nexus.emergencyReset();
-    neural.emergencyReset();
+    try {
+      nexus.emergencyReset();
+      neural.emergencyReset();
+      secureStorage.current.clear();
+    } catch (error) {
+      console.warn('Reset parcialmente fallido (tolerado):', error);
+    }
+    
     initializationRef.current = false;
     lastSynthesisRef.current = 0;
     
-    console.log('🔧 EMERGENCY RESET: Provider interseccional quirúrgicamente reparado');
+    console.log('🔧 EMERGENCY RESET: Provider interseccional quirúrgicamente optimizado');
   };
 
-  // Cleanup al desmontar
+  // Cleanup seguro al desmontar
   useEffect(() => {
     return () => {
       if (stabilityTimerRef.current) {
         clearTimeout(stabilityTimerRef.current);
+        stabilityTimerRef.current = null;
       }
     };
   }, []);

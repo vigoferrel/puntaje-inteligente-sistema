@@ -1,117 +1,150 @@
 
 /**
- * Circuit Breaker Neurológico QUIRÚRGICAMENTE REPARADO
- * Previene bucles infinitos con límites ultra-optimizados
+ * Circuit Breaker Neurológico QUIRÚRGICAMENTE OPTIMIZADO v2.0
+ * Previene bucles infinitos con límites inteligentes y deduplicación avanzada
  */
-interface EmergencyCircuitBreakerOptions {
+interface OptimizedCircuitBreakerOptions {
   maxSignalsPerSecond: number;
   cooldownPeriod: number;
   emergencyThreshold: number;
   autoRecoveryTime: number;
   cleanupInterval: number;
+  moduleDeduplicationWindow: number;
 }
 
-enum EmergencyState {
-  STABLE,
-  DEGRADED,
+enum SystemState {
+  OPTIMAL,
+  MONITORED,
+  RESTRICTED,
   EMERGENCY_LOCKDOWN
 }
 
 export class EmergencyCircuitBreaker {
-  private state: EmergencyState = EmergencyState.STABLE;
+  private state: SystemState = SystemState.OPTIMAL;
   private signalHistory: number[] = [];
   private lastSignalTime: number = 0;
   private consecutiveViolations: number = 0;
   private lockdownStartTime: number = 0;
-  private registeredModules: Set<string> = new Set();
+  private registeredModules: Map<string, { timestamp: number; baseType: string }> = new Map();
   private cleanupTimer: number | null = null;
-  private readonly options: EmergencyCircuitBreakerOptions;
+  private readonly options: OptimizedCircuitBreakerOptions;
 
-  constructor(options: Partial<EmergencyCircuitBreakerOptions> = {}) {
+  constructor(options: Partial<OptimizedCircuitBreakerOptions> = {}) {
     this.options = {
-      maxSignalsPerSecond: 1,          // Ultra estricto
-      cooldownPeriod: 5000,            // 5 segundos cooldown
-      emergencyThreshold: 2,           // 2 violaciones = lockdown
-      autoRecoveryTime: 10000,         // 10 segundos recovery
-      cleanupInterval: 30000,          // Cleanup cada 30 segundos
+      maxSignalsPerSecond: 3,          // Más permisivo
+      cooldownPeriod: 2000,            // Reducido a 2 segundos
+      emergencyThreshold: 5,           // Más tolerante
+      autoRecoveryTime: 8000,          // Recovery más rápido
+      cleanupInterval: 15000,          // Cleanup más frecuente
+      moduleDeduplicationWindow: 5000, // Ventana de deduplicación
       ...options
     };
 
-    this.startCleanupTimer();
+    this.startIntelligentCleanup();
   }
 
-  private startCleanupTimer(): void {
+  private startIntelligentCleanup(): void {
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
     }
     
     this.cleanupTimer = window.setInterval(() => {
-      this.performMaintenance();
+      this.performIntelligentMaintenance();
     }, this.options.cleanupInterval);
   }
 
-  private performMaintenance(): void {
+  private performIntelligentMaintenance(): void {
     const now = Date.now();
     
-    // Limpiar historial muy agresivamente
-    this.signalHistory = this.signalHistory.filter(time => now - time < 2000);
+    // Limpiar historial de señales más agresivamente
+    this.signalHistory = this.signalHistory.filter(time => now - time < 1000);
     
-    // Limpiar módulos duplicados
-    const moduleArray = Array.from(this.registeredModules);
-    const uniqueModules = new Set();
+    // Deduplicación inteligente de módulos por tipo base
+    const modulesByBaseType = new Map<string, { moduleId: string; timestamp: number }>();
     
-    moduleArray.forEach(moduleId => {
-      const baseId = moduleId.split('_')[0];
-      if (!uniqueModules.has(baseId)) {
-        uniqueModules.add(baseId);
+    for (const [moduleId, info] of this.registeredModules.entries()) {
+      const existing = modulesByBaseType.get(info.baseType);
+      if (!existing || info.timestamp > existing.timestamp) {
+        if (existing) {
+          this.registeredModules.delete(existing.moduleId);
+        }
+        modulesByBaseType.set(info.baseType, { moduleId, timestamp: info.timestamp });
       } else {
         this.registeredModules.delete(moduleId);
       }
-    });
-    
-    // Auto-recovery si estamos degradados por mucho tiempo
-    if (this.state === EmergencyState.DEGRADED && 
-        this.consecutiveViolations === 0) {
-      this.state = EmergencyState.STABLE;
     }
     
-    console.log(`🔧 Mantenimiento: ${this.registeredModules.size} módulos activos`);
+    // Limpiar módulos antiguos
+    for (const [moduleId, info] of this.registeredModules.entries()) {
+      if (now - info.timestamp > this.options.moduleDeduplicationWindow) {
+        this.registeredModules.delete(moduleId);
+      }
+    }
+    
+    // Auto-recovery gradual
+    if (this.state === SystemState.RESTRICTED && this.consecutiveViolations === 0) {
+      this.state = SystemState.MONITORED;
+    } else if (this.state === SystemState.MONITORED && this.signalHistory.length === 0) {
+      this.state = SystemState.OPTIMAL;
+    }
+    
+    console.log(`🔧 Mantenimiento inteligente: ${this.registeredModules.size} módulos activos`);
   }
 
   public canProcess(): boolean {
     const now = Date.now();
     
     // Auto-recovery optimizado
-    if (this.state === EmergencyState.EMERGENCY_LOCKDOWN) {
+    if (this.state === SystemState.EMERGENCY_LOCKDOWN) {
       if (now - this.lockdownStartTime > this.options.autoRecoveryTime) {
-        this.emergencyRecovery();
+        this.intelligentRecovery();
         return true;
       }
       return false;
     }
 
-    // Limpiar historial más agresivamente
-    this.signalHistory = this.signalHistory.filter(time => now - time < 2000);
+    // Limpiar historial dinámicamente
+    this.signalHistory = this.signalHistory.filter(time => now - time < 1000);
 
-    // Verificar límite ultra-estricto
-    if (this.signalHistory.length >= this.options.maxSignalsPerSecond) {
+    // Verificar límites con estado adaptativo
+    const currentLimit = this.getAdaptiveLimit();
+    if (this.signalHistory.length >= currentLimit) {
       this.consecutiveViolations++;
       
       if (this.consecutiveViolations >= this.options.emergencyThreshold) {
-        this.enterEmergencyLockdown();
+        this.enterControlledLockdown();
         return false;
       }
       
-      this.state = EmergencyState.DEGRADED;
+      this.state = SystemState.RESTRICTED;
       return false;
     }
 
-    // Verificar cooldown mínimo ultra-optimizado
-    if (now - this.lastSignalTime < this.options.cooldownPeriod) {
+    // Verificar cooldown adaptativo
+    const cooldownPeriod = this.getAdaptiveCooldown();
+    if (now - this.lastSignalTime < cooldownPeriod) {
       return false;
     }
 
     return true;
+  }
+
+  private getAdaptiveLimit(): number {
+    switch (this.state) {
+      case SystemState.OPTIMAL: return this.options.maxSignalsPerSecond;
+      case SystemState.MONITORED: return Math.max(1, this.options.maxSignalsPerSecond - 1);
+      case SystemState.RESTRICTED: return 1;
+      default: return 0;
+    }
+  }
+
+  private getAdaptiveCooldown(): number {
+    switch (this.state) {
+      case SystemState.OPTIMAL: return this.options.cooldownPeriod;
+      case SystemState.MONITORED: return this.options.cooldownPeriod * 1.5;
+      case SystemState.RESTRICTED: return this.options.cooldownPeriod * 2;
+      default: return this.options.cooldownPeriod * 3;
+    }
   }
 
   public recordSignal(): void {
@@ -121,46 +154,71 @@ export class EmergencyCircuitBreaker {
     this.signalHistory.push(now);
     this.lastSignalTime = now;
     
-    // Recuperación gradual más rápida
-    if (this.state === EmergencyState.DEGRADED && this.consecutiveViolations > 0) {
+    // Recuperación gradual más eficiente
+    if (this.consecutiveViolations > 0) {
       this.consecutiveViolations = Math.max(0, this.consecutiveViolations - 1);
-      if (this.consecutiveViolations === 0) {
-        this.state = EmergencyState.STABLE;
+      if (this.consecutiveViolations === 0 && this.state === SystemState.RESTRICTED) {
+        this.state = SystemState.MONITORED;
       }
     }
   }
 
   public registerModule(moduleId: string): boolean {
-    if (this.registeredModules.has(moduleId)) {
-      console.warn(`🚫 Módulo duplicado bloqueado: ${moduleId}`);
+    const baseType = moduleId.split('_')[0];
+    
+    // Verificar duplicación por tipo base
+    const existingByType = Array.from(this.registeredModules.entries())
+      .find(([_, info]) => info.baseType === baseType);
+    
+    if (existingByType && Date.now() - existingByType[1].timestamp < 3000) {
+      console.warn(`🚫 Módulo ${baseType} ya registrado recientemente`);
       return false;
     }
     
-    this.registeredModules.add(moduleId);
-    console.log(`🧠 Módulo neuronal registrado: ${moduleId}`);
+    // Registrar con información de tipo
+    this.registeredModules.set(moduleId, {
+      timestamp: Date.now(),
+      baseType
+    });
+    
+    console.log(`🧠 Módulo neuronal registrado: ${baseType}[${moduleId}]`);
     return true;
   }
 
-  private enterEmergencyLockdown(): void {
-    this.state = EmergencyState.EMERGENCY_LOCKDOWN;
+  private enterControlledLockdown(): void {
+    this.state = SystemState.EMERGENCY_LOCKDOWN;
     this.lockdownStartTime = Date.now();
-    console.error('🚨 EMERGENCY LOCKDOWN: Sistema neural completamente desobstruido');
+    console.error('🚨 LOCKDOWN CONTROLADO: Sistema neural temporalmente restringido');
   }
 
-  private emergencyRecovery(): void {
-    this.state = EmergencyState.STABLE;
+  private intelligentRecovery(): void {
+    this.state = SystemState.MONITORED;
     this.consecutiveViolations = 0;
     this.signalHistory = [];
+    
+    // Mantener solo un módulo por tipo
+    const modulesByType = new Map<string, string>();
+    for (const [moduleId, info] of this.registeredModules.entries()) {
+      modulesByType.set(info.baseType, moduleId);
+    }
+    
     this.registeredModules.clear();
-    console.log('✅ RECOVERY: Sistema neural quirúrgicamente reparado');
+    for (const [baseType, moduleId] of modulesByType.entries()) {
+      this.registeredModules.set(moduleId, {
+        timestamp: Date.now(),
+        baseType
+      });
+    }
+    
+    console.log('✅ RECOVERY INTELIGENTE: Sistema neural optimizado y funcional');
   }
 
   public getState(): string {
-    return `${EmergencyState[this.state].toLowerCase()}_${this.registeredModules.size}_modules`;
+    return `${SystemState[this.state].toLowerCase()}_${this.registeredModules.size}_modules`;
   }
 
   public forceRecovery(): void {
-    this.emergencyRecovery();
+    this.intelligentRecovery();
   }
 
   public destroy(): void {
