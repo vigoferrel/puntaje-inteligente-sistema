@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import PAESDashboard from "./pages/PAESDashboard";
 import LectoGuia from "./pages/LectoGuia";
 import Diagnostico from "./pages/Diagnostico";
-import LearningPlan from "./pages/LearningPlan";
+import Plan from "./pages/Plan";
 import Auth from "./pages/Auth";
 
 export const router = createBrowserRouter([
@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/plan",
-    element: <LearningPlan />,
+    element: <Plan />,
   },
   {
     path: "/auth",
