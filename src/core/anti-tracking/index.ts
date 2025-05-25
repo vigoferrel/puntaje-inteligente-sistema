@@ -24,6 +24,9 @@ export const emergencyAntiTrackingReset = () => {
   console.log('🚨 RESET DE EMERGENCIA ANTI-TRACKING GLOBAL');
   
   try {
+    const { trackingFirewall } = require('./TrackingFirewall');
+    const { storageProtection } = require('./StorageProtectionLayer');
+    
     trackingFirewall.emergencyPurge();
     storageProtection.emergencyWipe();
   } catch (error) {

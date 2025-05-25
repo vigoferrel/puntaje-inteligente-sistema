@@ -10,6 +10,10 @@ export interface ModuleSecurityContext {
   tracking_protected?: boolean;
   shield_level?: number;
   encryption_enabled?: boolean;
+  firewall_active?: boolean;
+  storage_protected?: boolean;
+  purification_level?: string;
+  emergency_mode?: boolean;
 }
 
 // Identidad de módulo extendida

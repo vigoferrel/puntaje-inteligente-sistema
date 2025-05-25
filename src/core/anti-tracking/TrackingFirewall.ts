@@ -1,6 +1,6 @@
 
 /**
- * FIREWALL ANTI-TRACKING EXTREMO v1.0
+ * FIREWALL ANTI-TRACKING EXTREMO v1.1
  * Blindaje quirúrgico contra todas las formas de tracking
  */
 
@@ -80,30 +80,34 @@ class TrackingFirewall {
   private interceptNetworkRequests(): void {
     // Override fetch para bloquear requests de tracking
     const originalFetch = window.fetch;
-    window.fetch = (...args) => {
+    const self = this;
+    
+    window.fetch = function(...args: Parameters<typeof fetch>) {
       const url = args[0] as string;
       
-      if (this.isTrackingUrl(url)) {
-        this.blockedAttempts++;
+      if (self.isTrackingUrl(url)) {
+        self.blockedAttempts++;
         console.log(`🚫 Blocked tracking request: ${url}`);
         return Promise.reject(new Error('Blocked by anti-tracking firewall'));
       }
       
-      return originalFetch(...args);
+      return originalFetch.apply(this, args);
     };
 
     // Override XMLHttpRequest
     const originalXHR = window.XMLHttpRequest;
-    window.XMLHttpRequest = class extends originalXHR {
-      open(method: string, url: string, ...args: any[]) {
-        if (this.isTrackingUrl(url)) {
-          this.blockedAttempts++;
+    const OriginalXHRClass = class extends originalXHR {
+      open(method: string, url: string, async: boolean = true, username?: string | null, password?: string | null) {
+        if (self.isTrackingUrl(url)) {
+          self.blockedAttempts++;
           console.log(`🚫 Blocked XHR tracking request: ${url}`);
           throw new Error('Blocked by anti-tracking firewall');
         }
-        return super.open(method, url, ...args);
+        return super.open(method, url, async, username, password);
       }
-    } as any;
+    };
+    
+    window.XMLHttpRequest = OriginalXHRClass as any;
   }
 
   private isTrackingUrl(url: string): boolean {
@@ -117,21 +121,51 @@ class TrackingFirewall {
   private blockStorageAccess(): void {
     // Crear proxy para localStorage que filtra tracking
     const originalLocalStorage = window.localStorage;
-    const storageProxy = new Proxy(originalLocalStorage, {
-      setItem: (target, key: string, value: string) => {
-        if (this.isTrackingKey(key)) {
-          console.log(`🚫 Blocked tracking storage: ${key}`);
-          return;
+    const self = this;
+    
+    const storageHandler: ProxyHandler<Storage> = {
+      set(target: Storage, key: string | symbol, value: any): boolean {
+        const keyStr = String(key);
+        if (keyStr === 'setItem') {
+          return true; // Permitir acceso al método
         }
-        return target.setItem(key, value);
+        
+        if (self.isTrackingKey(keyStr)) {
+          console.log(`🚫 Blocked tracking storage: ${keyStr}`);
+          return true;
+        }
+        
+        (target as any)[key] = value;
+        return true;
       },
-      getItem: (target, key: string) => {
-        if (this.isTrackingKey(key)) {
-          return null;
+      
+      get(target: Storage, key: string | symbol): any {
+        const keyStr = String(key);
+        
+        if (keyStr === 'setItem') {
+          return function(this: Storage, storageKey: string, storageValue: string) {
+            if (self.isTrackingKey(storageKey)) {
+              console.log(`🚫 Blocked tracking storage: ${storageKey}`);
+              return;
+            }
+            return originalLocalStorage.setItem.call(this, storageKey, storageValue);
+          };
         }
-        return target.getItem(key);
+        
+        if (keyStr === 'getItem') {
+          return function(this: Storage, storageKey: string) {
+            if (self.isTrackingKey(storageKey)) {
+              return null;
+            }
+            return originalLocalStorage.getItem.call(this, storageKey);
+          };
+        }
+        
+        return (target as any)[key];
       }
-    });
+    };
+
+    const storageProxy = new Proxy(originalLocalStorage, storageHandler);
 
     // Protección anti-fingerprinting
     Object.defineProperty(window, 'localStorage', {
