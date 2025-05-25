@@ -27,8 +27,9 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   const nexus = useIntersectionalNexus();
   const { isInitialized } = useUnifiedPAES();
   const initializationRef = useRef(false);
+  const lastSynthesisRef = useRef(0);
   
-  // Integración neurológica estabilizada
+  // Integración neurológica optimizada
   const neural = useNeuralIntegration('dashboard', [
     'system_coordination',
     'cross_module_synthesis',
@@ -39,22 +40,26 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     globalCoherence: nexus.global_coherence
   });
 
-  // Sistema neurológico listo con criterios más estrictos
+  // Sistema neurológico con criterios optimizados
   const isIntersectionalReady = Boolean(
     isInitialized && 
-    nexus.global_coherence > 80 &&
+    nexus.global_coherence > 70 &&
     nexus.active_modules.size >= 1 &&
     neural.circuitBreakerState !== 'emergency_lockdown'
   );
 
-  // Síntesis automática controlada (solo una vez cada 5 minutos)
+  // Síntesis automática MUY controlada (solo una vez cada 10 minutos)
   useEffect(() => {
     if (isIntersectionalReady && !initializationRef.current) {
       initializationRef.current = true;
       
       const interval = setInterval(() => {
-        nexus.synthesizeInsights();
-      }, 300000); // Cada 5 minutos
+        const now = Date.now();
+        if (now - lastSynthesisRef.current > 600000) { // 10 minutos
+          nexus.synthesizeInsights();
+          lastSynthesisRef.current = now;
+        }
+      }, 600000); // Verificar cada 10 minutos
 
       return () => clearInterval(interval);
     }
@@ -72,8 +77,8 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       }
     ];
 
-    // Agregar insights limitados de cross-pollination
-    nexus.cross_module_patterns.slice(0, 3).forEach(pattern => {
+    // Máximo 2 insights adicionales para evitar sobrecarga
+    nexus.cross_module_patterns.slice(0, 2).forEach(pattern => {
       systemInsights.push({
         type: 'cross-pollination',
         title: pattern.recommended_integration,
@@ -87,23 +92,29 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   };
 
   const adaptToUser = (behavior: any) => {
-    nexus.adaptToUserBehavior(behavior);
+    // Throttle muy agresivo para prevenir bucles
+    const now = Date.now();
+    if (now - lastSynthesisRef.current < 30000) return; // Mínimo 30 segundos entre adaptaciones
     
-    // Throttle de notificaciones neurológicas
+    nexus.adaptToUserBehavior(behavior);
+    lastSynthesisRef.current = now;
+    
+    // Notificación neurológica con delay mayor
     setTimeout(() => {
       neural.notifyEngagement({
         behavior_type: 'adaptive_learning',
         adaptation_success: true,
         user_satisfaction_estimated: nexus.system_health.user_experience_harmony
       });
-    }, 3000);
+    }, 5000);
   };
 
   const emergencyReset = () => {
     nexus.emergencyReset();
     neural.emergencyReset();
     initializationRef.current = false;
-    console.log('🚨 EMERGENCY RESET: Provider interseccional reiniciado');
+    lastSynthesisRef.current = 0;
+    console.log('🔧 EMERGENCY RESET: Provider interseccional completamente desobstruido');
   };
 
   const contextValue: IntersectionalContextType = {

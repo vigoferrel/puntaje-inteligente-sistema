@@ -1,7 +1,7 @@
 
 /**
- * Circuit Breaker Neurológico de Emergencia
- * Previene bucles infinitos con límites estrictos
+ * Circuit Breaker Neurológico REPARADO
+ * Previene bucles infinitos con límites optimizados
  */
 interface EmergencyCircuitBreakerOptions {
   maxSignalsPerSecond: number;
@@ -26,10 +26,10 @@ export class EmergencyCircuitBreaker {
 
   constructor(options: Partial<EmergencyCircuitBreakerOptions> = {}) {
     this.options = {
-      maxSignalsPerSecond: 3,        // Límite estricto
-      cooldownPeriod: 5000,          // 5 segundos cooldown
-      emergencyThreshold: 5,         // 5 violaciones = lockdown
-      autoRecoveryTime: 30000,       // 30 segundos recovery
+      maxSignalsPerSecond: 2,        // Límite más estricto
+      cooldownPeriod: 3000,          // 3 segundos cooldown
+      emergencyThreshold: 3,         // 3 violaciones = lockdown
+      autoRecoveryTime: 15000,       // 15 segundos recovery
       ...options
     };
   }
@@ -37,7 +37,7 @@ export class EmergencyCircuitBreaker {
   public canProcess(): boolean {
     const now = Date.now();
     
-    // Auto-recovery desde lockdown
+    // Auto-recovery optimizado
     if (this.state === EmergencyState.EMERGENCY_LOCKDOWN) {
       if (now - this.lockdownStartTime > this.options.autoRecoveryTime) {
         this.emergencyRecovery();
@@ -46,10 +46,10 @@ export class EmergencyCircuitBreaker {
       return false;
     }
 
-    // Limpiar historial antiguo (últimos 1000ms)
-    this.signalHistory = this.signalHistory.filter(time => now - time < 1000);
+    // Limpiar historial (últimos 1500ms para mayor estabilidad)
+    this.signalHistory = this.signalHistory.filter(time => now - time < 1500);
 
-    // Verificar límite de señales por segundo
+    // Verificar límite estricto
     if (this.signalHistory.length >= this.options.maxSignalsPerSecond) {
       this.consecutiveViolations++;
       
@@ -62,8 +62,8 @@ export class EmergencyCircuitBreaker {
       return false;
     }
 
-    // Verificar cooldown mínimo entre señales
-    if (now - this.lastSignalTime < (1000 / this.options.maxSignalsPerSecond)) {
+    // Verificar cooldown mínimo optimizado
+    if (now - this.lastSignalTime < (1500 / this.options.maxSignalsPerSecond)) {
       return false;
     }
 
@@ -71,10 +71,13 @@ export class EmergencyCircuitBreaker {
   }
 
   public recordSignal(): void {
+    if (!this.canProcess()) return;
+    
     const now = Date.now();
     this.signalHistory.push(now);
     this.lastSignalTime = now;
     
+    // Recuperación gradual
     if (this.state === EmergencyState.DEGRADED) {
       this.consecutiveViolations = Math.max(0, this.consecutiveViolations - 1);
       if (this.consecutiveViolations === 0) {
@@ -86,14 +89,14 @@ export class EmergencyCircuitBreaker {
   private enterEmergencyLockdown(): void {
     this.state = EmergencyState.EMERGENCY_LOCKDOWN;
     this.lockdownStartTime = Date.now();
-    console.error('🚨 EMERGENCY LOCKDOWN: Sistema neurológico en lockdown por bucles infinitos');
+    console.error('🚨 EMERGENCY LOCKDOWN: Sistema neural desobstruido');
   }
 
   private emergencyRecovery(): void {
     this.state = EmergencyState.STABLE;
     this.consecutiveViolations = 0;
     this.signalHistory = [];
-    console.log('🔄 RECOVERY: Sistema neurológico recuperado del lockdown');
+    console.log('✅ RECOVERY: Sistema neural completamente reparado');
   }
 
   public getState(): string {

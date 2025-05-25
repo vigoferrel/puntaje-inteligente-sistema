@@ -2,16 +2,15 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { CinematicAudioProvider } from '@/components/cinematic/UniversalCinematicSystem';
-import NeuralIndex from '@/pages/NeuralIndex';
+import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCenter';
 import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
-import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCenter';
 
-// Router completamente rediseñado - TODO ES NEURAL
+// Router completamente unificado - SOLO CENTRO NEURAL
 const neuralRouter = createBrowserRouter([
   {
     path: '/',
-    element: <NeuralIndex />
+    element: <NeuralCommandCenter />
   },
   {
     path: '/neural-command',
