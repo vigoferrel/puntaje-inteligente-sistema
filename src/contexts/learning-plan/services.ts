@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { LearningPlan } from "./types";
 
@@ -26,6 +25,7 @@ export const createLearningPlan = async (userId: string, planData: Partial<Learn
       id: planId,
       title: planData.title || 'Plan Personalizado PAES',
       description: planData.description || 'Plan generado automáticamente',
+      progress: 0,
       userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -61,6 +61,7 @@ export const fetchLearningPlans = async (userId: string): Promise<LearningPlan[]
       id: `plan_${userId}`,
       title: profile.target_career || 'Plan Personalizado PAES',
       description: 'Plan basado en tu progreso actual',
+      progress: 0,
       userId,
       createdAt: profile.created_at,
       updatedAt: profile.updated_at,
