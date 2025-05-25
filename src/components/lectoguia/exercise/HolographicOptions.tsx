@@ -44,7 +44,7 @@ export const HolographicOptions: React.FC<HolographicOptionsProps> = ({
               'bg-transparent group-hover:bg-primary/20'
             }`} />
             
-            {/* Botón principal */}
+            {/* Botón principal con fondo más opaco */}
             <motion.button
               whileHover={{ scale: showFeedback ? 1 : 1.02, y: -2 }}
               whileTap={{ scale: showFeedback ? 1 : 0.98 }}
@@ -52,12 +52,12 @@ export const HolographicOptions: React.FC<HolographicOptionsProps> = ({
               disabled={showFeedback}
               className={`relative w-full p-6 rounded-2xl transition-all duration-300 border-2 ${
                 shouldHighlightCorrect 
-                  ? 'bg-green-500/20 border-green-400/50 shadow-green-400/25 shadow-lg' :
+                  ? 'bg-green-500/30 border-green-400/70 shadow-green-400/25 shadow-lg backdrop-blur-md' :
                 isWrong 
-                  ? 'bg-red-500/20 border-red-400/50 shadow-red-400/25 shadow-lg' :
+                  ? 'bg-red-500/30 border-red-400/70 shadow-red-400/25 shadow-lg backdrop-blur-md' :
                 isSelected 
-                  ? 'bg-primary/20 border-primary/50 shadow-primary/25 shadow-lg' :
-                  'glass-morphism border-white/20 hover:border-primary/40 hover:bg-primary/5'
+                  ? 'bg-primary/30 border-primary/70 shadow-primary/25 shadow-lg backdrop-blur-md' :
+                  'bg-slate-800/90 dark:bg-slate-700/90 border-white/30 hover:border-primary/50 hover:bg-primary/20 backdrop-blur-md'
               } ${showFeedback ? 'cursor-default' : 'cursor-pointer'}`}
             >
               {/* Partículas flotantes para opciones especiales */}
@@ -88,7 +88,7 @@ export const HolographicOptions: React.FC<HolographicOptionsProps> = ({
               )}
 
               <div className="flex items-start gap-4">
-                {/* Indicador de letra con efectos */}
+                {/* Indicador de letra con fondo sólido */}
                 <div className={`relative flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
                   shouldHighlightCorrect 
                     ? 'bg-green-500 text-white shadow-green-400/50 shadow-lg' :
@@ -96,7 +96,7 @@ export const HolographicOptions: React.FC<HolographicOptionsProps> = ({
                     ? 'bg-red-500 text-white shadow-red-400/50 shadow-lg' :
                   isSelected 
                     ? 'bg-primary text-white shadow-primary/50 shadow-lg' :
-                    'bg-white/10 text-foreground border border-white/20'
+                    'bg-slate-700 dark:bg-slate-600 text-white border-2 border-white/40'
                 }`}>
                   {showFeedback ? (
                     shouldHighlightCorrect ? (
@@ -134,12 +134,12 @@ export const HolographicOptions: React.FC<HolographicOptionsProps> = ({
                   )}
                 </div>
 
-                {/* Texto de la opción */}
+                {/* Texto de la opción con mejor contraste */}
                 <div className="flex-1 text-left">
                   <p className={`font-medium leading-relaxed transition-colors duration-300 ${
                     shouldHighlightCorrect || isWrong || isSelected 
-                      ? 'text-foreground' 
-                      : 'text-foreground/80 group-hover:text-foreground'
+                      ? 'text-white' 
+                      : 'text-white group-hover:text-white'
                   }`}>
                     {option}
                   </p>

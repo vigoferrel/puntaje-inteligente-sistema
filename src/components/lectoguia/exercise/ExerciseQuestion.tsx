@@ -32,38 +32,46 @@ export const ExerciseQuestion: React.FC<ExerciseQuestionProps> = ({
         {exercise.options.map((option, index) => (
           <button
             key={index}
-            className={`w-full text-left p-3 rounded-lg transition-all duration-300 ${
+            className={`w-full text-left p-4 rounded-lg transition-all duration-300 border-2 ${
               selectedOption === index 
                 ? showFeedback
                   ? index === correctIndex 
-                    ? 'bg-green-500/20 border border-green-500/50'
-                    : 'bg-red-500/20 border border-red-500/50'
-                  : 'bg-primary/20 border border-primary/50' 
-                : 'bg-secondary/30 border border-border hover:bg-secondary'
+                    ? 'bg-green-500/30 border-green-500/70 shadow-lg backdrop-blur-md'
+                    : 'bg-red-500/30 border-red-500/70 shadow-lg backdrop-blur-md'
+                  : 'bg-primary/30 border-primary/70 shadow-lg backdrop-blur-md' 
+                : 'bg-slate-800/90 dark:bg-slate-700/90 border-white/30 hover:bg-primary/20 hover:border-primary/50 backdrop-blur-md'
             }`}
             onClick={() => !showFeedback && onOptionSelect(index)}
             disabled={showFeedback}
           >
             <div className="flex items-start">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5 ${
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5 font-bold text-sm ${
                 selectedOption === index 
                   ? showFeedback
                     ? index === correctIndex
-                      ? 'bg-green-500 text-white'
-                      : 'bg-red-500 text-white'
-                    : 'bg-primary text-white' 
+                      ? 'bg-green-500 text-white shadow-lg'
+                      : 'bg-red-500 text-white shadow-lg'
+                    : 'bg-primary text-white shadow-lg' 
                   : correctIndex === index && showFeedback
-                    ? 'bg-green-500 text-white'
-                    : 'border border-muted-foreground'
+                    ? 'bg-green-500 text-white shadow-lg'
+                    : 'bg-slate-700 dark:bg-slate-600 text-white border-2 border-white/40'
               }`}>
                 {showFeedback 
                   ? (index === correctIndex 
-                      ? <Award size={12} /> 
-                      : selectedOption === index ? '✗' : '')
-                  : selectedOption === index && <ArrowRight size={12} />
+                      ? <Award size={14} /> 
+                      : selectedOption === index ? '✗' : String.fromCharCode(65 + index))
+                  : selectedOption === index 
+                    ? <ArrowRight size={14} />
+                    : String.fromCharCode(65 + index)
                 }
               </div>
-              <span>{option}</span>
+              <span className={`font-medium ${
+                selectedOption === index || (showFeedback && index === correctIndex)
+                  ? 'text-white'
+                  : 'text-white'
+              }`}>
+                {option}
+              </span>
             </div>
           </button>
         ))}
