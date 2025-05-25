@@ -1,6 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest } from "@/types/diagnostic";
-import { RealExamDiagnosticGenerator } from "./real-exam-diagnostic-generator";
+import { ComprehensiveDiagnosticGenerator } from "./comprehensive-diagnostic-generator";
+import { SkillAssessmentEngine } from "./engines/skill-assessment-engine";
+import { AIContentGenerator } from "./generators/ai-content-generator";
 import { toast } from "@/components/ui/use-toast";
 
 export interface ComprehensiveSystemData {
@@ -26,11 +29,11 @@ export class ComprehensiveDiagnosticOrchestrator {
 
   async initializeSystem(): Promise<ComprehensiveSystemData> {
     try {
-      console.log('🚀 Inicializando sistema diagnóstico integral con exámenes reales...');
+      console.log('🚀 Inicializando sistema diagnóstico integral con arquitectura modular...');
       
-      // Load all resources in parallel, but prioritize real exam diagnostics
+      // Load comprehensive diagnostics with user personalization
       const [diagnostics, exercises, skills, nodes] = await Promise.all([
-        this.loadRealExamDiagnostics(),
+        ComprehensiveDiagnosticGenerator.generateAllDiagnostics(this.userId),
         this.loadOfficialExercises(),
         this.loadPAESSkills(),
         this.loadLearningNodes()
@@ -43,7 +46,7 @@ export class ComprehensiveDiagnosticOrchestrator {
         isSystemReady: diagnostics.length > 0
       };
 
-      console.log(`✅ Sistema inicializado: ${diagnostics.length} diagnósticos reales, ${exercises.length} ejercicios oficiales, ${nodes.length} nodos`);
+      console.log(`✅ Sistema modular inicializado: ${diagnostics.length} diagnósticos integrales, ${exercises.length} ejercicios oficiales, ${nodes.length} nodos`);
 
       return {
         diagnosticTests: diagnostics,
@@ -53,7 +56,7 @@ export class ComprehensiveDiagnosticOrchestrator {
         isLoading: false
       };
     } catch (error) {
-      console.error('❌ Error inicializando sistema:', error);
+      console.error('❌ Error inicializando sistema modular:', error);
       throw error;
     }
   }
@@ -196,16 +199,14 @@ export class ComprehensiveDiagnosticOrchestrator {
 
   async startQuantumDiagnostic(): Promise<boolean> {
     try {
-      console.log('🔬 Iniciando diagnóstico cuántico con exámenes reales...');
+      console.log('🔬 Iniciando diagnóstico cuántico con arquitectura modular...');
       
       toast({
         title: "Diagnóstico Cuántico Activado",
-        description: "Diagnósticos basados en exámenes oficiales PAES 2024 listos para usar",
+        description: "Sistema integral con IA y backend educativo activado",
       });
 
-      // Simulate brief initialization
       await new Promise(resolve => setTimeout(resolve, 1000));
-
       return true;
     } catch (error) {
       console.error('❌ Error iniciando diagnóstico cuántico:', error);
