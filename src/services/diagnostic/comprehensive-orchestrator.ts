@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest } from "@/types/diagnostic";
 import { ComprehensiveDiagnosticGenerator } from "./comprehensive-diagnostic-generator";
@@ -77,27 +78,6 @@ export class ComprehensiveDiagnosticOrchestrator {
       
     } catch (error) {
       console.warn('⚠️ Error generando diagnósticos integrales, usando fallback:', error);
-      return this.loadDatabaseDiagnostics();
-    }
-  }
-
-  private async loadRealExamDiagnostics(): Promise<DiagnosticTest[]> {
-    try {
-      console.log('📋 Generando diagnósticos desde exámenes oficiales PAES...');
-      
-      // Use the real exam diagnostic generator
-      const realDiagnostics = await RealExamDiagnosticGenerator.generateAllDiagnostics();
-      
-      if (realDiagnostics.length > 0) {
-        console.log(`✅ ${realDiagnostics.length} diagnósticos generados desde exámenes reales`);
-        return realDiagnostics;
-      }
-      
-      // Fallback to database diagnostics if real exam generation fails
-      return this.loadDatabaseDiagnostics();
-      
-    } catch (error) {
-      console.warn('⚠️ Error generando diagnósticos reales, usando fallback:', error);
       return this.loadDatabaseDiagnostics();
     }
   }
