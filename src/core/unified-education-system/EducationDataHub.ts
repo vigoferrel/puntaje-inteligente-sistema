@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,6 +115,10 @@ interface EducationSystemStore {
   generateAdaptiveContent: (nodeId: string, difficulty: string) => Promise<any>;
   predictLearningPath: (targetScore: number) => Promise<string[]>;
   getPersonalizedInsights: () => string[];
+  
+  // Métodos auxiliares
+  determineCurrentLevel: (nodes: Record<string, SkillNode>) => 'inicial' | 'intermedio' | 'avanzado';
+  generateSessionInsights: (session: LearningSession) => string[];
 }
 
 export const useEducationSystem = create<EducationSystemStore>()(
@@ -173,16 +176,23 @@ export const useEducationSystem = create<EducationSystemStore>()(
             nodes?.forEach(node => {
               const userProgress = progress?.find(p => p.node_id === node.id);
               
+              // Mapear dificultad correctamente
+              const difficultyMap: Record<string, 'basico' | 'intermedio' | 'avanzado'> = {
+                'basic': 'basico',
+                'intermediate': 'intermedio',
+                'advanced': 'avanzado'
+              };
+              
               processedNodes[node.id] = {
                 id: node.id,
                 code: node.code,
                 name: node.title,
                 subject: node.subject_area,
-                difficulty: node.difficulty,
+                difficulty: difficultyMap[node.difficulty] || 'basico',
                 prerequisites: node.depends_on || [],
                 masteryLevel: userProgress?.mastery_level || 0,
                 diagnosticResults: {
-                  lastAssessment: userProgress?.last_activity_at || new Date(),
+                  lastAssessment: userProgress?.last_activity_at ? new Date(userProgress.last_activity_at) : new Date(),
                   accuracy: userProgress?.success_rate || 0,
                   speed: 100 - (userProgress?.time_spent_minutes || 0) / 5,
                   confidence: userProgress?.mastery_level || 0
@@ -190,7 +200,7 @@ export const useEducationSystem = create<EducationSystemStore>()(
                 aiRecommendations: {
                   nextActions: [],
                   studyTime: node.estimated_time_minutes || 45,
-                  difficulty: node.difficulty,
+                  difficulty: difficultyMap[node.difficulty] || 'basico',
                   resources: []
                 }
               };
@@ -241,6 +251,8 @@ export const useEducationSystem = create<EducationSystemStore>()(
         // Determinar nivel actual del estudiante
         determineCurrentLevel: (nodes: Record<string, SkillNode>) => {
           const masteryLevels = Object.values(nodes).map(n => n.masteryLevel);
+          if (masteryLevels.length === 0) return 'inicial';
+          
           const average = masteryLevels.reduce((a, b) => a + b, 0) / masteryLevels.length;
           
           if (average < 40) return 'inicial';
