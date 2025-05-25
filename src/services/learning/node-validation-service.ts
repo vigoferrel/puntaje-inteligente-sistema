@@ -20,6 +20,8 @@ export interface NodeCoherenceCheck {
   bloomDistribution: boolean;
 }
 
+type TierPriority = 'tier1_critico' | 'tier2_importante' | 'tier3_complementario';
+
 class NodeValidationService {
   
   async validateAllNodes(): Promise<NodeValidationResult> {
@@ -135,7 +137,7 @@ class NodeValidationService {
     // Validar que tenemos distribución equilibrada de Bloom
     const minBloomCount = Math.floor(nodes.length * 0.05); // Al menos 5% por nivel
     Object.entries(bloomCount).forEach(([level, count]) => {
-      if (count < minBloomCount) {
+      if (typeof count === 'number' && count < minBloomCount) {
         issues.push(`Nivel Bloom ${level}: solo ${count} nodos (mínimo: ${minBloomCount})`);
       }
     });
@@ -169,7 +171,7 @@ class NodeValidationService {
       .select('*')
       .eq('subject_area', subject);
 
-    if (tier) {
+    if (tier && this.isValidTier(tier)) {
       query = query.eq('tier_priority', tier);
     }
 
@@ -177,6 +179,10 @@ class NodeValidationService {
     
     if (error) throw error;
     return data || [];
+  }
+
+  private isValidTier(tier: string): tier is TierPriority {
+    return ['tier1_critico', 'tier2_importante', 'tier3_complementario'].includes(tier);
   }
 
   async validateNodeDependencies(nodeId: string): Promise<string[]> {

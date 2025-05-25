@@ -147,7 +147,7 @@ class EnhancedInitializationService {
     return mappings[testId]?.[subjectArea] || null;
   }
 
-  async getExpectedNodeDistribution(): Record<string, any> {
+  async getExpectedNodeDistribution(): Promise<Record<string, any>> {
     return {
       totalExpected: 277,
       bySubject: {
