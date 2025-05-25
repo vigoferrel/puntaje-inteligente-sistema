@@ -3,8 +3,7 @@ import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useIntersectionalNexus } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
 import { useNeuralIntegration } from '@/hooks/use-neural-integration';
-import { RespiratorySystemManager } from '@/core/system-vitals/RespiratorySystemManager';
-import { RespiratorySystem } from '@/core/system-vitals/RespiratorySystem';
+import { CirculatorySystem } from '@/core/system-vitals/CirculatorySystem';
 import { SystemVitals } from '@/core/system-vitals/types';
 import { initializeAntiTrackingSystem } from '@/core/anti-tracking';
 
@@ -32,41 +31,21 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   const nexus = useIntersectionalNexus();
   const { isInitialized } = useUnifiedPAES();
   const initializationRef = useRef(false);
-  const respiratorySystemRef = useRef<RespiratorySystem | null>(null);
+  const circulatorySystemRef = useRef<CirculatorySystem | null>(null);
   const lastSynthesisRef = useRef(0);
   
-  // Inicializar sistema respiratorio con singleton manager
+  // Inicializar sistema circulatorio unificado
   useEffect(() => {
-    let mounted = true;
-    
-    const initializeRespiratory = async () => {
-      try {
-        if (!respiratorySystemRef.current) {
-          const instance = await RespiratorySystemManager.getInstance({
-            breathsPerMinute: 6, // Ultra-conservador
-            oxygenThreshold: 50,
-            purificationLevel: 'safe_mode', // Usar valor válido
-            antiTrackingMode: false,
-            emergencyMode: false
-          });
-          
-          if (mounted) {
-            respiratorySystemRef.current = instance;
-          }
-        }
-      } catch (error) {
-        console.error('Error inicializando sistema respiratorio:', error);
-        // Activar emergencia solo si no está en cooldown
-        RespiratorySystemManager.activateEmergencyMode();
-      }
-    };
-
-    initializeRespiratory();
+    if (!circulatorySystemRef.current) {
+      circulatorySystemRef.current = new CirculatorySystem();
+      console.log('🫀 SISTEMA CARDIOVASCULAR UNIFICADO v7.0 INICIADO');
+    }
 
     return () => {
-      mounted = false;
-      // No destruir aquí - el singleton se encarga
-      respiratorySystemRef.current = null;
+      if (circulatorySystemRef.current) {
+        circulatorySystemRef.current.destroy();
+        circulatorySystemRef.current = null;
+      }
     };
   }, []);
   
@@ -75,62 +54,60 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     if (!initializationRef.current) {
       initializationRef.current = true;
       
-      // Inicialización diferida y segura
       setTimeout(() => {
         try {
           initializeAntiTrackingSystem();
         } catch (error) {
           console.error('Error en inicialización anti-tracking:', error);
         }
-      }, 3000); // 3 segundos para evitar conflictos
+      }, 3000);
     }
   }, []);
   
-  // Integración neurológica cardiovascular-respiratoria ULTRA-CONSERVADORA
+  // Integración neurológica cardiovascular unificada
   const neural = useNeuralIntegration('dashboard', [
-    'respiratory_coordination',
-    'oxygen_distribution',
+    'cardiovascular_coordination',
+    'unified_circulation',
     'passive_operation'
   ], {
     isInitialized,
     activeModules: nexus.active_modules.size,
     globalCoherence: nexus.global_coherence,
-    respiratoryHealth: respiratorySystemRef.current?.getHealth(),
-    ultraConservativeMode: true
+    cardiovascularHealth: circulatorySystemRef.current?.getSystemVitals(),
+    unifiedMode: true
   });
 
-  // Sistema con criterios ultra-bajos
+  // Sistema con criterios optimizados
   const isIntersectionalReady = Boolean(
     isInitialized && 
-    nexus.global_coherence > 10 && // Umbral muy bajo
+    nexus.global_coherence > 20 && 
     nexus.active_modules.size >= 0 && 
-    respiratorySystemRef.current
+    circulatorySystemRef.current
   );
 
-  // Síntesis respiratoria PASIVA
+  // Síntesis cardiovascular simplificada
   useEffect(() => {
     if (isIntersectionalReady) {
       const now = Date.now();
       
-      // Síntesis muy espaciada - cada 30 minutos
-      if (now - lastSynthesisRef.current > 1800000) {
+      if (now - lastSynthesisRef.current > 900000) { // 15 minutos
         try {
-          if (respiratorySystemRef.current) {
+          if (circulatorySystemRef.current && circulatorySystemRef.current.canProcessSignal()) {
             const systemData = {
               nexus_state: nexus.system_health,
               active_modules: nexus.active_modules.size,
               coherence: nexus.global_coherence,
-              passive_mode: true
+              unified_mode: true
             };
 
-            const breathed = respiratorySystemRef.current.breatheIn(systemData);
-            if (breathed) {
+            const processed = circulatorySystemRef.current.processSignal(systemData);
+            if (processed) {
               nexus.synthesizeInsights();
               lastSynthesisRef.current = now;
             }
           }
         } catch (error) {
-          console.error('Error en síntesis pasiva:', error);
+          console.error('Error en síntesis cardiovascular:', error);
         }
       }
     }
@@ -138,51 +115,38 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
 
   const emergencyReset = () => {
     try {
-      // Reset con singleton manager
-      RespiratorySystemManager.destroyAllInstances();
+      if (circulatorySystemRef.current) {
+        circulatorySystemRef.current.emergencyReset();
+      }
       
       nexus.emergencyReset();
       neural.emergencyReset();
       
-      // Recrear después de delay
-      setTimeout(async () => {
-        try {
-          respiratorySystemRef.current = await RespiratorySystemManager.getInstance({
-            purificationLevel: 'safe_mode', // Usar valor válido
-            antiTrackingMode: false,
-            emergencyMode: false
-          });
-        } catch (error) {
-          console.error('Error recreando sistema:', error);
-        }
-      }, 2000);
-      
+      console.log('🫀 Sistema cardiovascular unificado reiniciado v7.0');
     } catch (error) {
       console.error('Error en reset de emergencia:', error);
     }
     
     initializationRef.current = false;
     lastSynthesisRef.current = 0;
-    
-    console.log('🫁 Sistema interseccional reiniciado con singleton manager');
   };
 
   const generateIntersectionalInsights = () => {
-    if (!respiratorySystemRef.current) return [];
+    if (!circulatorySystemRef.current) return [];
     
-    const respiratoryHealth = respiratorySystemRef.current.getHealth();
-    const systemStatus = RespiratorySystemManager.getSystemStatus();
+    const systemVitals = circulatorySystemRef.current.getSystemVitals();
     
     const systemInsights = [
       {
         type: 'system-health',
-        title: 'Sistema Singleton Activo',
-        description: `Modo observación al ${Math.round(respiratoryHealth.oxygenLevel)}% - Singleton controlado`,
+        title: 'Sistema Cardiovascular Unificado',
+        description: `Circulación al ${Math.round(systemVitals.cardiovascular.circulation)}% - Oxigenación al ${Math.round(systemVitals.cardiovascular.oxygenation)}%`,
         level: 'excellent',
         data: {
           ...nexus.system_health,
-          respiratory: respiratoryHealth,
-          singleton: systemStatus
+          cardiovascular: systemVitals.cardiovascular,
+          respiratory: systemVitals.respiratory,
+          unified: true
         }
       }
     ];
@@ -192,57 +156,57 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
 
   const adaptToUser = (behavior: any) => {
     try {
-      // Adaptación ultra-pasiva
-      const passiveBehavior = {
+      const adaptiveBehavior = {
         timestamp: Date.now(),
-        user_context: 'passive_observation',
-        singleton_mode: true
+        user_context: 'cardiovascular_adaptation',
+        unified_mode: true
       };
 
-      if (respiratorySystemRef.current) {
-        respiratorySystemRef.current.breatheIn(passiveBehavior);
-        nexus.adaptToUserBehavior(passiveBehavior);
+      if (circulatorySystemRef.current) {
+        circulatorySystemRef.current.processSignal(adaptiveBehavior);
+        nexus.adaptToUserBehavior(adaptiveBehavior);
       }
     } catch (error) {
       console.error('Error en adaptación:', error);
     }
   };
 
-  // Cleanup seguro y conservador
-  useEffect(() => {
-    return () => {
-      // No destruir instancia aquí - el singleton se encarga
-      respiratorySystemRef.current = null;
-    };
-  }, []);
-
   const contextValue: IntersectionalContextType = {
     isIntersectionalReady,
     neuralHealth: {
       ...nexus.system_health,
-      respiratory: respiratorySystemRef.current?.getHealth() || {
-        breathingRate: 0,
-        oxygenLevel: 50,
-        airQuality: 'pure' as const,
-        antiTrackingActive: false
+      cardiovascular: circulatorySystemRef.current?.getSystemVitals() || {
+        cardiovascular: {
+          heartRate: 60,
+          bloodPressure: 'optimal' as const,
+          circulation: 85,
+          oxygenation: 95
+        },
+        respiratory: {
+          breathingRate: 15,
+          oxygenLevel: 85,
+          airQuality: 'pure' as const,
+          antiTrackingActive: false
+        },
+        overallHealth: 'good' as const,
+        lastCheckup: Date.now()
       },
-      singleton: RespiratorySystemManager.getSystemStatus(),
-      ultraConservativeMode: true
+      unifiedMode: true
     },
     generateIntersectionalInsights,
     harmonizeExperience: nexus.harmonizeExperience,
     adaptToUser,
     emergencyReset,
-    systemVitals: {
-      cardiovascular: neural.systemHealth.cardiovascular?.cardiovascular || {
+    systemVitals: circulatorySystemRef.current?.getSystemVitals() || {
+      cardiovascular: {
         heartRate: 60,
         bloodPressure: 'optimal' as const,
         circulation: 85,
         oxygenation: 95
       },
-      respiratory: respiratorySystemRef.current?.getHealth() || {
-        breathingRate: 0,
-        oxygenLevel: 50,
+      respiratory: {
+        breathingRate: 15,
+        oxygenLevel: 85,
         airQuality: 'pure' as const,
         antiTrackingActive: false
       },

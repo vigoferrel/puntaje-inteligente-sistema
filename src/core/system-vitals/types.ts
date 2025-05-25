@@ -1,6 +1,7 @@
+
 /**
- * Tipos del Sistema Cardiovascular-Respiratorio
- * Arquitectura limpia para corazón, pulmón y circulación
+ * Tipos del Sistema Cardiovascular Unificado v7.0
+ * Arquitectura simplificada post-cirugía radical
  */
 
 // Contexto de seguridad modular
@@ -13,7 +14,7 @@ export interface ModuleSecurityContext {
   storage_protected?: boolean;
   purification_level?: string;
   emergency_mode?: boolean;
-  surgical_recovery?: boolean; // Agregar propiedad faltante
+  surgical_recovery?: boolean;
 }
 
 // Identidad de módulo extendida
@@ -25,15 +26,15 @@ export interface EnhancedModuleIdentity {
   security_context?: ModuleSecurityContext;
 }
 
-// Sistema de salud cardiovascular
+// Sistema de salud cardiovascular unificado (incluye funcionalidad respiratoria)
 export interface CardiovascularHealth {
   heartRate: number;
-  bloodPressure: 'optimal' | 'monitored' | 'restricted' | 'emergency';
+  bloodPressure: 'optimal' | 'monitored' | 'restricted' | 'emergency' | 'resting' | 'normal' | 'elevated' | 'purifying';
   circulation: number;
   oxygenation: number;
 }
 
-// Sistema de salud respiratorio
+// Sistema de salud respiratorio (ahora manejado por el corazón)
 export interface RespiratoryHealth {
   breathingRate: number;
   oxygenLevel: number;
@@ -49,7 +50,7 @@ export interface SystemVitals {
   lastCheckup: number;
 }
 
-// Eventos del sistema circulatorio
+// Eventos del sistema circulatorio unificado
 export interface CirculatoryEvent {
   type: 'heartbeat' | 'breath' | 'oxygen_delivery' | 'toxin_removal';
   source: 'heart' | 'lungs' | 'circulation';

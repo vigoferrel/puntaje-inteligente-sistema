@@ -1,23 +1,26 @@
 
 /**
- * SISTEMA CARDIOVASCULAR - Corazón Digital Limpio v1.0
- * Responsabilidad única: Control de flujo y regulación del sistema
+ * SISTEMA CARDIOVASCULAR UNIFICADO v7.0 - POST-CIRUGÍA RADICAL
+ * Responsabilidad ampliada: Control de flujo, purificación y oxigenación
  */
 
-import { CardiovascularHealth, CirculatoryEvent } from './types';
+import { CardiovascularHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
 
 interface HeartbeatOptions {
   maxBeatsPerSecond: number;
   restingPeriod: number;
   recoveryTime: number;
   emergencyThreshold: number;
+  purificationLevel: 'basic' | 'advanced' | 'maximum' | 'safe_mode' | 'surgical_recovery';
+  oxygenThreshold: number;
 }
 
 enum HeartState {
   RESTING = 'resting',
   NORMAL = 'normal', 
   ELEVATED = 'elevated',
-  EMERGENCY = 'emergency'
+  EMERGENCY = 'emergency',
+  PURIFYING = 'purifying'
 }
 
 export class CardiovascularSystem {
@@ -26,8 +29,11 @@ export class CardiovascularSystem {
   private lastBeat: number = 0;
   private beatHistory: number[] = [];
   private emergencyStartTime: number = 0;
+  private oxygenLevel: number = 100;
+  private purificationActive: boolean = false;
   private readonly options: HeartbeatOptions;
   private eventListeners: ((event: CirculatoryEvent) => void)[] = [];
+  private secureStorage = new Map<string, any>();
 
   constructor(options: Partial<HeartbeatOptions> = {}) {
     this.options = {
@@ -35,6 +41,8 @@ export class CardiovascularSystem {
       restingPeriod: 1000,
       recoveryTime: 3000,
       emergencyThreshold: 15,
+      purificationLevel: 'safe_mode',
+      oxygenThreshold: 60,
       ...options
     };
 
@@ -45,6 +53,7 @@ export class CardiovascularSystem {
     setInterval(() => {
       this.cleanBeatHistory();
       this.adjustHeartState();
+      this.performPurification();
       this.emitHeartbeat();
     }, 1000);
   }
@@ -77,6 +86,12 @@ export class CardiovascularSystem {
     }
   }
 
+  private performPurification(): void {
+    if (this.purificationActive && this.oxygenLevel < 90) {
+      this.oxygenLevel = Math.min(100, this.oxygenLevel + 2);
+    }
+  }
+
   private emitHeartbeat(): void {
     const event: CirculatoryEvent = {
       type: 'heartbeat',
@@ -84,6 +99,7 @@ export class CardiovascularSystem {
       data: {
         state: this.state,
         rate: this.heartRate,
+        oxygenLevel: this.oxygenLevel,
         health: this.getHealth()
       },
       timestamp: Date.now()
@@ -122,12 +138,72 @@ export class CardiovascularSystem {
     return true;
   }
 
+  // NUEVA FUNCIONALIDAD RESPIRATORIA INTEGRADA
+  public breatheIn(data: any): boolean {
+    if (this.state === HeartState.EMERGENCY) {
+      return false;
+    }
+
+    // Procesar datos de entrada y mejorar oxigenación
+    this.oxygenLevel = Math.min(100, this.oxygenLevel + 1);
+    this.purificationActive = true;
+    
+    return true;
+  }
+
+  public breatheOut(signal: any): any {
+    // Retornar señal purificada
+    return {
+      ...signal,
+      cardiovascular_processed: true,
+      oxygen_level: this.oxygenLevel,
+      purified: this.purificationActive
+    };
+  }
+
+  public oxygenate(module: EnhancedModuleIdentity): EnhancedModuleIdentity {
+    return {
+      ...module,
+      security_context: {
+        security_mode: 'normal',
+        tracking_protected: false,
+        shield_level: 1,
+        encryption_enabled: false,
+        firewall_active: false,
+        storage_protected: false,
+        purification_level: this.options.purificationLevel,
+        emergency_mode: this.state === HeartState.EMERGENCY,
+        ...module.security_context
+      }
+    };
+  }
+
+  public getRespiratoryHealth(): any {
+    return {
+      breathingRate: this.heartRate,
+      oxygenLevel: this.oxygenLevel,
+      airQuality: 'pure',
+      antiTrackingActive: this.purificationActive
+    };
+  }
+
+  public surgicalPurge(): void {
+    this.secureStorage.clear();
+    this.oxygenLevel = 100;
+    this.beatHistory = [];
+    this.state = HeartState.NORMAL;
+    this.purificationActive = false;
+    
+    console.log('🚨 PURGA CARDIOVASCULAR COMPLETADA v7.0');
+  }
+
   private getRestingPeriod(): number {
     switch (this.state) {
       case HeartState.RESTING: return this.options.restingPeriod * 0.8;
       case HeartState.NORMAL: return this.options.restingPeriod;
       case HeartState.ELEVATED: return this.options.restingPeriod * 1.5;
       case HeartState.EMERGENCY: return this.options.restingPeriod * 3;
+      case HeartState.PURIFYING: return this.options.restingPeriod * 0.9;
     }
   }
 
@@ -137,6 +213,7 @@ export class CardiovascularSystem {
       case HeartState.NORMAL: return this.options.maxBeatsPerSecond;
       case HeartState.ELEVATED: return Math.max(3, this.options.maxBeatsPerSecond - 3);
       case HeartState.EMERGENCY: return 1;
+      case HeartState.PURIFYING: return this.options.maxBeatsPerSecond;
     }
   }
 
@@ -145,7 +222,7 @@ export class CardiovascularSystem {
       heartRate: this.heartRate,
       bloodPressure: this.state as any,
       circulation: Math.max(0, 100 - (this.heartRate * 5)),
-      oxygenation: this.state === HeartState.EMERGENCY ? 30 : Math.max(70, 100 - this.heartRate)
+      oxygenation: this.oxygenLevel
     };
   }
 
@@ -165,9 +242,12 @@ export class CardiovascularSystem {
     this.beatHistory = [];
     this.lastBeat = 0;
     this.emergencyStartTime = 0;
+    this.oxygenLevel = 100;
+    this.purificationActive = false;
   }
 
   public destroy(): void {
     this.eventListeners = [];
+    this.secureStorage.clear();
   }
 }

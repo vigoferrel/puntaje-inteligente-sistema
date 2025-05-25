@@ -1,11 +1,10 @@
 
 /**
- * Sistema Cardiovascular-Respiratorio Completo
- * Exportaciones centralizadas para arquitectura limpia
+ * Sistema Cardiovascular Unificado v7.0 - POST-CIRUGÍA RADICAL
+ * Exportaciones centralizadas para arquitectura simplificada
  */
 
 export { CardiovascularSystem } from './CardiovascularSystem';
-export { RespiratorySystem } from './RespiratorySystem';
 export { CirculatorySystem } from './CirculatorySystem';
 
 export type {

@@ -1,15 +1,14 @@
+
 /**
- * SISTEMA CIRCULATORIO - Conexión Cardiovascular-Respiratoria v1.0
- * Responsabilidad única: Comunicación fluida entre corazón y pulmón
+ * SISTEMA CIRCULATORIO SIMPLIFICADO v7.0 - POST-CIRUGÍA RADICAL
+ * Responsabilidad única: Coordinación cardiovascular unificada
  */
 
 import { CardiovascularSystem } from './CardiovascularSystem';
-import { RespiratorySystem } from './RespiratorySystem';
 import { SystemVitals, CirculatoryEvent, EnhancedModuleIdentity } from './types';
 
 export class CirculatorySystem {
   private heart: CardiovascularSystem;
-  private lungs: RespiratorySystem;
   private bloodFlow: Map<string, any> = new Map();
   private lastSystemCheck: number = 0;
   private isHealthy: boolean = true;
@@ -19,31 +18,19 @@ export class CirculatorySystem {
       maxBeatsPerSecond: 8,
       restingPeriod: 1200,
       recoveryTime: 4000,
-      emergencyThreshold: 12
-    });
-
-    this.lungs = new RespiratorySystem({
-      breathsPerMinute: 15,
-      oxygenThreshold: 75,
+      emergencyThreshold: 12,
       purificationLevel: 'maximum',
-      antiTrackingMode: true
+      oxygenThreshold: 75
     });
 
     this.connectSystems();
   }
 
   private connectSystems(): void {
-    // Conectar corazón -> pulmón
+    // El corazón ahora maneja toda la funcionalidad
     this.heart.subscribe((event: CirculatoryEvent) => {
       if (event.type === 'heartbeat') {
-        this.deliverOxygen(event.data);
-      }
-    });
-
-    // Conectar pulmón -> corazón
-    this.lungs.subscribe((event: CirculatoryEvent) => {
-      if (event.type === 'breath') {
-        this.regulateHeartbeat(event.data);
+        this.regulateCirculation(event.data);
       }
     });
 
@@ -53,28 +40,16 @@ export class CirculatorySystem {
     }, 30000);
   }
 
-  private deliverOxygen(heartData: any): void {
-    // Solo entregar oxígeno si el corazón está saludable
+  private regulateCirculation(heartData: any): void {
     if (heartData.health.circulation > 60) {
-      const oxygenPacket = {
-        type: 'oxygen_delivery',
+      const circulationPacket = {
+        type: 'circulation_flow',
         circulation: heartData.health.circulation,
+        oxygenation: heartData.oxygenLevel || heartData.health.oxygenation,
         timestamp: Date.now()
       };
 
-      this.bloodFlow.set(`oxygen_${Date.now()}`, oxygenPacket);
-    }
-  }
-
-  private regulateHeartbeat(lungData: any): void {
-    // Ajustar ritmo cardíaco basado en oxigenación
-    if (lungData.health.oxygenLevel < 70) {
-      // Respiración comprometida -> corazón debe trabajar más
-      this.bloodFlow.set(`regulation_${Date.now()}`, {
-        type: 'increase_heartbeat',
-        reason: 'low_oxygen',
-        timestamp: Date.now()
-      });
+      this.bloodFlow.set(`flow_${Date.now()}`, circulationPacket);
     }
   }
 
@@ -83,22 +58,19 @@ export class CirculatorySystem {
     this.lastSystemCheck = now;
 
     const heartHealth = this.heart.getHealth();
-    const lungHealth = this.lungs.getHealth();
 
-    // Determinar salud general del sistema
     this.isHealthy = 
       heartHealth.circulation > 50 && 
-      lungHealth.oxygenLevel > 60 &&
+      heartHealth.oxygenation > 60 &&
       heartHealth.bloodPressure !== 'emergency';
 
     // Limpiar flujo sanguíneo de datos antiguos
     for (const [key, value] of this.bloodFlow.entries()) {
-      if (now - value.timestamp > 120000) { // 2 minutos
+      if (now - value.timestamp > 120000) {
         this.bloodFlow.delete(key);
       }
     }
 
-    // Auto-recovery si es necesario
     if (!this.isHealthy && heartHealth.bloodPressure === 'emergency') {
       this.emergencyIntervention();
     }
@@ -113,16 +85,14 @@ export class CirculatorySystem {
       return false;
     }
 
-    // Corazón bombea la señal
+    // El corazón unificado procesa todo
     const pumped = this.heart.pump();
     if (!pumped) return false;
 
-    // Pulmón procesa y purifica
-    const processed = this.lungs.breatheIn(signal);
+    const processed = this.heart.breatheIn(signal);
     if (!processed) return false;
 
-    // Circular la señal procesada
-    const circulatedSignal = this.lungs.breatheOut(signal);
+    const circulatedSignal = this.heart.breatheOut(signal);
     this.bloodFlow.set(`signal_${Date.now()}`, {
       original: signal,
       processed: circulatedSignal,
@@ -133,7 +103,6 @@ export class CirculatorySystem {
   }
 
   public oxygenateModule(module: any): EnhancedModuleIdentity {
-    // Asegurar que el módulo tenga el formato correcto
     const enhancedModule: EnhancedModuleIdentity = {
       id: module.id,
       type: module.type,
@@ -142,13 +111,16 @@ export class CirculatorySystem {
       security_context: module.security_context
     };
 
-    return this.lungs.oxygenate(enhancedModule);
+    return this.heart.oxygenate(enhancedModule);
   }
 
   public getSystemVitals(): SystemVitals {
+    const heartHealth = this.heart.getHealth();
+    const respiratoryHealth = this.heart.getRespiratoryHealth();
+
     return {
-      cardiovascular: this.heart.getHealth(),
-      respiratory: this.lungs.getHealth(),
+      cardiovascular: heartHealth,
+      respiratory: respiratoryHealth,
       overallHealth: this.calculateOverallHealth(),
       lastCheckup: this.lastSystemCheck
     };
@@ -156,13 +128,12 @@ export class CirculatorySystem {
 
   private calculateOverallHealth(): 'excellent' | 'good' | 'fair' | 'poor' | 'critical' {
     const heartHealth = this.heart.getHealth();
-    const lungHealth = this.lungs.getHealth();
 
-    if (heartHealth.bloodPressure === 'emergency' || lungHealth.oxygenLevel < 50) {
+    if (heartHealth.bloodPressure === 'emergency' || heartHealth.oxygenation < 50) {
       return 'critical';
     }
 
-    const avgHealth = (heartHealth.circulation + lungHealth.oxygenLevel) / 2;
+    const avgHealth = (heartHealth.circulation + heartHealth.oxygenation) / 2;
     
     if (avgHealth >= 90) return 'excellent';
     if (avgHealth >= 75) return 'good';
@@ -172,10 +143,10 @@ export class CirculatorySystem {
   }
 
   private emergencyIntervention(): void {
-    console.log('🚨 INTERVENCIÓN DE EMERGENCIA: Reiniciando sistemas cardiovascular-respiratorio');
+    console.log('🚨 INTERVENCIÓN DE EMERGENCIA v7.0: Reiniciando sistema cardiovascular unificado');
     
     this.heart.emergencyReset();
-    this.lungs.surgicalPurge(); // REPARACIÓN v6.1: Usar método correcto
+    this.heart.surgicalPurge();
     this.bloodFlow.clear();
     this.isHealthy = true;
   }
@@ -186,7 +157,6 @@ export class CirculatorySystem {
 
   public destroy(): void {
     this.heart.destroy();
-    this.lungs.destroy();
     this.bloodFlow.clear();
   }
 }
