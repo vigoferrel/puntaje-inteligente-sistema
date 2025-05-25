@@ -53,6 +53,48 @@ export type Database = {
           },
         ]
       }
+      examenes: {
+        Row: {
+          año: number
+          codigo: string
+          created_at: string
+          duracion_minutos: number
+          id: string
+          instrucciones: string | null
+          nombre: string
+          preguntas_validas: number
+          tipo: string
+          total_preguntas: number
+          updated_at: string
+        }
+        Insert: {
+          año: number
+          codigo: string
+          created_at?: string
+          duracion_minutos: number
+          id?: string
+          instrucciones?: string | null
+          nombre: string
+          preguntas_validas: number
+          tipo: string
+          total_preguntas: number
+          updated_at?: string
+        }
+        Update: {
+          año?: number
+          codigo?: string
+          created_at?: string
+          duracion_minutos?: number
+          id?: string
+          instrucciones?: string | null
+          nombre?: string
+          preguntas_validas?: number
+          tipo?: string
+          total_preguntas?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           bloom_level: Database["public"]["Enums"]["bloom_level"]
@@ -388,6 +430,44 @@ export type Database = {
           },
         ]
       }
+      opciones_respuesta: {
+        Row: {
+          contenido: string
+          created_at: string
+          es_correcta: boolean
+          id: string
+          letra: string
+          pregunta_id: string
+          updated_at: string
+        }
+        Insert: {
+          contenido: string
+          created_at?: string
+          es_correcta?: boolean
+          id?: string
+          letra: string
+          pregunta_id: string
+          updated_at?: string
+        }
+        Update: {
+          contenido?: string
+          created_at?: string
+          es_correcta?: boolean
+          id?: string
+          letra?: string
+          pregunta_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opciones_respuesta_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       paes_skills: {
         Row: {
           applicable_tests: string[] | null
@@ -482,6 +562,47 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      preguntas: {
+        Row: {
+          contexto: string | null
+          created_at: string
+          enunciado: string
+          examen_id: string
+          id: string
+          imagen_url: string | null
+          numero: number
+          updated_at: string
+        }
+        Insert: {
+          contexto?: string | null
+          created_at?: string
+          enunciado: string
+          examen_id: string
+          id?: string
+          imagen_url?: string | null
+          numero: number
+          updated_at?: string
+        }
+        Update: {
+          contexto?: string | null
+          created_at?: string
+          enunciado?: string
+          examen_id?: string
+          id?: string
+          imagen_url?: string | null
+          numero?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preguntas_examen_id_fkey"
+            columns: ["examen_id"]
+            isOneToOne: false
+            referencedRelation: "examenes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -994,6 +1115,10 @@ export type Database = {
         Returns: Json
       }
       obtener_examen_completo_f153: {
+        Args: { codigo_examen_param: string }
+        Returns: Json
+      }
+      obtener_examen_historia_completo: {
         Args: { codigo_examen_param: string }
         Returns: Json
       }
