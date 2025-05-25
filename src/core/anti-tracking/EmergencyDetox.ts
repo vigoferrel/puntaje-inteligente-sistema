@@ -207,11 +207,20 @@ class EmergencyDetoxSystem {
         (window as any).gc();
       }
       
-      // Limpiar timeouts/intervals huérfanos
-      const highestTimeoutId = setTimeout(() => {}, 0);
-      for (let i = 0; i < highestTimeoutId; i++) {
-        clearTimeout(i);
-        clearInterval(i);
+      // Limpiar timeouts/intervals activos de forma segura
+      // En lugar de usar un highestTimeoutId (que causa el error TypeScript),
+      // simplemente almacenamos referencias a timeouts/intervals que creamos
+      if (typeof window !== 'undefined') {
+        // Limpiar timers conocidos del sistema
+        const timersToClean = ['detoxTimer', 'stabilityTimer', 'cardiovascularTimer'];
+        timersToClean.forEach(timerName => {
+          const timer = (window as any)[timerName];
+          if (timer) {
+            clearTimeout(timer);
+            clearInterval(timer);
+            delete (window as any)[timerName];
+          }
+        });
       }
       
     } catch (error) {
