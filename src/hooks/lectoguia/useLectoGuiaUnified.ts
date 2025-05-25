@@ -1,8 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useComprehensiveDiagnostic } from '@/hooks/diagnostic/use-comprehensive-diagnostic';
+import { useDiagnosticSystem } from '@/hooks/diagnostic/useDiagnosticSystem';
 import { useLearningPlans } from '@/hooks/learning-plans/use-learning-plans';
-import { useHierarchicalDiagnostic } from '@/hooks/diagnostic/use-hierarchical-diagnostic';
 import { useValidationSystem } from './useValidationSystem';
 import { toast } from '@/components/ui/use-toast';
 
@@ -23,8 +22,8 @@ interface CurrentContext {
 }
 
 /**
- * Hook unificado que centraliza toda la lógica de LectoGuía
- * Integra diagnósticos, plan, validaciones y backend
+ * Hook unificado simplificado para LectoGuía
+ * Usa el nuevo sistema diagnóstico consolidado
  */
 export const useLectoGuiaUnified = (userId?: string) => {
   const [systemState, setSystemState] = useState<SystemState>({
@@ -41,9 +40,10 @@ export const useLectoGuiaUnified = (userId?: string) => {
     coherenceLevel: 100
   });
 
-  // Integraciones del sistema - CORRECCIÓN: Usamos la interfaz correcta
-  const comprehensiveDiagnostic = useComprehensiveDiagnostic();
-  const hierarchicalDiagnostic = useHierarchicalDiagnostic();
+  // Hook diagnóstico simplificado
+  const diagnosticSystem = useDiagnosticSystem();
+  
+  // Hook de planes de aprendizaje
   const { 
     plans, 
     currentPlan, 
@@ -54,29 +54,26 @@ export const useLectoGuiaUnified = (userId?: string) => {
   // Sistema de validación
   const {
     validationStatus,
-    validateSystemCoherence,
-    validateNodeMapping,
-    validateDiagnosticIntegrity
+    validateSystemCoherence
   } = useValidationSystem();
 
   // Referencias para evitar re-renders innecesarios
   const lastValidationRef = useRef<Date | null>(null);
 
-  // Sincronización con backend - CORRECCIÓN: Llamamos la función correcta
+  // Sincronización simplificada con backend
   const syncWithBackend = useCallback(async () => {
     if (!userId) return;
 
     try {
       setSystemState(prev => ({ ...prev, loading: true }));
 
-      // Sincronizar datos en paralelo
+      // Sincronizar solo lo esencial
       await Promise.all([
-        comprehensiveDiagnostic.initializeSystem(), // CORRECCIÓN: Función correcta
-        hierarchicalDiagnostic.initializeHierarchicalSystem(),
+        diagnosticSystem.initializeSystem(),
         fetchLearningPlans(userId)
       ]);
 
-      // Validar coherencia del sistema
+      // Validar coherencia básica
       await validateSystemCoherence();
 
       setSystemState(prev => ({
@@ -86,7 +83,7 @@ export const useLectoGuiaUnified = (userId?: string) => {
         lastSync: new Date()
       }));
 
-      console.log('✅ LectoGuía sincronizado con backend');
+      console.log('✅ LectoGuía sincronizado exitosamente');
 
     } catch (error) {
       console.error('❌ Error sincronizando LectoGuía:', error);
@@ -102,7 +99,7 @@ export const useLectoGuiaUnified = (userId?: string) => {
         variant: "destructive"
       });
     }
-  }, [userId, comprehensiveDiagnostic, hierarchicalDiagnostic, fetchLearningPlans, validateSystemCoherence]);
+  }, [userId, diagnosticSystem, fetchLearningPlans, validateSystemCoherence]);
 
   // Navegación entre módulos
   const navigateToModule = useCallback((module: string, context?: Partial<CurrentContext>) => {
@@ -116,19 +113,13 @@ export const useLectoGuiaUnified = (userId?: string) => {
       ...prev,
       activeModule: module as any
     }));
+  }, []);
 
-    // Validar coherencia cuando cambia el contexto
-    if (context?.selectedPrueba || context?.activeSubject) {
-      setTimeout(() => validateNodeMapping(), 100);
-    }
-  }, [validateNodeMapping]);
-
-  // Manejo de acciones del sistema
+  // Manejo simplificado de acciones del sistema
   const handleSystemAction = useCallback(async (action: { type: string; payload?: any }) => {
     switch (action.type) {
       case 'REVALIDATE_SYSTEM':
         await validateSystemCoherence();
-        await validateDiagnosticIntegrity();
         break;
 
       case 'SYNC_WITH_BACKEND':
@@ -162,7 +153,7 @@ export const useLectoGuiaUnified = (userId?: string) => {
       default:
         console.warn('Acción no reconocida:', action.type);
     }
-  }, [userId, validateSystemCoherence, validateDiagnosticIntegrity, syncWithBackend, createLearningPlan, navigateToModule]);
+  }, [userId, validateSystemCoherence, syncWithBackend, createLearningPlan, navigateToModule]);
 
   // Inicialización del sistema
   useEffect(() => {
@@ -171,7 +162,7 @@ export const useLectoGuiaUnified = (userId?: string) => {
     }
   }, [userId, systemState.phase, syncWithBackend]);
 
-  // Validación periódica (cada 5 minutos)
+  // Validación periódica simplificada
   useEffect(() => {
     if (systemState.phase === 'ready') {
       const interval = setInterval(() => {
@@ -187,12 +178,12 @@ export const useLectoGuiaUnified = (userId?: string) => {
     }
   }, [systemState.phase, validateSystemCoherence]);
 
-  // Integraciones específicas - CORRECCIÓN: Usamos las propiedades correctas
+  // Integraciones simplificadas
   const diagnosticIntegration = {
-    isReady: comprehensiveDiagnostic.isSystemReady,
-    availableTests: comprehensiveDiagnostic.diagnosticTests.length,
-    systemMetrics: comprehensiveDiagnostic.systemMetrics,
-    officialExercises: comprehensiveDiagnostic.officialExercises.length,
+    isReady: diagnosticSystem.isSystemReady,
+    availableTests: diagnosticSystem.diagnosticTests.length,
+    systemMetrics: diagnosticSystem.systemMetrics,
+    officialExercises: diagnosticSystem.learningNodes.length,
     startDiagnostic: () => navigateToModule('diagnostic'),
     generateExercise: (nodeId?: string) => handleSystemAction({
       type: 'START_EXERCISE',
@@ -213,13 +204,13 @@ export const useLectoGuiaUnified = (userId?: string) => {
   const dashboardSync = {
     lastSync: systemState.lastSync,
     isConnected: systemState.phase === 'ready',
-    nodeProgress: hierarchicalDiagnostic.userWeights.length,
-    recommendedPath: hierarchicalDiagnostic.recommendedPath
+    nodeProgress: diagnosticSystem.learningNodes.length,
+    recommendedPath: diagnosticSystem.tier1Nodes.slice(0, 5)
   };
 
   const nodeValidation = {
-    totalNodes: hierarchicalDiagnostic.systemMetrics.totalNodes,
-    tier1Nodes: hierarchicalDiagnostic.tier1Nodes.length,
+    totalNodes: diagnosticSystem.learningNodes.length,
+    tier1Nodes: diagnosticSystem.tier1Nodes.length,
     isCoherent: validationStatus.isValid,
     lastValidation: lastValidationRef.current
   };
@@ -232,7 +223,7 @@ export const useLectoGuiaUnified = (userId?: string) => {
     // Validaciones
     validationStatus,
 
-    // Integraciones
+    // Integraciones simplificadas
     diagnosticIntegration,
     planIntegration,
     dashboardSync,

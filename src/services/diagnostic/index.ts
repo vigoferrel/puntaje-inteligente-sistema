@@ -1,34 +1,13 @@
 
-// Re-export from existing services
-export { 
-  fetchDiagnosticTests, 
-  submitDiagnosticResult, 
-  calculateDiagnosticResults,
-  fetchOptimizedDiagnosticTests, 
-  getTestTypes 
-} from './test-services';
-export { fetchDiagnosticResults } from './results-services';
-export { ensureDefaultDiagnosticsExist, createLocalFallbackDiagnostics } from './default-services';
+// Servicio diagnóstico simplificado - Re-export del servicio unificado
+export * from '../diagnostic-service-unified';
 
-// Export new hierarchical services
-export {
-  fetchPAESTests,
-  fetchPAESSkills,
-  fetchLearningNodes,
-  fetchTier1CriticalNodes,
-  calculateAdaptiveWeight,
-  fetchUserNodeWeights,
-  getRecommendedLearningPath,
-  getSystemMetrics
-} from './hierarchical-services';
-
-// Export types
+// Re-export tipos básicos
 export type {
+  DiagnosticTest,
+  DiagnosticQuestion,
+  DiagnosticResult,
   LearningNode,
-  NodeWeight,
   PAESTest,
-  PAESSkill,
-  TierPriority,
-  BloomLevel,
-  DifficultyLevel
+  PAESSkill
 } from '@/types/diagnostic';

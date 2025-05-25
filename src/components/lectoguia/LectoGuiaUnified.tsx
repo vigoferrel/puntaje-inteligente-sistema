@@ -11,8 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 
 /**
- * LectoGuía Unificado - Hub Central del Sistema Educativo
- * Integra diagnósticos, plan, dashboard y backend
+ * LectoGuía Unificado Simplificado
+ * Arquitectura quirúrgicamente simplificada para máximo rendimiento
  */
 export const LectoGuiaUnified: React.FC = () => {
   const { user } = useAuth();
@@ -37,14 +37,15 @@ export const LectoGuiaUnified: React.FC = () => {
     syncWithBackend
   } = useLectoGuiaUnified(user?.id);
 
-  // Inicializar sistema al montar
+  // Inicializar sistema una sola vez
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && systemState.phase === 'initializing') {
+      console.log('🚀 Inicializando LectoGuía con arquitectura simplificada...');
       syncWithBackend();
     }
-  }, [user?.id, syncWithBackend]);
+  }, [user?.id, systemState.phase, syncWithBackend]);
 
-  // Mostrar estado de inicialización
+  // Mostrar estado de carga mejorado
   if (systemState.phase === 'initializing') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
@@ -55,7 +56,30 @@ export const LectoGuiaUnified: React.FC = () => {
         >
           <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
           <h2 className="text-xl font-semibold text-white">Inicializando LectoGuía</h2>
-          <p className="text-gray-300">Conectando con sistema educativo...</p>
+          <p className="text-gray-300">Sistema diagnóstico simplificado cargando...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Mostrar error si el sistema falla
+  if (systemState.phase === 'error') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto" />
+          <h2 className="text-xl font-semibold text-white">Error del Sistema</h2>
+          <p className="text-gray-300">No se pudo inicializar LectoGuía</p>
+          <button 
+            onClick={syncWithBackend}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Reintentar
+          </button>
         </motion.div>
       </div>
     );
@@ -63,7 +87,7 @@ export const LectoGuiaUnified: React.FC = () => {
 
   return (
     <div className="lectoguia-unified min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Header cinematográfico con estado del sistema */}
+      {/* Header cinematográfico */}
       <CinematicHeader
         user={user}
         systemState={systemState}
@@ -71,36 +95,38 @@ export const LectoGuiaUnified: React.FC = () => {
         onNavigateToModule={navigateToModule}
       />
 
-      {/* Estado de validación global */}
+      {/* Estado de validación simplificado */}
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center gap-2 text-sm">
           {validationStatus.isValid ? (
             <Badge variant="default" className="bg-green-600">
               <CheckCircle className="w-3 h-3 mr-1" />
-              Sistema Coherente
+              Sistema Operativo
             </Badge>
           ) : (
             <Badge variant="destructive">
               <AlertTriangle className="w-3 h-3 mr-1" />
-              {validationStatus.issuesCount} Problemas Detectados
+              Problemas Detectados
             </Badge>
           )}
           
           <Badge variant="outline" className="text-white border-white/20">
-            Diagnósticos: {diagnosticIntegration.availableTests}
+            Tests: {diagnosticIntegration.availableTests}
           </Badge>
           
           <Badge variant="outline" className="text-white border-white/20">
             Nodos: {nodeValidation.totalNodes}
           </Badge>
           
-          <Badge variant="outline" className="text-white border-white/20">
-            Plan: {planIntegration.currentPlan?.title || 'Sin plan'}
-          </Badge>
+          {dashboardSync.isConnected && (
+            <Badge variant="outline" className="text-white border-white/20 bg-green-600/20">
+              Conectado
+            </Badge>
+          )}
         </div>
       </div>
 
-      {/* Contenido principal unificado */}
+      {/* Contenido principal */}
       <main className="container mx-auto px-4 pb-8">
         <AnimatePresence mode="wait">
           <motion.div
@@ -122,15 +148,15 @@ export const LectoGuiaUnified: React.FC = () => {
         </AnimatePresence>
       </main>
 
-      {/* Overlay de validación cuando hay problemas */}
-      {!validationStatus.isValid && (
+      {/* Overlay de validación solo cuando es crítico */}
+      {!validationStatus.isValid && validationStatus.issuesCount > 5 && (
         <ValidationOverlay
           validationStatus={validationStatus}
           onRevalidate={() => handleSystemAction({ type: 'REVALIDATE_SYSTEM' })}
         />
       )}
 
-      {/* Capa de integración del sistema */}
+      {/* Capa de integración simplificada */}
       <SystemIntegrationLayer
         diagnosticIntegration={diagnosticIntegration}
         planIntegration={planIntegration}
