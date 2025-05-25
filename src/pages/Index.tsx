@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { AppLayout } from '@/components/app-layout';
 import { SimplifiedDashboard } from '@/components/dashboard/SimplifiedDashboard';
 import { useUnifiedInitialization } from '@/hooks/use-unified-initialization';
 import { LoadingState } from '@/components/plan/LoadingState';
@@ -25,11 +24,7 @@ const Index: React.FC = () => {
     );
   }
 
-  return (
-    <AppLayout>
-      <SimplifiedDashboard />
-    </AppLayout>
-  );
+  return <SimplifiedDashboard />;
 };
 
 export default Index;

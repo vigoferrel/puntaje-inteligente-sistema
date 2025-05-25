@@ -29,17 +29,20 @@ const CinematicPageWrapper: React.FC<{ children: React.ReactNode; scene: string 
   </UniversalTransition>
 );
 
+// Layout root que maneja la estructura global
+const RootLayout: React.FC = () => (
+  <CinematicAudioProvider>
+    <AppLayout>
+      <Outlet />
+      <CinematicControls />
+    </AppLayout>
+  </CinematicAudioProvider>
+);
+
 const router = createBrowserRouter([
   {
     path: '/',
-    element: (
-      <CinematicAudioProvider>
-        <AppLayout>
-          <Outlet />
-          <CinematicControls />
-        </AppLayout>
-      </CinematicAudioProvider>
-    ),
+    element: <RootLayout />,
     children: [
       { 
         path: '/', 
