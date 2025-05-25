@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSimplifiedIntersectional } from '@/hooks/useSimplifiedIntersectional';
 
-// Configuración y tipos
+// Configuración y tipos actualizados
 import { NEURAL_DIMENSIONS, getDimensionsByPhase } from './config/neuralDimensions';
 import { NeuralCommandCenterProps } from './config/neuralTypes';
 
@@ -24,7 +24,8 @@ import { NeuralInsights } from './components/NeuralInsights';
 import { DimensionContentRenderer } from './renderers/DimensionContentRenderer';
 
 export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
-  initialDimension = 'universe_exploration'
+  initialDimension = 'neural_command',
+  onNavigateToTool
 }) => {
   const { user } = useAuth();
   const { isIntersectionalReady, generateIntersectionalInsights } = useSimplifiedIntersectional();
@@ -39,10 +40,37 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
   
   const { metrics, getMetricForDimension } = useNeuralMetrics();
 
-  // Configuración
+  // Configuración actualizada
   const activeDimensionData = NEURAL_DIMENSIONS.find(d => d.id === activeDimension);
   const dimensionsByPhase = getDimensionsByPhase();
   const insights = generateIntersectionalInsights();
+
+  // Manejar navegación externa
+  const handleExternalNavigation = (tool: string, context?: any) => {
+    if (onNavigateToTool) {
+      onNavigateToTool(tool, context);
+    }
+    
+    // Mapear herramientas externas a dimensiones
+    const toolToDimensionMap: Record<string, string> = {
+      'universe': 'educational_universe',
+      'lectoguia': 'neural_training',
+      'diagnostic': 'progress_analysis',
+      'simulation': 'paes_simulation',
+      'feedback': 'personalized_feedback',
+      'battle': 'battle_mode',
+      'achievements': 'achievement_system',
+      'vocational': 'vocational_prediction',
+      'financial': 'financial_center',
+      'calendar': 'calendar_management',
+      'settings': 'settings_control'
+    };
+
+    const dimensionId = toolToDimensionMap[tool];
+    if (dimensionId) {
+      handleDimensionActivation(dimensionId as any);
+    }
+  };
 
   // Vista de contenido de dimensión
   if (showDimensionContent) {
@@ -74,7 +102,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
     );
   }
 
-  // Vista principal del centro neural
+  // Vista principal del centro neural reorganizado
   return (
     <NeuralLayout>
       <NeuralBreadcrumb 
@@ -97,7 +125,7 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
 
       <NeuralInsights insights={insights} />
 
-      {/* Neural Command Footer */}
+      {/* Neural Command Footer Actualizado */}
       <motion.div 
         className="text-center mt-8"
         initial={{ opacity: 0 }}
@@ -105,10 +133,32 @@ export const NeuralCommandCenter: React.FC<NeuralCommandCenterProps> = ({
         transition={{ duration: 0.8, delay: 0.8 }}
       >
         <p className="text-blue-200 text-sm mb-4 font-poppins">
-          Ecosistema Neural PAES Unificado • {NEURAL_DIMENSIONS.length} Dimensiones Activas • Sincronización Neural: Tiempo Real
+          Ecosistema Neural PAES Unificado • {NEURAL_DIMENSIONS.length} Dimensiones Activas • Universe 3D + SuperPAES + Gamificación Integrados
         </p>
         <div className="text-xs text-white/50 font-poppins">
-          🧠 Arquitectura Neural Optimizada • 🚀 Flujo Educativo Integrado • ⚡ Cero Duplicación de Trabajo
+          🧠 Arquitectura Neural Optimizada • 🌌 Universe 3D Inmersivo • ⚡ SuperPAES Coordinador • 🎮 Gamificación Real • 📊 Datos Reales Supabase
+        </div>
+        
+        {/* Quick Access Buttons */}
+        <div className="flex justify-center gap-4 mt-6">
+          <Button
+            onClick={() => handleExternalNavigation('universe')}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+          >
+            🌌 Universe 3D
+          </Button>
+          <Button
+            onClick={() => handleExternalNavigation('simulation')}
+            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500"
+          >
+            🎯 PAES Real
+          </Button>
+          <Button
+            onClick={() => handleExternalNavigation('battle')}
+            className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500"
+          >
+            ⚔️ Modo Batalla
+          </Button>
         </div>
       </motion.div>
     </NeuralLayout>
