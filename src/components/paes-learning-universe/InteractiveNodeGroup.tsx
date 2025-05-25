@@ -175,27 +175,28 @@ export const InteractiveNodeGroup: React.FC<InteractiveNodeGroupProps> = ({
             <ParticleSystem position={node.position} />
           )}
 
-          {/* Conexiones entre nodos dependientes */}
+          {/* Conexiones entre nodos dependientes - CORREGIDAS */}
           {node.dependsOn && node.dependsOn.length > 0 && (
             node.dependsOn.map((depId: string) => {
               const depNode = constellation.nodes.find(n => n.id === depId);
               if (!depNode) return null;
 
+              const geometry = new THREE.BufferGeometry();
+              const positions = new Float32Array([
+                ...node.position,
+                ...depNode.position
+              ]);
+              geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
               return (
-                <line key={`${node.id}-${depId}`}>
-                  <bufferGeometry>
-                    <bufferAttribute
-                      attach="attributes-position"
-                      count={2}
-                      array={new Float32Array([
-                        ...node.position,
-                        ...depNode.position
-                      ])}
-                      itemSize={3}
-                    />
-                  </bufferGeometry>
-                  <lineBasicMaterial color="#4B5563" transparent opacity={0.3} />
-                </line>
+                <primitive 
+                  key={`${node.id}-${depId}`}
+                  object={new THREE.Line(geometry, new THREE.LineBasicMaterial({ 
+                    color: "#4B5563", 
+                    transparent: true, 
+                    opacity: 0.3 
+                  }))}
+                />
               );
             })
           )}

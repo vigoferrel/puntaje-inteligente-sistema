@@ -1,5 +1,6 @@
 
 import React, { useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface LearningPathwayProps {
@@ -84,15 +85,12 @@ export const LearningPathway: React.FC<LearningPathwayProps> = ({
 
         return (
           <group key={pathway.id}>
-            {/* Línea de la ruta */}
-            <line geometry={geometry}>
-              <lineBasicMaterial 
-                color={pathway.color} 
-                transparent 
-                opacity={0.6}
-                linewidth={3}
-              />
-            </line>
+            {/* Línea de la ruta - CORREGIDA */}
+            <primitive object={new THREE.Line(geometry, new THREE.LineBasicMaterial({ 
+              color: pathway.color, 
+              transparent: true, 
+              opacity: 0.6 
+            }))} />
 
             {/* Partículas que se mueven por la ruta */}
             <MovingParticles 
@@ -129,19 +127,15 @@ const MovingParticles: React.FC<{
 }> = ({ curve, color, count }) => {
   const particlesRef = React.useRef<THREE.Group>(null);
 
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      if (particlesRef.current) {
-        particlesRef.current.children.forEach((particle, index) => {
-          const t = ((Date.now() * 0.001 + index * 0.2) % 1);
-          const position = curve.getPoint(t);
-          particle.position.copy(position);
-        });
-      }
-    }, 16);
-
-    return () => clearInterval(interval);
-  }, [curve]);
+  useFrame(() => {
+    if (particlesRef.current) {
+      particlesRef.current.children.forEach((particle, index) => {
+        const t = ((Date.now() * 0.001 + index * 0.2) % 1);
+        const position = curve.getPoint(t);
+        particle.position.copy(position);
+      });
+    }
+  });
 
   return (
     <group ref={particlesRef}>
