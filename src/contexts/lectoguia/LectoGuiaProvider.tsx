@@ -1,5 +1,4 @@
-
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { LectoGuiaContext } from './useLectoGuia';
 import { LectoGuiaContextType } from './types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +15,8 @@ interface LectoGuiaProviderProps {
 
 export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }) => {
   const { user } = useAuth();
+  const syncRef = useRef(false);
+  const lastSyncRef = useRef<string>('');
   
   // Hook unificado para gestión de materias
   const {
@@ -75,22 +76,43 @@ export const LectoGuiaProvider: React.FC<LectoGuiaProviderProps> = ({ children }
     exerciseSource
   } = useEnhancedExerciseFlow(activeSubject, setActiveTab);
 
-  // Sincronizar cambios de prueba con nodos
+  // Sincronización controlada y anti-bucle - CRÍTICO
   useEffect(() => {
-    console.log(`🔄 Sincronizando nodos para prueba: ${selectedPrueba} (testId: ${selectedTestId})`);
+    const syncKey = `${selectedPrueba}-${selectedTestId}-${nodes.length}`;
     
-    // Filtrar nodos por la prueba actual
-    const filteredNodes = getFilteredNodes();
-    console.log(`📊 Nodos filtrados para ${selectedPrueba}: ${filteredNodes.length}`);
-    
-    if (filteredNodes.length === 0 && nodes.length > 0) {
-      console.warn(`⚠️ No hay nodos disponibles para ${selectedPrueba}`);
-      addAssistantMessage(
-        `No se encontraron nodos de aprendizaje para ${subjectDisplayNames[activeSubject]}. ` +
-        `Te ayudo con contenido general mientras trabajamos en más material específico.`
-      );
+    // Prevenir bucle infinito con múltiples validaciones
+    if (syncRef.current || lastSyncRef.current === syncKey || !selectedPrueba || !user?.id) {
+      return;
     }
-  }, [selectedPrueba, selectedTestId, getFilteredNodes, nodes.length, subjectDisplayNames, activeSubject, addAssistantMessage]);
+    
+    syncRef.current = true;
+    lastSyncRef.current = syncKey;
+    
+    console.log(`🔄 Sincronización controlada: ${selectedPrueba} (testId: ${selectedTestId})`);
+    
+    try {
+      // Filtrar nodos por la prueba actual - sin triggear re-render
+      const filteredNodes = getFilteredNodes();
+      console.log(`📊 Nodos disponibles para ${selectedPrueba}: ${filteredNodes.length}`);
+      
+      // Solo mostrar mensaje si no hay nodos Y es la primera vez
+      if (filteredNodes.length === 0 && nodes.length > 0) {
+        setTimeout(() => {
+          addAssistantMessage(
+            `Detecté que estás en ${subjectDisplayNames[activeSubject]}. ` +
+            `Estoy preparando el contenido específico para esta materia.`
+          );
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error en sincronización:', error);
+    } finally {
+      // Resetear flag después de un delay
+      setTimeout(() => {
+        syncRef.current = false;
+      }, 2000);
+    }
+  }, [selectedPrueba, selectedTestId, nodes.length, user?.id]); // Dependencias mínimas y controladas
 
   // Función wrapper para updateNodeProgress con validación de tipos
   const handleUpdateNodeProgress = useCallback((nodeId: string, status: 'not_started' | 'in_progress' | 'completed', progress: number) => {
