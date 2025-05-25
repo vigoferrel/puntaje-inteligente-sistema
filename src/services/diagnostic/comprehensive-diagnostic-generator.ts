@@ -1,16 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
-
-// Ultra-simplified interface to avoid any type recursion
-interface BasicExerciseData {
-  id: string;
-  question?: string;
-  options?: string;
-  correct_answer?: string;
-  explanation?: string;
-  [key: string]: unknown; // Allow any other properties
-}
+import { TypeFirewall, RawDatabaseRecord, FirewallExercise } from "./types/firewall-types";
 
 export class ComprehensiveDiagnosticGenerator {
   private static instance: ComprehensiveDiagnosticGenerator;
@@ -64,7 +54,7 @@ export class ComprehensiveDiagnosticGenerator {
     console.log(`🎯 Generando diagnóstico comprehensivo para ${prueba}`);
 
     try {
-      const questions = await this.fetchDatabaseQuestions(prueba, questionCount);
+      const questions = await this.fetchDatabaseQuestionsFirewall(prueba, questionCount);
       
       if (questions.length === 0) {
         console.warn('⚠️ No se encontraron preguntas en BD, generando fallback');
@@ -96,44 +86,48 @@ export class ComprehensiveDiagnosticGenerator {
     }
   }
 
-  private async fetchDatabaseQuestions(
+  private async fetchDatabaseQuestionsFirewall(
     prueba: string,
     limit: number
   ): Promise<DiagnosticQuestion[]> {
     try {
-      const { data: exercises, error } = await supabase
+      // FIREWALL: Query específico sin select('*') para evitar tipos recursivos
+      const { data, error } = await supabase
         .from('exercises')
-        .select('*')
-        .eq('prueba', prueba)
+        .select('id,question,options,correct_answer,explanation,skill_id,test_id,diagnostic_id,node_id,difficulty,bloom_level,created_at,updated_at')
+        .eq('test_id', this.getTestIdForPrueba(prueba))
         .limit(limit);
 
-      if (error || !exercises) {
+      if (error || !data) {
         console.warn('⚠️ Error fetching exercises:', error);
         return [];
       }
 
-      // Use explicit for loop with ultra-simple mapping
+      // FIREWALL: Procesar como datos raw sin tipos Supabase
+      const rawRecords = data as RawDatabaseRecord[];
+      const firewallExercises = TypeFirewall.processRawExerciseArray(rawRecords);
+
+      // Mapear a DiagnosticQuestion usando firewall
       const mappedQuestions: DiagnosticQuestion[] = [];
-      for (let i = 0; i < exercises.length; i++) {
-        const rawExercise = exercises[i] as unknown;
-        const basicExercise = rawExercise as BasicExerciseData;
-        const mappedQuestion = this.createBasicQuestion(basicExercise);
-        mappedQuestions.push(mappedQuestion);
+      for (let i = 0; i < firewallExercises.length; i++) {
+        const exercise = firewallExercises[i];
+        const question = this.createFirewallQuestion(exercise);
+        mappedQuestions.push(question);
       }
 
       return mappedQuestions;
     } catch (error) {
-      console.error('❌ Error in fetchDatabaseQuestions:', error);
+      console.error('❌ Error in fetchDatabaseQuestionsFirewall:', error);
       return [];
     }
   }
 
-  // Ultra-simplified mapping function with explicit types
-  private createBasicQuestion(exercise: BasicExerciseData): DiagnosticQuestion {
+  // FIREWALL: Mapping seguro sin recursión
+  private createFirewallQuestion(exercise: FirewallExercise): DiagnosticQuestion {
     const question: DiagnosticQuestion = {
       id: exercise.id || `q-${Date.now()}-${Math.random()}`,
       question: exercise.question || 'Pregunta no disponible',
-      options: this.parseBasicOptions(exercise.options),
+      options: TypeFirewall.safeStringArray(exercise.options),
       correctAnswer: exercise.correct_answer || 'Opción A',
       explanation: exercise.explanation || '',
       difficulty: 'INTERMEDIO' as const,
@@ -145,24 +139,6 @@ export class ComprehensiveDiagnosticGenerator {
       }
     };
     return question;
-  }
-
-  private parseBasicOptions(options: unknown): string[] {
-    if (typeof options === 'string') {
-      try {
-        const parsed = JSON.parse(options);
-        if (Array.isArray(parsed)) {
-          return parsed.map(String);
-        }
-        return [options];
-      } catch {
-        return [options];
-      }
-    }
-    if (Array.isArray(options)) {
-      return options.map(String);
-    }
-    return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
   }
 
   private generateFallbackDiagnostic(

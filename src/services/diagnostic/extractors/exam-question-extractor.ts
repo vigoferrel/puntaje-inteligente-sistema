@@ -1,22 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticQuestion } from "@/types/diagnostic";
-
-// Ultra-simplified interface to prevent type recursion
-interface BasicExerciseData {
-  id: string;
-  question?: string;
-  enunciado?: string;
-  options?: unknown;
-  alternativas?: unknown;
-  alternatives?: unknown;
-  correct_answer?: string;
-  respuesta_correcta?: string;
-  correctAnswer?: string;
-  explanation?: string;
-  explicacion?: string;
-  [key: string]: unknown; // Allow any other properties
-}
+import { TypeFirewall, RawDatabaseRecord, FirewallExercise } from "../types/firewall-types";
 
 export class ExamQuestionExtractor {
   private static instance: ExamQuestionExtractor;
@@ -36,14 +21,16 @@ export class ExamQuestionExtractor {
     console.log(`📚 Extrayendo preguntas oficiales para ${prueba}`);
 
     try {
+      // FIREWALL: Query específico para evitar recursión de tipos
       let query = supabase
         .from('exercises')
-        .select('*')
-        .eq('prueba', prueba)
+        .select('id,question,options,correct_answer,explanation,skill_id,test_id,diagnostic_id,node_id,difficulty,bloom_level,created_at,updated_at')
+        .eq('test_id', this.getTestIdForPrueba(prueba))
         .limit(limit);
 
       if (year) {
-        query = query.eq('year', year);
+        // No agregamos filtro de año ya que no existe en la tabla exercises
+        console.log(`Año ${year} solicitado pero no disponible en exercises`);
       }
 
       const { data: exercises, error } = await query;
@@ -53,12 +40,15 @@ export class ExamQuestionExtractor {
         return this.generateFallbackQuestions(prueba, limit);
       }
 
-      // Use explicit for loop to avoid type recursion
+      // FIREWALL: Procesar como datos raw sin tipos complejos
+      const rawRecords = exercises as RawDatabaseRecord[];
+      const firewallExercises = TypeFirewall.processRawExerciseArray(rawRecords);
+
+      // Mapear usando firewall anti-recursión
       const mappedQuestions: DiagnosticQuestion[] = [];
-      for (let i = 0; i < exercises.length; i++) {
-        const rawExercise = exercises[i] as unknown;
-        const basicExercise = rawExercise as BasicExerciseData;
-        const mappedQuestion = this.createBasicQuestion(basicExercise);
+      for (let i = 0; i < firewallExercises.length; i++) {
+        const exercise = firewallExercises[i];
+        const mappedQuestion = this.createFirewallQuestion(exercise);
         mappedQuestions.push(mappedQuestion);
       }
 
@@ -70,14 +60,14 @@ export class ExamQuestionExtractor {
     }
   }
 
-  // Ultra-simplified mapping function with explicit types
-  private createBasicQuestion(exercise: BasicExerciseData): DiagnosticQuestion {
+  // FIREWALL: Mapping seguro de ejercicio a pregunta
+  private createFirewallQuestion(exercise: FirewallExercise): DiagnosticQuestion {
     const question: DiagnosticQuestion = {
       id: exercise.id || `extracted-${Date.now()}-${Math.random()}`,
-      question: exercise.question || exercise.enunciado || 'Pregunta no disponible',
-      options: this.extractBasicOptions(exercise),
-      correctAnswer: this.extractBasicCorrectAnswer(exercise),
-      explanation: exercise.explanation || exercise.explicacion || 'Explicación no disponible',
+      question: exercise.question || 'Pregunta no disponible',
+      options: TypeFirewall.safeStringArray(exercise.options),
+      correctAnswer: exercise.correct_answer || 'Opción A',
+      explanation: exercise.explanation || 'Explicación no disponible',
       difficulty: 'INTERMEDIO' as const,
       skill: 'INTERPRET_RELATE',
       prueba: 'COMPETENCIA_LECTORA',
@@ -87,47 +77,6 @@ export class ExamQuestionExtractor {
       }
     };
     return question;
-  }
-
-  private extractBasicOptions(exercise: BasicExerciseData): string[] {
-    const optionsFields = ['options', 'alternativas', 'alternatives'];
-    
-    for (const field of optionsFields) {
-      const fieldValue = exercise[field];
-      if (fieldValue) {
-        if (Array.isArray(fieldValue)) {
-          return fieldValue.map((opt: unknown) => 
-            typeof opt === 'string' ? opt : String(opt)
-          );
-        }
-        
-        if (typeof fieldValue === 'string') {
-          try {
-            const parsed = JSON.parse(fieldValue);
-            if (Array.isArray(parsed)) {
-              return parsed.map((opt: unknown) => String(opt));
-            }
-          } catch {
-            return [fieldValue];
-          }
-        }
-      }
-    }
-
-    return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
-  }
-
-  private extractBasicCorrectAnswer(exercise: BasicExerciseData): string {
-    const answerFields = ['correct_answer', 'respuesta_correcta', 'correctAnswer'];
-    
-    for (const field of answerFields) {
-      const fieldValue = exercise[field];
-      if (fieldValue) {
-        return String(fieldValue);
-      }
-    }
-
-    return 'Opción A';
   }
 
   private generateFallbackQuestions(prueba: string, count: number): DiagnosticQuestion[] {
@@ -150,6 +99,17 @@ export class ExamQuestionExtractor {
       questions.push(question);
     }
     return questions;
+  }
+
+  private getTestIdForPrueba(prueba: string): number {
+    const testIds: Record<string, number> = {
+      'COMPETENCIA_LECTORA': 1,
+      'MATEMATICA_1': 2,
+      'MATEMATICA_2': 3,
+      'HISTORIA': 4,
+      'CIENCIAS': 5
+    };
+    return testIds[prueba] || 1;
   }
 }
 
