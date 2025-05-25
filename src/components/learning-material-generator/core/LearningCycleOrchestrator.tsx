@@ -1,19 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Brain, Target, Sparkles, TrendingUp, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLearningPlanContext } from '@/contexts/LearningPlanContext';
-import { usePAESCycleIntegration } from '@/hooks/lectoguia/use-paes-cycle-integration';
-import { TLearningCyclePhase } from '@/types/system-types';
-import { ProgressDashboard } from '../ui/ProgressDashboard';
-import { PhaseNavigator } from '../ui/PhaseNavigator';
-import { AdaptiveRecommendationEngine } from './AdaptiveRecommendationEngine';
-import { UserProgressAnalyzer } from './UserProgressAnalyzer';
 import { MaterialGenerationHub } from '../materials/MaterialGenerationHub';
-import { ActionCenter } from '../ui/ActionCenter';
+import { PhaseNavigator } from './PhaseNavigator';
+import { UserProgressAnalyzer } from './UserProgressAnalyzer';
+import { AdaptiveRecommendationEngine } from './AdaptiveRecommendationEngine';
+import { TLearningCyclePhase, TPAESPrueba } from '@/types/system-types';
+import { useMaterialGeneration } from '@/hooks/use-material-generation';
+import { Brain, Sparkles } from 'lucide-react';
 
 interface LearningCycleOrchestratorProps {
   selectedSubject: string;
@@ -26,190 +21,174 @@ export const LearningCycleOrchestrator: React.FC<LearningCycleOrchestratorProps>
   selectedSubject,
   subjects,
   onGenerate,
-  isGenerating
+  isGenerating: externalIsGenerating
 }) => {
-  const { user } = useAuth();
-  const { currentPlan, refreshPlans } = useLearningPlanContext();
-  const { 
-    loading: paesLoading,
-    phaseProgress,
-    predictedScore,
+  const [currentPhase, setCurrentPhase] = useState<TLearningCyclePhase>('EXPERIENCIA_CONCRETA');
+  
+  const {
+    isGenerating: internalIsGenerating,
+    generatedMaterials,
     recommendations,
-    getPhaseConfig,
-    loadPhaseProgress
-  } = usePAESCycleIntegration();
+    generateMaterial,
+    generateRecommendations,
+    getMockUserProgress
+  } = useMaterialGeneration();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'generate' | 'analyze'>('dashboard');
-  const [currentPhase, setCurrentPhase] = useState<TLearningCyclePhase>('SKILL_TRAINING');
-  const [learningInsights, setLearningInsights] = useState<any>(null);
+  const isGenerating = externalIsGenerating || internalIsGenerating;
 
-  // Cargar datos iniciales y análisis inteligente
+  // Mapeo de materias a pruebas PAES
+  const subjectToPruebaMap: Record<string, TPAESPrueba> = {
+    'competencia-lectora': 'COMPETENCIA_LECTORA',
+    'matematica-m1': 'MATEMATICA_1',
+    'matematica-m2': 'MATEMATICA_2',
+    'historia': 'HISTORIA',
+    'ciencias': 'CIENCIAS'
+  };
+
   useEffect(() => {
-    if (user?.id) {
-      loadInitialData();
-    }
-  }, [user?.id, selectedSubject]);
+    // Generar recomendaciones cuando cambia la materia o fase
+    const userProgress = getMockUserProgress(selectedSubject);
+    userProgress.currentPhase = currentPhase;
+    generateRecommendations(userProgress, selectedSubject);
+  }, [selectedSubject, currentPhase, generateRecommendations, getMockUserProgress]);
 
-  const loadInitialData = async () => {
-    try {
-      await Promise.all([
-        loadPhaseProgress(),
-        refreshPlans(user?.id), // Pasar user?.id como parámetro requerido
-        generateLearningInsights()
-      ]);
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-    }
-  };
-
-  const generateLearningInsights = async () => {
-    // Simular análisis inteligente basado en progreso real
-    const insights = {
-      strongestSkills: ['TRACK_LOCATE', 'SOLVE_PROBLEMS'],
-      weakestSkills: ['EVALUATE_REFLECT', 'SCIENTIFIC_ARGUMENT'],
-      recommendedFocus: 'CONTENT_STUDY',
-      estimatedStudyTime: 45,
-      nextMilestone: 'Simulacro PAES completo',
-      improvementTrend: 'positive'
+  const handleMaterialGeneration = async (config: any) => {
+    const prueba = subjectToPruebaMap[selectedSubject] || 'COMPETENCIA_LECTORA';
+    
+    const fullConfig = {
+      ...config,
+      prueba,
+      phase: currentPhase,
+      subject: selectedSubject
     };
-    setLearningInsights(insights);
+
+    // Usar el sistema interno de generación
+    const materials = await generateMaterial(fullConfig);
+    
+    // También llamar al callback externo para compatibilidad
+    if (onGenerate) {
+      onGenerate(fullConfig);
+    }
+
+    return materials;
   };
 
-  const phaseConfig = getPhaseConfig(currentPhase);
+  const phaseInfo = {
+    'EXPERIENCIA_CONCRETA': {
+      name: 'Experiencia Concreta',
+      description: 'Práctica inicial con ejercicios básicos',
+      color: 'bg-blue-100 text-blue-800'
+    },
+    'OBSERVACION_REFLEXIVA': {
+      name: 'Observación Reflexiva',
+      description: 'Análisis de patrones y estrategias',
+      color: 'bg-green-100 text-green-800'
+    },
+    'CONCEPTUALIZACION_ABSTRACTA': {
+      name: 'Conceptualización Abstracta',
+      description: 'Teoría profunda y conceptos avanzados',
+      color: 'bg-purple-100 text-purple-800'
+    },
+    'EXPERIMENTACION_ACTIVA': {
+      name: 'Experimentación Activa',
+      description: 'Aplicación práctica y simulacros',
+      color: 'bg-orange-100 text-orange-800'
+    }
+  };
+
+  const currentPhaseInfo = phaseInfo[currentPhase];
 
   return (
     <div className="space-y-6">
-      {/* Header del Learning Command Center */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20"
-      >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary text-primary-foreground">
-                <Brain className="h-6 w-6" />
-              </div>
+      {/* Header con información de fase */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Brain className="h-6 w-6 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold">Centro de Comando del Aprendizaje</h1>
-                <p className="text-muted-foreground">
-                  Tu hub inteligente para {subjects[selectedSubject]?.name}
+                <CardTitle>Sistema de Generación de Material PAES</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Ciclo de Aprendizaje Kolb • {subjects[selectedSubject]?.name}
                 </p>
               </div>
             </div>
-            
-            {predictedScore && (
-              <div className="text-right">
-                <div className="text-2xl font-bold text-primary">{predictedScore}</div>
-                <div className="text-sm text-muted-foreground">Puntaje Proyectado PAES</div>
-              </div>
-            )}
+            <Badge className={currentPhaseInfo.color}>
+              {currentPhaseInfo.name}
+            </Badge>
           </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-4 gap-4">
-            <div className="text-center p-3 rounded-lg bg-background/50">
-              <div className="text-lg font-bold">{Object.keys(phaseProgress).length}</div>
-              <div className="text-xs text-muted-foreground">Fases Activas</div>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-background/50">
-              <div className="text-lg font-bold">{recommendations.length}</div>
-              <div className="text-xs text-muted-foreground">Recomendaciones</div>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-background/50">
-              <div className="text-lg font-bold">{learningInsights?.estimatedStudyTime || 0}min</div>
-              <div className="text-xs text-muted-foreground">Estudio Hoy</div>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-background/50">
-              <div className="flex items-center justify-center gap-1">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                <span className="text-lg font-bold">+15%</span>
-              </div>
-              <div className="text-xs text-muted-foreground">Mejora Semanal</div>
-            </div>
-          </div>
-        </CardContent>
-      </motion.div>
-
-      {/* Navegación Principal */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <Target className="h-4 w-4" />
-            Dashboard
-          </TabsTrigger>
-          <TabsTrigger value="generate" className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
-            Generar Material
-          </TabsTrigger>
-          <TabsTrigger value="analyze" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Análisis
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Dashboard Principal */}
-        <TabsContent value="dashboard" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Panel de Progreso */}
-            <div className="lg:col-span-2">
-              <ProgressDashboard
-                phaseProgress={phaseProgress}
-                currentPhase={currentPhase}
-                learningInsights={learningInsights}
-                predictedScore={predictedScore}
-              />
-            </div>
-
-            {/* Panel de Acciones Rápidas */}
-            <div>
-              <ActionCenter
-                recommendations={recommendations}
-                currentPhase={currentPhase}
-                onQuickAction={onGenerate}
-                isGenerating={isGenerating}
-              />
-            </div>
-          </div>
-
-          {/* Navegador de Fases */}
-          <PhaseNavigator
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            {currentPhaseInfo.description}
+          </p>
+          
+          {/* Navegador de fases */}
+          <PhaseNavigator 
             currentPhase={currentPhase}
-            phaseProgress={phaseProgress}
             onPhaseChange={setCurrentPhase}
           />
-        </TabsContent>
+        </CardContent>
+      </Card>
 
-        {/* Generación de Material */}
-        <TabsContent value="generate" className="space-y-6">
-          <MaterialGenerationHub
-            selectedSubject={selectedSubject}
-            currentPhase={currentPhase}
-            recommendations={recommendations}
-            onGenerate={onGenerate}
-            isGenerating={isGenerating}
-          />
-        </TabsContent>
+      {/* Analizador de progreso */}
+      <UserProgressAnalyzer 
+        selectedSubject={selectedSubject}
+        currentPhase={currentPhase}
+      />
 
-        {/* Análisis y Recomendaciones */}
-        <TabsContent value="analyze" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <UserProgressAnalyzer
-              userId={user?.id}
-              selectedSubject={selectedSubject}
-              phaseProgress={phaseProgress}
-            />
-            
-            <AdaptiveRecommendationEngine
-              currentPhase={currentPhase}
-              learningInsights={learningInsights}
-              recommendations={recommendations}
-              onApplyRecommendation={onGenerate}
-            />
-          </div>
-        </TabsContent>
-      </Tabs>
+      {/* Motor de recomendaciones */}
+      <AdaptiveRecommendationEngine 
+        recommendations={recommendations}
+        onRecommendationSelect={handleMaterialGeneration}
+        isGenerating={isGenerating}
+      />
+
+      {/* Hub principal de generación */}
+      <MaterialGenerationHub
+        selectedSubject={selectedSubject}
+        currentPhase={currentPhase}
+        recommendations={recommendations}
+        onGenerate={handleMaterialGeneration}
+        isGenerating={isGenerating}
+      />
+
+      {/* Resultados generados */}
+      {generatedMaterials.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              Material Generado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {generatedMaterials.map((material) => (
+                <div key={material.id} className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">{material.title}</h4>
+                    <Badge variant="outline" className="text-xs">
+                      {material.metadata.source}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {material.type === 'exercises' ? 
+                      `Pregunta: ${material.content.question?.substring(0, 100)}...` :
+                      `Tema: ${material.content.topic || 'Material de estudio'}`
+                    }
+                  </p>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                    <span>⏱️ {material.metadata.estimatedTime} min</span>
+                    <span>📊 {material.metadata.difficulty}</span>
+                    <span>🎯 {material.metadata.skill}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

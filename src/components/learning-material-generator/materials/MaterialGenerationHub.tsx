@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, BookOpen, TestTube, FileText, Play, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TLearningCyclePhase } from '@/types/system-types';
+import { AdaptiveRecommendation } from '@/types/material-generation';
 import { ExerciseGenerator } from './ExerciseGenerator';
 import { StudyContentGenerator } from './StudyContentGenerator';
 import { AssessmentGenerator } from './AssessmentGenerator';
@@ -14,7 +15,7 @@ import { AssessmentGenerator } from './AssessmentGenerator';
 interface MaterialGenerationHubProps {
   selectedSubject: string;
   currentPhase: TLearningCyclePhase;
-  recommendations: any[];
+  recommendations: AdaptiveRecommendation[];
   onGenerate: (config: any) => void;
   isGenerating: boolean;
 }
@@ -35,8 +36,10 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
       subject: selectedSubject,
       phase: currentPhase,
       count: type === 'exercises' ? 5 : 3,
+      difficulty: 'INTERMEDIO',
       mode: generationMode,
-      useOfficialContent: generationMode !== 'ai'
+      useOfficialContent: generationMode !== 'ai',
+      includeContext: true
     };
     
     onGenerate(config);
@@ -45,11 +48,11 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
   const getModeDescription = (mode: string) => {
     switch (mode) {
       case 'official':
-        return 'Usa exclusivamente preguntas oficiales de exámenes PAES reales';
+        return 'Contenido extraído de exámenes PAES oficiales 2024';
       case 'ai':
-        return 'Genera contenido nuevo usando IA basado en patrones PAES';
+        return 'Material generado por IA siguiendo patrones PAES';
       case 'hybrid':
-        return 'Combina preguntas oficiales con contenido generado por IA';
+        return 'Combinación inteligente de contenido oficial y generado';
       default:
         return 'Modo de generación';
     }
@@ -74,7 +77,7 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
             </div>
             
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              Fase: {currentPhase}
+              Fase: {currentPhase.split('_')[0]}
             </Badge>
           </div>
         </CardHeader>
@@ -100,20 +103,17 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
                       {mode === 'official' ? 'Oficial' : mode === 'ai' ? 'IA' : 'Híbrido'}
                     </span>
                   </div>
-                  <span className="text-xs text-muted-foreground mt-1 text-center">
-                    {getModeDescription(mode)}
-                  </span>
                 </Button>
               ))}
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {getModeDescription(generationMode)}
+            </p>
           </div>
 
           {/* Acciones Rápidas */}
           <div className="grid grid-cols-3 gap-4">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 onClick={() => handleQuickGeneration('exercises')}
                 disabled={isGenerating}
@@ -122,14 +122,11 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
               >
                 <TestTube className="h-5 w-5" />
                 <span>Ejercicios</span>
-                <span className="text-xs text-muted-foreground">5 preguntas</span>
+                <span className="text-xs text-muted-foreground">5 preguntas oficiales</span>
               </Button>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 onClick={() => handleQuickGeneration('study_content')}
                 disabled={isGenerating}
@@ -142,10 +139,7 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
               </Button>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 onClick={() => handleQuickGeneration('assessment')}
                 disabled={isGenerating}
@@ -217,11 +211,14 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
             <div className="space-y-2">
               {recommendations.slice(0, 3).map((rec, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <span className="text-sm">{rec.title || 'Recomendación de material'}</span>
+                  <div>
+                    <span className="text-sm font-medium">{rec.title}</span>
+                    <p className="text-xs text-muted-foreground">{rec.description}</p>
+                  </div>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleQuickGeneration(rec.type || 'exercises')}
+                    onClick={() => onGenerate(rec.config)}
                     disabled={isGenerating}
                   >
                     <Play className="h-4 w-4" />
@@ -244,7 +241,7 @@ export const MaterialGenerationHub: React.FC<MaterialGenerationHubProps> = ({
                   Usando Contenido Oficial PAES 2024
                 </p>
                 <p className="text-xs text-green-700">
-                  Material validado y extraído de exámenes oficiales reales
+                  Material validado extraído de exámenes oficiales reales con códigos {selectedSubject}
                 </p>
               </div>
             </div>

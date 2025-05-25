@@ -1,109 +1,120 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Activity, Target } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { TLearningCyclePhase } from '@/types/system-types';
+import { TrendingUp, Target, Clock } from 'lucide-react';
 
 interface UserProgressAnalyzerProps {
-  userId?: string;
   selectedSubject: string;
-  phaseProgress: Record<string, any>;
+  currentPhase: TLearningCyclePhase;
 }
 
 export const UserProgressAnalyzer: React.FC<UserProgressAnalyzerProps> = ({
-  userId,
   selectedSubject,
-  phaseProgress
+  currentPhase
 }) => {
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
-
-  useEffect(() => {
-    generateAnalytics();
-  }, [phaseProgress, selectedSubject]);
-
-  const generateAnalytics = () => {
-    // Simulación de análisis avanzado
-    const analytics = {
-      overallTrend: 'positive',
-      strengthAreas: ['TRACK_LOCATE', 'SOLVE_PROBLEMS'],
-      improvementAreas: ['EVALUATE_REFLECT', 'SCIENTIFIC_ARGUMENT'],
-      studyTimeOptimal: 45,
-      difficultyRecommendation: 'intermedio',
-      nextPhaseReadiness: 75,
-      weeklyImprovement: 12
-    };
-    setAnalyticsData(analytics);
+  // Mock data - en producción vendría de la base de datos
+  const progressData = {
+    overallProgress: 35,
+    weakAreas: ['Interpretar y Relacionar', 'Resolver Problemas'],
+    strongAreas: ['Localizar Información'],
+    completedNodes: 12,
+    totalNodes: 30,
+    studyTime: 45,
+    lastActivity: new Date()
   };
 
-  if (!analyticsData) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <Activity className="h-6 w-6 animate-pulse" />
-            <span className="ml-2">Analizando progreso...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const phaseProgress = {
+    'EXPERIENCIA_CONCRETA': 75,
+    'OBSERVACION_REFLEXIVA': 40,
+    'CONCEPTUALIZACION_ABSTRACTA': 20,
+    'EXPERIMENTACION_ACTIVA': 0
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5" />
+          <TrendingUp className="h-5 w-5" />
           Análisis de Progreso
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Tendencia General */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-600" />
-            <span className="font-medium">Tendencia Positiva</span>
-          </div>
-          <Badge variant="outline" className="text-green-700 border-green-300">
-            +{analyticsData.weeklyImprovement}% esta semana
-          </Badge>
-        </div>
-
-        {/* Métricas Clave */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="text-sm text-muted-foreground">Tiempo Óptimo</div>
-            <div className="text-xl font-bold">{analyticsData.studyTimeOptimal}min</div>
-          </div>
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="text-sm text-muted-foreground">Preparación</div>
-            <div className="text-xl font-bold">{analyticsData.nextPhaseReadiness}%</div>
-          </div>
-        </div>
-
-        {/* Preparación para Siguiente Fase */}
+      <CardContent className="space-y-4">
+        {/* Progreso general */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Preparación para Siguiente Fase</span>
-            <Target className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Progreso General</span>
+            <span className="text-sm text-muted-foreground">{progressData.overallProgress}%</span>
           </div>
-          <Progress value={analyticsData.nextPhaseReadiness} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">
-            {analyticsData.nextPhaseReadiness >= 80 ? 
-              'Listo para avanzar' : 
-              `Necesitas ${100 - analyticsData.nextPhaseReadiness}% más`
-            }
-          </p>
+          <Progress value={progressData.overallProgress} className="h-2" />
         </div>
 
-        {/* Recomendaciones de Dificultad */}
-        <div className="p-3 rounded-lg border border-border">
-          <h4 className="font-medium mb-2">Nivel Recomendado</h4>
-          <Badge variant="default">{analyticsData.difficultyRecommendation}</Badge>
-          <p className="text-xs text-muted-foreground mt-1">
-            Basado en tu rendimiento actual
-          </p>
+        {/* Progreso por fases */}
+        <div>
+          <h4 className="text-sm font-medium mb-3">Progreso por Fase del Ciclo</h4>
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(phaseProgress).map(([phase, progress]) => (
+              <div key={phase} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">{phase.split('_')[0]}</span>
+                  <span className="text-xs text-muted-foreground">{progress}%</span>
+                </div>
+                <Progress value={progress} className="h-1" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Métricas clave */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Target className="h-4 w-4 text-blue-600" />
+            </div>
+            <div className="text-lg font-bold">{progressData.completedNodes}/{progressData.totalNodes}</div>
+            <div className="text-xs text-muted-foreground">Nodos</div>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Clock className="h-4 w-4 text-green-600" />
+            </div>
+            <div className="text-lg font-bold">{progressData.studyTime}h</div>
+            <div className="text-xs text-muted-foreground">Estudio</div>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-1">
+              <TrendingUp className="h-4 w-4 text-purple-600" />
+            </div>
+            <div className="text-lg font-bold">{progressData.strongAreas.length}</div>
+            <div className="text-xs text-muted-foreground">Fortalezas</div>
+          </div>
+        </div>
+
+        {/* Áreas de enfoque */}
+        <div className="space-y-3">
+          <div>
+            <h4 className="text-sm font-medium mb-2">Áreas para Reforzar</h4>
+            <div className="flex flex-wrap gap-1">
+              {progressData.weakAreas.map((area) => (
+                <Badge key={area} variant="destructive" className="text-xs">
+                  {area}
+                </Badge>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-medium mb-2">Fortalezas</h4>
+            <div className="flex flex-wrap gap-1">
+              {progressData.strongAreas.map((area) => (
+                <Badge key={area} variant="default" className="text-xs">
+                  {area}
+                </Badge>
+              ))}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
