@@ -9,6 +9,7 @@ import PAESUniversePage from '@/pages/PAESUniversePage';
 import LectoGuia from '@/pages/LectoGuia';
 import Diagnostico from '@/pages/Diagnostico';
 import Plan from '@/pages/Plan';
+import FinancialCenter from '@/pages/FinancialCenter';
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +47,10 @@ export const router = createBrowserRouter([
   {
     path: '/plan',
     element: <Plan />,
+  },
+  {
+    path: '/centro-financiero',
+    element: <FinancialCenter />,
   },
   {
     path: '/auth',

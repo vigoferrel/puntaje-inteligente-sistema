@@ -1,3 +1,4 @@
+
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -26,7 +27,8 @@ import {
   GraduationCap,
   Brain,
   Play,
-  Sparkles
+  Sparkles,
+  DollarSign
 } from "lucide-react";
 
 const menuItems = [
@@ -39,6 +41,12 @@ const menuItems = [
     title: "PAES Dashboard",
     url: "/paes-dashboard",
     icon: Target,
+  },
+  {
+    title: "Centro Financiero",
+    url: "/centro-financiero",
+    icon: DollarSign,
+    badge: "PAES 2025"
   },
   {
     title: "Generador de Ejercicios",
@@ -139,7 +147,12 @@ export function AppSidebar() {
                       }
                     >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span className="flex-1">{item.title}</span>
+                      {item.badge && (
+                        <Badge variant="destructive" className="text-xs px-1 py-0 h-4">
+                          {item.badge}
+                        </Badge>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
