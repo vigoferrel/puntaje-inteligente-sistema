@@ -1,14 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface LearningPlan {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  createdAt: string;
-}
+import { LearningPlan, PlanProgress } from '../types';
 
 export const useLearningPlanProvider = () => {
   const { profile } = useAuth();
@@ -54,7 +47,9 @@ export const useLearningPlanProvider = () => {
         title,
         description: description || '',
         progress: 0,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        userId: profile.id,
+        nodes: []
       };
 
       setPlans(prev => [...prev, newPlan]);
@@ -86,7 +81,7 @@ export const useLearningPlanProvider = () => {
     }
   };
 
-  const getPlanProgress = (planId: string) => {
+  const getPlanProgress = (planId: string): PlanProgress => {
     return progressData[planId] || {
       totalNodes: 0,
       completedNodes: 0,
@@ -104,7 +99,9 @@ export const useLearningPlanProvider = () => {
         title: 'Preparación PAES 2024',
         description: 'Plan integral para maximizar puntaje PAES',
         progress: 68,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        userId: profile.id,
+        nodes: []
       };
       
       setPlans([demoPlan]);
