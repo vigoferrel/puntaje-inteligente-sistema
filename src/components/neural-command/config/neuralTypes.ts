@@ -55,3 +55,40 @@ export interface NavigationAnalytics {
     interactionLatency: number;
   };
 }
+
+// Nuevos tipos exportados necesarios
+export type NeuralDimension = 
+  | 'neural_command'
+  | 'educational_universe'
+  | 'neural_training'
+  | 'progress_analysis'
+  | 'paes_simulation'
+  | 'personalized_feedback'
+  | 'battle_mode'
+  | 'achievement_system'
+  | 'vocational_prediction'
+  | 'financial_center'
+  | 'calendar_management'
+  | 'settings_control';
+
+export interface NeuralDimensionConfig {
+  id: NeuralDimension;
+  name: string;
+  description: string;
+  color: string;
+  icon: any;
+  status: 'active' | 'developing' | 'conceptual';
+  phase: 'foundation' | 'intelligence' | 'evolution';
+}
+
+// Legacy compatibility
+export interface NeuralMetrics {
+  neural_efficiency: number;
+  adaptive_learning_score: number;
+  cross_pollination_rate: number;
+  user_experience_harmony: number;
+  paes_simulation_accuracy: number;
+  universe_exploration_depth: number;
+  superpaes_coordination_level: number;
+  gamification_engagement: number;
+}

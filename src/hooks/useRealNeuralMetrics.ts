@@ -32,7 +32,7 @@ export const useRealNeuralMetrics = () => {
     lastUpdate: null
   });
 
-  // Calcular métricas basadas en datos reales
+  // Calcular métricas basadas en datos reales existentes en Supabase
   const calculateMetrics = useCallback(async () => {
     if (!user?.id) {
       setState(prev => ({ ...prev, isLoading: false, error: 'Usuario no autenticado' }));
@@ -42,62 +42,61 @@ export const useRealNeuralMetrics = () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Obtener datos reales de progreso
-      const [progressData, diagnosticData, planData] = await Promise.all([
+      // Obtener datos reales de las tablas existentes
+      const [nodeProgressData, userGoalsData, exerciseAttemptsData] = await Promise.all([
         supabase
-          .from('node_progress')
-          .select('mastery_level, completed_at')
+          .from('user_node_progress')
+          .select('mastery_level, status, time_spent_minutes')
           .eq('user_id', user.id),
         
         supabase
-          .from('diagnostic_results')
-          .select('results, completed_at')
+          .from('user_goals')
+          .select('target_score_cl, target_score_m1, target_score_m2, created_at')
           .eq('user_id', user.id)
-          .order('completed_at', { ascending: false })
-          .limit(5),
+          .eq('is_active', true),
         
         supabase
-          .from('learning_plans')
-          .select('progress, created_at')
+          .from('user_exercise_attempts')
+          .select('is_correct, time_taken_seconds, created_at')
           .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(50)
       ]);
 
       // Calcular métricas neurales basadas en datos reales
-      const nodeProgress = progressData.data || [];
-      const diagnostics = diagnosticData.data || [];
-      const plans = planData.data || [];
+      const nodeProgress = nodeProgressData.data || [];
+      const userGoals = userGoalsData.data || [];
+      const exerciseAttempts = exerciseAttemptsData.data || [];
 
-      // Neural efficiency basada en progreso promedio
+      // Neural efficiency basada en progreso promedio de nodos
       const neural_efficiency = nodeProgress.length > 0 
         ? Math.round(nodeProgress.reduce((acc, curr) => acc + (curr.mastery_level || 0), 0) / nodeProgress.length * 100)
         : 45;
 
       // Universe exploration basada en nodos completados
-      const universe_exploration_depth = Math.min(95, Math.round((nodeProgress.length / 100) * 100));
+      const completedNodes = nodeProgress.filter(n => n.status === 'completed').length;
+      const universe_exploration_depth = Math.min(95, Math.round((completedNodes / 50) * 100));
 
-      // PAES accuracy basada en diagnósticos recientes
-      const paes_simulation_accuracy = diagnostics.length > 0
-        ? Math.round(Object.values(diagnostics[0]?.results || {}).reduce((acc: number, score: any) => {
-            return acc + (typeof score === 'number' ? score : 0);
-          }, 0) / Object.keys(diagnostics[0]?.results || {}).length / 850 * 100)
+      // PAES accuracy basada en intentos de ejercicios recientes
+      const recentCorrectAttempts = exerciseAttempts.filter(a => a.is_correct).length;
+      const paes_simulation_accuracy = exerciseAttempts.length > 0
+        ? Math.round((recentCorrectAttempts / exerciseAttempts.length) * 100)
         : 67;
 
       // Engagement basado en actividad reciente
-      const recentActivity = [...nodeProgress, ...diagnostics, ...plans]
-        .filter(item => {
-          const date = new Date(item.completed_at || item.created_at);
-          const daysAgo = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
-          return daysAgo <= 7;
-        });
+      const recentActivity = exerciseAttempts.filter(attempt => {
+        const date = new Date(attempt.created_at);
+        const daysAgo = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+        return daysAgo <= 7;
+      });
 
-      const gamification_engagement = Math.min(92, Math.round((recentActivity.length / 10) * 100));
+      const gamification_engagement = Math.min(92, Math.round((recentActivity.length / 20) * 100));
 
-      // Adaptive learning rate basado en mejora en diagnósticos
-      const adaptive_learning_rate = diagnostics.length >= 2
-        ? Math.round(Math.abs(
-            Object.values(diagnostics[0]?.results || {}).reduce((acc: number, score: any) => acc + score, 0) -
-            Object.values(diagnostics[1]?.results || {}).reduce((acc: number, score: any) => acc + score, 0)
-          ) / 100)
+      // Adaptive learning rate basado en mejora de tiempo
+      const avgTimeRecent = recentActivity.slice(0, 10).reduce((acc, curr) => acc + (curr.time_taken_seconds || 0), 0) / 10;
+      const avgTimeOlder = exerciseAttempts.slice(10, 20).reduce((acc, curr) => acc + (curr.time_taken_seconds || 0), 0) / 10;
+      const adaptive_learning_rate = avgTimeOlder > 0 
+        ? Math.min(95, Math.round((1 - (avgTimeRecent / avgTimeOlder)) * 100 + 50))
         : 78;
 
       // Métricas calculadas dinámicamente

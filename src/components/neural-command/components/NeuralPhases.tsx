@@ -21,35 +21,20 @@ export const NeuralPhases: React.FC<NeuralPhasesProps> = ({
   getMetricForDimension
 }) => {
   const phaseInfo = {
-    core: { 
-      title: 'Centro Neural', 
-      description: 'Hub principal del ecosistema',
+    foundation: { 
+      title: 'Base Neural', 
+      description: 'Fundamentos del ecosistema',
       color: 'from-cyan-600 to-blue-600'
     },
-    navigation: { 
-      title: 'Navegación 3D', 
-      description: 'Universe educativo inmersivo',
+    intelligence: { 
+      title: 'Inteligencia IA', 
+      description: 'Capacidades avanzadas',
       color: 'from-purple-600 to-pink-600'
     },
-    coordination: { 
-      title: 'Coordinación IA', 
-      description: 'SuperPAES inteligente',
-      color: 'from-yellow-600 to-orange-600'
-    },
-    learning: { 
-      title: 'Flujo de Aprendizaje', 
-      description: 'Gamificación con datos reales',
+    evolution: { 
+      title: 'Evolución Neural', 
+      description: 'Futuro adaptativo',
       color: 'from-green-600 to-emerald-600'
-    },
-    gamification: { 
-      title: 'Sistema Gamificado', 
-      description: 'Competencia y logros',
-      color: 'from-pink-600 to-rose-600'
-    },
-    intelligence: { 
-      title: 'Inteligencia Cross-Module', 
-      description: 'Herramientas conectadas',
-      color: 'from-indigo-600 to-purple-600'
     }
   };
 
@@ -119,7 +104,7 @@ export const NeuralPhases: React.FC<NeuralPhasesProps> = ({
                         <div className="relative">
                           <Icon 
                             className="w-8 h-8 transition-colors duration-300" 
-                            style={{ color: isActive ? '#FFFFFF' : dimension.color }} 
+                            style={{ color: isActive ? '#FFFFFF' : '#4F46E5' }} 
                           />
                           {isActive && (
                             <motion.div
