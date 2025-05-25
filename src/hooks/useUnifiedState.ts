@@ -140,7 +140,7 @@ export const useUnifiedState = create<UnifiedState>()(
             if (parsed.state?.cache?.timestamp) {
               parsed.state.cache.timestamp = new Date(parsed.state.cache.timestamp);
             }
-            return parsed;
+            return JSON.stringify(parsed); // Retornar como string
           } catch {
             return null;
           }

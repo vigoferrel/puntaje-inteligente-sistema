@@ -1,311 +1,121 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Exercise } from '@/types/ai-types';
-import { provideChatFeedback } from '@/services/openrouter/feedback';
-import { toast } from '@/components/ui/use-toast';
+
+import { useState, useCallback } from 'react';
+import { useUnifiedState } from '@/hooks/useUnifiedState';
 
 interface ChatMessage {
-  id: string;
-  type: 'user' | 'ai';
+  role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
 }
 
-interface LectoGuiaState {
-  // Chat
-  messages: ChatMessage[];
-  isTyping: boolean;
-  
-  // Exercise
-  currentExercise: Exercise | null;
-  selectedOption: number | null;
-  showFeedback: boolean;
-  isLoading: boolean;
-  
-  // Navigation
-  activeTab: 'chat' | 'exercise' | 'progress';
-  activeSubject: string;
-  
-  // System
-  isConnected: boolean;
-  lastSync: Date | null;
-  
-  // Stats
+interface ExerciseStats {
   exercisesCompleted: number;
-  totalCorrectAnswers: number;
-  streakDays: number;
+  averageScore: number;
+  streak: number;
 }
 
-const INITIAL_STATE: LectoGuiaState = {
-  messages: [
-    {
-      id: '1',
-      type: 'ai',
-      content: '¡Hola! Soy LectoGuía, tu asistente de preparación PAES. Puedo ayudarte con ejercicios, explicaciones y estrategias de estudio. ¿En qué te puedo ayudar hoy?',
-      timestamp: new Date()
-    }
-  ],
-  isTyping: false,
-  currentExercise: null,
-  selectedOption: null,
-  showFeedback: false,
-  isLoading: false,
-  activeTab: 'chat',
-  activeSubject: 'general',
-  isConnected: true,
-  lastSync: new Date(),
-  exercisesCompleted: 0,
-  totalCorrectAnswers: 0,
-  streakDays: 1
-};
-
-// Ejercicios de ejemplo para fallback
-const SAMPLE_EXERCISES: Exercise[] = [
-  {
-    id: 'sample-1',
-    nodeId: 'node-comprension',
-    nodeName: 'Comprensión Lectora Básica',
-    prueba: 'COMPETENCIA_LECTORA',
-    skill: 'INTERPRET_RELATE',
-    difficulty: 'INTERMEDIATE',
-    question: 'Lee el siguiente texto y responde: "El cambio climático es uno de los desafíos más importantes del siglo XXI. Sus efectos incluyen el aumento de las temperaturas globales y fenómenos meteorológicos extremos." ¿Cuál es la idea principal del texto?',
-    options: [
-      'El siglo XXI tiene muchos desafíos',
-      'El cambio climático es un desafío importante con múltiples efectos',
-      'Las temperaturas están aumentando globalmente',
-      'Los fenómenos meteorológicos son extremos'
-    ],
-    correctAnswer: 'El cambio climático es un desafío importante con múltiples efectos',
-    explanation: 'La idea principal conecta el concepto central (cambio climático como desafío) con sus características (múltiples efectos).'
-  },
-  {
-    id: 'sample-2',
-    nodeId: 'node-matematica',
-    nodeName: 'Funciones Lineales',
-    prueba: 'MATEMATICA_1',
-    skill: 'ANALYZE',
-    difficulty: 'INTERMEDIATE',
-    question: 'Si una función lineal f(x) = 2x + 3, ¿cuál es el valor de f(5)?',
-    options: ['8', '10', '13', '15'],
-    correctAnswer: '13',
-    explanation: 'f(5) = 2(5) + 3 = 10 + 3 = 13'
-  }
-];
-
 export const useLectoGuiaSimplified = () => {
-  const { user, profile } = useAuth();
-  const [state, setState] = useState<LectoGuiaState>(INITIAL_STATE);
+  const [activeTab, setActiveTab] = useState<'chat' | 'exercise' | 'overview'>('overview');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [activeSubject, setActiveSubject] = useState('COMPETENCIA_LECTORA');
+  const [currentExercise, setCurrentExercise] = useState(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Simular conexión estable
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setState(prev => ({ ...prev, lastSync: new Date() }));
-    }, 30000); // Actualizar cada 30 segundos
+  const { userProgress, updateUserProgress } = useUnifiedState();
 
-    return () => clearInterval(interval);
-  }, []);
-
-  // Manejo de mensajes del chat
   const handleSendMessage = useCallback(async (message: string) => {
-    if (!message.trim()) return;
-
-    // Agregar mensaje del usuario
     const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      type: 'user',
+      role: 'user',
       content: message,
       timestamp: new Date()
     };
-
-    setState(prev => ({
-      ...prev,
-      messages: [...prev.messages, userMessage],
-      isTyping: true
-    }));
-
-    try {
-      // Intentar obtener respuesta del AI
-      const aiResponse = await provideChatFeedback(
-        message,
-        `Materia actual: ${state.activeSubject}. Usuario: ${profile?.name || user?.email || 'Estudiante'}`
-      );
-
-      // Procesar la respuesta
-      let finalResponse = aiResponse || generateFallbackResponse(message);
-
-      // Si la respuesta es muy corta, mejorarla
-      if (finalResponse.length < 20) {
-        finalResponse = `${finalResponse} ¿Hay algo específico sobre ${state.activeSubject} en lo que te pueda ayudar más?`;
-      }
-
-      const aiMessage: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        type: 'ai',
-        content: finalResponse,
-        timestamp: new Date()
-      };
-
-      setState(prev => ({
-        ...prev,
-        messages: [...prev.messages, aiMessage],
-        isTyping: false
-      }));
-
-    } catch (error) {
-      console.error('Error en chat:', error);
-      
-      // Respuesta de emergencia
-      const emergencyResponse: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        type: 'ai',
-        content: generateFallbackResponse(message),
-        timestamp: new Date()
-      };
-
-      setState(prev => ({
-        ...prev,
-        messages: [...prev.messages, emergencyResponse],
-        isTyping: false
-      }));
-    }
-  }, [state.activeSubject, profile?.name, user?.email]);
-
-  // Generar respuesta de fallback inteligente
-  const generateFallbackResponse = (userMessage: string): string => {
-    const message = userMessage.toLowerCase();
     
-    if (message.includes('ejercicio') || message.includes('practica')) {
-      return `Perfecto! Puedo generar ejercicios de ${state.activeSubject}. Ve a la pestaña "Ejercicios" y presiona "Nuevo Ejercicio" para comenzar.`;
-    }
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
     
-    if (message.includes('ayuda') || message.includes('como')) {
-      return `Estoy aquí para ayudarte con tu preparación PAES. Puedo generar ejercicios, explicar conceptos, y darte estrategias de estudio para ${state.activeSubject}.`;
-    }
-    
-    if (message.includes('matematica')) {
-      return 'En matemática puedo ayudarte con álgebra, funciones, geometría y estadística. ¿Qué tema específico te interesa?';
-    }
-    
-    if (message.includes('ciencia')) {
-      return 'En ciencias cubrimos biología, química y física. ¿Hay algún tema específico que quieras repasar?';
-    }
-    
-    return `Entiendo tu consulta sobre "${message}". Como tu asistente PAES, puedo ayudarte con ejercicios, explicaciones y estrategias de estudio. ¿Qué te gustaría hacer?`;
-  };
-
-  // Generar nuevo ejercicio
-  const handleNewExercise = useCallback(() => {
-    setState(prev => ({ ...prev, isLoading: true }));
-    
-    // Simular carga y seleccionar ejercicio apropiado
+    // Simular respuesta del asistente
     setTimeout(() => {
-      const availableExercises = SAMPLE_EXERCISES.filter(ex => 
-        state.activeSubject === 'general' || 
-        ex.prueba.includes(state.activeSubject.toUpperCase())
-      );
-      
-      const selectedExercise = availableExercises[Math.floor(Math.random() * availableExercises.length)] || SAMPLE_EXERCISES[0];
-      
-      setState(prev => ({
-        ...prev,
-        currentExercise: selectedExercise,
-        selectedOption: null,
-        showFeedback: false,
-        isLoading: false,
-        activeTab: 'exercise'
-      }));
-
-      toast({
-        title: "Ejercicio generado",
-        description: `Nuevo ejercicio de ${selectedExercise.nodeName}`,
-      });
-    }, 1000);
-  }, [state.activeSubject]);
-
-  // Seleccionar opción en ejercicio
-  const handleOptionSelect = useCallback((option: number) => {
-    setState(prev => {
-      const isCorrect = prev.currentExercise && 
-        prev.currentExercise.options[option] === prev.currentExercise.correctAnswer;
-      
-      return {
-        ...prev,
-        selectedOption: option,
-        showFeedback: true,
-        totalCorrectAnswers: isCorrect ? prev.totalCorrectAnswers + 1 : prev.totalCorrectAnswers,
-        exercisesCompleted: prev.exercisesCompleted + 1
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: `He recibido tu mensaje: "${message}". ¿En qué más puedo ayudarte con LectoGuía?`,
+        timestamp: new Date()
       };
-    });
+      setMessages(prev => [...prev, assistantMessage]);
+      setIsTyping(false);
+    }, 1500);
   }, []);
 
-  // Cambiar materia activa
   const handleSubjectChange = useCallback((subject: string) => {
-    setState(prev => ({ ...prev, activeSubject: subject }));
+    setActiveSubject(subject);
+  }, []);
+
+  const handleOptionSelect = useCallback((option: number) => {
+    setSelectedOption(option);
+    setShowFeedback(true);
     
-    const subjectMessages = {
-      'general': 'Ahora estamos en modo general. Puedo ayudarte con cualquier materia PAES.',
-      'matematicas': 'Cambiamos a matemática. ¿Qué tema quieres practicar?',
-      'ciencias': 'Ahora en ciencias. ¿Biología, química o física?',
-      'historia': 'En historia podemos repasar desde la colonia hasta el siglo XX.',
-      'lectura': 'En comprensión lectora trabajaremos textos y estrategias de análisis.'
-    };
+    // Simular evaluación
+    const isCorrect = option === 0; // Primera opción es correcta para demo
+    if (isCorrect) {
+      updateUserProgress({
+        completedExercises: userProgress.completedExercises + 1,
+        experience: userProgress.experience + 10
+      });
+    }
+  }, [userProgress, updateUserProgress]);
 
-    const message: ChatMessage = {
-      id: `system-${Date.now()}`,
-      type: 'ai',
-      content: subjectMessages[subject as keyof typeof subjectMessages] || subjectMessages.general,
-      timestamp: new Date()
-    };
+  const handleNewExercise = useCallback(() => {
+    setIsLoading(true);
+    setSelectedOption(null);
+    setShowFeedback(false);
+    
+    // Simular generación de ejercicio
+    setTimeout(() => {
+      const newExercise = {
+        id: `exercise-${Date.now()}`,
+        question: `Ejercicio de ${activeSubject}`,
+        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+        correctAnswer: 0,
+        explanation: 'Explicación del ejercicio'
+      };
+      setCurrentExercise(newExercise);
+      setIsLoading(false);
+    }, 1000);
+  }, [activeSubject]);
 
-    setState(prev => ({
-      ...prev,
-      messages: [...prev.messages, message]
-    }));
-  }, []);
+  const generateExercise = useCallback(async () => {
+    return handleNewExercise();
+  }, [handleNewExercise]);
 
-  // Cambiar pestaña activa
-  const setActiveTab = useCallback((tab: 'chat' | 'exercise' | 'progress') => {
-    setState(prev => ({ ...prev, activeTab: tab }));
-  }, []);
-
-  // Stats mejorados para el dashboard
-  const getStats = useCallback(() => {
-    const totalMessages = state.messages.filter(m => m.type === 'user').length;
-    const averageScore = state.exercisesCompleted > 0 
-      ? Math.round((state.totalCorrectAnswers / state.exercisesCompleted) * 100)
-      : 0;
-
+  const getStats = useCallback((): ExerciseStats => {
     return {
-      totalMessages,
-      exercisesCompleted: state.exercisesCompleted,
-      currentSubject: state.activeSubject,
-      isConnected: state.isConnected,
-      lastSync: state.lastSync,
-      averageScore,
-      streak: state.streakDays
+      exercisesCompleted: userProgress.completedExercises,
+      averageScore: Math.round((userProgress.overallScore / Math.max(userProgress.completedExercises, 1)) * 100),
+      streak: userProgress.streak
     };
-  }, [state]);
+  }, [userProgress]);
+
+  // Alias para chatHistory
+  const chatHistory = messages;
 
   return {
-    // Estado
-    ...state,
-    
-    // Acciones de chat
-    handleSendMessage,
-    
-    // Acciones de ejercicios
-    handleNewExercise,
-    handleOptionSelect,
-    
-    // Navegación
+    activeTab,
     setActiveTab,
+    messages,
+    chatHistory, // Añadir alias para compatibilidad
+    isTyping,
+    handleSendMessage,
+    activeSubject,
     handleSubjectChange,
-    
-    // Utilidades
-    getStats,
-    
-    // Estado de conexión simplificado
-    connectionStatus: state.isConnected ? 'connected' : 'disconnected',
-    serviceStatus: 'available'
+    currentExercise,
+    selectedOption,
+    showFeedback,
+    handleOptionSelect,
+    handleNewExercise,
+    generateExercise, // Añadir método generateExercise
+    isLoading,
+    getStats
   };
 };
