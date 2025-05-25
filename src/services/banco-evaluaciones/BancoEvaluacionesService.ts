@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -18,13 +17,16 @@ export interface PreguntaBanco {
   genero_textual?: string;
   autor_texto?: string;
   extension_palabras?: number;
+  nivel_complejidad_lexica?: 'basico' | 'intermedio' | 'avanzado';
   
   // Matemáticas/Ciencias
   imagen_principal_url?: string;
+  imagen_secundaria_url?: string;
   datos_tabla?: any;
   formulas_relevantes?: string[];
   unidades_trabajo?: string;
   tipo_grafico?: string;
+  variables_involucradas?: string[];
   
   // Historia
   documento_fuente?: string;
@@ -168,11 +170,14 @@ export class BancoEvaluacionesService {
         genero_textual,
         autor_texto,
         extension_palabras,
+        nivel_complejidad_lexica,
         imagen_principal_url,
+        imagen_secundaria_url,
         datos_tabla,
         formulas_relevantes,
         unidades_trabajo,
         tipo_grafico,
+        variables_involucradas,
         documento_fuente,
         tipo_documento,
         mapa_imagen_url,
@@ -210,6 +215,8 @@ export class BancoEvaluacionesService {
 
     return preguntas?.map(p => ({
       ...p,
+      nivel_dificultad: p.nivel_dificultad as 'basico' | 'intermedio' | 'avanzado',
+      nivel_complejidad_lexica: p.nivel_complejidad_lexica as 'basico' | 'intermedio' | 'avanzado' | undefined,
       alternativas: p.alternativas_respuesta || [],
       explicacion: p.explicaciones_pregunta?.[0]
     })) || [];
@@ -459,6 +466,7 @@ export class BancoEvaluacionesService {
 
     return data?.map(p => ({
       ...p,
+      nivel_dificultad: p.nivel_dificultad as 'basico' | 'intermedio' | 'avanzado',
       alternativas: p.alternativas_respuesta || []
     })) || [];
   }
