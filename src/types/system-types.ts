@@ -22,3 +22,11 @@ export type { TLearningCyclePhase } from './learning-cycle-types';
 
 // Export types from learning-node-types.ts
 export type { TLearningNode } from './learning-node-types';
+
+// Export types from learning-material-types.ts
+export type { 
+  MaterialType, 
+  MaterialGenerationConfig, 
+  GeneratedMaterial, 
+  PhaseConfig 
+} from '../components/learning-material-generator/types/learning-material-types';

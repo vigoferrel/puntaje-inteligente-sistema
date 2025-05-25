@@ -54,7 +54,7 @@ export const LearningCycleOrchestrator: React.FC<LearningCycleOrchestratorProps>
   const loadInitialData = async () => {
     try {
       await Promise.all([
-        loadPhaseProgress(),
+        loadPhaseProgress(selectedSubject), // Pasar selectedSubject como parámetro
         refreshPlans(),
         generateLearningInsights()
       ]);
