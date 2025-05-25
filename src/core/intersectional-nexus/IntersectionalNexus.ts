@@ -1,3 +1,4 @@
+
 /**
  * NEXUS INTERSECCIONAL DESINFECTADO - Sistema Nervioso Digital v3.0
  * Arquitectura quirúrgica sin bucles infinitos y con batching optimizado
@@ -7,14 +8,14 @@ import React from 'react';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { universalHub } from '@/core/universal-hub/UniversalDataHub';
-import { EmergencyCircuitBreaker } from '@/utils/circuit-breaker';
+import { CardiovascularSystem } from '@/core/system-vitals/CardiovascularSystem';
 
-// Circuit Breaker Global Desinfectado
-const globalCircuitBreaker = new EmergencyCircuitBreaker({
-  maxSignalsPerSecond: 5,  // Más permisivo
-  cooldownPeriod: 1500,    // Más rápido
-  emergencyThreshold: 8,   // Más tolerante
-  autoRecoveryTime: 5000   // Recovery más rápido
+// Sistema Cardiovascular Global Desinfectado
+const globalHeartSystem = new CardiovascularSystem({
+  maxBeatsPerSecond: 5,  // Más permisivo
+  restingPeriod: 1500,    // Más rápido
+  recoveryTime: 5000,   // Recovery más rápido
+  emergencyThreshold: 8   // Más tolerante
 });
 
 // Tipos neurológicos del sistema
@@ -143,7 +144,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
 
     // Registro neurológico ultra-controlado y silencioso
     registerModule: (module: ModuleIdentity) => {
-      if (!globalCircuitBreaker.canProcess()) {
+      if (!globalHeartSystem.canPump()) {
         return;
       }
 
@@ -151,7 +152,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
         const newModules = new Map(state.active_modules);
         newModules.set(module.id, module);
         
-        globalCircuitBreaker.recordSignal();
+        globalHeartSystem.pump();
         
         return {
           active_modules: newModules,
@@ -162,7 +163,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
 
     // Broadcasting con control de emergencia y batching optimizado
     broadcastSignal: (signal) => {
-      if (!globalCircuitBreaker.canProcess()) {
+      if (!globalHeartSystem.canPump()) {
         return;
       }
 
@@ -174,7 +175,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
 
       // Agregar a queue para batching con delay más largo
       signalQueue.push(fullSignal);
-      globalCircuitBreaker.recordSignal();
+      globalHeartSystem.pump();
 
       // Procesar batch después de un delay más largo para reducir frecuencia
       if (batchTimeout) {
@@ -199,7 +200,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
 
     // Síntesis con control de frecuencia ultra-agresivo
     synthesizeInsights: async () => {
-      if (!globalCircuitBreaker.canProcess()) {
+      if (!globalHeartSystem.canPump()) {
         return;
       }
 
@@ -245,7 +246,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
         }
       });
 
-      globalCircuitBreaker.recordSignal();
+      globalHeartSystem.pump();
     },
 
     // Adaptación comportamental minimalista
@@ -279,7 +280,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
       
       modules.forEach(module => {
         // Signal minimalista sin payload complejo
-        if (globalCircuitBreaker.canProcess()) {
+        if (globalHeartSystem.canPump()) {
           setTimeout(() => {
             get().broadcastSignal({
               origin: { 
@@ -305,10 +306,15 @@ export const useIntersectionalNexus = create<IntersectionalState & {
     // Sistema inmunológico ultra-simplificado
     detectAnomalies: () => {
       const state = get();
+      const heartHealth = globalHeartSystem.getHealth();
       const anomalies: string[] = [];
 
       if (state.global_coherence < 50) { // Umbral más permisivo
         anomalies.push(`Coherencia global: ${state.global_coherence}%`);
+      }
+
+      if (heartHealth.circulation < 60) { // Umbral más permisivo
+        anomalies.push(`Circulación cardiovascular: ${heartHealth.circulation}%`);
       }
 
       if (state.system_health.neural_efficiency < 60) { // Umbral más permisivo
@@ -324,6 +330,12 @@ export const useIntersectionalNexus = create<IntersectionalState & {
       
       if (anomalies.length === 0) {
         return;
+      }
+
+      // Reset cardiovascular si es necesario
+      const heartHealth = globalHeartSystem.getHealth();
+      if (heartHealth.bloodPressure === 'emergency') {
+        globalHeartSystem.emergencyReset();
       }
 
       set(state => ({
@@ -366,7 +378,7 @@ export const useIntersectionalNexus = create<IntersectionalState & {
 
     // Sistema de emergencia quirúrgico
     emergencyReset: () => {
-      globalCircuitBreaker.forceRecovery();
+      globalHeartSystem.emergencyReset();
       
       // Limpiar queue de señales
       signalQueue = [];
@@ -388,11 +400,11 @@ export const useIntersectionalNexus = create<IntersectionalState & {
         }
       });
       
-      console.log('🚨 EMERGENCY RESET: Sistema neurológico reiniciado quirúrgicamente');
+      console.log('🚨 EMERGENCY RESET: Sistema neurológico cardiovascular reiniciado');
     },
 
     getSystemStatus: () => ({
-      circuitBreakerState: globalCircuitBreaker.getState(),
+      cardiovascularState: globalHeartSystem.getHealth(),
       activeModules: get().active_modules.size,
       globalCoherence: get().global_coherence,
       pathways: get().neural_pathways.size,
