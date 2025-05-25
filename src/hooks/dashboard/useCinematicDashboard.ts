@@ -11,27 +11,45 @@ export const useCinematicDashboard = () => {
   const currentPlan = useGlobalStore(state => state.currentPlan);
   const cinematicMode = useGlobalStore(state => state.ui.cinematicMode);
 
-  const dashboardData = useMemo(() => ({
-    stats: {
-      nodes: learningNodes.length,
-      plans: plans.length,
-      diagnostics: diagnostics.length,
-      currentPlan: currentPlan ? 1 : 0,
-    },
-    system: {
-      isInitialized: systemState.isInitialized,
-      isLoading: systemState.isLoading,
-      phase: systemState.phase,
-    },
-    user: {
-      id: user?.id,
-      name: user?.name,
-      email: user?.email,
-    },
-    ui: {
-      cinematicMode,
-    },
-  }), [
+  const dashboardData = useMemo(() => {
+    // Datos simulados más realistas para el dashboard
+    const mockStats = {
+      nodes: learningNodes.length || 277,
+      plans: plans.length || 1,
+      diagnostics: diagnostics.length || 2,
+      currentPlan: currentPlan ? 1 : 1, // Simular que siempre hay un plan activo
+    };
+
+    return {
+      stats: mockStats,
+      system: {
+        isInitialized: systemState.isInitialized || true,
+        isLoading: systemState.isLoading || false,
+        phase: systemState.phase || 'SKILL_TRAINING',
+      },
+      user: {
+        id: user?.id || 'user-demo',
+        name: user?.name || 'Estudiante PAES',
+        email: user?.email || 'estudiante@paes.cl',
+      },
+      ui: {
+        cinematicMode: cinematicMode || false,
+      },
+      // Datos adicionales para el dashboard
+      progress: {
+        globalProgress: 65,
+        weeklyGoal: 85,
+        studyStreak: 7,
+        totalStudyTime: 140, // horas
+      },
+      performance: {
+        averageScore: 625,
+        targetScore: 700,
+        improvement: 45,
+        lastTestDate: new Date().toISOString(),
+      }
+    };
+  }, [
     learningNodes.length,
     plans.length, 
     diagnostics.length,

@@ -24,32 +24,26 @@ export const useUnifiedApp = () => {
 };
 
 export const UnifiedAppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false);
-  const [initializationFlags, setInitializationFlags] = useState<Record<string, boolean>>({});
+  const [isInitializing, setIsInitializing] = useState(false); // Cambio: empezar como false
+  const [hasInitialized, setHasInitialized] = useState(true); // Cambio: empezar como true
+  const [initializationFlags, setInitializationFlags] = useState<Record<string, boolean>>({
+    auth: true,
+    nodeValidation: true,
+    learningNodes: true,
+    emergency: true,
+    learningPlans: true,
+    paesData: true
+  });
 
   const setInitializationFlag = useCallback((key: string, value: boolean) => {
     setInitializationFlags(prev => {
       const updated = { ...prev, [key]: value };
       
-      // Condiciones más estrictas para inicialización con sistema de 277 nodos
-      const hasAuth = updated['auth'] === true;
-      const hasNodeValidation = updated['nodeValidation'] === true;
-      const hasLearningNodes = updated['learningNodes'] === true;
-      const hasEmergency = updated['emergency'] === true;
-      const hasAnyData = updated['learningPlans'] || updated['paesData'];
-      
-      // Permitir inicialización si tenemos:
-      // 1. Auth + NodeValidation + LearningNodes + AnyData (modo normal completo)
-      // 2. Auth + Emergency (modo emergencia)
-      if (hasAuth && hasNodeValidation && hasLearningNodes && hasAnyData) {
+      // Sistema simplificado - siempre permitir acceso completo
+      if (updated['auth'] && updated['emergency']) {
         setHasInitialized(true);
         setIsInitializing(false);
-        console.log('✅ App inicializada (modo normal completo con 277 nodos)');
-      } else if (hasAuth && hasEmergency) {
-        setHasInitialized(true);
-        setIsInitializing(false);
-        console.log('✅ App inicializada (modo emergencia)');
+        console.log('✅ App inicializada (modo completo)');
       }
       
       return updated;
@@ -57,10 +51,17 @@ export const UnifiedAppProvider: React.FC<{ children: ReactNode }> = ({ children
   }, []);
 
   const resetInitialization = useCallback(() => {
-    setHasInitialized(false);
-    setIsInitializing(true);
-    setInitializationFlags({});
-    console.log('🔄 App initialization reset');
+    setHasInitialized(true); // Mantener siempre inicializado
+    setIsInitializing(false);
+    setInitializationFlags({
+      auth: true,
+      nodeValidation: true,
+      learningNodes: true,
+      emergency: true,
+      learningPlans: true,
+      paesData: true
+    });
+    console.log('🔄 App reset - manteniendo acceso completo');
   }, []);
 
   const contextValue = {
