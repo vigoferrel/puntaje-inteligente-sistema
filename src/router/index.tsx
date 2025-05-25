@@ -1,10 +1,9 @@
 
 import { createBrowserRouter } from 'react-router-dom';
-import NewIndex from '@/pages/NewIndex';
+import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import PAESExerciseGenerator from '@/pages/PAESExerciseGenerator';
 import SubjectDetail from '@/pages/SubjectDetail';
-import Dashboard from '@/pages/Dashboard';
 import PAESDashboard from '@/pages/PAESDashboard';
 import LectoGuia from '@/pages/LectoGuia';
 import Diagnostico from '@/pages/Diagnostico';
@@ -13,11 +12,7 @@ import Plan from '@/pages/Plan';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <NewIndex />,
-  },
-  {
-    path: '/dashboard',
-    element: <Dashboard />,
+    element: <Index />,
   },
   {
     path: '/paes-dashboard',

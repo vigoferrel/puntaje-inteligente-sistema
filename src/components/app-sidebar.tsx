@@ -31,15 +31,9 @@ import {
 
 const menuItems = [
   {
-    title: "Dashboard Moderno",
+    title: "Dashboard",
     url: "/",
-    icon: Sparkles,
-    isNew: true
-  },
-  {
-    title: "Dashboard Clásico",
-    url: "/dashboard",
-    icon: BarChart3,
+    icon: Home,
   },
   {
     title: "PAES Dashboard",
@@ -146,11 +140,6 @@ export function AppSidebar() {
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                      {item.isNew && (
-                        <Badge className="ml-auto text-xs bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none">
-                          NUEVO
-                        </Badge>
-                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
