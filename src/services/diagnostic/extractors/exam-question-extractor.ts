@@ -52,14 +52,15 @@ export class ExamQuestionExtractor {
   }
 
   private mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
-    return {
+    // Simplified mapping to avoid infinite recursion
+    const question: DiagnosticQuestion = {
       id: exercise.id || `extracted-${Date.now()}-${Math.random()}`,
       question: exercise.question || exercise.enunciado || 'Pregunta no disponible',
       options: this.extractOptions(exercise),
       correctAnswer: this.extractCorrectAnswer(exercise),
       explanation: exercise.explanation || exercise.explicacion || 'Explicación no disponible',
       difficulty: mapDifficultyToSpanish('INTERMEDIO'),
-      skill: this.mapSkillToEnumSafe(exercise.skill || exercise.competencia_especifica),
+      skill: this.getSkillString(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {
         source: 'oficial_extracted',
@@ -68,6 +69,7 @@ export class ExamQuestionExtractor {
         year: exercise.year
       }
     };
+    return question;
   }
 
   private extractOptions(exercise: any): string[] {
@@ -118,7 +120,7 @@ export class ExamQuestionExtractor {
     return 'Opción A';
   }
 
-  private mapSkillToEnumSafe(skill: any): TPAESHabilidad {
+  private getSkillString(skill: any): string {
     if (!skill) return 'INTERPRET_RELATE';
 
     const skillString = String(skill).toLowerCase();
@@ -142,7 +144,7 @@ export class ExamQuestionExtractor {
       correctAnswer: 'Opción A',
       explanation: 'Pregunta de demostración extraída del sistema.',
       difficulty: 'INTERMEDIO' as const,
-      skill: 'INTERPRET_RELATE' as TPAESHabilidad,
+      skill: 'INTERPRET_RELATE',
       prueba,
       metadata: {
         source: 'fallback_extractor',

@@ -117,14 +117,15 @@ export class ComprehensiveDiagnosticGenerator {
   }
 
   private mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
-    return {
+    // Simplified mapping to avoid infinite recursion
+    const question: DiagnosticQuestion = {
       id: exercise.id || `q-${Date.now()}-${Math.random()}`,
       question: exercise.question || 'Pregunta no disponible',
       options: this.parseOptions(exercise.options),
       correctAnswer: exercise.correct_answer || 'Opción A',
       explanation: exercise.explanation || '',
       difficulty: mapDifficultyToSpanish(exercise.difficulty || 'intermediate'),
-      skill: this.mapSkillSafe(exercise.skill || exercise.competencia_especifica),
+      skill: this.getSkillString(exercise.skill || exercise.competencia_especifica),
       prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
       metadata: {
         source: exercise.metadata?.source || 'database',
@@ -133,6 +134,7 @@ export class ComprehensiveDiagnosticGenerator {
         year: exercise.year
       }
     };
+    return question;
   }
 
   private parseOptions(options: any): string[] {
@@ -150,7 +152,7 @@ export class ComprehensiveDiagnosticGenerator {
     return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
   }
 
-  private mapSkillSafe(skill: any): TPAESHabilidad {
+  private getSkillString(skill: any): string {
     if (!skill) return 'INTERPRET_RELATE';
     
     const skillStr = String(skill).toLowerCase();
@@ -238,8 +240,8 @@ export class ComprehensiveDiagnosticGenerator {
     return testIds[prueba] || 1;
   }
 
-  private getDefaultSkillForPrueba(prueba: TPAESPrueba): TPAESHabilidad {
-    const skills: Record<TPAESPrueba, TPAESHabilidad> = {
+  private getDefaultSkillForPrueba(prueba: TPAESPrueba): string {
+    const skills: Record<TPAESPrueba, string> = {
       'COMPETENCIA_LECTORA': 'INTERPRET_RELATE',
       'MATEMATICA_1': 'SOLVE_PROBLEMS',
       'MATEMATICA_2': 'REPRESENT',
