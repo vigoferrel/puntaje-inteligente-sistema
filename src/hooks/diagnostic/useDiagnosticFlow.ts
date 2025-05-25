@@ -1,290 +1,154 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { useDiagnosticSystem } from './useDiagnosticSystem';
-import { DiagnosticTest, DiagnosticResult } from '@/types/diagnostic';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
-import { submitDiagnosticResult } from '@/services/diagnostic/results/submit-result';
-import { fetchDiagnosticQuestions } from '@/services/diagnostic/question/fetch-questions';
+import { useState, useCallback } from 'react';
+import { DiagnosticTest, DiagnosticQuestion, DiagnosticResult } from '@/types/diagnostic';
+import { useDiagnosticTests } from './use-diagnostic-tests';
+import { useSubmitResult } from './results/use-submit-result';
+import { calculateDiagnosticResults } from '@/utils/diagnostic-helpers';
 
 interface DiagnosticFlowState {
-  selectedTestId: string | null;
   currentTest: DiagnosticTest | null;
-  isActive: boolean;
   currentQuestionIndex: number;
   answers: Record<string, string>;
-  timeStarted: Date | null;
-  showHint: boolean;
-  results: DiagnosticResult | null;
+  isCompleted: boolean;
+  result: DiagnosticResult | null;
 }
 
-export const useDiagnosticFlow = () => {
-  const { user } = useAuth();
-  const diagnosticSystem = useDiagnosticSystem();
-  
-  const [state, setState] = useState<DiagnosticFlowState>({
-    selectedTestId: null,
+export const useDiagnosticFlow = (userId?: string) => {
+  const [flowState, setFlowState] = useState<DiagnosticFlowState>({
     currentTest: null,
-    isActive: false,
     currentQuestionIndex: 0,
     answers: {},
-    timeStarted: null,
-    showHint: false,
-    results: null
+    isCompleted: false,
+    result: null
   });
 
-  // Cargar preguntas para un test
-  const loadTestQuestions = useCallback(async (test: DiagnosticTest): Promise<DiagnosticTest> => {
-    try {
-      console.log('📋 Cargando preguntas para test:', test.id);
-      
-      // Intentar cargar preguntas reales
-      const questions = await fetchDiagnosticQuestions(test.id, test.testId);
-      
-      if (questions.length > 0) {
-        console.log(`✅ Cargadas ${questions.length} preguntas reales`);
-        return { ...test, questions };
-      }
-      
-      // Fallback: crear preguntas de demostración
-      console.log('⚠️ Usando preguntas de demostración');
-      const demoQuestions = Array.from({ length: 5 }, (_, i) => ({
-        id: `demo-${test.id}-${i + 1}`,
-        question: `Pregunta de demostración ${i + 1} para ${test.title}`,
-        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
-        correctAnswer: 'Opción A',
-        skill: 'INTERPRET_RELATE' as any,
-        prueba: 'COMPETENCIA_LECTORA' as any,
-        explanation: `Explicación para la pregunta ${i + 1}`,
-        difficulty: 'intermediate' as any
-      }));
-      
-      return { ...test, questions: demoQuestions };
-    } catch (error) {
-      console.error('❌ Error cargando preguntas:', error);
-      
-      // Fallback de emergencia
-      const fallbackQuestions = Array.from({ length: 3 }, (_, i) => ({
-        id: `fallback-${test.id}-${i + 1}`,
-        question: `Pregunta de fallback ${i + 1}`,
-        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
-        correctAnswer: 'Opción A',
-        skill: 'INTERPRET_RELATE' as any,
-        prueba: 'COMPETENCIA_LECTORA' as any,
-        explanation: 'Explicación de fallback',
-        difficulty: 'basic' as any
-      }));
-      
-      return { ...test, questions: fallbackQuestions };
-    }
-  }, []);
+  const { tests, loading: testsLoading, fetchTests } = useDiagnosticTests();
+  const { submit, submitting } = useSubmitResult();
 
-  // Seleccionar test
-  const selectTest = useCallback(async (testId: string) => {
-    const test = diagnosticSystem.diagnosticTests.find(t => t.id === testId);
-    if (!test) {
-      console.error('❌ Test no encontrado:', testId);
-      return false;
-    }
+  const startTest = useCallback((testId: string) => {
+    const test = tests.find(t => t.id === testId);
+    if (!test) return false;
 
-    console.log('🎯 Seleccionando test:', test.title);
-    
-    try {
-      const testWithQuestions = await loadTestQuestions(test);
-      
-      setState(prev => ({
-        ...prev,
-        selectedTestId: testId,
-        currentTest: testWithQuestions
-      }));
-      
-      toast({
-        title: "Test seleccionado",
-        description: `${test.title} - ${testWithQuestions.questions.length} preguntas`,
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Error seleccionando test:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cargar el test seleccionado",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }, [diagnosticSystem.diagnosticTests, loadTestQuestions]);
-
-  // Iniciar diagnóstico
-  const startDiagnostic = useCallback(() => {
-    if (!state.currentTest) {
-      console.error('❌ No hay test seleccionado');
-      return false;
-    }
-
-    if (state.currentTest.questions.length === 0) {
-      console.error('❌ Test sin preguntas');
-      toast({
-        title: "Error",
-        description: "El test seleccionado no tiene preguntas disponibles",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    console.log('▶️ Iniciando diagnóstico:', state.currentTest.title);
-
-    setState(prev => ({
-      ...prev,
-      isActive: true,
+    setFlowState({
+      currentTest: test,
       currentQuestionIndex: 0,
       answers: {},
-      timeStarted: new Date(),
-      showHint: false,
-      results: null
-    }));
-
-    toast({
-      title: "Diagnóstico iniciado",
-      description: `Comenzando ${state.currentTest.title} - ${state.currentTest.questions.length} preguntas`,
+      isCompleted: false,
+      result: null
     });
 
     return true;
-  }, [state.currentTest]);
+  }, [tests]);
 
-  // Responder pregunta
   const answerQuestion = useCallback((questionId: string, answer: string) => {
-    console.log('📝 Respuesta registrada:', questionId, answer);
-    setState(prev => ({
+    setFlowState(prev => ({
       ...prev,
-      answers: { ...prev.answers, [questionId]: answer },
-      showHint: false
+      answers: {
+        ...prev.answers,
+        [questionId]: answer
+      }
     }));
   }, []);
 
-  // Navegar preguntas
-  const navigateQuestion = useCallback((direction: 'next' | 'prev' | number) => {
-    setState(prev => {
-      const maxIndex = (prev.currentTest?.questions.length || 1) - 1;
-      let newIndex = prev.currentQuestionIndex;
-
-      if (typeof direction === 'number') {
-        newIndex = Math.max(0, Math.min(direction, maxIndex));
-      } else if (direction === 'next') {
-        newIndex = Math.min(newIndex + 1, maxIndex);
-      } else if (direction === 'prev') {
-        newIndex = Math.max(newIndex - 1, 0);
-      }
-
-      console.log('🔄 Navegando a pregunta:', newIndex + 1);
-      return { ...prev, currentQuestionIndex: newIndex, showHint: false };
+  const nextQuestion = useCallback(() => {
+    setFlowState(prev => {
+      if (!prev.currentTest) return prev;
+      
+      const nextIndex = prev.currentQuestionIndex + 1;
+      const isCompleted = nextIndex >= prev.currentTest.questions.length;
+      
+      return {
+        ...prev,
+        currentQuestionIndex: nextIndex,
+        isCompleted
+      };
     });
   }, []);
 
-  // Finalizar diagnóstico
-  const finishDiagnostic = useCallback(async (): Promise<boolean> => {
-    if (!state.currentTest || !state.timeStarted || !user?.id) {
-      console.error('❌ Datos insuficientes para finalizar');
-      return false;
-    }
+  const previousQuestion = useCallback(() => {
+    setFlowState(prev => ({
+      ...prev,
+      currentQuestionIndex: Math.max(0, prev.currentQuestionIndex - 1)
+    }));
+  }, []);
+
+  const submitTest = useCallback(async () => {
+    if (!flowState.currentTest || !userId) return null;
 
     try {
-      console.log('🏁 Finalizando diagnóstico...');
-      
-      const timeSpentMinutes = Math.round(
-        (Date.now() - state.timeStarted.getTime()) / 60000
-      );
-
-      console.log('📊 Enviando resultados:', {
-        test: state.currentTest.id,
-        answers: Object.keys(state.answers).length,
-        timeSpent: timeSpentMinutes
-      });
-
-      const result = await submitDiagnosticResult(
-        user.id,
-        state.currentTest.id,
-        state.answers,
-        timeSpentMinutes
+      const result = await submit(
+        userId,
+        flowState.currentTest.id,
+        flowState.answers,
+        flowState.currentTest.questions
       );
 
       if (result) {
-        setState(prev => ({
+        setFlowState(prev => ({
           ...prev,
-          isActive: false,
-          results: result
+          result,
+          isCompleted: true
         }));
-
-        // Actualizar sistema
-        await diagnosticSystem.refreshSystem();
-
-        toast({
-          title: "Diagnóstico completado",
-          description: "Resultados guardados exitosamente",
-        });
-
-        return true;
       }
 
-      return false;
+      return result;
     } catch (error) {
-      console.error('❌ Error finalizando diagnóstico:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo completar el diagnóstico",
-        variant: "destructive"
-      });
-      return false;
+      console.error('Error submitting test:', error);
+      return null;
     }
-  }, [state.currentTest, state.timeStarted, state.answers, user?.id, diagnosticSystem]);
+  }, [flowState, userId, submit]);
 
-  // Toggle hint
-  const toggleHint = useCallback(() => {
-    setState(prev => ({ ...prev, showHint: !prev.showHint }));
-  }, []);
-
-  // Reset completo
   const resetFlow = useCallback(() => {
-    console.log('🔄 Reset completo del flujo');
-    setState({
-      selectedTestId: null,
+    setFlowState({
       currentTest: null,
-      isActive: false,
       currentQuestionIndex: 0,
       answers: {},
-      timeStarted: null,
-      showHint: false,
-      results: null
+      isCompleted: false,
+      result: null
     });
   }, []);
 
-  // Estado derivado
-  const currentQuestion = state.currentTest?.questions[state.currentQuestionIndex] || null;
-  const isLastQuestion = state.currentQuestionIndex === (state.currentTest?.questions.length || 0) - 1;
-  const canContinue = currentQuestion ? !!state.answers[currentQuestion.id] : false;
-  const progress = state.currentTest ? 
-    ((state.currentQuestionIndex + 1) / state.currentTest.questions.length) * 100 : 0;
+  const getCurrentQuestion = useCallback((): DiagnosticQuestion | null => {
+    if (!flowState.currentTest || flowState.currentQuestionIndex >= flowState.currentTest.questions.length) {
+      return null;
+    }
+    return flowState.currentTest.questions[flowState.currentQuestionIndex];
+  }, [flowState]);
+
+  const getProgress = useCallback(() => {
+    if (!flowState.currentTest) return { current: 0, total: 0, percentage: 0 };
+    
+    const current = flowState.currentQuestionIndex;
+    const total = flowState.currentTest.questions.length;
+    const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+    
+    return { current, total, percentage };
+  }, [flowState]);
 
   return {
-    // Estado
-    ...state,
-    currentQuestion,
-    isLastQuestion,
-    canContinue,
-    progress,
-    
-    // Sistema diagnóstico
-    availableTests: diagnosticSystem.diagnosticTests,
-    systemReady: diagnosticSystem.isSystemReady,
-    isLoading: diagnosticSystem.isLoading,
-    
-    // Acciones
-    selectTest,
-    startDiagnostic,
+    // State
+    flowState,
+    tests,
+    loading: testsLoading || submitting,
+
+    // Actions
+    startTest,
     answerQuestion,
-    navigateQuestion,
-    finishDiagnostic,
-    toggleHint,
-    resetFlow
+    nextQuestion,
+    previousQuestion,
+    submitTest,
+    resetFlow,
+    fetchTests,
+
+    // Helpers
+    getCurrentQuestion,
+    getProgress,
+
+    // Computed
+    canGoNext: flowState.currentTest ? 
+      flowState.currentQuestionIndex < flowState.currentTest.questions.length - 1 : false,
+    canGoPrevious: flowState.currentQuestionIndex > 0,
+    canSubmit: flowState.currentTest ? 
+      Object.keys(flowState.answers).length === flowState.currentTest.questions.length : false
   };
 };

@@ -1,130 +1,66 @@
 
-import { useCallback } from "react";
-import { DiagnosticTest, DiagnosticResult } from "@/types/diagnostic";
-import { useDiagnostic } from "@/hooks/use-diagnostic";
-import { toast } from "@/components/ui/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { useDemonstrationMode } from "../use-demonstration-mode";
+import { useState } from 'react';
+import { DiagnosticResult } from '@/types/diagnostic';
+import { TPAESHabilidad } from '@/types/system-types';
+import { submitDiagnosticResult } from '@/services/diagnostic/results/submit-result';
+import { calculateDiagnosticResults } from '@/utils/diagnostic-helpers';
 
-interface SubmitResultProps {
-  currentTest: DiagnosticTest | null;
-  answers: Record<string, string>;
-  timeStarted: Date | null;
-}
+export const useSubmitResult = () => {
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export const useSubmitResult = ({
-  currentTest,
-  answers,
-  timeStarted
-}: SubmitResultProps) => {
-  const { profile } = useAuth();
-  const { submitDiagnosticResult } = useDiagnostic();
-  const { demoActivated, getDemoDiagnosticResult } = useDemonstrationMode();
-  
-  const handleFinishTest = useCallback(async () => {
-    if (!currentTest) {
-      toast({
-        title: "Error",
-        description: "No hay un diagnóstico activo para finalizar",
-        variant: "destructive"
-      });
-      return null;
-    }
-    
-    if (!timeStarted) {
-      toast({
-        title: "Error",
-        description: "No se pudo determinar el tiempo de inicio del diagnóstico",
-        variant: "destructive"
-      });
-      return null;
-    }
-    
-    if (Object.keys(answers).length === 0) {
-      toast({
-        title: "Error",
-        description: "No has contestado ninguna pregunta",
-        variant: "destructive"
-      });
-      return null;
-    }
-    
+  const submit = async (
+    userId: string,
+    diagnosticId: string,
+    answers: Record<string, string>,
+    questions: any[]
+  ): Promise<DiagnosticResult | null> => {
     try {
-      // Calcular tiempo en minutos
-      const endTime = new Date();
-      const timeSpentMinutes = Math.round((endTime.getTime() - timeStarted.getTime()) / 60000);
+      setSubmitting(true);
+      setError(null);
+
+      // Calculate results from answers and questions
+      const calculatedResults = calculateDiagnosticResults(answers, questions);
       
-      // Si estamos en modo demostración o detectamos algún error, generar resultados locales
-      if (demoActivated) {
-        const result = getDemoDiagnosticResult();
-        
-        toast({
-          title: "Resultados generados",
-          description: "Se han generado resultados de demostración",
-        });
-        
-        return result;
-      } 
+      // Submit the calculated results
+      const result = await submitDiagnosticResult(userId, diagnosticId, calculatedResults);
       
-      // Solo intentamos guardar en la base de datos si NO estamos en modo demostración
-      if (!profile) {
-        toast({
-          title: "Error",
-          description: "Debes iniciar sesión para guardar resultados",
-          variant: "destructive"
-        });
-        
-        // Devolver resultados de demostración como fallback
-        return getDemoDiagnosticResult();
-      }
-      
-      try {
-        const result = await submitDiagnosticResult(
-          profile.id,
-          currentTest.id,
-          answers,
-          timeSpentMinutes
-        );
-        
-        if (result) {
-          toast({
-            title: "Diagnóstico completado",
-            description: "Tus resultados han sido guardados correctamente",
-          });
-          return result;
-        } else {
-          // Si submitDiagnosticResult falla, usar resultados de demostración
-          const demoResult = getDemoDiagnosticResult();
-          toast({
-            title: "Resultados generados",
-            description: "Se han generado resultados de demostración debido a un error",
-          });
-          return demoResult;
-        }
-      } catch (error) {
-        console.error("Error al enviar resultados:", error);
-        // Usar resultados de demostración como fallback
-        const demoResult = getDemoDiagnosticResult();
-        toast({
-          title: "Resultados de demostración",
-          description: "Se han generado resultados de demostración debido a un error de guardado",
-        });
-        return demoResult;
-      }
-    } catch (error) {
-      console.error("Error general al finalizar el diagnóstico:", error);
-      
-      // Si hay cualquier error, usar resultados de demostración
-      const demoResult = getDemoDiagnosticResult();
-      toast({
-        title: "Resultados de demostración",
-        description: "Se muestran resultados de ejemplo debido a un error",
-      });
-      return demoResult;
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error submitting result';
+      setError(errorMessage);
+      console.error('Error submitting diagnostic result:', err);
+      return null;
+    } finally {
+      setSubmitting(false);
     }
-  }, [currentTest, answers, timeStarted, profile, submitDiagnosticResult, demoActivated, getDemoDiagnosticResult]);
-  
+  };
+
+  const submitWithResults = async (
+    userId: string,
+    diagnosticId: string,
+    results: Record<TPAESHabilidad, number>
+  ): Promise<DiagnosticResult | null> => {
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      const result = await submitDiagnosticResult(userId, diagnosticId, results);
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error submitting result';
+      setError(errorMessage);
+      console.error('Error submitting diagnostic result:', err);
+      return null;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return {
-    handleFinishTest
+    submit,
+    submitWithResults,
+    submitting,
+    error
   };
 };

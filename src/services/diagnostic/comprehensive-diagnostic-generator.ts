@@ -1,146 +1,221 @@
 
-import { DiagnosticTest } from "@/types/diagnostic";
-import { TPAESPrueba } from "@/types/system-types";
-import { DiagnosticConfig } from "./base/diagnostic-base-service";
-import { ExamQuestionExtractor } from "./extractors/exam-question-extractor";
-import { NodeProgressValidator } from "./validators/node-progress-validator";
-import { SkillAssessmentEngine } from "./engines/skill-assessment-engine";
-import { AIContentGenerator } from "./generators/ai-content-generator";
-
-const REAL_EXAM_DIAGNOSTICS: DiagnosticConfig[] = [
-  {
-    examCode: 'PAES-2024-FORM-103',
-    title: 'Diagnóstico Comprensión Lectora PAES 2024',
-    description: 'Evaluación basada en preguntas oficiales PAES de Competencia Lectora',
-    testId: 1,
-    prueba: 'COMPETENCIA_LECTORA',
-    questionCount: 12
-  },
-  {
-    examCode: 'MATEMATICA_M1_2024_FORMA_123',
-    title: 'Diagnóstico Matemática M1 PAES 2024',
-    description: 'Evaluación oficial de Matemática M1 con preguntas representativas',
-    testId: 2,
-    prueba: 'MATEMATICA_1',
-    questionCount: 15
-  },
-  {
-    examCode: 'MATEMATICA_M2_2024_FORMA_456',
-    title: 'Diagnóstico Matemática M2 PAES 2024',
-    description: 'Evaluación avanzada de Matemática M2 basada en examen oficial',
-    testId: 3,
-    prueba: 'MATEMATICA_2',
-    questionCount: 15
-  },
-  {
-    examCode: 'CIENCIAS_2024_FORMA_789',
-    title: 'Diagnóstico Ciencias PAES 2024',
-    description: 'Evaluación integral de Ciencias con preguntas oficiales',
-    testId: 5,
-    prueba: 'CIENCIAS',
-    questionCount: 18
-  },
-  {
-    examCode: 'HISTORIA_2024_FORMA_123',
-    title: 'Diagnóstico Historia PAES 2024',
-    description: 'Evaluación de competencias históricas basada en PAES oficial',
-    testId: 4,
-    prueba: 'HISTORIA',
-    questionCount: 12
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
+import { DiagnosticTest, DiagnosticQuestion } from "@/types/diagnostic";
+import { TPAESHabilidad, TPAESPrueba } from "@/types/system-types";
+import { mapDifficultyToSpanish } from "@/utils/difficulty-mapper";
 
 export class ComprehensiveDiagnosticGenerator {
-  static async generateAllDiagnostics(userId?: string): Promise<DiagnosticTest[]> {
-    console.log('🔬 Generando diagnósticos integrales con IA y backend educativo...');
-    
-    const diagnostics: DiagnosticTest[] = [];
-    
-    for (const config of REAL_EXAM_DIAGNOSTICS) {
-      try {
-        const diagnostic = await this.generateComprehensiveDiagnostic(config, userId);
-        if (diagnostic) {
-          diagnostics.push(diagnostic);
-          console.log(`✅ Diagnóstico integral generado: ${diagnostic.title}`);
-        }
-      } catch (error) {
-        console.warn(`⚠️ Error generando diagnóstico ${config.examCode}:`, error);
-        const fallbackDiagnostic = this.createFallbackDiagnostic(config);
-        diagnostics.push(fallbackDiagnostic);
-      }
+  private static instance: ComprehensiveDiagnosticGenerator;
+
+  static getInstance(): ComprehensiveDiagnosticGenerator {
+    if (!ComprehensiveDiagnosticGenerator.instance) {
+      ComprehensiveDiagnosticGenerator.instance = new ComprehensiveDiagnosticGenerator();
     }
-    
-    return diagnostics;
+    return ComprehensiveDiagnosticGenerator.instance;
   }
 
-  private static async generateComprehensiveDiagnostic(
-    config: DiagnosticConfig, 
-    userId?: string
-  ): Promise<DiagnosticTest | null> {
+  async generateComprehensiveDiagnostic(
+    prueba: TPAESPrueba,
+    targetLevel: 'basic' | 'intermediate' | 'advanced' = 'intermediate',
+    questionCount: number = 20
+  ): Promise<DiagnosticTest> {
+    console.log(`🎯 Generando diagnóstico comprehensivo para ${prueba}`);
+
     try {
-      // 1. Extract official exam questions
-      const officialQuestions = await ExamQuestionExtractor.extractQuestions(config);
+      // Fetch questions from database
+      const questions = await this.fetchDatabaseQuestions(prueba, questionCount);
       
-      if (officialQuestions.length === 0) {
-        console.warn(`No official questions for ${config.examCode}`);
-        return null;
+      if (questions.length === 0) {
+        console.warn('⚠️ No se encontraron preguntas en BD, generando fallback');
+        return this.generateFallbackDiagnostic(prueba, targetLevel, questionCount);
       }
 
-      // 2. Map questions to learning nodes
-      const questionsWithNodes = await NodeProgressValidator.mapQuestionsToNodes(
-        officialQuestions, 
-        config.prueba
-      );
-
-      let finalQuestions = questionsWithNodes;
-
-      // 3. If user provided, enhance with personalized content
-      if (userId) {
-        const skillAssessments = await SkillAssessmentEngine.assessUserSkills(userId, config.prueba);
-        const weakSkills = skillAssessments
-          .filter(s => s.recommendedFocus === 'critical')
-          .map(s => s.skill);
-
-        if (weakSkills.length > 0) {
-          // Generate AI-powered adaptive questions
-          const adaptiveQuestions = await AIContentGenerator.generateAdaptiveQuestions(
-            weakSkills,
-            config.prueba,
-            3
-          );
-          
-          finalQuestions = [...questionsWithNodes, ...adaptiveQuestions];
-        }
-      }
-
-      return {
-        id: `comprehensive-${config.testId}`,
-        title: config.title,
-        description: `${config.description} (Integración completa con IA y nodos)`,
-        testId: config.testId,
-        questions: finalQuestions,
+      // Create comprehensive diagnostic
+      const diagnostic: DiagnosticTest = {
+        id: `comprehensive-${prueba.toLowerCase()}-${Date.now()}`,
+        title: `Diagnóstico Comprehensivo - ${this.getPruebaDisplayName(prueba)}`,
+        description: `Evaluación integral de todas las habilidades de ${this.getPruebaDisplayName(prueba)}`,
+        testId: this.getTestIdForPrueba(prueba),
+        questions: questions.slice(0, questionCount),
         isCompleted: false,
-        targetTier: 'tier1_critico',
-        questionsPerSkill: 3,
-        totalQuestions: finalQuestions.length
+        metadata: {
+          source: 'comprehensive_generator',
+          officialCount: questions.filter(q => q.metadata?.source === 'oficial').length,
+          aiCount: questions.filter(q => q.metadata?.source === 'ai_generated').length,
+          totalCostSavings: questions.length * 0.15, // Estimate
+          quality: 'high',
+        }
       };
+
+      console.log(`✅ Diagnóstico comprehensivo generado: ${questions.length} preguntas`);
+      return diagnostic;
+
     } catch (error) {
-      console.error(`Error generating comprehensive diagnostic for ${config.examCode}:`, error);
-      return null;
+      console.error('❌ Error generando diagnóstico comprehensivo:', error);
+      return this.generateFallbackDiagnostic(prueba, targetLevel, questionCount);
     }
   }
 
-  private static createFallbackDiagnostic(config: DiagnosticConfig): DiagnosticTest {
+  private async fetchDatabaseQuestions(
+    prueba: TPAESPrueba,
+    limit: number
+  ): Promise<DiagnosticQuestion[]> {
+    try {
+      const { data: exercises, error } = await supabase
+        .from('exercises')
+        .select('*')
+        .eq('prueba', prueba)
+        .limit(limit);
+
+      if (error || !exercises) {
+        console.warn('⚠️ Error fetching exercises:', error);
+        return [];
+      }
+
+      return exercises.map(exercise => this.mapExerciseToQuestion(exercise));
+    } catch (error) {
+      console.error('❌ Error in fetchDatabaseQuestions:', error);
+      return [];
+    }
+  }
+
+  private mapExerciseToQuestion(exercise: any): DiagnosticQuestion {
     return {
-      id: `fallback-${config.testId}`,
-      title: config.title,
-      description: `${config.description} (Modo fallback)`,
-      testId: config.testId,
-      questions: [],
-      isCompleted: false,
-      targetTier: 'tier1_critico',
-      questionsPerSkill: 2,
-      totalQuestions: 0
+      id: exercise.id || `q-${Date.now()}-${Math.random()}`,
+      question: exercise.question || 'Pregunta no disponible',
+      options: this.parseOptions(exercise.options),
+      correctAnswer: exercise.correct_answer || 'Opción A',
+      explanation: exercise.explanation || '',
+      difficulty: mapDifficultyToSpanish(exercise.difficulty || 'intermediate'),
+      skill: this.mapSkill(exercise.skill || exercise.competencia_especifica) as TPAESHabilidad,
+      prueba: exercise.prueba || 'COMPETENCIA_LECTORA',
+      metadata: {
+        source: exercise.metadata?.source || 'database',
+        originalId: exercise.id,
+        nodoCode: exercise.nodo_code
+      }
     };
   }
+
+  private parseOptions(options: any): string[] {
+    if (Array.isArray(options)) {
+      return options.map(String);
+    }
+    if (typeof options === 'string') {
+      try {
+        const parsed = JSON.parse(options);
+        return Array.isArray(parsed) ? parsed.map(String) : ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
+      } catch {
+        return [options];
+      }
+    }
+    return ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
+  }
+
+  private mapSkill(skill: any): string {
+    if (typeof skill === 'string') {
+      const skillMapping: Record<string, TPAESHabilidad> = {
+        'localizar': 'TRACK_LOCATE',
+        'interpretar': 'INTERPRET_RELATE',
+        'evaluar': 'EVALUATE_REFLECT',
+        'resolver': 'SOLVE_PROBLEMS',
+        'representar': 'REPRESENT',
+        'modelar': 'MODEL',
+        'argumentar': 'ARGUE_COMMUNICATE',
+        'identificar': 'IDENTIFY_THEORIES',
+        'procesar': 'PROCESS_ANALYZE',
+        'aplicar': 'APPLY_PRINCIPLES',
+        'cientifico': 'SCIENTIFIC_ARGUMENT',
+        'temporal': 'TEMPORAL_THINKING',
+        'fuentes': 'SOURCE_ANALYSIS',
+        'multicausal': 'MULTICAUSAL_ANALYSIS',
+        'critico': 'CRITICAL_THINKING',
+        'reflexion': 'REFLECTION'
+      };
+
+      const lowerSkill = skill.toLowerCase();
+      for (const [key, value] of Object.entries(skillMapping)) {
+        if (lowerSkill.includes(key)) {
+          return value;
+        }
+      }
+    }
+    return 'INTERPRET_RELATE';
+  }
+
+  private generateFallbackDiagnostic(
+    prueba: TPAESPrueba,
+    targetLevel: string,
+    questionCount: number
+  ): DiagnosticTest {
+    const questions: DiagnosticQuestion[] = Array.from({ length: questionCount }, (_, i) => ({
+      id: `fallback-${prueba}-${i + 1}`,
+      question: `Pregunta ${i + 1} de ${this.getPruebaDisplayName(prueba)}. Evalúa tu comprensión de conceptos fundamentales.`,
+      options: [
+        'Opción A: Primera alternativa',
+        'Opción B: Segunda alternativa',
+        'Opción C: Tercera alternativa',
+        'Opción D: Cuarta alternativa'
+      ],
+      correctAnswer: 'Opción A: Primera alternativa',
+      explanation: `Esta pregunta evalúa habilidades fundamentales de ${this.getPruebaDisplayName(prueba)}.`,
+      difficulty: mapDifficultyToSpanish(targetLevel),
+      skill: this.getDefaultSkillForPrueba(prueba),
+      prueba,
+      metadata: {
+        source: 'fallback_generator',
+        template: true
+      }
+    }));
+
+    return {
+      id: `fallback-comprehensive-${prueba.toLowerCase()}-${Date.now()}`,
+      title: `Diagnóstico de Demostración - ${this.getPruebaDisplayName(prueba)}`,
+      description: `Evaluación de demostración para ${this.getPruebaDisplayName(prueba)}`,
+      testId: this.getTestIdForPrueba(prueba),
+      questions,
+      isCompleted: false,
+      metadata: {
+        source: 'fallback',
+        officialCount: 0,
+        aiCount: questionCount,
+        quality: 'demo'
+      }
+    };
+  }
+
+  private getPruebaDisplayName(prueba: TPAESPrueba): string {
+    const names: Record<TPAESPrueba, string> = {
+      'COMPETENCIA_LECTORA': 'Comprensión Lectora',
+      'MATEMATICA_1': 'Matemática M1',
+      'MATEMATICA_2': 'Matemática M2',
+      'CIENCIAS': 'Ciencias',
+      'HISTORIA': 'Historia y Geografía'
+    };
+    return names[prueba] || prueba;
+  }
+
+  private getTestIdForPrueba(prueba: TPAESPrueba): number {
+    const testIds: Record<TPAESPrueba, number> = {
+      'COMPETENCIA_LECTORA': 1,
+      'MATEMATICA_1': 2,
+      'MATEMATICA_2': 3,
+      'HISTORIA': 4,
+      'CIENCIAS': 5
+    };
+    return testIds[prueba] || 1;
+  }
+
+  private getDefaultSkillForPrueba(prueba: TPAESPrueba): TPAESHabilidad {
+    const skills: Record<TPAESPrueba, TPAESHabilidad> = {
+      'COMPETENCIA_LECTORA': 'INTERPRET_RELATE',
+      'MATEMATICA_1': 'SOLVE_PROBLEMS',
+      'MATEMATICA_2': 'REPRESENT',
+      'CIENCIAS': 'PROCESS_ANALYZE',
+      'HISTORIA': 'TEMPORAL_THINKING'
+    };
+    return skills[prueba] || 'INTERPRET_RELATE';
+  }
 }
+
+export const comprehensiveDiagnosticGenerator = ComprehensiveDiagnosticGenerator.getInstance();

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { 
   DiagnosticTest, 
@@ -11,6 +12,7 @@ import {
   ensureDefaultDiagnosticsExist,
   createLocalFallbackDiagnostics
 } from "@/services/diagnostic-service-unified";
+import { calculateDiagnosticResults } from "@/utils/diagnostic-helpers";
 import { toast } from "@/components/ui/use-toast";
 
 // Re-export types for convenience
