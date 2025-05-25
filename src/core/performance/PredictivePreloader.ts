@@ -1,4 +1,6 @@
 
+import React, { useEffect } from 'react';
+
 interface PreloadRule {
   trigger: string;
   targets: string[];
@@ -135,14 +137,14 @@ class PredictivePreloader {
 
 export const predictivePreloader = new PredictivePreloader();
 
-// Hook para usar preloading predictivo
+// Hook corregido para usar preloading predictivo
 export const usePredictivePreloading = (currentRoute: string) => {
-  React.useEffect(() => {
+  useEffect(() => {
     const predictions = predictivePreloader.predictNextPages(currentRoute);
     predictivePreloader.preloadComponents(predictions);
   }, [currentRoute]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     predictivePreloader.setupHoverPreloading();
   }, []);
 };

@@ -1,4 +1,6 @@
 
+import React, { useEffect } from 'react';
+
 interface PerformanceMetrics {
   componentRenderTime: number;
   memoryUsage: number;
@@ -105,11 +107,11 @@ class PerformanceMonitor {
 
 export const performanceMonitor = new PerformanceMonitor();
 
-// Hook para monitorear componentes
+// Hook corregido para monitorear componentes
 export const usePerformanceMonitor = (componentName: string) => {
   const startTime = performance.now();
   
-  React.useEffect(() => {
+  useEffect(() => {
     const endTime = performance.now();
     const renderTime = endTime - startTime;
     performanceMonitor.recordComponentRender(componentName, renderTime);

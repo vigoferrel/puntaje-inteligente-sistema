@@ -41,16 +41,19 @@ const CinematicSuspenseFallback: React.FC<{ componentName: string }> = ({ compon
   </motion.div>
 );
 
-// HOC para lazy loading con fallback personalizado
-export const withLazyLoading = <P extends object>(
-  Component: React.LazyExoticComponent<React.ComponentType<P>>,
+// HOC simplificado para lazy loading con tipos corregidos
+export const withLazyLoading = <T extends React.ComponentType<any>>(
+  Component: React.LazyExoticComponent<T>,
   componentName: string
 ) => {
-  return (props: P) => (
+  const WrappedComponent = (props: React.ComponentProps<T>) => (
     <Suspense fallback={<CinematicSuspenseFallback componentName={componentName} />}>
       <Component {...props} />
     </Suspense>
   );
+  
+  WrappedComponent.displayName = `withLazyLoading(${componentName})`;
+  return WrappedComponent;
 };
 
 // Componentes lazy exportados
