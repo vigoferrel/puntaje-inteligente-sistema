@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants, Transition } from 'framer-motion';
 
 // Configuraciones de transición optimizadas para 60fps
 export const optimizedTransitions = {
@@ -20,46 +20,75 @@ export const optimizedTransitions = {
 
 // Variantes de animación cinematográfica optimizadas
 export const cinematicVariants: Variants = {
-  fadeIn: {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 }
+  fadeInInitial: {
+    opacity: 0,
+    y: 10
+  },
+  fadeInAnimate: {
+    opacity: 1,
+    y: 0
+  },
+  fadeInExit: {
+    opacity: 0,
+    y: -10
   },
   
-  scaleIn: {
-    initial: { opacity: 0, scale: 0.95 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 1.05 }
+  scaleInInitial: {
+    opacity: 0,
+    scale: 0.95
+  },
+  scaleInAnimate: {
+    opacity: 1,
+    scale: 1
+  },
+  scaleInExit: {
+    opacity: 0,
+    scale: 1.05
   },
   
-  slideUp: {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 }
+  slideUpInitial: {
+    opacity: 0,
+    y: 20
+  },
+  slideUpAnimate: {
+    opacity: 1,
+    y: 0
+  },
+  slideUpExit: {
+    opacity: 0,
+    y: -20
   },
   
-  neuralGlow: {
-    initial: { 
-      opacity: 0, 
-      scale: 0.9,
-      filter: 'blur(4px)'
-    },
-    animate: { 
-      opacity: 1, 
-      scale: 1,
-      filter: 'blur(0px)'
-    },
-    exit: { 
-      opacity: 0, 
-      scale: 1.1,
-      filter: 'blur(4px)'
-    }
+  neuralGlowInitial: {
+    opacity: 0,
+    scale: 0.9,
+    filter: 'blur(4px)'
+  },
+  neuralGlowAnimate: {
+    opacity: 1,
+    scale: 1,
+    filter: 'blur(0px)'
+  },
+  neuralGlowExit: {
+    opacity: 0,
+    scale: 1.1,
+    filter: 'blur(4px)'
   }
+};
+
+// Helper para obtener las variantes de animación
+export const getAnimationStates = (variant: string) => {
+  const baseVariant = variant.replace(/Initial|Animate|Exit$/, '');
+  return {
+    initial: `${baseVariant}Initial`,
+    animate: `${baseVariant}Animate`,
+    exit: `${baseVariant}Exit`
+  };
 };
 
 interface OptimizedMotionProps {
   children: React.ReactNode;
-  variant?: keyof typeof cinematicVariants;
+  variant?: 'fadeIn' | 'scaleIn' | 'slideUp' | 'neuralGlow';
   speed?: keyof typeof optimizedTransitions;
   className?: string;
   delay?: number;
@@ -72,17 +101,18 @@ export const OptimizedMotion: React.FC<OptimizedMotionProps> = ({
   className = '',
   delay = 0
 }) => {
-  const variantConfig = cinematicVariants[variant];
-  const transitionConfig = {
+  const animationStates = getAnimationStates(variant);
+  const transitionConfig: Transition = {
     ...optimizedTransitions[speed],
     delay
   };
 
   return (
     <motion.div
-      initial={variantConfig.initial}
-      animate={variantConfig.animate}
-      exit={variantConfig.exit}
+      variants={cinematicVariants}
+      initial={animationStates.initial}
+      animate={animationStates.animate}
+      exit={animationStates.exit}
       transition={transitionConfig}
       className={className}
     >
@@ -132,7 +162,7 @@ export const useAdaptiveAnimations = () => {
     };
   }, []);
 
-  const getOptimizedTransition = (speed: keyof typeof optimizedTransitions = 'fast') => {
+  const getOptimizedTransition = (speed: keyof typeof optimizedTransitions = 'fast'): Transition => {
     if (shouldReduceMotion) {
       return { duration: 0.01, ease: 'linear' };
     }
