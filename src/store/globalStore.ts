@@ -1,7 +1,6 @@
 
 import { create } from 'zustand';
 import { devtools, persist, subscribeWithSelector } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 
 // Tipos centralizados
 interface User {
@@ -108,8 +107,8 @@ const initialState = {
   user: null,
   session: null,
   ui: {
-    isDarkMode: true, // Modo oscuro por defecto
-    cinematicMode: true, // Modo cinematográfico activado
+    isDarkMode: true,
+    cinematicMode: true,
     sidebarOpen: true,
     currentModule: 'dashboard',
     notifications: [],
@@ -127,138 +126,181 @@ export const useGlobalStore = create<GlobalState>()(
   devtools(
     persist(
       subscribeWithSelector(
-        immer((set, get) => ({
+        (set, get) => ({
           ...initialState,
           
           actions: {
             // Sistema
-            setSystemState: (newState) => set((state) => {
-              Object.assign(state.system, newState);
-            }),
+            setSystemState: (newState) => set((state) => ({
+              ...state,
+              system: { ...state.system, ...newState }
+            })),
             
-            setInitialized: (initialized) => set((state) => {
-              state.system.isInitialized = initialized;
-              if (initialized) {
-                state.system.phase = 'complete';
-                state.system.lastSync = new Date();
+            setInitialized: (initialized) => set((state) => ({
+              ...state,
+              system: {
+                ...state.system,
+                isInitialized: initialized,
+                phase: initialized ? 'complete' : state.system.phase,
+                lastSync: initialized ? new Date() : state.system.lastSync
               }
-            }),
+            })),
             
             setError: (error) => set((state) => {
-              state.system.error = error;
-              if (error) {
-                state.actions.addNotification({
-                  type: 'error',
-                  message: error
-                });
-              }
+              const newNotifications = error ? [
+                ...state.ui.notifications,
+                {
+                  id: Date.now().toString(),
+                  type: 'error' as const,
+                  message: error,
+                  timestamp: new Date()
+                }
+              ] : state.ui.notifications;
+              
+              return {
+                ...state,
+                system: { ...state.system, error },
+                ui: { ...state.ui, notifications: newNotifications }
+              };
             }),
             
             // Usuario
-            setUser: (user) => set((state) => {
-              state.user = user;
-            }),
+            setUser: (user) => set((state) => ({
+              ...state,
+              user
+            })),
             
-            setSession: (session) => set((state) => {
-              state.session = session;
-              state.user = session?.user || null;
-            }),
+            setSession: (session) => set((state) => ({
+              ...state,
+              session,
+              user: session?.user || null
+            })),
             
-            logout: () => set((state) => {
-              state.user = null;
-              state.session = null;
-              state.system.isInitialized = false;
-              state.currentPlan = null;
-              state.userProgress = {};
-            }),
+            logout: () => set((state) => ({
+              ...state,
+              user: null,
+              session: null,
+              system: { ...state.system, isInitialized: false },
+              currentPlan: null,
+              userProgress: {}
+            })),
             
             // UI
-            toggleDarkMode: () => set((state) => {
-              state.ui.isDarkMode = !state.ui.isDarkMode;
-            }),
+            toggleDarkMode: () => set((state) => ({
+              ...state,
+              ui: { ...state.ui, isDarkMode: !state.ui.isDarkMode }
+            })),
             
-            enableCinematicMode: () => set((state) => {
-              state.ui.cinematicMode = true;
-              state.ui.isDarkMode = true;
-            }),
+            enableCinematicMode: () => set((state) => ({
+              ...state,
+              ui: { ...state.ui, cinematicMode: true, isDarkMode: true }
+            })),
             
-            toggleSidebar: () => set((state) => {
-              state.ui.sidebarOpen = !state.ui.sidebarOpen;
-            }),
+            toggleSidebar: () => set((state) => ({
+              ...state,
+              ui: { ...state.ui, sidebarOpen: !state.ui.sidebarOpen }
+            })),
             
-            setCurrentModule: (module) => set((state) => {
-              state.ui.currentModule = module;
-            }),
+            setCurrentModule: (module) => set((state) => ({
+              ...state,
+              ui: { ...state.ui, currentModule: module }
+            })),
             
-            addNotification: (notification) => set((state) => {
-              state.ui.notifications.push({
-                ...notification,
-                id: Date.now().toString(),
-                timestamp: new Date(),
-              });
-            }),
+            addNotification: (notification) => set((state) => ({
+              ...state,
+              ui: {
+                ...state.ui,
+                notifications: [
+                  ...state.ui.notifications,
+                  {
+                    ...notification,
+                    id: Date.now().toString(),
+                    timestamp: new Date(),
+                  }
+                ]
+              }
+            })),
             
-            removeNotification: (id) => set((state) => {
-              state.ui.notifications = state.ui.notifications.filter(n => n.id !== id);
-            }),
+            removeNotification: (id) => set((state) => ({
+              ...state,
+              ui: {
+                ...state.ui,
+                notifications: state.ui.notifications.filter(n => n.id !== id)
+              }
+            })),
             
             // Datos
-            setLearningNodes: (nodes) => set((state) => {
-              state.learningNodes = nodes;
-            }),
+            setLearningNodes: (nodes) => set((state) => ({
+              ...state,
+              learningNodes: nodes
+            })),
             
-            updateNodeProgress: (nodeId, progress) => set((state) => {
-              state.userProgress[nodeId] = progress;
-            }),
+            updateNodeProgress: (nodeId, progress) => set((state) => ({
+              ...state,
+              userProgress: { ...state.userProgress, [nodeId]: progress }
+            })),
             
-            setPlans: (plans) => set((state) => {
-              state.plans = plans;
-            }),
+            setPlans: (plans) => set((state) => ({
+              ...state,
+              plans
+            })),
             
-            setCurrentPlan: (plan) => set((state) => {
-              state.currentPlan = plan;
-            }),
+            setCurrentPlan: (plan) => set((state) => ({
+              ...state,
+              currentPlan: plan
+            })),
             
-            setDiagnostics: (diagnostics) => set((state) => {
-              state.diagnostics = diagnostics;
-            }),
+            setDiagnostics: (diagnostics) => set((state) => ({
+              ...state,
+              diagnostics
+            })),
             
-            setPaesData: (data) => set((state) => {
-              state.paesData = data;
-            }),
+            setPaesData: (data) => set((state) => ({
+              ...state,
+              paesData: data
+            })),
             
-            setFinancialData: (data) => set((state) => {
-              state.financialData = data;
-            }),
+            setFinancialData: (data) => set((state) => ({
+              ...state,
+              financialData: data
+            })),
             
             // Sync
             syncAllData: async () => {
               const state = get();
               if (!state.user?.id) return;
               
-              set((draft) => {
-                draft.system.isLoading = true;
-              });
+              set((currentState) => ({
+                ...currentState,
+                system: { ...currentState.system, isLoading: true }
+              }));
               
               try {
-                // Aquí implementaríamos la sincronización real
                 console.log('🔄 Sincronizando datos globales...');
                 
                 // Simular sincronización
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                set((draft) => {
-                  draft.system.lastSync = new Date();
-                  draft.system.isLoading = false;
-                });
+                set((currentState) => ({
+                  ...currentState,
+                  system: {
+                    ...currentState.system,
+                    lastSync: new Date(),
+                    isLoading: false
+                  }
+                }));
                 
                 console.log('✅ Sincronización completada');
                 
               } catch (error) {
-                set((draft) => {
-                  draft.system.error = `Error de sincronización: ${error}`;
-                  draft.system.isLoading = false;
-                });
+                set((currentState) => ({
+                  ...currentState,
+                  system: {
+                    ...currentState.system,
+                    error: `Error de sincronización: ${error}`,
+                    isLoading: false
+                  }
+                }));
               }
             },
             
@@ -267,7 +309,7 @@ export const useGlobalStore = create<GlobalState>()(
               actions: get().actions,
             })),
           },
-        }))
+        })
       ),
       {
         name: 'global-store',
