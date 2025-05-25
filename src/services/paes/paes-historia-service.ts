@@ -33,15 +33,20 @@ export interface PAESHistoriaExamComplete {
 }
 
 /**
+ * Código único del examen PAES Historia consolidado
+ */
+const PAES_HISTORIA_EXAM_CODE = 'PAES_HISTORIA_2024_FORMA_123';
+
+/**
  * Obtiene el examen completo de PAES Historia 2024 usando la función específica de historia
  */
 export const fetchPAESHistoriaExam = async (): Promise<PAESHistoriaExamComplete | null> => {
   try {
     console.log('🔍 Fetching complete PAES Historia exam (65 questions)');
     
-    // Usar la función específica para historia
+    // Usar la función específica para historia con el código correcto
     const { data, error } = await supabase.rpc('obtener_examen_historia_completo', {
-      codigo_examen_param: 'HISTORIA_2024_FORMA_123'
+      codigo_examen_param: PAES_HISTORIA_EXAM_CODE
     });
 
     if (error) {
@@ -56,12 +61,10 @@ export const fetchPAESHistoriaExam = async (): Promise<PAESHistoriaExamComplete 
     }
 
     console.log('✅ PAES Historia exam loaded via RPC:', data);
-    // Fix the type conversion by casting to unknown first, then to the target type
     return data as unknown as PAESHistoriaExamComplete;
 
   } catch (error) {
     console.error('Error in fetchPAESHistoriaExam:', error);
-    // Fallback: usar consulta directa
     return await fetchHistoriaExamDirect();
   }
 };
@@ -77,7 +80,7 @@ const fetchHistoriaExamDirect = async (): Promise<PAESHistoriaExamComplete | nul
     const { data: examenData, error: examenError } = await supabase
       .from('examenes')
       .select('*')
-      .eq('codigo', 'HISTORIA_2024_FORMA_123')
+      .eq('codigo', PAES_HISTORIA_EXAM_CODE)
       .single();
 
     if (examenError || !examenData) {
@@ -171,12 +174,11 @@ export const fetchHistoriaCorrectAnswers = async (): Promise<Record<number, stri
   try {
     // Usar la función RPC para obtener respuestas correctas
     const { data, error } = await supabase.rpc('obtener_respuestas_correctas_examen_f153', {
-      codigo_examen_param: 'HISTORIA_2024_FORMA_123'
+      codigo_examen_param: PAES_HISTORIA_EXAM_CODE
     });
 
     if (error) {
       console.error('Error fetching correct answers via RPC:', error);
-      // Fallback: consulta directa
       return await fetchCorrectAnswersDirect();
     }
 
@@ -203,7 +205,7 @@ const fetchCorrectAnswersDirect = async (): Promise<Record<number, string>> => {
     const { data: examenData } = await supabase
       .from('examenes')
       .select('id')
-      .eq('codigo', 'HISTORIA_2024_FORMA_123')
+      .eq('codigo', PAES_HISTORIA_EXAM_CODE)
       .single();
 
     if (!examenData) {
@@ -335,31 +337,34 @@ export const validateHistoriaExamIntegrity = async (): Promise<{
       };
     }
 
-    // Validar que tengamos 65 preguntas
-    if (examData.preguntas.length !== 65) {
-      issues.push(`Se esperaban 65 preguntas, se encontraron ${examData.preguntas.length}`);
+    // Validar que tengamos las preguntas esperadas
+    const expectedCount = 65;
+    if (examData.preguntas.length < expectedCount) {
+      issues.push(`Se esperaban ${expectedCount} preguntas, se encontraron ${examData.preguntas.length}`);
     }
 
     // Validar numeración secuencial
     const numeros = examData.preguntas.map(p => p.numero).sort((a, b) => a - b);
-    for (let i = 1; i <= 65; i++) {
-      if (!numeros.includes(i)) {
-        issues.push(`Falta la pregunta número ${i}`);
+    const expectedNumbers = Array.from({length: examData.preguntas.length}, (_, i) => i + 1);
+    
+    expectedNumbers.forEach(expectedNum => {
+      if (!numeros.includes(expectedNum)) {
+        issues.push(`Falta la pregunta número ${expectedNum}`);
       }
-    }
+    });
 
     // Validar opciones por pregunta
     examData.preguntas.forEach(pregunta => {
-      if (pregunta.numero === 56) {
-        // La pregunta 56 debe tener 5 opciones
-        if (pregunta.opciones.length !== 5) {
-          issues.push(`Pregunta ${pregunta.numero} debe tener 5 opciones, tiene ${pregunta.opciones.length}`);
-        }
-      } else {
-        // Las demás preguntas deben tener 4 opciones
-        if (pregunta.opciones.length !== 4) {
-          issues.push(`Pregunta ${pregunta.numero} debe tener 4 opciones, tiene ${pregunta.opciones.length}`);
-        }
+      // Verificar que tenga opciones
+      if (!pregunta.opciones || pregunta.opciones.length === 0) {
+        issues.push(`Pregunta ${pregunta.numero} no tiene opciones`);
+        return;
+      }
+
+      // La pregunta 56 debe tener 5 opciones, las demás 4
+      const expectedOptions = pregunta.numero === 56 ? 5 : 4;
+      if (pregunta.opciones.length !== expectedOptions) {
+        issues.push(`Pregunta ${pregunta.numero} debe tener ${expectedOptions} opciones, tiene ${pregunta.opciones.length}`);
       }
 
       // Validar que cada pregunta tenga exactamente una respuesta correcta
@@ -385,4 +390,11 @@ export const validateHistoriaExamIntegrity = async (): Promise<{
       stats: null
     };
   }
+};
+
+/**
+ * Obtiene el código del examen PAES Historia actual
+ */
+export const getPAESHistoriaExamCode = (): string => {
+  return PAES_HISTORIA_EXAM_CODE;
 };

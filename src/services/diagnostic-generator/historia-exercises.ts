@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Exercise } from "@/types/ai-types";
-import { getRandomHistoriaQuestions, getHistoriaQuestionsBySection } from "@/services/paes/paes-historia-service";
+import { getRandomHistoriaQuestions, getHistoriaQuestionsBySection, getPAESHistoriaExamCode } from "@/services/paes/paes-historia-service";
 import { mapHistoriaQuestionToSkill } from "@/utils/paes-historia-mapper";
 
 /**
@@ -66,7 +66,7 @@ export const generateHistoriaExercisesForNode = async (
         question: question.enunciado + (question.contexto ? `\n\nContexto: ${question.contexto}` : ''),
         options: question.opciones.map(opt => opt.contenido),
         correct_answer: correctOption?.contenido || question.opciones[0].contenido,
-        explanation: `Pregunta ${question.numero} del examen PAES Historia y Ciencias Sociales 2024 - Habilidad: ${habilidadPAES}`,
+        explanation: `Pregunta ${question.numero} del examen PAES Historia y Ciencias Sociales 2024 (${getPAESHistoriaExamCode()}) - Habilidad: ${habilidadPAES}`,
         difficulty: 'intermediate' as const,
         bloom_level: 'comprender' as const
       };
