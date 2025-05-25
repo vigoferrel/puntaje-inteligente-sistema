@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Brain, Target, BookOpen, TrendingUp, 
   Zap, Crown, Award, Star, Calendar,
-  Calculator, DollarSign, Users
+  Calculator, DollarSign, Users, Activity
 } from 'lucide-react';
 import { useCinematic } from '@/components/cinematic/CinematicTransitionSystem';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,19 +20,21 @@ export const SuperPAESMain: React.FC = () => {
     startTransition('dashboard');
   };
 
-  const handleNavigateToModule = (module: string) => {
-    console.log(`Navegando a módulo: ${module}`);
-    startTransition('dashboard');
+  const handleNavigateToUnified = () => {
+    window.location.href = '/';
   };
 
-  const handleNavigateToFinancial = () => {
-    // Navegar al centro financiero
-    window.location.href = '/financial';
+  const handleNavigateToTool = (tool: string) => {
+    console.log(`Navegando a herramienta: ${tool}`);
+    window.location.href = `/?tool=${tool}`;
   };
 
   const handleNavigateToCalendar = () => {
-    // Navegar al calendario
     window.location.href = '/calendario';
+  };
+
+  const handleNavigateToFinancial = () => {
+    window.location.href = '/financial';
   };
 
   return (
@@ -73,71 +75,80 @@ export const SuperPAESMain: React.FC = () => {
           </Badge>
         </motion.div>
 
-        {/* Módulos Principales */}
+        {/* Herramientas Principales del Ecosistema */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             {
-              title: 'PAES Universe',
-              description: 'Exploración 3D del conocimiento',
-              icon: Target,
+              title: 'Dashboard Unificado',
+              description: 'Centro de control principal con datos reales',
+              icon: Activity,
               color: 'from-blue-500 to-indigo-500',
-              action: () => handleNavigateToUniverse()
+              action: () => handleNavigateToUnified(),
+              priority: 'high'
             },
             {
               title: 'LectoGuía IA',
-              description: 'Asistente de comprensión lectora',
+              description: 'Asistente de comprensión lectora inteligente',
               icon: BookOpen,
               color: 'from-orange-500 to-red-500',
-              action: () => handleNavigateToModule('lectoguia')
+              action: () => handleNavigateToTool('lectoguia'),
+              priority: 'high'
             },
             {
               title: 'Diagnóstico Inteligente',
               description: 'Evaluación adaptativa personalizada',
               icon: Brain,
               color: 'from-purple-500 to-pink-500',
-              action: () => handleNavigateToModule('diagnostic')
-            },
-            {
-              title: 'Plan de Estudio IA',
-              description: 'Planificación optimizada por IA',
-              icon: TrendingUp,
-              color: 'from-green-500 to-teal-500',
-              action: () => handleNavigateToModule('plan')
+              action: () => handleNavigateToTool('diagnostic'),
+              priority: 'high'
             },
             {
               title: 'Ejercicios Adaptativos',
               description: 'Práctica inteligente personalizada',
               icon: Zap,
               color: 'from-yellow-500 to-orange-500',
-              action: () => handleNavigateToModule('exercises')
+              action: () => handleNavigateToTool('exercises'),
+              priority: 'medium'
             },
             {
-              title: 'Centro Financiero',
-              description: 'Calculadora de becas y beneficios',
-              icon: DollarSign,
-              color: 'from-emerald-500 to-green-500',
-              action: () => handleNavigateToFinancial()
+              title: 'Plan de Estudio IA',
+              description: 'Planificación optimizada por IA',
+              icon: TrendingUp,
+              color: 'from-green-500 to-teal-500',
+              action: () => handleNavigateToTool('plan'),
+              priority: 'medium'
             },
             {
               title: 'Calendario Inteligente',
               description: 'Planificación de estudio y fechas PAES',
               icon: Calendar,
               color: 'from-indigo-500 to-purple-500',
-              action: () => handleNavigateToCalendar()
+              action: () => handleNavigateToCalendar(),
+              priority: 'medium'
+            },
+            {
+              title: 'Centro Financiero',
+              description: 'Calculadora de becas y beneficios',
+              icon: DollarSign,
+              color: 'from-emerald-500 to-green-500',
+              action: () => handleNavigateToFinancial(),
+              priority: 'medium'
             },
             {
               title: 'Calculadora PAES',
               description: 'Simulador de puntajes y carreras',
               icon: Calculator,
               color: 'from-cyan-500 to-blue-500',
-              action: () => handleNavigateToModule('calculator')
+              action: () => handleNavigateToTool('calculator'),
+              priority: 'low'
             },
             {
-              title: 'Métricas Avanzadas',
-              description: 'Análisis predictivo de rendimiento',
-              icon: Award,
+              title: 'PAES Universe',
+              description: 'Exploración 3D del conocimiento',
+              icon: Target,
               color: 'from-pink-500 to-purple-500',
-              action: () => handleNavigateToModule('metrics')
+              action: () => handleNavigateToUniverse(),
+              priority: 'low'
             }
           ].map((module, index) => {
             const Icon = module.icon;
@@ -149,18 +160,29 @@ export const SuperPAESMain: React.FC = () => {
                 transition={{ delay: 0.1 * index }}
                 whileHover={{ scale: 1.02 }}
               >
-                <Card className="bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-white/10 hover:border-cyan-500/50 transition-all cursor-pointer h-full">
+                <Card className={`bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-white/10 hover:border-cyan-500/50 transition-all cursor-pointer h-full ${
+                  module.priority === 'high' ? 'ring-2 ring-cyan-500/30' : ''
+                }`}>
                   <CardContent className="p-6 flex flex-col h-full">
-                    <div className={`w-12 h-12 bg-gradient-to-r ${module.color} rounded-xl flex items-center justify-center mb-4`}>
-                      <Icon className="w-6 h-6 text-white" />
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`w-12 h-12 bg-gradient-to-r ${module.color} rounded-xl flex items-center justify-center`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      {module.priority === 'high' && (
+                        <Badge variant="default" className="bg-cyan-600">
+                          Esencial
+                        </Badge>
+                      )}
                     </div>
+                    
                     <h3 className="text-lg font-bold text-white mb-2">{module.title}</h3>
                     <p className="text-gray-300 text-sm mb-4 flex-1">{module.description}</p>
+                    
                     <Button 
                       onClick={module.action}
                       className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
                     >
-                      Acceder
+                      {module.priority === 'high' ? 'Acceder Ahora' : 'Explorar'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -169,7 +191,7 @@ export const SuperPAESMain: React.FC = () => {
           })}
         </div>
 
-        {/* Estado del Sistema */}
+        {/* Flujo de Aprendizaje Recomendado */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -180,12 +202,72 @@ export const SuperPAESMain: React.FC = () => {
             <CardContent className="p-6">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                 <Star className="w-5 h-5 mr-2 text-yellow-400" />
-                Estado del Sistema SuperPAES
+                Flujo de Aprendizaje Recomendado
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {[
+                  { 
+                    step: '1', 
+                    title: 'Diagnóstico', 
+                    description: 'Evalúa tu nivel actual',
+                    action: () => handleNavigateToTool('diagnostic')
+                  },
+                  { 
+                    step: '2', 
+                    title: 'Plan IA', 
+                    description: 'Genera tu plan personalizado',
+                    action: () => handleNavigateToTool('plan')
+                  },
+                  { 
+                    step: '3', 
+                    title: 'Práctica', 
+                    description: 'Ejercicios adaptativos diarios',
+                    action: () => handleNavigateToTool('exercises')
+                  },
+                  { 
+                    step: '4', 
+                    title: 'Seguimiento', 
+                    description: 'Monitorea tu progreso',
+                    action: () => handleNavigateToUnified()
+                  }
+                ].map((step) => (
+                  <Card 
+                    key={step.step}
+                    className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={step.action}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span className="text-white font-bold text-sm">{step.step}</span>
+                      </div>
+                      <h4 className="font-semibold text-white text-sm">{step.title}</h4>
+                      <p className="text-gray-300 text-xs mt-1">{step.description}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Estado del Sistema */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8"
+        >
+          <Card className="bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-white/10">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <Users className="w-5 h-5 mr-2 text-green-400" />
+                Estado del Ecosistema SuperPAES
               </h3>
               
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {[
-                  { label: 'Módulos Activos', value: '9/9', status: 'success' },
+                  { label: 'Herramientas Activas', value: '9/9', status: 'success' },
                   { label: 'IA Operativa', value: '100%', status: 'success' },
                   { label: 'Datos Sincronizados', value: 'OK', status: 'success' },
                   { label: 'Rendimiento', value: 'Óptimo', status: 'success' },

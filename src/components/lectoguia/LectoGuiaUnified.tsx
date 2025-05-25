@@ -1,199 +1,307 @@
 
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthContext';
-import { useEducationalFlow } from '@/hooks/lectoguia/useEducationalFlow';
-import { LectoGuiaEmergencyMode } from './LectoGuiaEmergencyMode';
-import { CinematicHeader } from './components/CinematicHeader';
-import { UnifiedContent } from './components/UnifiedContent';
-import { ValidationOverlay } from './components/ValidationOverlay';
-import { SystemIntegrationLayer } from './components/SystemIntegrationLayer';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  MessageCircle, BookOpen, Target, TrendingUp, 
+  Brain, Zap, CheckCircle 
+} from 'lucide-react';
+import { useLectoGuia } from '@/hooks/use-lectoguia';
+import { LectoGuiaChat } from './LectoGuiaChat';
+import { ExerciseInterface } from './components/modules/ExerciseInterface';
 
-/**
- * LectoGuía Unificado Optimizado
- * Versión corregida sin bucles infinitos ni toasts en render
- */
-export const LectoGuiaUnified: React.FC = () => {
-  const { user } = useAuth();
-  const { flowState, actions, diagnostic } = useEducationalFlow();
-  const [showEmergencyMode, setShowEmergencyMode] = useState(false);
-  const [initializationTimeout, setInitializationTimeout] = useState(false);
+interface LectoGuiaUnifiedProps {
+  initialSubject: string;
+  onSubjectChange: (subject: string) => void;
+  onNavigateToTool: (tool: string, context?: any) => void;
+}
 
-  // Timeout de inicialización más largo para evitar emergency mode prematuro
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!flowState.user.isAuthenticated) {
-        setInitializationTimeout(true);
-      }
-    }, 15000); // Aumentado a 15 segundos
+const SUBJECTS = [
+  { code: 'COMPETENCIA_LECTORA', name: 'Competencia Lectora', color: 'bg-blue-500' },
+  { code: 'MATEMATICA_1', name: 'Matemática M1', color: 'bg-green-500' },
+  { code: 'MATEMATICA_2', name: 'Matemática M2', color: 'bg-purple-500' },
+  { code: 'CIENCIAS', name: 'Ciencias', color: 'bg-orange-500' },
+  { code: 'HISTORIA', name: 'Historia', color: 'bg-red-500' }
+];
 
-    return () => clearTimeout(timer);
-  }, [flowState.user.isAuthenticated]);
+export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
+  initialSubject,
+  onSubjectChange,
+  onNavigateToTool
+}) => {
+  const [activeTab, setActiveTab] = useState('chat');
+  
+  const {
+    messages,
+    isTyping,
+    handleSendMessage,
+    currentExercise,
+    selectedOption,
+    showFeedback,
+    handleExerciseOptionSelect,
+    handleNewExercise,
+    skillLevels,
+    isLoading,
+    getStats
+  } = useLectoGuia();
 
-  // Emergency mode solo en casos extremos
-  useEffect(() => {
-    if (initializationTimeout && !flowState.user.isAuthenticated) {
-      const emergencyTimer = setTimeout(() => {
-        setShowEmergencyMode(true);
-      }, 10000); // 10 segundos adicionales
+  const currentSubject = SUBJECTS.find(s => s.code === initialSubject) || SUBJECTS[0];
+  const stats = getStats();
 
-      return () => clearTimeout(emergencyTimer);
+  const handleSubjectSelect = (subjectCode: string) => {
+    onSubjectChange(subjectCode);
+  };
+
+  const handleActionFromInterface = (action: any) => {
+    console.log('Acción desde interfaz:', action);
+    
+    switch (action.type) {
+      case 'START_DIAGNOSTIC':
+        onNavigateToTool('diagnostic');
+        break;
+      case 'CREATE_PLAN':
+        onNavigateToTool('plan', action.payload);
+        break;
+      case 'GENERATE_EXERCISES':
+        onNavigateToTool('exercises', { subject: initialSubject });
+        break;
     }
-  }, [initializationTimeout, flowState.user.isAuthenticated]);
+  };
 
-  // Estado de carga inicial optimizado
-  if (!flowState.user.isAuthenticated && !initializationTimeout) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <h2 className="text-xl font-semibold text-white">Iniciando LectoGuía</h2>
-          <p className="text-gray-300">Optimizando sistema educativo...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Modo de emergencia solo en casos críticos
-  if (showEmergencyMode) {
-    return (
-      <LectoGuiaEmergencyMode 
-        error="No se pudo sincronizar el sistema educativo"
-        onRetry={() => {
-          setShowEmergencyMode(false);
-          setInitializationTimeout(false);
-          actions.syncSystem();
-        }}
-      />
-    );
-  }
-
-  // Renderizado normal optimizado
   return (
-    <div className="lectoguia-unified min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Header optimizado */}
-      <CinematicHeader
-        user={user}
-        systemState={{ 
-          phase: 'ready', 
-          activeModule: 'chat', 
-          loading: diagnostic.isLoading 
-        }}
-        validationStatus={{ 
-          isValid: flowState.isCoherent, 
-          issuesCount: flowState.isCoherent ? 0 : 1 
-        }}
-        onNavigateToModule={actions.navigateToContext}
-      />
-
-      {/* Estado del sistema simplificado */}
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex items-center gap-2 text-sm">
-          {flowState.isCoherent ? (
-            <Badge variant="default" className="bg-green-600">
-              <CheckCircle className="w-3 h-3 mr-1" />
-              Sistema Activo
-            </Badge>
-          ) : (
-            <Badge variant="secondary">
-              <AlertTriangle className="w-3 h-3 mr-1" />
-              Modo Básico
-            </Badge>
-          )}
-          
-          <Badge variant="outline" className="text-white border-white/20">
-            Diagnósticos: {flowState.diagnostic.availableTests || 0}
-          </Badge>
-          
-          <Badge variant="outline" className="text-white border-white/20">
-            Planes: {flowState.learning.totalPlans || 0}
-          </Badge>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      {/* Header de LectoGuía */}
+      <div className="text-center space-y-4">
+        <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+          <Brain className="w-8 h-8 text-white" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">LectoGuía IA</h1>
+          <p className="text-gray-600">Asistente inteligente de comprensión y aprendizaje</p>
         </div>
       </div>
 
-      {/* Contenido principal optimizado */}
-      <main className="container mx-auto px-4 pb-8">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key="unified-content"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <UnifiedContent
-              context={{ activeModule: 'chat' }}
-              systemState={{ 
-                phase: 'ready', 
-                activeModule: 'chat', 
-                loading: diagnostic.isLoading 
-              }}
-              diagnosticIntegration={{
-                isReady: flowState.diagnostic.canStart,
-                availableTests: flowState.diagnostic.availableTests || 0,
-                systemMetrics: { totalNodes: 0, isSystemReady: true },
-                startDiagnostic: () => actions.navigateToContext('diagnostic')
-              }}
-              planIntegration={{
-                allPlans: flowState.learning.totalPlans > 0 ? [flowState.learning.currentPlan].filter(Boolean) : [],
-                currentPlan: flowState.learning.currentPlan,
-                navigateToPlan: () => actions.navigateToContext('plan')
-              }}
-              onAction={(action) => {
-                switch (action.type) {
-                  case 'START_DIAGNOSTIC':
-                    actions.startDiagnostic(action.payload?.testId);
-                    break;
-                  case 'CREATE_PLAN':
-                    actions.createLearningPlan(action.payload?.title, action.payload?.description);
-                    break;
-                  default:
-                    console.log('Acción:', action.type);
-                }
-              }}
-              onNavigate={actions.navigateToContext}
-            />
-          </motion.div>
-        </AnimatePresence>
-      </main>
+      {/* Selector de Materia */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            Materia Activa
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {SUBJECTS.map((subject) => (
+              <Button
+                key={subject.code}
+                variant={subject.code === initialSubject ? "default" : "outline"}
+                onClick={() => handleSubjectSelect(subject.code)}
+                className="flex items-center gap-2"
+              >
+                <div className={`w-3 h-3 rounded-full ${subject.color}`}></div>
+                {subject.name}
+              </Button>
+            ))}
+          </div>
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+            <h3 className="font-medium text-blue-900">{currentSubject.name}</h3>
+            <p className="text-sm text-blue-700">
+              Actualmente trabajando en esta materia. El asistente adaptará sus respuestas y ejercicios.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Overlay solo para errores críticos */}
-      {!flowState.isCoherent && !showEmergencyMode && (
-        <ValidationOverlay
-          validationStatus={{ 
-            isValid: false, 
-            issuesCount: 1 
-          }}
-          onRevalidate={actions.syncSystem}
-        />
-      )}
+      {/* Estadísticas Rápidas */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.totalMessages}</div>
+            <div className="text-sm text-gray-600">Conversaciones</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{stats.exercisesCompleted}</div>
+            <div className="text-sm text-gray-600">Ejercicios</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">{stats.averageScore}%</div>
+            <div className="text-sm text-gray-600">Precisión</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-orange-600">{stats.streak}</div>
+            <div className="text-sm text-gray-600">Racha</div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Capa de integración simplificada */}
-      <SystemIntegrationLayer
-        diagnosticIntegration={{
-          isReady: flowState.diagnostic.canStart,
-          availableTests: flowState.diagnostic.availableTests || 0
-        }}
-        planIntegration={{
-          currentPlan: flowState.learning.currentPlan,
-          totalPlans: flowState.learning.totalPlans || 0
-        }}
-        dashboardSync={{
-          isConnected: flowState.isCoherent,
-          nodeProgress: 0
-        }}
-        nodeValidation={{
-          totalNodes: 0,
-          isCoherent: flowState.isCoherent
-        }}
-        onSystemUpdate={actions.syncSystem}
-      />
-    </div>
+      {/* Interfaz Principal */}
+      <Card>
+        <CardContent className="p-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="chat" className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                Chat IA
+              </TabsTrigger>
+              <TabsTrigger value="exercise" className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Ejercicios
+              </TabsTrigger>
+              <TabsTrigger value="progress" className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Progreso
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="chat" className="p-6">
+              <LectoGuiaChat
+                messages={messages}
+                isTyping={isTyping}
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+            
+            <TabsContent value="exercise" className="p-6">
+              <ExerciseInterface
+                context={{ 
+                  currentExercise, 
+                  selectedOption, 
+                  showFeedback,
+                  subject: initialSubject
+                }}
+                onAction={handleActionFromInterface}
+                onNavigate={onNavigateToTool}
+              />
+              
+              {currentExercise && (
+                <div className="mt-6 space-y-4">
+                  <h3 className="font-semibold">{currentExercise.question}</h3>
+                  <div className="space-y-2">
+                    {currentExercise.options.map((option, index) => (
+                      <Button
+                        key={index}
+                        variant={
+                          showFeedback 
+                            ? (index === selectedOption 
+                                ? (option === currentExercise.correctAnswer ? "default" : "destructive")
+                                : (option === currentExercise.correctAnswer ? "default" : "outline"))
+                            : "outline"
+                        }
+                        onClick={() => handleExerciseOptionSelect(index)}
+                        disabled={showFeedback}
+                        className="w-full text-left justify-start"
+                      >
+                        {String.fromCharCode(65 + index)}. {option}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  {showFeedback && (
+                    <div className="mt-4 space-y-4">
+                      <div className={`p-4 rounded-lg ${
+                        selectedOption !== null && 
+                        currentExercise.options[selectedOption] === currentExercise.correctAnswer
+                          ? 'bg-green-50 border border-green-200'
+                          : 'bg-red-50 border border-red-200'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className={`w-5 h-5 ${
+                            selectedOption !== null && 
+                            currentExercise.options[selectedOption] === currentExercise.correctAnswer
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                          }`} />
+                          <span className="font-medium">
+                            {selectedOption !== null && 
+                             currentExercise.options[selectedOption] === currentExercise.correctAnswer
+                              ? '¡Correcto!'
+                              : 'Incorrecto'}
+                          </span>
+                        </div>
+                        {currentExercise.explanation && (
+                          <p className="text-sm text-gray-700">{currentExercise.explanation}</p>
+                        )}
+                      </div>
+                      
+                      <Button onClick={handleNewExercise} className="w-full">
+                        <Zap className="w-4 h-4 mr-2" />
+                        Nuevo Ejercicio
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="progress" className="p-6">
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Progreso por Habilidades</h3>
+                
+                <div className="grid gap-4">
+                  {Object.entries(skillLevels).map(([skill, level]) => (
+                    <div key={skill} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <div className="font-medium">{skill.replace(/_/g, ' ')}</div>
+                        <div className="text-sm text-gray-600">Nivel actual</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-blue-600">{level}%</div>
+                        <Badge variant={level >= 70 ? "default" : level >= 40 ? "secondary" : "destructive"}>
+                          {level >= 70 ? "Avanzado" : level >= 40 ? "Intermedio" : "Básico"}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Acciones Recomendadas</h4>
+                  <div className="space-y-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => onNavigateToTool('diagnostic')}
+                      className="w-full justify-start"
+                    >
+                      Realizar diagnóstico completo
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => onNavigateToTool('exercises', { subject: initialSubject })}
+                      className="w-full justify-start"
+                    >
+                      Practicar ejercicios dirigidos
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => onNavigateToTool('plan')}
+                      className="w-full justify-start"
+                    >
+                      Crear plan de estudio
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
