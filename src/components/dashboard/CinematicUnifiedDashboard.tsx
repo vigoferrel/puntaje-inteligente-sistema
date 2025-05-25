@@ -1,9 +1,9 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { useSuperContext } from '@/contexts/SuperContext';
+import { useCinematicDashboard } from '@/hooks/dashboard/useCinematicDashboard';
 import { useCinematicTheme } from '@/contexts/CinematicThemeProvider';
-import { useGlobalStore } from '@/store/globalStore';
+import { useActions } from '@/store/globalStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,20 +19,14 @@ import {
 } from 'lucide-react';
 
 export const CinematicUnifiedDashboard: React.FC = () => {
-  const { isInitialized, cinematicMode, enableCinematicExperience } = useSuperContext();
-  const { applyThemeToElement } = useCinematicTheme();
-  
-  const learningData = useGlobalStore(state => ({
-    nodes: state.learningNodes.length,
-    plans: state.plans.length,
-    diagnostics: state.diagnostics.length,
-    currentPlan: state.currentPlan,
-  }));
+  const dashboardData = useCinematicDashboard();
+  const { enableCinematicMode } = useCinematicTheme();
+  const actions = useActions();
 
   const stats = [
     {
       title: "Nodos Activos",
-      value: learningData.nodes,
+      value: dashboardData.stats.nodes,
       max: 277,
       icon: Brain,
       color: "from-blue-500 to-cyan-500",
@@ -40,7 +34,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
     },
     {
       title: "Plan Actual",
-      value: learningData.currentPlan ? 1 : 0,
+      value: dashboardData.stats.currentPlan,
       max: 1,
       icon: Target,
       color: "from-purple-500 to-pink-500",
@@ -48,7 +42,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
     },
     {
       title: "Diagnósticos",
-      value: learningData.diagnostics,
+      value: dashboardData.stats.diagnostics,
       max: 5,
       icon: Shield,
       color: "from-green-500 to-emerald-500",
@@ -56,7 +50,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
     },
     {
       title: "Planes Totales",
-      value: learningData.plans,
+      value: dashboardData.stats.plans,
       max: 10,
       icon: Trophy,
       color: "from-yellow-500 to-orange-500",
@@ -64,7 +58,7 @@ export const CinematicUnifiedDashboard: React.FC = () => {
     }
   ];
 
-  if (!isInitialized) {
+  if (!dashboardData.system.isInitialized) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
         <motion.div
@@ -102,9 +96,9 @@ export const CinematicUnifiedDashboard: React.FC = () => {
               <p className="text-cyan-200">Sistema educativo cinematográfico unificado</p>
             </div>
             
-            {!cinematicMode && (
+            {!dashboardData.ui.cinematicMode && (
               <Button
-                onClick={enableCinematicExperience}
+                onClick={enableCinematicMode}
                 className="cinematic-button"
               >
                 <Sparkles className="w-4 h-4 mr-2" />

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useGlobalStore, useSystemState, useUser, useActions } from '@/store/globalStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
@@ -33,10 +33,70 @@ export const SuperContextProvider: React.FC<{ children: ReactNode }> = ({ childr
   const user = useUser();
   const actions = useActions();
   const { profile } = useAuth();
+  const cinematicMode = useGlobalStore(state => state.ui.cinematicMode);
 
-  // Sincronización con contexto de autenticación existente
+  // Memoizar las acciones para evitar recreación en cada render
+  const memoizedActions = useMemo(() => {
+    const initializeSystem = async () => {
+      if (systemState.isInitialized || systemState.isLoading || !user?.id) {
+        console.log('⏭️ Saltando inicialización:', { 
+          isInitialized: systemState.isInitialized, 
+          isLoading: systemState.isLoading,
+          hasUser: !!user?.id 
+        });
+        return;
+      }
+
+      try {
+        actions.setSystemState({ isLoading: true, phase: 'auth' });
+        
+        console.log('🚀 Iniciando SuperContext...');
+        
+        // Fase simplificada: solo marcar como inicializado
+        actions.setSystemState({ phase: 'complete' });
+        actions.enableCinematicMode();
+        actions.setInitialized(true);
+        
+        toast({
+          title: "🎬 Sistema Activado",
+          description: "Experiencia cinematográfica lista",
+        });
+        
+      } catch (error) {
+        console.error('❌ Error en inicialización:', error);
+        actions.setError(`Error: ${error}`);
+      }
+    };
+
+    const navigateToModule = (module: string) => {
+      actions.setCurrentModule(module);
+    };
+
+    const refreshData = async () => {
+      if (!user?.id || systemState.isLoading) return;
+      console.log('🔄 Refrescando datos...');
+    };
+
+    const enableCinematicExperience = () => {
+      actions.enableCinematicMode();
+      toast({
+        title: "🎬 Modo Cinematográfico",
+        description: "Experiencia visual activada",
+      });
+    };
+
+    return {
+      initializeSystem,
+      navigateToModule,
+      refreshData,
+      enableCinematicExperience,
+    };
+  }, [actions, systemState.isInitialized, systemState.isLoading, user?.id]);
+
+  // Sincronización con perfil de autenticación (solo una vez)
   useEffect(() => {
-    if (profile && !user) {
+    if (profile && !user && profile.id) {
+      console.log('👤 Sincronizando usuario desde AuthContext');
       actions.setUser({
         id: profile.id,
         email: profile.email || '',
@@ -44,93 +104,34 @@ export const SuperContextProvider: React.FC<{ children: ReactNode }> = ({ childr
         profile,
       });
     }
-  }, [profile, user, actions]);
+  }, [profile?.id, user?.id, actions]);
 
-  // Inicialización unificada del sistema
-  const initializeSystem = async () => {
-    if (systemState.isInitialized || !user?.id) return;
-
-    try {
-      actions.setSystemState({ isLoading: true, phase: 'auth' });
-      
-      console.log('🚀 Iniciando SuperContext unificado...');
-      
-      // Fase 1: Autenticación (ya manejada por AuthContext)
-      actions.setSystemState({ phase: 'nodes' });
-      
-      // Fase 2: Cargar nodos de aprendizaje
-      // Usar servicios existentes pero de forma centralizada
-      const { ensureLearningNodesExist } = await import('@/services/learning/initialize-learning-service');
-      await ensureLearningNodesExist();
-      
-      // Fase 3: Validación del sistema
-      actions.setSystemState({ phase: 'validation' });
-      
-      // Activar modo cinematográfico
-      actions.enableCinematicMode();
-      
-      // Sincronizar todos los datos
-      await actions.syncAllData();
-      
-      // Completar inicialización
-      actions.setInitialized(true);
-      
-      toast({
-        title: "🎬 Sistema Cinematográfico Activado",
-        description: "Experiencia completa iniciada exitosamente",
-      });
-      
-    } catch (error) {
-      console.error('❌ Error en SuperContext:', error);
-      actions.setError(`Error de inicialización: ${error}`);
-    }
-  };
-
-  // Navegación unificada entre módulos
-  const navigateToModule = (module: string) => {
-    actions.setCurrentModule(module);
-    
-    // Efectos cinematográficos opcionales
-    if (systemState.phase === 'complete') {
-      console.log(`🎭 Navegando a módulo: ${module}`);
-    }
-  };
-
-  // Actualización de datos
-  const refreshData = async () => {
-    if (!user?.id) return;
-    await actions.syncAllData();
-  };
-
-  // Activar experiencia cinematográfica completa
-  const enableCinematicExperience = () => {
-    actions.enableCinematicMode();
-    
-    toast({
-      title: "🎬 Modo Cinematográfico",
-      description: "Experiencia visual mejorada activada",
-    });
-  };
-
-  // Auto-inicialización cuando hay usuario
+  // Auto-inicialización simplificada (solo una vez cuando cambia el estado crítico)
   useEffect(() => {
-    if (user?.id && !systemState.isInitialized) {
-      const timer = setTimeout(initializeSystem, 500);
+    if (user?.id && !systemState.isInitialized && !systemState.isLoading) {
+      console.log('🎯 Iniciando auto-inicialización...');
+      const timer = setTimeout(() => {
+        memoizedActions.initializeSystem();
+      }, 100);
+      
       return () => clearTimeout(timer);
     }
-  }, [user?.id, systemState.isInitialized]);
+  }, [user?.id, systemState.isInitialized, systemState.isLoading]);
 
-  const contextValue: SuperContextType = {
+  // Valor del contexto memoizado
+  const contextValue: SuperContextType = useMemo(() => ({
     isInitialized: systemState.isInitialized,
     isLoading: systemState.isLoading,
     user,
-    cinematicMode: useGlobalStore(state => state.ui.cinematicMode),
-    
-    initializeSystem,
-    navigateToModule,
-    refreshData,
-    enableCinematicExperience,
-  };
+    cinematicMode,
+    ...memoizedActions,
+  }), [
+    systemState.isInitialized,
+    systemState.isLoading,
+    user,
+    cinematicMode,
+    memoizedActions,
+  ]);
 
   return (
     <SuperContext.Provider value={contextValue}>
