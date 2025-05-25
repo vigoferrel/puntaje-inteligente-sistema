@@ -43,6 +43,10 @@ export interface PreguntaBanco {
   competencias_evaluadas?: string[];
   tags_contenido?: string[];
   
+  // Parámetros IRT (AGREGADOS)
+  parametro_discriminacion?: number;
+  parametro_dificultad?: number;
+  
   alternativas: AlternativaBanco[];
   explicacion?: ExplicacionBanco;
 }
@@ -189,6 +193,8 @@ export class BancoEvaluacionesService {
         tiempo_estimado_segundos,
         competencias_evaluadas,
         tags_contenido,
+        parametro_discriminacion,
+        parametro_dificultad,
         alternativas_respuesta (
           id,
           letra,
@@ -219,7 +225,9 @@ export class BancoEvaluacionesService {
       tipo_pregunta: p.tipo_pregunta as 'multiple_choice' | 'multiple_select' | 'true_false' | 'ordenar_secuencia' | 'completar_texto' | 'drag_drop' | 'hotspot_imagen' | 'respuesta_numerica',
       nivel_complejidad_lexica: p.nivel_complejidad_lexica as 'basico' | 'intermedio' | 'avanzado' | undefined,
       alternativas: p.alternativas_respuesta || [],
-      explicacion: p.explicaciones_pregunta?.[0]
+      explicacion: p.explicaciones_pregunta?.[0],
+      parametro_discriminacion: p.parametro_discriminacion || 1.0,
+      parametro_dificultad: p.parametro_dificultad || 0.0
     })) || [];
   }
 
@@ -448,8 +456,15 @@ export class BancoEvaluacionesService {
       .select(`
         id, codigo_pregunta, nodo_code, prueba_paes, enunciado,
         nivel_dificultad, tipo_pregunta, tiempo_estimado_segundos,
-        competencias_evaluadas, tags_contenido,
-        alternativas_respuesta (id, letra, contenido, es_correcta)
+        competencias_evaluadas, tags_contenido, parametro_discriminacion, parametro_dificultad,
+        alternativas_respuesta (
+          id,
+          letra,
+          contenido,
+          es_correcta,
+          tipo_distractor,
+          explicacion_por_que_incorrecta
+        )
       `)
       .eq('validada', true)
       .eq('prueba_paes', config.prueba_paes);
@@ -469,7 +484,9 @@ export class BancoEvaluacionesService {
       ...p,
       nivel_dificultad: p.nivel_dificultad as 'basico' | 'intermedio' | 'avanzado',
       tipo_pregunta: p.tipo_pregunta as 'multiple_choice' | 'multiple_select' | 'true_false' | 'ordenar_secuencia' | 'completar_texto' | 'drag_drop' | 'hotspot_imagen' | 'respuesta_numerica',
-      alternativas: p.alternativas_respuesta || []
+      alternativas: p.alternativas_respuesta || [],
+      parametro_discriminacion: p.parametro_discriminacion || 1.0,
+      parametro_dificultad: p.parametro_dificultad || 0.0
     })) || [];
   }
 
@@ -602,7 +619,7 @@ export class BancoEvaluacionesService {
 
       preguntas.forEach(pregunta => {
         const discrimination = pregunta.parametro_discriminacion || 1.0;
-        const difficulty = pregunta.parametro_dificultad || 0.0;
+        const difficulty = pregunta.parametro_dificultad || 0.0; // CORREGIDO: definir difficulty aquí
         
         // Calcular información de Fisher simplificada
         const diffFromTarget = Math.abs(difficulty - targetDifficulty);
@@ -626,6 +643,7 @@ export class BancoEvaluacionesService {
         parametro_dificultad: bestPregunta.parametro_dificultad || 0.0
       };
 
+      const difficulty = bestPregunta.parametro_dificultad || 0.0; // CORREGIDO: definir difficulty para el log
       console.log(`🎯 Pregunta adaptativa seleccionada: dificultad=${difficulty}, información=${bestInformation}`);
       
       return preguntaFormatted;
