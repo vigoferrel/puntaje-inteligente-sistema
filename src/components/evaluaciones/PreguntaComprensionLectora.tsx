@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,6 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
-import ReactMarkdown from 'react-markdown';
 
 interface PreguntaComprensionLectoraProps {
   pregunta: {
@@ -187,9 +185,9 @@ export const PreguntaComprensionLectora: React.FC<PreguntaComprensionLectoraProp
               onScroll={handleScroll}
               onMouseUp={handleTextSelection}
             >
-              <ReactMarkdown className="prose prose-sm max-w-none">
+              <div className="prose prose-sm max-w-none">
                 {pregunta.texto_base}
-              </ReactMarkdown>
+              </div>
             </div>
             
             {/* Panel de análisis expandible */}
@@ -273,9 +271,9 @@ export const PreguntaComprensionLectora: React.FC<PreguntaComprensionLectoraProp
           <CardContent className="flex-1 flex flex-col">
             {/* Enunciado de la pregunta */}
             <div className="mb-6 p-4 bg-white rounded-lg border-l-4 border-purple-500">
-              <ReactMarkdown className="prose prose-sm max-w-none">
+              <div className="prose prose-sm max-w-none">
                 {pregunta.enunciado}
-              </ReactMarkdown>
+              </div>
             </div>
             
             {/* Alternativas */}
@@ -305,9 +303,9 @@ export const PreguntaComprensionLectora: React.FC<PreguntaComprensionLectoraProp
                         {alternativa.letra}
                       </div>
                       <div className="flex-1 text-sm">
-                        <ReactMarkdown className="prose prose-sm max-w-none">
+                        <div className="prose prose-sm max-w-none">
                           {alternativa.contenido}
-                        </ReactMarkdown>
+                        </div>
                       </div>
                     </div>
                   </Button>

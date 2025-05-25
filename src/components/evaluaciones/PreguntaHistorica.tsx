@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -104,7 +103,6 @@ export const PreguntaHistorica: React.FC<PreguntaHistoricaProps> = ({
   const inicioRef = React.useRef<Date>(new Date());
   const tabStartRef = React.useRef<Date>(new Date());
 
-  // Tracking de tiempo por tab
   const handleTabChange = (newTab: 'documento' | 'mapa' | 'cronologia') => {
     const ahora = new Date();
     const tiempoEnTab = ahora.getTime() - tabStartRef.current.getTime();
@@ -121,7 +119,6 @@ export const PreguntaHistorica: React.FC<PreguntaHistoricaProps> = ({
   const handleConfirmarRespuesta = () => {
     if (!respuestaSeleccionada) return;
 
-    // Registrar tiempo final de la tab activa
     const ahora = new Date();
     const tiempoEnTabActual = ahora.getTime() - tabStartRef.current.getTime();
     const tiempoFinal = {
