@@ -1,8 +1,8 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { TLearningCyclePhase, TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
 import { PAESContentService, PAESExerciseConfig } from '@/services/paes/paes-content-service';
 import { PAESNodeMappingService, NodeEducationalInfo } from '@/services/paes/paes-node-mapping-service';
+import { PAESCycleIntegrationService } from '@/services/paes/paes-cycle-integration';
 
 interface PhaseProgress {
   [phase: string]: {
@@ -59,6 +59,34 @@ export function usePAESCycleIntegration() {
       
     } catch (error) {
       console.error('Error loading phase progress:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Generar ejercicios específicos para una fase del ciclo de aprendizaje
+   */
+  const generatePhaseExercises = useCallback(async (
+    phase: TLearningCyclePhase,
+    skill: TPAESHabilidad,
+    prueba: TPAESPrueba,
+    userId?: string
+  ) => {
+    setLoading(true);
+    try {
+      const result = await PAESCycleIntegrationService.generatePhaseExercises(
+        phase,
+        skill,
+        prueba,
+        userId
+      );
+      
+      console.log(`✅ Ejercicios generados para fase ${phase}:`, result.stats);
+      return result.exercises;
+    } catch (error) {
+      console.error('Error generando ejercicios de fase:', error);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -280,6 +308,7 @@ export function usePAESCycleIntegration() {
     generateRecommendations,
     getPhaseConfig,
     generateOfficialExercises,
+    generatePhaseExercises,
     loadNodesEducationalInfo,
     searchEducationalNodes,
     updatePhaseProgress

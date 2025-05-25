@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface NodeEducationalInfo {
@@ -204,16 +203,19 @@ export class PAESNodeMappingService {
    * Mapea dificultad técnica a descriptiva
    */
   private static mapDifficulty(difficulty: string): 'BASICO' | 'INTERMEDIO' | 'AVANZADO' {
-    const difficultyMap: Record<string, 'BASICO' | 'INTERMEDIO' | 'AVANZADO'> = {
-      'basic': 'BASICO',
-      'intermediate': 'INTERMEDIO',
-      'advanced': 'AVANZADO',
-      'basico': 'BASICO',
-      'intermedio': 'INTERMEDIO',
-      'avanzado': 'AVANZADO'
-    };
+    if (!difficulty) return 'INTERMEDIO';
     
-    return difficultyMap[difficulty?.toLowerCase()] || 'INTERMEDIO';
+    const difficultyLower = difficulty.toLowerCase();
+    
+    if (difficultyLower === 'basic' || difficultyLower === 'basico' || difficultyLower === 'easy') {
+      return 'BASICO';
+    }
+    
+    if (difficultyLower === 'advanced' || difficultyLower === 'avanzado' || difficultyLower === 'hard') {
+      return 'AVANZADO';
+    }
+    
+    return 'INTERMEDIO';
   }
   
   /**
