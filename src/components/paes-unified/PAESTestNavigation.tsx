@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Clock
 } from 'lucide-react';
-import { PAESTestPerformance } from '@/hooks/use-paes-unified-dashboard';
+import { PAESTestPerformance } from '@/hooks/use-paes-unified-dashboard-optimized';
 
 interface PAESTestNavigationProps {
   testPerformances: PAESTestPerformance[];

@@ -37,6 +37,9 @@ export interface SmartRecommendation {
   impact: number;
 }
 
+// Cache simple para evitar cargas duplicadas
+const simpleCache = new Map<string, any>();
+
 export const usePAESData = () => {
   const { user } = useAuth();
   const [tests, setTests] = useState<PAESTestInfo[]>([]);
@@ -46,58 +49,52 @@ export const usePAESData = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     const loadPAESData = async () => {
       if (!user?.id) return;
+
+      const cacheKey = `paes_data_${user.id}`;
+      const cached = simpleCache.get(cacheKey);
+      
+      if (cached && mounted) {
+        setTests(cached.tests);
+        setSkills(cached.skills);
+        setRecommendations(cached.recommendations);
+        setLoading(false);
+        return;
+      }
 
       try {
         setLoading(true);
         setError(null);
 
-        // Cargar tests PAES
-        const { data: testsData, error: testsError } = await supabase
-          .from('paes_tests')
-          .select('*')
-          .order('id');
+        // Cargar datos básicos de forma optimizada
+        const [testsResponse, skillsResponse, nodesResponse, progressResponse] = await Promise.all([
+          supabase.from('paes_tests').select('*').order('id'),
+          supabase.from('paes_skills').select('*').order('display_order'),
+          supabase.from('learning_nodes').select('test_id, skill_id, id'),
+          supabase.from('user_node_progress').select('node_id, progress, status').eq('user_id', user.id)
+        ]);
 
-        if (testsError) throw testsError;
+        if (!mounted) return;
 
-        // Cargar skills PAES
-        const { data: skillsData, error: skillsError } = await supabase
-          .from('paes_skills')
-          .select('*')
-          .order('display_order');
-
-        if (skillsError) throw skillsError;
-
-        // Cargar nodos para contar por test y skill
-        const { data: nodesData, error: nodesError } = await supabase
-          .from('learning_nodes')
-          .select('test_id, skill_id, id');
-
-        if (nodesError) throw nodesError;
-
-        // Cargar progreso del usuario
-        const { data: progressData, error: progressError } = await supabase
-          .from('user_node_progress')
-          .select('node_id, progress, status')
-          .eq('user_id', user.id);
-
-        if (progressError) throw progressError;
+        const testsData = testsResponse.data || [];
+        const skillsData = skillsResponse.data || [];
+        const nodesData = nodesResponse.data || [];
+        const progressData = progressResponse.data || [];
 
         // Procesar datos de tests
-        const processedTests: PAESTestInfo[] = testsData?.map(test => {
-          const testNodes = nodesData?.filter(node => node.test_id === test.id) || [];
-          const testSkills = skillsData?.filter(skill => skill.test_id === test.id) || [];
+        const processedTests: PAESTestInfo[] = testsData.map(test => {
+          const testNodes = nodesData.filter(node => node.test_id === test.id);
+          const testSkills = skillsData.filter(skill => skill.test_id === test.id);
           
-          // Calcular progreso promedio
           const completedNodes = testNodes.filter(node => {
-            const progress = progressData?.find(p => p.node_id === node.id);
+            const progress = progressData.find(p => p.node_id === node.id);
             return progress?.status === 'completed';
           }).length;
           
           const userProgress = testNodes.length > 0 ? (completedNodes / testNodes.length) * 100 : 0;
-          
-          // Determinar nivel de debilidad
           const weaknessLevel = userProgress >= 75 ? 'good' : 
                                userProgress >= 50 ? 'low' :
                                userProgress >= 25 ? 'moderate' : 'critical';
@@ -112,24 +109,20 @@ export const usePAESData = () => {
             userProgress: Math.round(userProgress),
             weaknessLevel
           };
-        }) || [];
+        });
 
         // Procesar datos de skills
-        const processedSkills: PAESSkillInfo[] = skillsData?.map(skill => {
-          const skillNodes = nodesData?.filter(node => node.skill_id === skill.id) || [];
-          const test = testsData?.find(t => t.id === skill.test_id);
+        const processedSkills: PAESSkillInfo[] = skillsData.map(skill => {
+          const skillNodes = nodesData.filter(node => node.skill_id === skill.id);
+          const test = testsData.find(t => t.id === skill.test_id);
           
-          // Calcular rendimiento
           const completedNodes = skillNodes.filter(node => {
-            const progress = progressData?.find(p => p.node_id === node.id);
+            const progress = progressData.find(p => p.node_id === node.id);
             return progress?.status === 'completed';
           }).length;
           
           const performance = skillNodes.length > 0 ? (completedNodes / skillNodes.length) * 100 : 0;
-          
-          // Determinar prioridad
-          const priority = performance < 30 ? 'high' : 
-                          performance < 60 ? 'medium' : 'low';
+          const priority = performance < 30 ? 'high' : performance < 60 ? 'medium' : 'low';
 
           return {
             id: skill.id,
@@ -141,38 +134,55 @@ export const usePAESData = () => {
             priority,
             nodesCount: skillNodes.length
           };
-        }) || [];
+        });
 
-        // Generar recomendaciones inteligentes
+        // Generar recomendaciones simplificadas
         const smartRecommendations = generateSmartRecommendations(processedTests, processedSkills);
 
-        setTests(processedTests);
-        setSkills(processedSkills);
-        setRecommendations(smartRecommendations);
+        if (mounted) {
+          setTests(processedTests);
+          setSkills(processedSkills);
+          setRecommendations(smartRecommendations);
+
+          // Guardar en cache
+          simpleCache.set(cacheKey, {
+            tests: processedTests,
+            skills: processedSkills,
+            recommendations: smartRecommendations
+          });
+        }
 
       } catch (error) {
         console.error('Error loading PAES data:', error);
-        setError('Error al cargar datos PAES');
+        if (mounted) {
+          setError('Error al cargar datos PAES');
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadPAESData();
+
+    return () => {
+      mounted = false;
+    };
   }, [user?.id]);
 
   const generateSmartRecommendations = (tests: PAESTestInfo[], skills: PAESSkillInfo[]): SmartRecommendation[] => {
     const recommendations: SmartRecommendation[] = [];
 
-    // Recomendaciones por debilidades críticas
+    // Recomendaciones críticas (máximo 2)
     const criticalSkills = skills.filter(s => s.priority === 'high').slice(0, 2);
-    criticalSkills.forEach((skill, index) => {
+    criticalSkills.forEach(skill => {
       recommendations.push({
         id: `weakness-${skill.id}`,
         type: 'weakness',
-        title: 'Área Crítica Detectada',
-        description: `${skill.name} necesita atención inmediata (${skill.performance}% completado)`,
-        action: 'Dedicar 50% del tiempo de estudio',
+        title: 'Área Crítica',
+        description: `${skill.name} necesita atención (${skill.performance}%)`,
+        action: 'Dedicar 50% del tiempo',
         priority: 'Alta',
         testCode: skill.testCode,
         skillCode: skill.code,
@@ -180,35 +190,19 @@ export const usePAESData = () => {
       });
     });
 
-    // Recomendaciones por oportunidades
+    // Oportunidades (máximo 2)
     const opportunitySkills = skills.filter(s => s.priority === 'medium').slice(0, 2);
-    opportunitySkills.forEach((skill, index) => {
+    opportunitySkills.forEach(skill => {
       recommendations.push({
         id: `opportunity-${skill.id}`,
         type: 'opportunity',
-        title: 'Oportunidad de Mejora',
-        description: `${skill.name} tiene potencial de crecimiento (${skill.performance}% completado)`,
-        action: 'Incrementar práctica gradualmente',
+        title: 'Oportunidad',
+        description: `${skill.name} puede mejorar (${skill.performance}%)`,
+        action: 'Incrementar práctica',
         priority: 'Media',
         testCode: skill.testCode,
         skillCode: skill.code,
         impact: 80 - skill.performance
-      });
-    });
-
-    // Recomendaciones por fortalezas
-    const strongSkills = skills.filter(s => s.priority === 'low' && s.performance > 70).slice(0, 1);
-    strongSkills.forEach((skill, index) => {
-      recommendations.push({
-        id: `strength-${skill.id}`,
-        type: 'strength',
-        title: 'Fortaleza Confirmada',
-        description: `Excelente desempeño en ${skill.name} (${skill.performance}% completado)`,
-        action: 'Mantener práctica regular',
-        priority: 'Baja',
-        testCode: skill.testCode,
-        skillCode: skill.code,
-        impact: skill.performance
       });
     });
 
@@ -222,8 +216,9 @@ export const usePAESData = () => {
     loading,
     error,
     refreshData: () => {
+      // Limpiar cache y recargar
+      simpleCache.clear();
       setLoading(true);
-      // Re-trigger useEffect
     }
   };
 };

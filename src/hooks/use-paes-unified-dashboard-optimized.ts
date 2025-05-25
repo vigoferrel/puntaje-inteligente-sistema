@@ -168,10 +168,10 @@ export const usePAESUnifiedDashboardOptimized = () => {
 
         const skillEntries = Object.entries(skillBreakdown);
         const strengths = skillEntries
-          .filter(([_, correct]) => correct >= 3)
+          .filter(([_, correct]) => (correct as number) >= 3)
           .map(([skill]) => skill);
         const criticalAreas = skillEntries
-          .filter(([_, correct]) => correct < 2)
+          .filter(([_, correct]) => (correct as number) < 2)
           .map(([skill]) => skill);
 
         performances.push({
