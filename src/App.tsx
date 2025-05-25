@@ -7,8 +7,13 @@ import { BrowserRouter, Routes, Route, useSearchParams } from "react-router-dom"
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LectoGuiaProvider } from "@/contexts/lectoguia";
 import { CinematicThemeProvider } from "@/contexts/CinematicThemeProvider";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { NeuralCommandCenter } from "@/components/neural-command/NeuralCommandCenter";
 import UnifiedIndex from "./pages/UnifiedIndex";
+import { Button } from "@/components/ui/button";
+import { Brain, Sparkles, ArrowUpDown } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,9 +25,40 @@ const queryClient = new QueryClient({
   },
 });
 
-// Componente para manejar navegación por URL con todas las rutas
-const UnifiedIndexWithParams = () => {
+// Sistema de toggle entre Neural y Unified
+const SystemToggle = ({ currentSystem, onToggle }: { currentSystem: 'neural' | 'unified', onToggle: () => void }) => (
+  <div className="fixed top-4 right-4 z-50">
+    <Card className="bg-black/60 backdrop-blur-xl border-cyan-500/30">
+      <CardContent className="p-3">
+        <div className="flex items-center gap-3">
+          <Badge className={`${currentSystem === 'neural' ? 'bg-cyan-600' : 'bg-gray-600'}`}>
+            <Brain className="w-3 h-3 mr-1" />
+            Neural
+          </Badge>
+          
+          <Button
+            onClick={onToggle}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10"
+          >
+            <ArrowUpDown className="w-4 h-4" />
+          </Button>
+          
+          <Badge className={`${currentSystem === 'unified' ? 'bg-purple-600' : 'bg-gray-600'}`}>
+            <Sparkles className="w-3 h-3 mr-1" />
+            Unificado
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+// Componente principal con toggle de sistema
+const MainSystemWithToggle = () => {
   const [searchParams] = useSearchParams();
+  const [systemMode, setSystemMode] = useState<'neural' | 'unified'>('neural');
   const tool = searchParams.get('tool');
   
   useEffect(() => {
@@ -30,8 +66,22 @@ const UnifiedIndexWithParams = () => {
       console.log(`🔗 Navegando via URL a herramienta: ${tool}`);
     }
   }, [tool]);
-  
-  return <UnifiedIndex initialTool={tool} />;
+
+  const toggleSystem = () => {
+    setSystemMode(prev => prev === 'neural' ? 'unified' : 'neural');
+  };
+
+  return (
+    <>
+      <SystemToggle currentSystem={systemMode} onToggle={toggleSystem} />
+      
+      {systemMode === 'neural' ? (
+        <NeuralCommandCenter />
+      ) : (
+        <UnifiedIndex initialTool={tool} />
+      )}
+    </>
+  );
 };
 
 const App = () => (
@@ -44,21 +94,8 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
-                {/* Todas las rutas redirigen al dashboard unificado */}
-                <Route path="/" element={<UnifiedIndexWithParams />} />
-                <Route path="/dashboard" element={<UnifiedIndexWithParams />} />
-                <Route path="/lectoguia" element={<UnifiedIndexWithParams />} />
-                <Route path="/calendar" element={<UnifiedIndexWithParams />} />
-                <Route path="/calendario" element={<UnifiedIndexWithParams />} />
-                <Route path="/financial" element={<UnifiedIndexWithParams />} />
-                <Route path="/finanzas" element={<UnifiedIndexWithParams />} />
-                <Route path="/exercises" element={<UnifiedIndexWithParams />} />
-                <Route path="/ejercicios" element={<UnifiedIndexWithParams />} />
-                <Route path="/diagnostic" element={<UnifiedIndexWithParams />} />
-                <Route path="/diagnostico" element={<UnifiedIndexWithParams />} />
-                <Route path="/plan" element={<UnifiedIndexWithParams />} />
-                <Route path="/superpaes" element={<UnifiedIndexWithParams />} />
-                <Route path="*" element={<UnifiedIndexWithParams />} />
+                {/* Todas las rutas ahora muestran el sistema con toggle */}
+                <Route path="/*" element={<MainSystemWithToggle />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
