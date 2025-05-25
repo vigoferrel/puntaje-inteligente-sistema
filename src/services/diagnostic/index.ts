@@ -1,13 +1,17 @@
 
-// Servicio diagnóstico simplificado - Re-export del servicio unificado
-export * from '../diagnostic-service-unified';
+// Servicio diagnóstico refactorizado - Exportaciones centralizadas
+export { TestService } from './core/test-service';
+export { ResultService } from './core/result-service';
+export { fetchTestQuestions, safeParseOptions } from './core/question-service';
 
-// Re-export tipos básicos
+// Re-export legacy functions para compatibilidad
+export const fetchDiagnosticTests = TestService.fetchTests;
+export const submitDiagnosticResult = ResultService.submitResult;
+export const fetchDiagnosticResults = ResultService.fetchUserResults;
+
+// Re-export tipos
 export type {
   DiagnosticTest,
   DiagnosticQuestion,
-  DiagnosticResult,
-  LearningNode,
-  PAESTest,
-  PAESSkill
+  DiagnosticResult
 } from '@/types/diagnostic';
