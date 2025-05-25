@@ -42,7 +42,7 @@ export interface PAESQuestion {
 }
 
 export interface PAESExam {
-  id: string; // Cambiado de number a string para coincidir con Supabase
+  id: string; // Changed from number to string to match Supabase UUID
   codigo: string;
   nombre: string;
   tipo: string;
@@ -107,7 +107,7 @@ export class PAESService {
       }
 
       const exam: PAESExam = {
-        id: data.id, // Ya es string en Supabase
+        id: data.id,
         codigo: data.codigo,
         nombre: data.nombre,
         tipo: data.tipo,
@@ -162,8 +162,8 @@ export class PAESService {
         return null;
       }
 
-      // Convertir la respuesta a tipo conocido
-      const examData = data as ExamenCompleto;
+      // Convertir la respuesta a tipo conocido con doble casting
+      const examData = data as unknown as ExamenCompleto;
       
       if (!examData.preguntas || examData.preguntas.length === 0) {
         console.warn(`No se encontraron preguntas para ${examCode}`);
@@ -243,11 +243,11 @@ export class PAESService {
         return null;
       }
 
-      // Contar preguntas reales en la base de datos usando el id como string
+      // Contar preguntas reales en la base de datos
       const { data: preguntasData, error: preguntasError } = await supabase
         .from('preguntas')
         .select('id')
-        .eq('examen_id', exam.id); // exam.id ya es string
+        .eq('examen_id', exam.id);
 
       if (preguntasError) {
         console.error('Error al contar preguntas:', preguntasError);
@@ -302,7 +302,7 @@ export class PAESService {
       }
 
       const exams: PAESExam[] = (data || []).map(exam => ({
-        id: exam.id, // Ya es string en Supabase
+        id: exam.id,
         codigo: exam.codigo,
         nombre: exam.nombre,
         tipo: exam.tipo,
@@ -342,8 +342,8 @@ export class PAESService {
         return [];
       }
 
-      // Convertir la respuesta a tipo conocido
-      const examData = data as ExamenCompleto;
+      // Convertir la respuesta a tipo conocido con doble casting
+      const examData = data as unknown as ExamenCompleto;
       
       if (!examData.preguntas) {
         console.warn('No se encontraron preguntas en la respuesta');
