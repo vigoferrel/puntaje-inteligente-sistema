@@ -6,13 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   RotateCcw, 
-  Eye, 
   Filter, 
-  Maximize2, 
   Route,
   Settings,
-  Zap,
-  Target
+  Zap
 } from 'lucide-react';
 
 interface UniverseControlsProps {
@@ -34,27 +31,6 @@ export const UniverseControls: React.FC<UniverseControlsProps> = ({
   onFiltersChange,
   onReset
 }) => {
-  const viewModes = [
-    { 
-      mode: 'galaxy', 
-      label: 'Galaxia', 
-      icon: Eye, 
-      description: 'Vista panorámica completa' 
-    },
-    { 
-      mode: 'constellation', 
-      label: 'Constelación', 
-      icon: Target, 
-      description: 'Enfoque por prueba PAES' 
-    },
-    { 
-      mode: 'pathway', 
-      label: 'Rutas', 
-      icon: Route, 
-      description: 'Caminos de aprendizaje' 
-    }
-  ];
-
   const filterOptions = {
     tier: ['all', 'tier1_critico', 'tier2_importante', 'tier3_complementario'],
     difficulty: ['all', 'basic', 'intermediate', 'advanced'],
@@ -63,88 +39,59 @@ export const UniverseControls: React.FC<UniverseControlsProps> = ({
 
   return (
     <>
-      {/* Panel de Controles Principal */}
+      {/* Panel de Controles Compacto */}
       <motion.div 
         className="absolute top-20 right-4 pointer-events-auto"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
       >
-        <Card className="w-80 bg-black/40 backdrop-blur-lg border-white/20">
-          <CardContent className="p-4 space-y-4">
-            {/* Modos de Vista */}
+        <Card className="w-64 bg-black/40 backdrop-blur-lg border-white/20">
+          <CardContent className="p-3 space-y-3">
+            {/* Control de Rutas */}
             <div>
-              <h3 className="text-white font-semibold mb-3 flex items-center">
-                <Eye className="w-4 h-4 mr-2" />
-                Modo de Vista
+              <h3 className="text-white font-medium mb-2 flex items-center text-sm">
+                <Settings className="w-4 h-4 mr-2" />
+                Controles de Vista
               </h3>
-              <div className="grid grid-cols-1 gap-2">
-                {viewModes.map((mode) => (
-                  <Button
-                    key={mode.mode}
-                    variant={viewMode.mode === mode.mode ? "default" : "outline"}
-                    className={`justify-start h-auto p-3 ${
-                      viewMode.mode === mode.mode 
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                        : 'border-white/30 text-white hover:bg-white/10'
-                    }`}
-                    onClick={() => onViewModeChange({ mode: mode.mode })}
-                  >
-                    <mode.icon className="w-4 h-4 mr-3" />
-                    <div className="text-left">
-                      <div className="font-medium">{mode.label}</div>
-                      <div className="text-xs opacity-80">{mode.description}</div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
+              <Button
+                variant={showPathways ? "default" : "outline"}
+                size="sm"
+                className={`w-full justify-start ${
+                  showPathways 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'border-white/30 text-white hover:bg-white/10'
+                }`}
+                onClick={() => onShowPathwaysChange(!showPathways)}
+              >
+                <Route className="w-4 h-4 mr-2" />
+                Rutas de Aprendizaje
+                {showPathways && (
+                  <Badge className="ml-auto bg-white/20 text-white border-none text-xs">
+                    ON
+                  </Badge>
+                )}
+              </Button>
             </div>
 
-            {/* Controles de Visualización */}
+            {/* Filtros Rápidos */}
             <div>
-              <h3 className="text-white font-semibold mb-3 flex items-center">
-                <Settings className="w-4 h-4 mr-2" />
-                Visualización
+              <h3 className="text-white font-medium mb-2 flex items-center text-sm">
+                <Filter className="w-4 h-4 mr-2" />
+                Filtros Rápidos
               </h3>
               <div className="space-y-2">
-                <Button
-                  variant={showPathways ? "default" : "outline"}
-                  className={`w-full justify-start ${
-                    showPathways 
-                      ? 'bg-green-600 hover:bg-green-700 text-white' 
-                      : 'border-white/30 text-white hover:bg-white/10'
-                  }`}
-                  onClick={() => onShowPathwaysChange(!showPathways)}
-                >
-                  <Route className="w-4 h-4 mr-2" />
-                  Rutas de Aprendizaje
-                  {showPathways && (
-                    <Badge className="ml-auto bg-white/20 text-white border-none">
-                      ON
-                    </Badge>
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Filtros */}
-            <div>
-              <h3 className="text-white font-semibold mb-3 flex items-center">
-                <Filter className="w-4 h-4 mr-2" />
-                Filtros
-              </h3>
-              <div className="space-y-3">
                 {Object.entries(filterOptions).map(([filterType, options]) => (
                   <div key={filterType}>
-                    <label className="text-white text-sm font-medium capitalize mb-2 block">
+                    <label className="text-white text-xs font-medium capitalize mb-1 block">
                       {filterType === 'tier' ? 'Nivel' : filterType === 'difficulty' ? 'Dificultad' : 'Estado'}
                     </label>
                     <div className="flex flex-wrap gap-1">
-                      {options.map((option) => (
+                      {options.slice(0, 3).map((option) => (
                         <Button
                           key={option}
                           variant={filters[filterType] === option ? "default" : "outline"}
                           size="sm"
-                          className={`text-xs ${
+                          className={`text-xs px-2 py-1 h-auto ${
                             filters[filterType] === option
                               ? 'bg-blue-600 hover:bg-blue-700 text-white'
                               : 'border-white/30 text-white hover:bg-white/10'
@@ -154,7 +101,7 @@ export const UniverseControls: React.FC<UniverseControlsProps> = ({
                             [filterType]: option
                           })}
                         >
-                          {option === 'all' ? 'Todos' : option.replace('_', ' ')}
+                          {option === 'all' ? 'Todos' : option.replace('_', ' ').slice(0, 8)}
                         </Button>
                       ))}
                     </div>
@@ -163,53 +110,44 @@ export const UniverseControls: React.FC<UniverseControlsProps> = ({
               </div>
             </div>
 
-            {/* Acciones */}
-            <div className="pt-2 border-t border-white/20">
-              <Button
-                variant="outline"
-                className="w-full border-white/30 text-white hover:bg-white/10"
-                onClick={onReset}
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Resetear Vista
-              </Button>
-            </div>
+            {/* Reset */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-white/30 text-white hover:bg-white/10"
+              onClick={onReset}
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Resetear Vista
+            </Button>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Indicadores de Estado */}
+      {/* Indicadores de Estado Compactos */}
       <motion.div 
-        className="absolute bottom-20 right-4 pointer-events-auto"
+        className="absolute bottom-4 right-4 pointer-events-auto"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2 }}
       >
         <Card className="bg-black/40 backdrop-blur-lg border-white/20">
-          <CardContent className="p-4">
-            <h3 className="text-white font-semibold mb-3 flex items-center">
+          <CardContent className="p-3">
+            <h3 className="text-white font-medium mb-2 flex items-center text-sm">
               <Zap className="w-4 h-4 mr-2" />
-              Estado del Sistema
+              Estado
             </h3>
-            <div className="space-y-2 text-sm text-white">
+            <div className="space-y-1 text-xs text-white">
               <div className="flex justify-between">
-                <span className="opacity-80">Nodos Cargados:</span>
-                <span className="font-medium">277</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="opacity-80">Pruebas Activas:</span>
-                <span className="font-medium">5</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="opacity-80">Renderizado:</span>
-                <Badge className="bg-green-600 text-white border-none text-xs">
-                  3D WebGL
+                <span className="opacity-80">Modo:</span>
+                <Badge className="bg-blue-600 text-white border-none text-xs capitalize">
+                  {viewMode.mode}
                 </Badge>
               </div>
               <div className="flex justify-between">
-                <span className="opacity-80">Modo Vista:</span>
-                <Badge className="bg-blue-600 text-white border-none text-xs capitalize">
-                  {viewMode.mode}
+                <span className="opacity-80">Render:</span>
+                <Badge className="bg-green-600 text-white border-none text-xs">
+                  WebGL
                 </Badge>
               </div>
             </div>

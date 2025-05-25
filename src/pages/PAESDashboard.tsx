@@ -103,12 +103,14 @@ const PAESDashboard = () => {
   if (viewMode === 'universe') {
     return (
       <AppInitializer>
-        <div className="min-h-screen bg-slate-900">
+        <AppLayout>
           <div className="container mx-auto py-6 px-4">
             <ViewToggle />
           </div>
-          <PAESLearningUniverse />
-        </div>
+          <div className="h-[calc(100vh-200px)]">
+            <PAESLearningUniverse />
+          </div>
+        </AppLayout>
       </AppInitializer>
     );
   }

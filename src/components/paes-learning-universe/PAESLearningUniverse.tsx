@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text, Html, Stars, Environment } from '@react-three/drei';
@@ -10,11 +9,7 @@ import {
   Target, 
   Brain, 
   Zap, 
-  Trophy, 
-  Filter,
-  RotateCcw,
-  Maximize2,
-  Eye
+  Trophy
 } from 'lucide-react';
 import { usePAESData } from '@/hooks/use-paes-data';
 import { useLearningNodes } from '@/hooks/use-learning-nodes';
@@ -22,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { InteractiveNodeGroup } from './InteractiveNodeGroup';
 import { UniverseControls } from './UniverseControls';
 import { LearningPathway } from './LearningPathway';
+import { OptimalPathSidebar } from './OptimalPathSidebar';
 import { TPAESPrueba } from '@/types/system-types';
 
 interface ViewMode {
@@ -129,7 +125,7 @@ export const PAESLearningUniverse: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="h-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
         <div className="text-center text-white">
           <div className="animate-spin w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full mx-auto mb-4"></div>
           <div className="text-xl font-medium">Cargando Universo PAES...</div>
@@ -140,95 +136,41 @@ export const PAESLearningUniverse: React.FC = () => {
   }
 
   return (
-    <div className="relative h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 overflow-hidden">
+    <div className="flex h-full bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      {/* Sidebar Izquierdo - Planes Óptimos */}
+      <OptimalPathSidebar
+        constellations={universeLayout.constellations}
+        selectedNode={selectedNode}
+        viewMode={viewMode}
+        onNodeClick={handleNodeClick}
+        onConstellationFocus={handleConstellationFocus}
+        onViewModeChange={setViewMode}
+      />
+
       {/* Canvas 3D Principal */}
-      <Canvas
-        camera={{ position: [0, 10, 30], fov: 60 }}
-        className="absolute inset-0"
-      >
-        <Environment preset="night" />
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-        
-        <ambientLight intensity={0.3} />
-        <pointLight position={[10, 10, 10]} intensity={1} color="#ffffff" />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#3B82F6" />
-
-        <OrbitControls
-          enableZoom={true}
-          enablePan={true}
-          enableRotate={true}
-          minDistance={5}
-          maxDistance={100}
-          autoRotate={viewMode.mode === 'galaxy'}
-          autoRotateSpeed={0.5}
-        />
-
-        {/* Renderizar Constelaciones */}
-        {universeLayout.constellations.map((constellation, index) => (
-          <InteractiveNodeGroup
-            key={constellation.test.id}
-            constellation={constellation}
-            viewMode={viewMode}
-            onNodeClick={handleNodeClick}
-            onConstellationClick={() => handleConstellationFocus(constellation.test.code as TPAESPrueba)}
-            selectedNode={selectedNode}
-          />
-        ))}
-
-        {/* Pathways de Aprendizaje */}
-        {showPathways && (
-          <LearningPathway
-            constellations={universeLayout.constellations}
-            viewMode={viewMode}
-          />
-        )}
-
-        {/* Texto Central del Universo */}
-        {viewMode.mode === 'galaxy' && (
-          <Text
-            position={[0, 8, 0]}
-            fontSize={2}
-            color="#ffffff"
-            anchorX="center"
-            anchorY="middle"
-            font="/fonts/roboto-bold.woff"
-          >
-            UNIVERSO PAES
-          </Text>
-        )}
-      </Canvas>
-
-      {/* HUD - Head Up Display */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Panel Superior - Métricas */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* Header con Métricas */}
         <motion.div 
-          className="absolute top-4 left-4 right-4 pointer-events-auto"
+          className="absolute top-4 left-4 right-4 z-10 pointer-events-auto"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <Card className="bg-black/40 backdrop-blur-lg border-white/20">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between text-white">
-                <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <Target className="w-5 h-5 text-blue-400" />
+                    <Target className="w-4 h-4 text-blue-400" />
                     <div>
-                      <div className="text-sm opacity-80">Progreso Global</div>
-                      <div className="text-xl font-bold">{Math.round(overallProgress)}%</div>
+                      <div className="text-xs opacity-80">Progreso Global</div>
+                      <div className="text-lg font-bold">{Math.round(overallProgress)}%</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Brain className="w-5 h-5 text-green-400" />
+                    <Brain className="w-4 h-4 text-green-400" />
                     <div>
-                      <div className="text-sm opacity-80">Nodos Completados</div>
-                      <div className="text-xl font-bold">{universeLayout.completedNodes}/{universeLayout.totalNodes}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Zap className="w-5 h-5 text-yellow-400" />
-                    <div>
-                      <div className="text-sm opacity-80">Modo Vista</div>
-                      <div className="text-lg font-semibold capitalize">{viewMode.mode}</div>
+                      <div className="text-xs opacity-80">Nodos Completados</div>
+                      <div className="text-lg font-bold">{universeLayout.completedNodes}/{universeLayout.totalNodes}</div>
                     </div>
                   </div>
                 </div>
@@ -238,7 +180,7 @@ export const PAESLearningUniverse: React.FC = () => {
                     <Badge
                       key={constellation.test.id}
                       variant="outline"
-                      className="text-white border-white/30"
+                      className="text-white border-white/30 text-xs"
                       style={{ borderColor: constellation.color }}
                     >
                       {constellation.test.code}: {Math.round(constellation.completionRate * 100)}%
@@ -250,7 +192,63 @@ export const PAESLearningUniverse: React.FC = () => {
           </Card>
         </motion.div>
 
-        {/* Controles Laterales */}
+        <Canvas
+          camera={{ position: [0, 10, 30], fov: 60 }}
+          className="absolute inset-0"
+        >
+          <Environment preset="night" />
+          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          
+          <ambientLight intensity={0.3} />
+          <pointLight position={[10, 10, 10]} intensity={1} color="#ffffff" />
+          <pointLight position={[-10, -10, -10]} intensity={0.5} color="#3B82F6" />
+
+          <OrbitControls
+            enableZoom={true}
+            enablePan={true}
+            enableRotate={true}
+            minDistance={5}
+            maxDistance={100}
+            autoRotate={viewMode.mode === 'galaxy'}
+            autoRotateSpeed={0.5}
+          />
+
+          {/* Renderizar Constelaciones */}
+          {universeLayout.constellations.map((constellation, index) => (
+            <InteractiveNodeGroup
+              key={constellation.test.id}
+              constellation={constellation}
+              viewMode={viewMode}
+              onNodeClick={handleNodeClick}
+              onConstellationClick={() => handleConstellationFocus(constellation.test.code as TPAESPrueba)}
+              selectedNode={selectedNode}
+            />
+          ))}
+
+          {/* Pathways de Aprendizaje */}
+          {showPathways && (
+            <LearningPathway
+              constellations={universeLayout.constellations}
+              viewMode={viewMode}
+            />
+          )}
+
+          {/* Texto Central del Universo */}
+          {viewMode.mode === 'galaxy' && (
+            <Text
+              position={[0, 8, 0]}
+              fontSize={2}
+              color="#ffffff"
+              anchorX="center"
+              anchorY="middle"
+              font="/fonts/roboto-bold.woff"
+            >
+              UNIVERSO PAES
+            </Text>
+          )}
+        </Canvas>
+
+        {/* Controles Laterales Compactos */}
         <UniverseControls
           viewMode={viewMode}
           onViewModeChange={setViewMode}
