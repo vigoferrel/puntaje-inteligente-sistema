@@ -1,4 +1,5 @@
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -148,6 +149,15 @@
   .card-spacing {
     @apply gap-4 md:gap-6;
   }
+
+  /* Fixed layout for no overlaps */
+  .feature-cards-grid {
+    @apply grid gap-6 md:grid-cols-3 w-full;
+  }
+
+  .feature-card-base {
+    @apply transition-shadow duration-300 hover:shadow-md h-full;
+  }
 }
 
 @layer utilities {
@@ -187,13 +197,13 @@
 
 /* Keyframes and animations */
 @keyframes accordion-down {
-  from { height: "0", opacity: "0" }
-  to { height: "var(--radix-accordion-content-height)", opacity: "1" }
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-accordion-content-height); opacity: 1; }
 }
 
 @keyframes accordion-up {
-  from { height: "var(--radix-accordion-content-height)", opacity: "1" }
-  to { height: "0", opacity: "0" }
+  from { height: var(--radix-accordion-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
 }
 
 @keyframes fade-in {
@@ -266,3 +276,4 @@
 .pulse {
   @apply animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite];
 }
+
