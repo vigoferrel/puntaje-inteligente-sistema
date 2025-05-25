@@ -18,6 +18,25 @@ interface NotificationPreference {
   timezone: string;
 }
 
+// Helper para convertir Json a string[] de forma segura
+const convertJsonToStringArray = (value: any): string[] => {
+  if (Array.isArray(value)) {
+    return value.filter(item => typeof item === 'string');
+  }
+  return ['15m'];
+};
+
+// Helper para convertir Json a objeto quiet_hours de forma segura
+const convertJsonToQuietHours = (value: any): { start: string; end: string } => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return {
+      start: typeof value.start === 'string' ? value.start : '22:00',
+      end: typeof value.end === 'string' ? value.end : '08:00'
+    };
+  }
+  return { start: '22:00', end: '08:00' };
+};
+
 export const useNotificationPreferences = () => {
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,10 +60,10 @@ export const useNotificationPreferences = () => {
         email_enabled: item.email_enabled,
         push_enabled: item.push_enabled,
         sms_enabled: item.sms_enabled,
-        email_timing: Array.isArray(item.email_timing) ? item.email_timing : ['15m', '1h'],
-        push_timing: Array.isArray(item.push_timing) ? item.push_timing : ['15m'],
-        sms_timing: Array.isArray(item.sms_timing) ? item.sms_timing : ['15m'],
-        quiet_hours: item.quiet_hours || { start: '22:00', end: '08:00' },
+        email_timing: convertJsonToStringArray(item.email_timing),
+        push_timing: convertJsonToStringArray(item.push_timing),
+        sms_timing: convertJsonToStringArray(item.sms_timing),
+        quiet_hours: convertJsonToQuietHours(item.quiet_hours),
         timezone: item.timezone || 'America/Santiago'
       }));
 
@@ -84,10 +103,10 @@ export const useNotificationPreferences = () => {
         email_enabled: data.email_enabled,
         push_enabled: data.push_enabled,
         sms_enabled: data.sms_enabled,
-        email_timing: Array.isArray(data.email_timing) ? data.email_timing : ['15m', '1h'],
-        push_timing: Array.isArray(data.push_timing) ? data.push_timing : ['15m'],
-        sms_timing: Array.isArray(data.sms_timing) ? data.sms_timing : ['15m'],
-        quiet_hours: data.quiet_hours || { start: '22:00', end: '08:00' },
+        email_timing: convertJsonToStringArray(data.email_timing),
+        push_timing: convertJsonToStringArray(data.push_timing),
+        sms_timing: convertJsonToStringArray(data.sms_timing),
+        quiet_hours: convertJsonToQuietHours(data.quiet_hours),
         timezone: data.timezone || 'America/Santiago'
       };
 
