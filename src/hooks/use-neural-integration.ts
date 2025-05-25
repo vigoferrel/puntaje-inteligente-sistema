@@ -1,7 +1,7 @@
 
 /**
- * Hook neurológico CARDIOVASCULAR INTEGRISTA v8.0 - SISTEMA UNIFICADO
- * Post-cirugía completa con arquitectura monolítica cardiovascular
+ * Hook neurológico CARDIOVASCULAR v8.2 - CALIBRACIÓN SILENCIOSA
+ * Post-cirugía completa con arquitectura monolítica cardiovascular optimizada
  */
 
 import { useEffect, useRef, useCallback } from 'react';
@@ -9,7 +9,7 @@ import { useNeuralModule } from '@/core/intersectional-nexus/IntersectionalNexus
 import { useAuth } from '@/contexts/AuthContext';
 import { CardiovascularSystem } from '@/core/system-vitals/CardiovascularSystem';
 
-// SINGLETON CARDIOVASCULAR INTEGRISTA GLOBAL
+// SINGLETON CARDIOVASCULAR CALIBRADO GLOBAL v8.2
 let globalCardiovascularInstance: CardiovascularSystem | null = null;
 let instanceCreationLock = false;
 
@@ -24,43 +24,43 @@ export const useNeuralIntegration = (
   const lastBroadcastRef = useRef<string>('');
   const isDestroyedRef = useRef(false);
   const lastLogTime = useRef(0);
-  const logThrottle = 120000; // 2 minutos entre logs
+  const logThrottle = 300000; // 5 minutos para v8.2
   
   const neural = useNeuralModule({
     id: moduleId.current,
     type: moduleType,
     capabilities: [
       ...capabilities,
-      'cardiovascular_integrista_v8_0',
-      'detox_integration',
-      'anti_tracking_unified',
-      'emergency_response_integrated'
+      'cardiovascular_integrista_v8_2',
+      'detox_integration_calibrated',
+      'anti_tracking_silent',
+      'emergency_response_optimized'
     ]
   });
 
-  // Inicialización del sistema cardiovascular integrista
+  // Inicialización del sistema cardiovascular calibrado v8.2
   useEffect(() => {
     if (!cardiovascularSystem.current && !globalCardiovascularInstance && !instanceCreationLock) {
       instanceCreationLock = true;
       
       try {
         globalCardiovascularInstance = CardiovascularSystem.getInstance({
-          maxBeatsPerSecond: 5,  // Más conservador para v8.0
-          restingPeriod: 3000,   // Más espaciado
-          recoveryTime: 8000,    // Recovery más largo
+          maxBeatsPerSecond: 4,  // Más conservador para v8.2
+          restingPeriod: 4000,   // Más espaciado
+          recoveryTime: 10000,   // Recovery más largo
           emergencyThreshold: 8, // Más tolerante
-          purificationLevel: 'maximum',
-          oxygenThreshold: 80
+          purificationLevel: 'safe_mode',
+          oxygenThreshold: 70
         });
         cardiovascularSystem.current = globalCardiovascularInstance;
         
         const now = Date.now();
         if (now - lastLogTime.current > logThrottle) {
-          console.log('🫀 SISTEMA CARDIOVASCULAR INTEGRISTA v8.0 INICIALIZADO (Detox incluido)');
+          console.log('🫀 SISTEMA CARDIOVASCULAR v8.2 CALIBRADO (Hook Neural)');
           lastLogTime.current = now;
         }
       } catch (error) {
-        console.error('Error inicializando sistema cardiovascular integrista:', error);
+        console.error('Error inicializando sistema cardiovascular v8.2:', error);
       } finally {
         instanceCreationLock = false;
       }
@@ -73,7 +73,7 @@ export const useNeuralIntegration = (
     };
   }, []);
 
-  // Broadcast cardiovascular integrista throttled
+  // Broadcast cardiovascular calibrado (menos frecuente)
   const cardiovascularBroadcast = useCallback((signalType: string, payload: any) => {
     if (isDestroyedRef.current || !cardiovascularSystem.current) {
       return;
@@ -83,7 +83,7 @@ export const useNeuralIntegration = (
       type: signalType,
       payload,
       timestamp: Date.now(),
-      integrista_version: 'v8.0'
+      integrista_version: 'v8.2'
     });
 
     if (processed) {
@@ -99,16 +99,16 @@ export const useNeuralIntegration = (
         type: signalType as any,
         payload: {
           ...payload,
-          cardiovascular_integrista_v8_0: true,
-          detox_integrated: true,
+          cardiovascular_integrista_v8_2: true,
+          detox_calibrated: true,
           vitals: cardiovascularSystem.current.getIntegratedSystemStatus()
         },
-        priority: 'MEDIUM' as any
+        priority: 'LOW' as any // Prioridad baja para v8.2
       });
     }
   }, [neural, moduleType, capabilities, currentState]);
 
-  // Broadcast ultra-controlado con mayor delay para v8.0
+  // Broadcast ultra-controlado con mayor delay para v8.2
   useEffect(() => {
     if (isDestroyedRef.current || !cardiovascularSystem.current) return;
     
@@ -120,31 +120,32 @@ export const useNeuralIntegration = (
             cardiovascularSystem.current && 
             cardiovascularSystem.current.canPump()) {
           
-          cardiovascularBroadcast('DATA_MUTATION_INTEGRISTA_V8_0', {
+          cardiovascularBroadcast('DATA_MUTATION_CALIBRATED_V8_2', {
             new_state: currentState,
             user_id: user?.id,
             timestamp: Date.now(),
-            system_health: 'integrista_optimized',
+            system_health: 'integrista_calibrated',
             detox_status: cardiovascularSystem.current.getIntegratedDetoxStatus()
           });
         }
-      }, 60000); // Aumentado a 60 segundos para v8.0
+      }, 120000); // Aumentado a 2 minutos para v8.2
 
       return () => clearTimeout(timeoutId);
     }
   }, [currentState, cardiovascularBroadcast, user?.id]);
 
-  // Suscripción cardiovascular throttled
+  // Suscripción cardiovascular silenciosa
   useEffect(() => {
     if (isDestroyedRef.current) return;
     
     const unsubscribe = neural.subscribeToSignals(moduleId.current, (signal) => {
       if (isDestroyedRef.current) return;
       
+      // Solo logs críticos
       if (signal.type === 'EMERGENCY_COORDINATION') {
         const now = Date.now();
         if (now - lastLogTime.current > logThrottle) {
-          console.log('🫀 Sistema cardiovascular integrista procesando emergencia v8.0');
+          console.log('🫀 Sistema cardiovascular v8.2 procesando emergencia');
           lastLogTime.current = now;
         }
       }
@@ -153,7 +154,7 @@ export const useNeuralIntegration = (
     return unsubscribe;
   }, [neural, moduleType]);
 
-  // Acciones cardiovasculares integradas con delay aumentado
+  // Acciones cardiovasculares con delay aumentado para v8.2
   const broadcastUserAction = useCallback((action: string, payload: any = {}) => {
     if (isDestroyedRef.current || !cardiovascularSystem.current) return;
     
@@ -170,16 +171,16 @@ export const useNeuralIntegration = (
           cardiovascularSystem.current && 
           cardiovascularSystem.current.canPump()) {
         
-        cardiovascularBroadcast('USER_ACTION_INTEGRISTA_V8_0', {
+        cardiovascularBroadcast('USER_ACTION_CALIBRATED_V8_2', {
           action,
           user_id: user?.id,
           module_context: currentState,
           system_vitals: cardiovascularSystem.current.getIntegratedSystemStatus(),
-          integrista_info: 'v8_0_unified',
+          integrista_info: 'v8_2_calibrated',
           ...payload
         });
       }
-    }, 8000); // Aumentado a 8 segundos para v8.0
+    }, 15000); // Aumentado a 15 segundos para v8.2
   }, [cardiovascularBroadcast, user?.id, currentState]);
 
   // Cleanup NO destructivo del singleton
@@ -195,31 +196,31 @@ export const useNeuralIntegration = (
     systemHealth: {
       ...neural.systemHealth,
       cardiovascular: cardiovascularSystem.current?.getIntegratedSystemStatus() || null,
-      integrista_status: 'v8_0_unified'
+      integrista_status: 'v8_2_calibrated'
     },
     
-    // Helpers cardiovasculares integrados con delays aumentados
+    // Helpers cardiovasculares calibrados (delays aumentados)
     notifyProgress: useCallback((progress: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('PROGRESS_INTEGRISTA_V8_0', progress), 20000);
+      setTimeout(() => broadcastUserAction('PROGRESS_CALIBRATED_V8_2', progress), 30000); // 30 seg
     }, [broadcastUserAction]),
     
     notifyCompletion: useCallback((completion: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('COMPLETION_INTEGRISTA_V8_0', completion), 12000);
+      setTimeout(() => broadcastUserAction('COMPLETION_CALIBRATED_V8_2', completion), 20000); // 20 seg
     }, [broadcastUserAction]),
     
     notifyEngagement: useCallback((engagement: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('ENGAGEMENT_INTEGRISTA_V8_0', engagement), 25000);
+      setTimeout(() => broadcastUserAction('ENGAGEMENT_CALIBRATED_V8_2', engagement), 45000); // 45 seg
     }, [broadcastUserAction]),
     
     requestRecommendation: useCallback((context: any) => {
       if (isDestroyedRef.current) return;
-      setTimeout(() => broadcastUserAction('RECOMMENDATION_INTEGRISTA_V8_0', context), 5000);
+      setTimeout(() => broadcastUserAction('RECOMMENDATION_CALIBRATED_V8_2', context), 10000); // 10 seg
     }, [broadcastUserAction]),
 
-    // Sistema de emergencia cardiovascular integrista
+    // Sistema de emergencia cardiovascular v8.2
     emergencyReset: useCallback(() => {
       if (cardiovascularSystem.current) {
         cardiovascularSystem.current.emergencyReset();
@@ -227,10 +228,10 @@ export const useNeuralIntegration = (
       lastBroadcastRef.current = '';
       isDestroyedRef.current = false;
       lastLogTime.current = 0;
-      console.log('🫀 Sistema cardiovascular integrista reiniciado v8.0');
+      console.log('🫀 Sistema cardiovascular v8.2 reiniciado');
     }, []),
 
-    // Nuevos métodos específicos del sistema integrista
+    // Métodos específicos del sistema calibrado v8.2
     activateEmergencyDetox: useCallback(() => {
       if (cardiovascularSystem.current) {
         cardiovascularSystem.current.activateIntegratedEmergencyMode();

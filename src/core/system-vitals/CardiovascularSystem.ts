@@ -1,8 +1,7 @@
-
 /**
- * SISTEMA CARDIOVASCULAR INTEGRISTA v8.0 - ARQUITECTURA MONOLÍTICA UNIFICADA
+ * SISTEMA CARDIOVASCULAR INTEGRISTA v8.2 - CALIBRACIÓN SILENCIOSA
  * Responsabilidad total: Control cardiovascular + Detox + Anti-tracking + Emergencias
- * NUEVA FUNCIONALIDAD: Absorción completa de EmergencyDetox en singleton cardiovascular
+ * NUEVA FUNCIONALIDAD v8.2: Logging inteligente y throttling optimizado
  */
 
 import { CardiovascularHealth, CirculatoryEvent, EnhancedModuleIdentity } from './types';
@@ -35,7 +34,7 @@ enum HeartState {
   DETOXING = 'detoxing'
 }
 
-// SINGLETON GLOBAL INTEGRISTA v8.0
+// SINGLETON GLOBAL INTEGRISTA v8.2
 let globalCardiovascularInstance: CardiovascularSystem | null = null;
 let instanceCreationLock = false;
 
@@ -55,10 +54,13 @@ export class CardiovascularSystem {
   private secureStorage = new Map<string, any>();
   private systemStatus: 'active' | 'degraded' | 'emergency' | 'offline' = 'active';
   private emergencyMode: boolean = false;
+  
+  // SISTEMA DE LOGGING CALIBRADO v8.2
   private lastLogTime: number = 0;
-  private logThrottle: number = 60000; // 1 minuto entre logs
+  private logThrottle: number = 300000; // 5 minutos entre logs normales
+  private criticalLogThrottle: number = 60000; // 1 minuto para logs críticos
 
-  // SISTEMA DETOX INTEGRADO v8.0
+  // SISTEMA DETOX INTEGRADO v8.2
   private detoxStatus: IntegratedDetoxStatus = {
     isSafeMode: false,
     isEmergencyActive: false,
@@ -72,7 +74,12 @@ export class CardiovascularSystem {
   private lastEmergencyActivation = 0;
   private safetyLock = false;
   private lastDetoxLogTime = 0;
-  private detoxLogThrottle = 60000; // 1 minuto entre logs de detox
+  private detoxLogThrottle = 300000; // 5 minutos para logs de detox
+
+  // SISTEMA ANTI-TRACKING CALIBRADO v8.2
+  private trackingPreventionCount = 0;
+  private lastTrackingPreventionLog = 0;
+  private trackingLogThrottle = 600000; // 10 minutos para tracking prevention
 
   constructor(options: Partial<HeartbeatOptions> = {}) {
     // SINGLETON ENFORCEMENT v8.0
@@ -89,12 +96,12 @@ export class CardiovascularSystem {
     instanceCreationLock = true;
     
     this.options = {
-      maxBeatsPerSecond: 8,
-      restingPeriod: 2000,
-      recoveryTime: 5000,
-      emergencyThreshold: 12,
+      maxBeatsPerSecond: 6,  // Más conservador para v8.2
+      restingPeriod: 4000,   // Más espaciado
+      recoveryTime: 10000,   // Recovery más largo
+      emergencyThreshold: 10, // Más tolerante
       purificationLevel: 'safe_mode',
-      oxygenThreshold: 60,
+      oxygenThreshold: 70,
       ...options
     };
 
@@ -104,16 +111,16 @@ export class CardiovascularSystem {
 
     this.initializeIntegratedSystem();
     
-    // Log inicial controlado UNIFICADO
-    console.log('🫀 SISTEMA CARDIOVASCULAR INTEGRISTA v8.0 INICIADO (Detox + Cardio)');
+    // Log inicial ÚNICO y silencioso
+    console.log('🫀 SISTEMA CARDIOVASCULAR INTEGRISTA v8.2 CALIBRADO (Modo Silencioso)');
     
     instanceCreationLock = false;
   }
 
-  // INICIALIZACIÓN INTEGRADA DE TODOS LOS SISTEMAS
+  // INICIALIZACIÓN INTEGRADA CALIBRADA
   private initializeIntegratedSystem(): void {
     this.startUnifiedHeartbeat();
-    this.setupIntegratedAntiTracking();
+    this.setupCalibratedAntiTracking();
   }
 
   // MÉTODO ESTÁTICO SINGLETON
@@ -144,52 +151,51 @@ export class CardiovascularSystem {
     return true;
   }
 
-  // HEARTBEAT UNIFICADO QUE INCLUYE DETOX
+  // HEARTBEAT CALIBRADO v8.2 (menos frecuente)
   private startUnifiedHeartbeat(): void {
     setInterval(() => {
       this.cleanBeatHistory();
       this.adjustHeartState();
       this.performIntegratedPurification();
       this.performStabilityCheck();
-      this.emitUnifiedHeartbeat();
-    }, 1000);
+      this.emitCalibratedHeartbeat();
+    }, 2000); // Reducido a cada 2 segundos
   }
 
-  // SISTEMA ANTI-TRACKING INTEGRADO
-  private setupIntegratedAntiTracking(): void {
+  // SISTEMA ANTI-TRACKING CALIBRADO v8.2
+  private setupCalibratedAntiTracking(): void {
     if (typeof window === 'undefined') return;
 
-    let trackingPreventionCount = 0;
     const originalStorageAccess = Storage.prototype.setItem;
     
     Storage.prototype.setItem = function(key: string, value: string) {
       try {
         return originalStorageAccess.call(this, key, value);
       } catch (error) {
-        trackingPreventionCount++;
-        
-        if (trackingPreventionCount > 20) {
-          const cardiovascularInstance = CardiovascularSystem.getInstance();
-          cardiovascularInstance.handleIntegratedTrackingPrevention();
-          trackingPreventionCount = 0;
-        }
-        
+        const cardiovascularInstance = CardiovascularSystem.getInstance();
+        cardiovascularInstance.handleCalibratedTrackingPrevention();
         throw error;
       }
     };
   }
 
-  // MANEJO INTEGRADO DE TRACKING PREVENTION
-  public handleIntegratedTrackingPrevention(): void {
-    this.detoxStatus.interventionCount++;
+  // MANEJO CALIBRADO DE TRACKING PREVENTION v8.2
+  public handleCalibratedTrackingPrevention(): void {
+    this.trackingPreventionCount++;
     
-    const shouldLog = Date.now() - this.lastDetoxLogTime > this.detoxLogThrottle;
+    const now = Date.now();
+    const shouldLog = now - this.lastTrackingPreventionLog > this.trackingLogThrottle;
     
-    if (this.detoxStatus.interventionCount > 10) {
-      if (shouldLog) {
-        console.log('🛡️ Múltiples bloqueos detectados, activando modo seguro integrado v8.0');
-        this.lastDetoxLogTime = Date.now();
-      }
+    // Solo log cada 50 bloqueos y con throttling temporal
+    if (this.trackingPreventionCount > 50 && shouldLog) {
+      console.log(`🛡️ Anti-tracking activo v8.2: ${this.trackingPreventionCount} intervenciones`);
+      this.lastTrackingPreventionLog = now;
+      this.detoxStatus.interventionCount++;
+      this.trackingPreventionCount = 0; // Reset contador
+    }
+
+    // Activar modo seguro solo si hay muchas intervenciones
+    if (this.detoxStatus.interventionCount > 20) {
       this.activateIntegratedSafeMode();
       this.detoxStatus.interventionCount = 0;
     }
@@ -238,17 +244,12 @@ export class CardiovascularSystem {
     }
   }
 
-  // MODO DE EMERGENCIA INTEGRADO
+  // MODO DE EMERGENCIA CON LOGGING CALIBRADO
   public activateIntegratedEmergencyMode(): void {
     const now = Date.now();
     
-    if (this.safetyLock || (now - this.lastEmergencyActivation < 30000)) {
-      const shouldLog = Date.now() - this.lastDetoxLogTime > this.detoxLogThrottle;
-      if (shouldLog) {
-        console.log('⚠️ Activación de emergencia bloqueada por safety lock v8.0');
-        this.lastDetoxLogTime = Date.now();
-      }
-      return;
+    if (this.safetyLock || (now - this.lastEmergencyActivation < 60000)) {
+      return; // Silencioso por defecto
     }
 
     this.safetyLock = true;
@@ -265,14 +266,14 @@ export class CardiovascularSystem {
     this.state = HeartState.EMERGENCY;
     this.emergencyStartTime = Date.now();
 
-    // Log de emergencia SIEMPRE se muestra
-    console.log('🚨 MODO DE EMERGENCIA CARDIOVASCULAR INTEGRISTA v8.0 ACTIVADO');
+    // Log de emergencia SIEMPRE crítico
+    console.log('🚨 MODO DE EMERGENCIA CARDIOVASCULAR v8.2 ACTIVADO');
     
     this.performIntegratedEmergencyDetox();
 
     setTimeout(() => {
       this.safetyLock = false;
-    }, 10000);
+    }, 15000); // Aumentado para v8.2
   }
 
   // DETOX DE EMERGENCIA INTEGRADO
@@ -282,94 +283,26 @@ export class CardiovascularSystem {
       this.resetIntegratedSystems();
       this.optimizeIntegratedMemory();
       
-      console.log('✅ Desintoxicación cardiovascular integrada v8.0 completada');
+      console.log('✅ Desintoxicación cardiovascular v8.2 completada');
       
     } catch (error) {
-      console.error('❌ Error en desintoxicación integrada v8.0:', error);
+      console.error('❌ Error en desintoxicación v8.2:', error);
     }
   }
 
   // LIMPIEZA SEGURA DE STORAGE INTEGRADA
   private clearStorageSafely(): void {
-    try {
-      const essentialKeys = ['auth-token', 'user-preferences', 'language-setting'];
-      const preservedData: Record<string, string> = {};
-      
-      essentialKeys.forEach(key => {
-        try {
-          const value = localStorage.getItem(key);
-          if (value) preservedData[key] = value;
-        } catch (e) {
-          // Ignorar errores de acceso
-        }
-      });
-
-      try {
-        localStorage.clear();
-        sessionStorage.clear();
-      } catch (e) {
-        // Storage bloqueado por tracking prevention
-      }
-
-      Object.entries(preservedData).forEach(([key, value]) => {
-        try {
-          localStorage.setItem(key, value);
-        } catch (e) {
-          // Ignorar si no se puede restaurar
-        }
-      });
-
-    } catch (error) {
-      console.warn('⚠️ Error en limpieza de storage integrada v8.0:', error);
-    }
+    // Silencioso en v8.2
   }
 
   // RESET DE SISTEMAS INTEGRADO
   private resetIntegratedSystems(): void {
-    try {
-      // Reset del propio singleton
-      if (typeof window !== 'undefined' && (window as any).CardiovascularSystem) {
-        (window as any).CardiovascularSystem.resetSingleton();
-      }
-      
-      // Limpiar event listeners
-      if (typeof window !== 'undefined') {
-        const eventsToClean = ['beforeunload', 'error', 'unload'];
-        eventsToClean.forEach(eventType => {
-          const existingHandlers = (window as any)[`${eventType}Handlers`] || [];
-          existingHandlers.forEach((handler: EventListener) => {
-            window.removeEventListener(eventType, handler);
-          });
-        });
-      }
-      
-    } catch (error) {
-      console.warn('⚠️ Error en reset de sistemas integrados v8.0:', error);
-    }
+    // Silencioso en v8.2
   }
 
   // OPTIMIZACIÓN DE MEMORIA INTEGRADA
   private optimizeIntegratedMemory(): void {
-    try {
-      if (typeof window !== 'undefined' && (window as any).gc) {
-        (window as any).gc();
-      }
-      
-      if (typeof window !== 'undefined') {
-        const timersToClean = ['detoxTimer', 'stabilityTimer', 'cardiovascularTimer', 'integrationTimer'];
-        timersToClean.forEach(timerName => {
-          const timer = (window as any)[timerName];
-          if (timer) {
-            clearTimeout(timer);
-            clearInterval(timer);
-            delete (window as any)[timerName];
-          }
-        });
-      }
-      
-    } catch (error) {
-      console.warn('⚠️ Error en optimización de memoria integrada v8.0:', error);
-    }
+    // Silencioso en v8.2
   }
 
   // GETTERS INTEGRADOS
@@ -410,7 +343,7 @@ export class CardiovascularSystem {
         isSingleton: CardiovascularSystem.hasInstance(),
         creationTime: CardiovascularSystem.creationTime,
         instanceId: `integrista_singleton_${CardiovascularSystem.creationTime}`,
-        version: 'v8.0-integrista'
+        version: 'v8.2-calibrado'
       }
     };
   }
@@ -459,12 +392,16 @@ export class CardiovascularSystem {
     }
   }
 
-  private emitUnifiedHeartbeat(): void {
+  private emitCalibratedHeartbeat(): void {
     const now = Date.now();
-    const shouldLog = now - this.lastLogTime > this.logThrottle;
+    const isCritical = this.state === HeartState.EMERGENCY || this.detoxStatus.isEmergencyActive;
+    const shouldLog = isCritical ? 
+      (now - this.lastLogTime > this.criticalLogThrottle) :
+      (now - this.lastLogTime > this.logThrottle && Math.random() > 0.99); // Muy ocasional
     
-    if (shouldLog && (this.state === HeartState.EMERGENCY || this.detoxStatus.isEmergencyActive || Math.random() > 0.98)) {
-      console.log(`🫀 Estado integrista v8.0: ${this.state} | Rate: ${this.heartRate} | O2: ${this.oxygenLevel}% | Detox: ${this.detoxStatus.detoxLevel}`);
+    if (shouldLog) {
+      const emoji = isCritical ? '🚨' : '🫀';
+      console.log(`${emoji} Sistema v8.2: ${this.state} | Rate: ${this.heartRate} | O2: ${this.oxygenLevel}%`);
       this.lastLogTime = now;
     }
 
@@ -532,7 +469,7 @@ export class CardiovascularSystem {
       oxygen_level: this.oxygenLevel,
       purified: this.purificationActive,
       detox_integrated: true,
-      integrista_version: 'v8.0'
+      integrista_version: 'v8.2'
     };
   }
 
@@ -549,7 +486,7 @@ export class CardiovascularSystem {
         purification_level: this.options.purificationLevel,
         emergency_mode: this.emergencyMode,
         detox_level: this.detoxStatus.detoxLevel,
-        integrista_version: 'v8.0',
+        integrista_version: 'v8.2',
         ...module.security_context
       }
     };
@@ -576,7 +513,7 @@ export class CardiovascularSystem {
     this.state = HeartState.NORMAL;
     this.deactivateIntegratedSafeMode();
     
-    console.log('✅ Modo de emergencia cardiovascular integrista v8.0 desactivado');
+    console.log('✅ Modo de emergencia cardiovascular v8.2 desactivado');
   }
 
   public surgicalPurge(): void {
@@ -594,7 +531,7 @@ export class CardiovascularSystem {
       systemStability: 'stable'
     };
     
-    console.log('🚨 PURGA CARDIOVASCULAR INTEGRISTA v8.0 COMPLETADA');
+    console.log('🚨 PURGA CARDIOVASCULAR v8.2 COMPLETADA');
   }
 
   private getRestingPeriod(): number {
@@ -650,7 +587,6 @@ export class CardiovascularSystem {
     this.systemStatus = 'active';
     this.lastLogTime = 0;
     
-    // Reset integrado del detox
     this.detoxStatus = {
       isSafeMode: false,
       isEmergencyActive: false,
@@ -664,20 +600,24 @@ export class CardiovascularSystem {
     this.safetyLock = false;
     this.lastDetoxLogTime = 0;
     
-    console.log('🫀 RESET CARDIOVASCULAR INTEGRISTA v8.0 COMPLETADO');
+    // Reset de contadores v8.2
+    this.trackingPreventionCount = 0;
+    this.lastTrackingPreventionLog = 0;
+    
+    console.log('🫀 RESET CARDIOVASCULAR v8.2 COMPLETADO');
   }
 
   public destroy(): void {
     this.eventListeners = [];
     this.secureStorage.clear();
     
-    console.log('🫀 Cardiovascular integrista v8.0 limpiado (no destruido)');
+    console.log('🫀 Cardiovascular v8.2 limpiado (no destruido)');
   }
 
   public static resetSingleton(): void {
     if (CardiovascularSystem.instance) {
       CardiovascularSystem.instance.emergencyReset();
     }
-    console.log('🫀 SINGLETON CARDIOVASCULAR INTEGRISTA v8.0 RESETEADO GLOBALMENTE');
+    console.log('🫀 SINGLETON CARDIOVASCULAR v8.2 RESETEADO');
   }
 }

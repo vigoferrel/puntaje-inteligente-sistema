@@ -1,7 +1,6 @@
-
 /**
- * SISTEMA CIRCULATORIO INTEGRISTA v8.0 - DELEGACIÓN COMPLETA
- * Responsabilidad única: Delegación al CardiovascularSystem integrista
+ * SISTEMA CIRCULATORIO v8.2 - DELEGACIÓN CALIBRADA
+ * Responsabilidad única: Delegación silenciosa al CardiovascularSystem
  */
 
 import { CardiovascularSystem } from './CardiovascularSystem';
@@ -10,30 +9,30 @@ import { SystemVitals, CirculatoryEvent, EnhancedModuleIdentity } from './types'
 export class CirculatorySystem {
   private heart: CardiovascularSystem;
   private lastLogTime: number = 0;
-  private logThrottle: number = 120000; // 2 minutos
+  private logThrottle: number = 300000; // 5 minutos para v8.2
 
   constructor() {
-    // USAR SINGLETON INTEGRISTA v8.0
+    // USAR SINGLETON CALIBRADO v8.2
     this.heart = CardiovascularSystem.getInstance({
-      maxBeatsPerSecond: 5,     // Más conservador para v8.0
-      restingPeriod: 3000,      // Más espaciado
-      recoveryTime: 8000,       // Recovery más largo
+      maxBeatsPerSecond: 4,     // Más conservador para v8.2
+      restingPeriod: 4000,      // Más espaciado
+      recoveryTime: 10000,      // Recovery más largo
       emergencyThreshold: 8,    // Más tolerante
-      purificationLevel: 'maximum',
-      oxygenThreshold: 80
+      purificationLevel: 'safe_mode',
+      oxygenThreshold: 70
     });
 
-    this.connectToIntegristaSystem();
+    this.connectToCalibratedSystem();
   }
 
-  private connectToIntegristaSystem(): void {
-    // El sistema cardiovascular integrista maneja TODA la funcionalidad
+  private connectToCalibratedSystem(): void {
+    // Sistema circulatorio silencioso - delegación completa
     this.heart.subscribe((event: CirculatoryEvent) => {
       if (event.type === 'heartbeat') {
-        // Sistema circulatorio simplificado - solo delega
         const now = Date.now();
-        if (now - this.lastLogTime > this.logThrottle && Math.random() > 0.95) {
-          console.log('🩸 Sistema circulatorio v8.0 delegando al integrista');
+        // Solo log muy ocasional y crítico
+        if (now - this.lastLogTime > this.logThrottle && Math.random() > 0.98) {
+          console.log('🩸 Sistema circulatorio v8.2 delegando (modo silencioso)');
           this.lastLogTime = now;
         }
       }
@@ -49,7 +48,6 @@ export class CirculatorySystem {
       return false;
     }
 
-    // Delegación completa al sistema cardiovascular integrista
     const pumped = this.heart.pump();
     if (!pumped) return false;
 
@@ -99,12 +97,11 @@ export class CirculatorySystem {
   }
 
   public emergencyReset(): void {
-    // Delegación completa al sistema integrista
     this.heart.emergencyReset();
   }
 
   public destroy(): void {
     // NO destruir el singleton integrista
-    console.log('🩸 Sistema circulatorio v8.0 limpiado (integrista preservado)');
+    console.log('🩸 Sistema circulatorio v8.2 limpiado (integrista preservado)');
   }
 }
