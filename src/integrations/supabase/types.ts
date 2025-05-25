@@ -1164,6 +1164,10 @@ export type Database = {
         Args: { codigo_examen_param: string }
         Returns: Json
       }
+      obtener_examen_matematica2_completo: {
+        Args: { codigo_examen_param: string }
+        Returns: Json
+      }
       obtener_respuestas_correctas_examen: {
         Args: { codigo_examen: string }
         Returns: {
