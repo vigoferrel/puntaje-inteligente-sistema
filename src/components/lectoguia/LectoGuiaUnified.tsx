@@ -141,7 +141,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
                   <AnimatePresence>
                     {messages.map((message, index) => (
                       <motion.div
-                        key={index}
+                        key={message.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -225,7 +225,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaUnifiedProps> = ({
                           <motion.button
                             key={index}
                             whileHover={{ scale: 1.02 }}
-                            onClick={() => handleOptionSelect(index)}
+                            onClick={() => handleOptionSelect(option)}
                             className={`w-full text-left p-3 rounded-lg border transition-all ${
                               selectedOption === option
                                 ? showFeedback

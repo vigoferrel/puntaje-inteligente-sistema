@@ -18,9 +18,9 @@ export const useIntersectionalState = (userId?: string) => {
       activeModule: 'chat',
       crossModuleMetrics: {
         totalStudyTime: systemMetrics.todayStudyTime,
-        exercisesCompleted: userProgress.completedExercises,
-        averagePerformance: userProgress.overallScore,
-        streakDays: userProgress.streak
+        exercisesCompleted: userProgress.totalExercises,
+        averagePerformance: userProgress.averageScore,
+        streakDays: userProgress.streakDays
       }
     },
     modules: {
@@ -178,9 +178,9 @@ export const useIntersectionalState = (userId?: string) => {
       updateContext({
         crossModuleMetrics: {
           totalStudyTime: systemMetrics.todayStudyTime,
-          exercisesCompleted: userProgress.completedExercises,
-          averagePerformance: userProgress.overallScore,
-          streakDays: userProgress.streak
+          exercisesCompleted: userProgress.totalExercises,
+          averagePerformance: userProgress.averageScore,
+          streakDays: userProgress.streakDays
         }
       });
       

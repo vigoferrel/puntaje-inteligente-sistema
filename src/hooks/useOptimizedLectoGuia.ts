@@ -3,10 +3,14 @@ import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface OptimizedMessage {
+  id: string;
   type: 'user' | 'assistant';
   content: string;
   source?: string;
   timestamp: Date;
+  metadata?: {
+    costSaving?: number;
+  };
 }
 
 interface OptimizedExercise {
@@ -23,15 +27,24 @@ interface OptimizedExercise {
 
 interface OptimizationStats {
   quality: string;
-  officialContentUsage?: number;
-  aiUsage?: number;
-  costSavings?: number;
+  officialContentUsage: number;
+  aiUsage: number;
+  costSavings: number;
+}
+
+interface LectoGuiaStats {
+  exercisesCompleted: number;
+  averageScore: number;
+  streak: number;
+  todayStudyTime: number;
+  optimizationStats: OptimizationStats;
 }
 
 export const useOptimizedLectoGuia = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<OptimizedMessage[]>([
     {
+      id: '1',
       type: 'assistant',
       content: '¡Hola! Soy tu asistente neural para PAES. ¿En qué puedo ayudarte hoy?',
       timestamp: new Date()
@@ -55,6 +68,7 @@ export const useOptimizedLectoGuia = () => {
     if (!message.trim()) return;
 
     const userMessage: OptimizedMessage = {
+      id: Date.now().toString(),
       type: 'user',
       content: message,
       timestamp: new Date()
@@ -66,6 +80,7 @@ export const useOptimizedLectoGuia = () => {
     // Simular respuesta de IA
     setTimeout(() => {
       const assistantMessage: OptimizedMessage = {
+        id: (Date.now() + 1).toString(),
         type: 'assistant',
         content: `Entiendo tu consulta sobre "${message}". Te ayudo con información específica para ${activeSubject}.`,
         source: 'Neural IA',
@@ -117,12 +132,13 @@ export const useOptimizedLectoGuia = () => {
     setShowFeedback(true);
   }, []);
 
-  const getStats = useCallback(() => ({
+  const getStats = useCallback((): LectoGuiaStats => ({
     exercisesCompleted: 12,
     averageScore: 87,
     streak: 5,
-    todayStudyTime: 45
-  }), []);
+    todayStudyTime: 45,
+    optimizationStats
+  }), [optimizationStats]);
 
   return {
     messages,

@@ -8,6 +8,7 @@ interface SystemMetricsData {
   totalNodes: number;
   systemHealth: number;
   performanceScore: number;
+  streakDays: number;
 }
 
 export const useSystemMetrics = () => {
@@ -17,7 +18,8 @@ export const useSystemMetrics = () => {
     completedNodes: 8,
     totalNodes: 25,
     systemHealth: 95,
-    performanceScore: 87
+    performanceScore: 87,
+    streakDays: 5
   });
 
   // Actualizar métricas cada 30 segundos

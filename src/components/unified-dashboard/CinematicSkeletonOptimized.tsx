@@ -6,7 +6,7 @@ import { Loader2, Brain } from 'lucide-react';
 interface CinematicSkeletonOptimizedProps {
   message?: string;
   progress?: number;
-  variant?: 'full' | 'component';
+  variant?: 'full' | 'component' | 'card' | 'dashboard' | 'universe' | 'training' | 'diagnostic' | 'financial' | 'calendar';
 }
 
 export const CinematicSkeletonOptimized: React.FC<CinematicSkeletonOptimizedProps> = ({
