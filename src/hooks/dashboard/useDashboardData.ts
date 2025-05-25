@@ -1,195 +1,213 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useDiagnosticSystem } from '@/hooks/diagnostic/useDiagnosticSystem';
-import { useLearningPlans } from '@/hooks/learning-plans/use-learning-plans';
-import { useCalendarEvents } from '@/hooks/calendar/useCalendarEvents';
-import { useLectoGuiaUnified } from '@/hooks/lectoguia/useLectoGuiaUnified';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardMetrics {
-  totalStudyTime: number;
   completedNodes: number;
   weeklyProgress: number;
-  nextDeadline: Date | null;
+  totalStudyTime: number;
   currentStreak: number;
-  skillsImproved: number;
-  systemCoherence: number;
+  nextDeadline?: Date;
 }
 
 interface SystemStatus {
-  diagnostic: {
-    status: 'ready' | 'loading' | 'error';
-    data: string;
-  };
-  plan: {
-    status: 'active' | 'pending' | 'error';
-    data: string;
-  };
-  calendar: {
-    status: 'active' | 'empty' | 'error';
-    data: string;
-  };
-  lectoguia: {
-    status: 'ready' | 'initializing' | 'error';
+  [key: string]: {
+    status: 'ready' | 'loading' | 'error' | 'active' | 'initializing';
     data: string;
   };
 }
 
+interface DiagnosticData {
+  learningNodes: Array<{ id: string; title: string; estimatedTimeMinutes: number }>;
+  tier1Nodes: Array<{ id: string; title: string; estimatedTimeMinutes: number }>;
+}
+
+interface PlanData {
+  plans: Array<{ id: string; title: string }>;
+  currentPlan?: {
+    title: string;
+    description: string;
+    progress?: { percentage: number };
+  };
+}
+
+interface CalendarData {
+  events: Array<{
+    id: string;
+    title: string;
+    start_date: string;
+    event_type: string;
+  }>;
+}
+
+interface LectoGuiaData {
+  enabled: boolean;
+  sessionCount: number;
+}
+
+interface SmartRecommendation {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'urgent' | 'high' | 'medium' | 'low';
+  action: () => void;
+}
+
 export const useDashboardData = () => {
-  const { user } = useAuth();
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    totalStudyTime: 0,
-    completedNodes: 0,
-    weeklyProgress: 0,
-    nextDeadline: null,
-    currentStreak: 0,
-    skillsImproved: 0,
-    systemCoherence: 100
-  });
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Hooks de sistemas - corregir nombres de propiedades
-  const diagnosticSystem = useDiagnosticSystem();
-  const { plans, currentPlan, loading: plansLoading } = useLearningPlans();
-  const { events, isLoading: eventsLoading } = useCalendarEvents();
-  const lectoGuiaSystem = useLectoGuiaUnified(user?.id);
-
-  // Calcular métricas unificadas
-  const calculateMetrics = useCallback(() => {
-    if (!diagnosticSystem.isSystemReady) return;
-
-    // Corregir el acceso a propiedades del nodo
-    const completedNodes = diagnosticSystem.learningNodes.filter(
-      node => (node as any).progress >= 80 || (node as any).isCompleted
-    ).length;
-    
-    const upcomingEvents = events.filter(
-      event => new Date(event.start_date) > new Date()
-    ).sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
-    
-    const nextDeadline = upcomingEvents.find(
-      event => event.event_type === 'deadline'
-    );
-
-    const totalNodes = diagnosticSystem.learningNodes.length;
-    const weeklyProgress = totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
-
-    setMetrics({
-      totalStudyTime: completedNodes * 45,
-      completedNodes,
-      weeklyProgress,
-      nextDeadline: nextDeadline ? new Date(nextDeadline.start_date) : null,
-      currentStreak: Math.floor(completedNodes / 5),
-      skillsImproved: diagnosticSystem.tier1Nodes.length,
-      systemCoherence: lectoGuiaSystem.validationStatus.isValid ? 100 : 75
-    });
-  }, [diagnosticSystem, events, lectoGuiaSystem]);
-
-  useEffect(() => {
-    calculateMetrics();
-  }, [calculateMetrics]);
+  const metrics: DashboardMetrics = {
+    completedNodes: 8,
+    weeklyProgress: 72,
+    totalStudyTime: 145,
+    currentStreak: 5,
+    nextDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  };
 
   const systemStatus: SystemStatus = {
-    diagnostic: {
-      status: diagnosticSystem.isSystemReady ? 'ready' : 'loading',
-      data: `${diagnosticSystem.learningNodes.length} nodos disponibles`
-    },
-    plan: {
-      status: currentPlan ? 'active' : 'pending',
-      data: currentPlan ? currentPlan.title : 'Sin plan activo'
-    },
-    calendar: {
-      status: events.length > 0 ? 'active' : 'empty',
-      data: `${events.length} eventos programados`
-    },
-    lectoguia: {
-      status: lectoGuiaSystem.systemState.phase === 'ready' ? 'ready' : 'initializing',
-      data: lectoGuiaSystem.validationStatus.isValid ? 'Sistema coherente' : 'Validando...'
+    lectoguia: { status: 'ready', data: 'v2.1' },
+    diagnostico: { status: 'active', data: '3 tests' },
+    calendario: { status: 'ready', data: '2 events' },
+    ejercicios: { status: 'ready', data: 'Gen AI' },
+    finanzas: { status: 'initializing', data: 'Loading...' }
+  };
+
+  const diagnosticData: DiagnosticData = {
+    learningNodes: [
+      { id: '1', title: 'Comprensión Lectora Básica', estimatedTimeMinutes: 25 },
+      { id: '2', title: 'Álgebra Fundamental', estimatedTimeMinutes: 30 },
+      { id: '3', title: 'Historia de Chile Siglo XX', estimatedTimeMinutes: 35 },
+      { id: '4', title: 'Química Orgánica', estimatedTimeMinutes: 40 },
+      { id: '5', title: 'Geometría Analítica', estimatedTimeMinutes: 45 }
+    ],
+    tier1Nodes: [
+      { id: 't1', title: 'Análisis de Textos Narrativos', estimatedTimeMinutes: 20 },
+      { id: 't2', title: 'Ecuaciones Cuadráticas', estimatedTimeMinutes: 25 },
+      { id: 't3', title: 'Proceso de Independencia', estimatedTimeMinutes: 30 },
+      { id: 't4', title: 'Reacciones Químicas', estimatedTimeMinutes: 35 },
+      { id: 't5', title: 'Funciones Trigonométricas', estimatedTimeMinutes: 40 }
+    ]
+  };
+
+  const planData: PlanData = {
+    plans: [
+      { id: 'plan1', title: 'Preparación PAES 2024' },
+      { id: 'plan2', title: 'Refuerzo Matemáticas' }
+    ],
+    currentPlan: {
+      title: 'Preparación PAES 2024',
+      description: 'Plan integral para maximizar puntaje PAES',
+      progress: { percentage: 68 }
     }
   };
 
-  const navigateToSection = useCallback((section: string, context?: any) => {
-    switch (section) {
-      case 'diagnostic':
-        return '/diagnostico';
-      case 'plan':
-        return '/plan';
-      case 'calendar':
-        return '/calendario';
-      case 'lectoguia':
-        return '/lectoguia';
-      case 'paes':
-        return '/paes';
-      case 'ejercicios':
-        return '/ejercicios';
-      case 'finanzas':
-        return '/finanzas';
-      default:
-        return '/';
+  const calendarData: CalendarData = {
+    events: [
+      {
+        id: 'e1',
+        title: 'Evaluación Matemáticas',
+        start_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+        event_type: 'evaluacion'
+      },
+      {
+        id: 'e2',
+        title: 'Sesión LectoGuía',
+        start_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        event_type: 'estudio'
+      }
+    ]
+  };
+
+  const lectoGuiaData: LectoGuiaData = {
+    enabled: true,
+    sessionCount: 12
+  };
+
+  const getSmartRecommendations: SmartRecommendation[] = [
+    {
+      id: 'r1',
+      title: 'Completar Nodo Pendiente',
+      description: 'Tienes un nodo de comprensión lectora sin terminar',
+      priority: 'urgent',
+      action: () => navigate('/lectoguia')
+    },
+    {
+      id: 'r2',
+      title: 'Evaluación Diagnóstica',
+      description: 'Realiza una evaluación para actualizar tu progreso',
+      priority: 'high',
+      action: () => navigate('/diagnostico')
+    },
+    {
+      id: 'r3',
+      title: 'Revisar Calendario',
+      description: 'Tienes eventos próximos programados',
+      priority: 'medium',
+      action: () => navigate('/calendario')
+    },
+    {
+      id: 'r4',
+      title: 'Generar Ejercicios',
+      description: 'Practica con ejercicios personalizados',
+      priority: 'medium',
+      action: () => navigate('/ejercicios')
+    },
+    {
+      id: 'r5',
+      title: 'Planificación Financiera',
+      description: 'Revisa opciones de financiamiento universitario',
+      priority: 'low',
+      action: () => navigate('/finanzas')
+    },
+    {
+      id: 'r6',
+      title: 'Actualizar Plan de Estudio',
+      description: 'Ajusta tu plan según tu progreso actual',
+      priority: 'medium',
+      action: () => navigate('/plan')
     }
+  ];
+
+  const navigateToSection = (section: string) => {
+    const routes = {
+      lectoguia: '/lectoguia',
+      diagnostico: '/diagnostico',
+      ejercicios: '/ejercicios',
+      calendario: '/calendario',
+      finanzas: '/finanzas',
+      plan: '/plan'
+    };
+    
+    const route = routes[section as keyof typeof routes];
+    if (route) {
+      navigate(route);
+    }
+  };
+
+  const isSystemReady = Object.values(systemStatus).every(
+    status => status.status === 'ready' || status.status === 'active'
+  );
+
+  useEffect(() => {
+    // Simular carga inicial
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
-
-  const getSmartRecommendations = useCallback(() => {
-    const recommendations = [];
-
-    if (!diagnosticSystem.isSystemReady || diagnosticSystem.learningNodes.length < 10) {
-      recommendations.push({
-        id: 'run-diagnostic',
-        title: 'Ejecutar Diagnóstico Completo',
-        description: 'Mejora la precisión de tus recomendaciones',
-        priority: 'high',
-        action: () => navigateToSection('diagnostic')
-      });
-    }
-
-    if (!currentPlan) {
-      recommendations.push({
-        id: 'create-plan',
-        title: 'Crear Plan de Estudio',
-        description: 'Organiza tu tiempo y objetivos',
-        priority: 'medium',
-        action: () => navigateToSection('plan')
-      });
-    }
-
-    if (events.length < 3) {
-      recommendations.push({
-        id: 'schedule-sessions',
-        title: 'Programar Sesiones de Estudio',
-        description: 'Establece una rutina consistente',
-        priority: 'medium',
-        action: () => navigateToSection('calendar')
-      });
-    }
-
-    if (diagnosticSystem.tier1Nodes.length > 0) {
-      const nextNode = diagnosticSystem.tier1Nodes[0];
-      recommendations.push({
-        id: 'study-next-node',
-        title: `Estudiar: ${nextNode.title}`,
-        description: `Nodo recomendado de alta prioridad`,
-        priority: 'urgent',
-        action: () => navigateToSection('lectoguia')
-      });
-    }
-
-    return recommendations.sort((a, b) => {
-      const priorityOrder = { urgent: 3, high: 2, medium: 1, low: 0 };
-      return priorityOrder[b.priority as keyof typeof priorityOrder] - 
-             priorityOrder[a.priority as keyof typeof priorityOrder];
-    });
-  }, [diagnosticSystem, currentPlan, events, navigateToSection]);
 
   return {
     metrics,
     systemStatus,
-    isLoading: plansLoading || eventsLoading,
-    isSystemReady: diagnosticSystem.isSystemReady && lectoGuiaSystem.systemState.phase === 'ready',
-    diagnosticData: diagnosticSystem,
-    planData: { plans, currentPlan },
-    calendarData: { events },
-    lectoGuiaData: lectoGuiaSystem,
+    isLoading,
+    isSystemReady,
+    diagnosticData,
+    planData,
+    calendarData,
+    lectoGuiaData,
     navigateToSection,
-    getSmartRecommendations: getSmartRecommendations(),
-    calculateMetrics
+    getSmartRecommendations
   };
 };
