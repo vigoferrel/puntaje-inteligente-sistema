@@ -17,19 +17,27 @@ export const mapHistoriaSectionToPrueba = (section: string): TPAESPrueba => {
 
 /**
  * Mapea tipos de preguntas de Historia a habilidades PAES
+ * Actualizado con base en el contenido real del examen 2024
  */
 export const mapHistoriaQuestionToSkill = (questionNumber: number): TPAESHabilidad => {
-  // Formación Ciudadana (1-12) - Análisis crítico y evaluación
+  // Formación Ciudadana (1-12) - Pensamiento crítico y reflexión
   if (questionNumber >= 1 && questionNumber <= 12) {
     return 'CRITICAL_THINKING';
   }
   
-  // Historia (13-57) - Interpretación y análisis temporal
+  // Historia: Mundo, América y Chile (13-57)
   if (questionNumber >= 13 && questionNumber <= 57) {
+    // Preguntas de contexto histórico y análisis temporal (13-30)
     if (questionNumber <= 30) {
       return 'TEMPORAL_THINKING';
-    } else {
+    }
+    // Preguntas de análisis de fuentes y procesos (31-45)
+    else if (questionNumber <= 45) {
       return 'SOURCE_ANALYSIS';
+    }
+    // Preguntas de análisis multicausal y procesos complejos (46-57)
+    else {
+      return 'MULTICAUSAL_ANALYSIS';
     }
   }
   
@@ -61,21 +69,30 @@ export const getHistoriaSectionName = (questionNumber: number): string => {
 };
 
 /**
- * Obtiene la dificultad estimada según el número de pregunta
+ * Obtiene la dificultad estimada según el número de pregunta y contenido
  */
 export const getHistoriaQuestionDifficulty = (questionNumber: number): 'basic' | 'intermediate' | 'advanced' => {
-  // Primeras preguntas tienden a ser más básicas
-  if (questionNumber <= 20) {
-    return 'basic';
-  }
-  
-  // Preguntas medias son intermedias
-  if (questionNumber <= 50) {
+  // Formación Ciudadana: generalmente intermedia
+  if (questionNumber >= 1 && questionNumber <= 12) {
     return 'intermediate';
   }
   
-  // Últimas preguntas son más avanzadas
-  return 'advanced';
+  // Historia temprana: básica a intermedia
+  if (questionNumber >= 13 && questionNumber <= 25) {
+    return 'basic';
+  }
+  
+  // Historia media: intermedia
+  if (questionNumber >= 26 && questionNumber <= 45) {
+    return 'intermediate';
+  }
+  
+  // Historia avanzada y sistema económico: avanzada
+  if (questionNumber >= 46) {
+    return 'advanced';
+  }
+  
+  return 'intermediate';
 };
 
 /**
@@ -86,12 +103,47 @@ export const getHistoriaQuestionWeight = (questionNumber: number): number => {
   
   switch (section) {
     case 'Formación Ciudadana':
-      return 1.2; // Mayor peso por relevancia ciudadana
+      return 1.3; // Mayor peso por relevancia ciudadana
     case 'Historia: Mundo, América y Chile':
       return 1.0; // Peso estándar
     case 'Sistema Económico':
-      return 1.1; // Peso ligeramente mayor
+      return 1.2; // Peso mayor por complejidad
     default:
       return 1.0;
   }
+};
+
+/**
+ * Determina si una pregunta requiere análisis de texto/contexto
+ */
+export const requiresContextAnalysis = (questionNumber: number): boolean => {
+  // Preguntas que típicamente incluyen textos o contextos para analizar
+  return questionNumber >= 23 && questionNumber <= 45;
+};
+
+/**
+ * Obtiene el tipo de contenido predominante en una pregunta
+ */
+export const getHistoriaContentType = (questionNumber: number): string => {
+  if (questionNumber >= 1 && questionNumber <= 12) {
+    return 'Educación Cívica y Formación Ciudadana';
+  }
+  
+  if (questionNumber >= 13 && questionNumber <= 30) {
+    return 'Historia de Chile Siglo XIX';
+  }
+  
+  if (questionNumber >= 31 && questionNumber <= 45) {
+    return 'Historia Contemporánea y Mundial';
+  }
+  
+  if (questionNumber >= 46 && questionNumber <= 57) {
+    return 'Historia de América Latina';
+  }
+  
+  if (questionNumber >= 58 && questionNumber <= 65) {
+    return 'Economía y Sistemas Económicos';
+  }
+  
+  return 'Historia General';
 };

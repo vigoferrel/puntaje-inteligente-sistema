@@ -33,38 +33,64 @@ export interface PAESHistoriaExamComplete {
 }
 
 /**
- * Obtiene el examen completo de PAES Historia 2024 usando la estructura de tablas actual
+ * Obtiene el examen completo de PAES Historia 2024 usando la función específica de historia
  */
 export const fetchPAESHistoriaExam = async (): Promise<PAESHistoriaExamComplete | null> => {
   try {
-    console.log('🔍 Fetching PAES Historia exam from current database structure');
+    console.log('🔍 Fetching PAES Historia exam using historia-specific function');
+    
+    // Usar la función específica para historia
+    const { data, error } = await supabase.rpc('obtener_examen_historia_completo', {
+      codigo_examen_param: 'HISTORIA_2024_FORMA_123'
+    });
+
+    if (error) {
+      console.error('Error fetching Historia exam via RPC:', error);
+      // Fallback: usar consulta directa
+      return await fetchHistoriaExamDirect();
+    }
+
+    if (!data) {
+      console.warn('No data returned from Historia RPC function');
+      return await fetchHistoriaExamDirect();
+    }
+
+    console.log('✅ PAES Historia exam loaded via RPC:', data);
+    return data as PAESHistoriaExamComplete;
+
+  } catch (error) {
+    console.error('Error in fetchPAESHistoriaExam:', error);
+    // Fallback: usar consulta directa
+    return await fetchHistoriaExamDirect();
+  }
+};
+
+/**
+ * Fallback: obtiene el examen usando consultas directas
+ */
+const fetchHistoriaExamDirect = async (): Promise<PAESHistoriaExamComplete | null> => {
+  try {
+    console.log('🔄 Using direct query fallback for Historia exam');
     
     // Obtener examen base
     const { data: examenData, error: examenError } = await supabase
       .from('examenes')
       .select('*')
-      .eq('nombre', 'PAES Historia y Ciencias Sociales')
+      .or('nombre.ilike.%historia%,nombre.ilike.%ciencias sociales%')
       .eq('año', 2024)
       .single();
 
     if (examenError || !examenData) {
-      console.warn('No se encontró el examen PAES Historia 2024');
+      console.error('Error fetching exam:', examenError);
       return null;
     }
 
-    // Obtener preguntas con opciones
+    console.log('📖 Found exam:', examenData.nombre, 'ID:', examenData.id);
+
+    // Obtener preguntas con opciones usando join manual
     const { data: preguntasData, error: preguntasError } = await supabase
       .from('preguntas')
-      .select(`
-        numero,
-        enunciado,
-        contexto_adicional,
-        opciones (
-          letra,
-          texto,
-          es_correcta
-        )
-      `)
+      .select('*')
       .eq('examen_id', examenData.id)
       .order('numero');
 
@@ -73,29 +99,55 @@ export const fetchPAESHistoriaExam = async (): Promise<PAESHistoriaExamComplete 
       throw preguntasError;
     }
 
+    console.log(`📝 Found ${preguntasData?.length || 0} questions`);
+
+    // Obtener todas las opciones para estas preguntas
+    const preguntaIds = preguntasData?.map(p => p.id) || [];
+    const { data: opcionesData, error: opcionesError } = await supabase
+      .from('opciones_respuesta')
+      .select('*')
+      .in('pregunta_id', preguntaIds)
+      .order('letra');
+
+    if (opcionesError) {
+      console.error('Error fetching options:', opcionesError);
+      throw opcionesError;
+    }
+
+    console.log(`📋 Found ${opcionesData?.length || 0} options`);
+
+    // Agrupar opciones por pregunta
+    const opcionesByPregunta: Record<string, any[]> = {};
+    opcionesData?.forEach(opcion => {
+      if (!opcionesByPregunta[opcion.pregunta_id]) {
+        opcionesByPregunta[opcion.pregunta_id] = [];
+      }
+      opcionesByPregunta[opcion.pregunta_id].push(opcion);
+    });
+
     // Transformar datos al formato esperado
     const preguntas: PAESHistoriaQuestion[] = (preguntasData || []).map(pregunta => ({
       numero: pregunta.numero,
       enunciado: pregunta.enunciado,
-      contexto: pregunta.contexto_adicional,
-      imagen_url: undefined,
-      opciones: (pregunta.opciones || []).map(opcion => ({
+      contexto: pregunta.contexto || undefined,
+      imagen_url: pregunta.imagen_url || undefined,
+      opciones: (opcionesByPregunta[pregunta.id] || []).map(opcion => ({
         letra: opcion.letra,
-        contenido: opcion.texto,
+        contenido: opcion.contenido,
         es_correcta: opcion.es_correcta
       }))
     }));
 
     const examen: PAESHistoriaExam = {
       id: examenData.id.toString(),
-      codigo: `${examenData.nombre}_${examenData.año}_FORMA_${examenData.forma}`,
+      codigo: examenData.codigo,
       nombre: examenData.nombre,
       tipo: examenData.tipo,
       año: examenData.año,
       duracion_minutos: examenData.duracion_minutos,
       total_preguntas: examenData.total_preguntas,
       preguntas_validas: preguntas.length,
-      instrucciones: undefined
+      instrucciones: examenData.instrucciones || undefined
     };
 
     const result: PAESHistoriaExamComplete = {
@@ -103,11 +155,11 @@ export const fetchPAESHistoriaExam = async (): Promise<PAESHistoriaExamComplete 
       preguntas
     };
 
-    console.log(`✅ PAES Historia exam loaded: ${preguntas.length} preguntas`);
+    console.log(`✅ PAES Historia exam loaded via direct query: ${preguntas.length} preguntas`);
     return result;
 
   } catch (error) {
-    console.error('Error in fetchPAESHistoriaExam:', error);
+    console.error('Error in fetchHistoriaExamDirect:', error);
     throw error;
   }
 };
@@ -117,10 +169,41 @@ export const fetchPAESHistoriaExam = async (): Promise<PAESHistoriaExamComplete 
  */
 export const fetchHistoriaCorrectAnswers = async (): Promise<Record<number, string>> => {
   try {
+    // Usar la función RPC para obtener respuestas correctas
+    const { data, error } = await supabase.rpc('obtener_respuestas_correctas_examen_f153', {
+      codigo_examen_param: 'HISTORIA_2024_FORMA_123'
+    });
+
+    if (error) {
+      console.error('Error fetching correct answers via RPC:', error);
+      // Fallback: consulta directa
+      return await fetchCorrectAnswersDirect();
+    }
+
+    // Convertir a objeto para fácil acceso
+    const answers: Record<number, string> = {};
+    data?.forEach((row: any) => {
+      answers[row.numero_pregunta] = row.respuesta_correcta;
+    });
+
+    console.log(`📊 Found ${Object.keys(answers).length} correct answers`);
+    return answers;
+
+  } catch (error) {
+    console.error('Error in fetchHistoriaCorrectAnswers:', error);
+    return await fetchCorrectAnswersDirect();
+  }
+};
+
+/**
+ * Fallback para obtener respuestas correctas
+ */
+const fetchCorrectAnswersDirect = async (): Promise<Record<number, string>> => {
+  try {
     const { data: examenData } = await supabase
       .from('examenes')
       .select('id')
-      .eq('nombre', 'PAES Historia y Ciencias Sociales')
+      .or('nombre.ilike.%historia%,nombre.ilike.%ciencias sociales%')
       .eq('año', 2024)
       .single();
 
@@ -132,29 +215,29 @@ export const fetchHistoriaCorrectAnswers = async (): Promise<Record<number, stri
       .from('preguntas')
       .select(`
         numero,
-        opciones!inner (
+        opciones_respuesta!inner (
           letra
         )
       `)
       .eq('examen_id', examenData.id)
-      .eq('opciones.es_correcta', true);
+      .eq('opciones_respuesta.es_correcta', true);
 
     if (error) {
-      console.error('Error fetching correct answers:', error);
+      console.error('Error fetching correct answers direct:', error);
       throw error;
     }
 
     // Convertir a objeto para fácil acceso
     const answers: Record<number, string> = {};
     respuestasData?.forEach((row: any) => {
-      if (row.opciones && row.opciones.length > 0) {
-        answers[row.numero] = row.opciones[0].letra;
+      if (row.opciones_respuesta && row.opciones_respuesta.length > 0) {
+        answers[row.numero] = row.opciones_respuesta[0].letra;
       }
     });
 
     return answers;
   } catch (error) {
-    console.error('Error in fetchHistoriaCorrectAnswers:', error);
+    console.error('Error in fetchCorrectAnswersDirect:', error);
     throw error;
   }
 };
