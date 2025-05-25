@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticTest } from "@/types/diagnostic";
 import { ComprehensiveDiagnosticGenerator } from "./comprehensive-diagnostic-generator";
@@ -58,6 +57,27 @@ export class ComprehensiveDiagnosticOrchestrator {
     } catch (error) {
       console.error('❌ Error inicializando sistema modular:', error);
       throw error;
+    }
+  }
+
+  private async loadComprehensiveDiagnostics(): Promise<DiagnosticTest[]> {
+    try {
+      console.log('📋 Generando diagnósticos integrales con todos los recursos...');
+      
+      // Use the comprehensive diagnostic generator
+      const comprehensiveDiagnostics = await ComprehensiveDiagnosticGenerator.generateAllDiagnostics(this.userId);
+      
+      if (comprehensiveDiagnostics.length > 0) {
+        console.log(`✅ ${comprehensiveDiagnostics.length} diagnósticos integrales generados`);
+        return comprehensiveDiagnostics;
+      }
+      
+      // Fallback to database diagnostics if generation fails
+      return this.loadDatabaseDiagnostics();
+      
+    } catch (error) {
+      console.warn('⚠️ Error generando diagnósticos integrales, usando fallback:', error);
+      return this.loadDatabaseDiagnostics();
     }
   }
 

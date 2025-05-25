@@ -13,25 +13,43 @@ export interface SkillAssessment {
 export class SkillAssessmentEngine {
   static async assessUserSkills(userId: string, prueba: TPAESPrueba): Promise<SkillAssessment[]> {
     try {
-      const { data: skillData } = await supabase
+      // Primero obtenemos las habilidades PAES
+      const { data: skillData, error: skillError } = await supabase
         .from('paes_skills')
-        .select(`
-          id,
-          skill_type,
-          name,
-          impact_weight,
-          user_exercise_attempts!left(
-            is_correct,
-            created_at,
-            skill_demonstrated
-          )
-        `)
+        .select('id, skill_type, name, impact_weight')
         .eq('test_id', this.getTestIdFromPrueba(prueba));
 
-      return (skillData || []).map(skill => {
-        const attempts = skill.user_exercise_attempts || [];
-        const correctAttempts = attempts.filter(a => a.is_correct).length;
-        const totalAttempts = attempts.length;
+      if (skillError) {
+        console.error('Error obteniendo habilidades PAES:', skillError);
+        return [];
+      }
+
+      if (!skillData || skillData.length === 0) {
+        console.warn(`No se encontraron habilidades para la prueba ${prueba}`);
+        return [];
+      }
+
+      // Luego obtenemos los intentos de ejercicios del usuario
+      const { data: attemptData, error: attemptError } = await supabase
+        .from('user_exercise_attempts')
+        .select('is_correct, created_at, skill_demonstrated')
+        .eq('user_id', userId);
+
+      if (attemptError) {
+        console.error('Error obteniendo intentos de ejercicios:', attemptError);
+        return [];
+      }
+
+      const attempts = attemptData || [];
+
+      return skillData.map(skill => {
+        // Filtrar intentos relacionados con esta habilidad
+        const skillAttempts = attempts.filter(attempt => 
+          attempt.skill_demonstrated === skill.skill_type
+        );
+        
+        const correctAttempts = skillAttempts.filter(a => a.is_correct).length;
+        const totalAttempts = skillAttempts.length;
         const currentLevel = totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0;
         
         return {
@@ -39,7 +57,8 @@ export class SkillAssessmentEngine {
           currentLevel,
           recommendedFocus: this.calculateFocusPriority(currentLevel, skill.impact_weight),
           exerciseCount: totalAttempts,
-          lastActivity: attempts.length > 0 ? attempts[attempts.length - 1].created_at : null
+          lastActivity: skillAttempts.length > 0 ? 
+            skillAttempts[skillAttempts.length - 1].created_at : null
         };
       });
     } catch (error) {

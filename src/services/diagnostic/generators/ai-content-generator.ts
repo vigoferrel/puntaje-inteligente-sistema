@@ -109,11 +109,12 @@ export class AIContentGenerator {
   }
 
   private static getSkillIds(skills: TPAESHabilidad[]): number[] {
-    // Map skills to their database IDs
+    // Map skills to their database IDs - Agregando REFLECTION que faltaba
     const skillIdMap: Record<TPAESHabilidad, number> = {
       'TRACK_LOCATE': 1,
       'INTERPRET_RELATE': 2,
       'EVALUATE_REFLECT': 3,
+      'REFLECTION': 16, // Agregando la habilidad faltante
       'SOLVE_PROBLEMS': 4,
       'REPRESENT': 5,
       'MODEL': 6,

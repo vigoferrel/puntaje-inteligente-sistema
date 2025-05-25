@@ -143,8 +143,8 @@ export class RealExamDiagnosticGenerator {
       
       if (error) throw error;
       
-      // Properly cast the JSON response to our expected type
-      const examResponse = data as ExamRPCResponse;
+      // Cast seguro usando unknown como intermediario y validación
+      const examResponse = this.validateAndCastExamResponse(data);
       return examResponse?.preguntas || [];
     } catch (error) {
       console.warn(`No se pudo obtener examen ${examCode}, usando consulta directa`);
@@ -174,6 +174,32 @@ export class RealExamDiagnosticGenerator {
         .limit(20);
       
       return preguntas || [];
+    }
+  }
+  
+  // Función auxiliar para validar y hacer cast seguro
+  private static validateAndCastExamResponse(data: unknown): ExamRPCResponse | null {
+    try {
+      // Primer cast a unknown, luego validación de estructura
+      const response = data as unknown;
+      
+      if (!response || typeof response !== 'object') {
+        console.warn('Respuesta del examen no es un objeto válido');
+        return null;
+      }
+      
+      const examResponse = response as ExamRPCResponse;
+      
+      // Validar que tiene la estructura esperada
+      if (!examResponse.examen || !Array.isArray(examResponse.preguntas)) {
+        console.warn('Estructura de respuesta del examen no válida');
+        return null;
+      }
+      
+      return examResponse;
+    } catch (error) {
+      console.warn('Error validando respuesta del examen:', error);
+      return null;
     }
   }
   
