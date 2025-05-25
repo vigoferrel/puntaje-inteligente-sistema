@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -36,7 +35,8 @@ import {
   FlaskConical,
   ClipboardList,
   BarChart2,
-  Dumbbell
+  Dumbbell,
+  Compass
 } from "lucide-react";
 import { useCinematicDashboard } from "@/hooks/dashboard/useCinematicDashboard";
 import { useGlobalStore } from "@/store/globalStore";
@@ -54,6 +54,13 @@ const workflowItems = [
     url: "/diagnostico",
     icon: Stethoscope,
     phase: "diagnostic"
+  },
+  {
+    title: "SuperPAES Vocacional",
+    url: "/superpaes",
+    icon: Compass,
+    phase: "coordination",
+    badge: "Coordinador"
   },
   {
     title: "Plan Inteligente",
@@ -129,6 +136,8 @@ export function AppSidebar() {
     switch (phase) {
       case 'diagnostic':
         return stats.diagnostics > 0 ? 'completed' : 'available';
+      case 'coordination':
+        return 'available'; // SuperPAES siempre disponible como coordinador
       case 'planning':
         return stats.currentPlan > 0 ? 'completed' : 'available';
       case 'study':
@@ -190,6 +199,7 @@ export function AppSidebar() {
             <SidebarMenu className="space-y-1">
               {workflowItems.map((item, index) => {
                 const status = getPhaseStatus(item.phase);
+                const isCoordinator = item.phase === 'coordination';
                 
                 return (
                   <motion.div
@@ -205,13 +215,20 @@ export function AppSidebar() {
                           className={({ isActive }) =>
                             `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
                               isActive 
-                                ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/20" 
+                                ? isCoordinator
+                                  ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 border border-purple-500/30 shadow-lg shadow-purple-500/20"
+                                  : "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/20"
                                 : "text-gray-300 hover:text-white hover:bg-white/5"
                             }`
                           }
                         >
                           <item.icon className="h-4 w-4" />
                           <span className="flex-1">{item.title}</span>
+                          {item.badge && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 font-medium bg-purple-600 text-white">
+                              {item.badge}
+                            </Badge>
+                          )}
                           {getStatusBadge(status)}
                         </NavLink>
                       </SidebarMenuButton>

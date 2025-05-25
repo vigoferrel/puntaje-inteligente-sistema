@@ -11,6 +11,7 @@ import Diagnostico from '@/pages/Diagnostico';
 import Plan from '@/pages/Plan';
 import Progreso from '@/pages/Progreso';
 import Evaluacion from '@/pages/Evaluacion';
+import SuperPAES from '@/pages/SuperPAES';
 import PAESDashboard from '@/pages/PAESDashboard';
 import PAESUniversePage from '@/pages/PAESUniversePage';
 import SubjectDetail from '@/pages/SubjectDetail';
@@ -57,6 +58,7 @@ const router = createBrowserRouter([
       { path: '/progreso', element: <Progreso /> },
       { path: '/evaluacion', element: <Evaluacion /> },
       { path: '/evaluaciones', element: <Evaluacion /> },
+      { path: '/superpaes', element: <SuperPAES /> },
       { path: '/paes-dashboard', element: <PAESDashboard /> },
       { path: '/paes-universe', element: <PAESUniversePage /> },
       { path: '/paes', element: <PAES /> },

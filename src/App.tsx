@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { UnifiedAppProvider } from "./contexts/UnifiedAppProvider";
 import { IntersectionalProvider } from "./contexts/IntersectionalProvider";
 import { CinematicProvider } from "@/components/cinematic/CinematicTransitionSystem";
-import { GlobalErrorRecoveryProvider } from "@/core/performance/GlobalErrorRecovery";
+import { NeuralErrorBoundary } from "@/components/neural/NeuralErrorBoundary";
 import { AppRouter } from "@/router/AppRouter";
 
 const queryClient = new QueryClient({
@@ -22,7 +22,9 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <GlobalErrorRecoveryProvider>
+    <NeuralErrorBoundary 
+      onError={(error) => console.error('🧠 App Level Error:', error.message)}
+    >
       <UnifiedAppProvider>
         <IntersectionalProvider>
           <CinematicProvider>
@@ -36,7 +38,7 @@ const App = () => (
           </CinematicProvider>
         </IntersectionalProvider>
       </UnifiedAppProvider>
-    </GlobalErrorRecoveryProvider>
+    </NeuralErrorBoundary>
   </QueryClientProvider>
 );
 
