@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { fetchPAESHistoriaExam, getRandomHistoriaQuestions, getHistoriaQuestionsBySection } from '@/services/paes/paes-historia-service';
 import { generateHistoriaExercisesForNode } from '@/services/diagnostic-generator/historia-exercises';
 import { PAESHistoriaExamComplete, PAESHistoriaQuestion } from '@/services/paes/paes-historia-service';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 export const usePAESHistoriaIntegration = () => {
   const [historiaExam, setHistoriaExam] = useState<PAESHistoriaExamComplete | null>(null);

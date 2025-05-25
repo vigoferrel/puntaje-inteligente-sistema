@@ -1,8 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Exercise } from "@/types/ai-types";
 import { getRandomHistoriaQuestions, getHistoriaQuestionsBySection } from "@/services/paes/paes-historia-service";
+import { mapHistoriaQuestionToSkill } from "@/utils/paes-historia-mapper";
 
 /**
  * Genera ejercicios de Historia PAES para un nodo específico
@@ -54,17 +55,22 @@ export const generateHistoriaExercisesForNode = async (
       .slice(0, Math.min(count, historiaQuestions.length));
     
     // Convertir preguntas PAES a formato de ejercicios
-    const exercisesData = selectedQuestions.map(question => ({
-      node_id: nodeId,
-      test_id: testId,
-      skill_id: skillId,
-      question: question.enunciado + (question.contexto ? `\n\nContexto: ${question.contexto}` : ''),
-      options: question.opciones.map(opt => opt.contenido),
-      correct_answer: question.opciones.find(opt => opt.es_correcta)?.contenido || question.opciones[0].contenido,
-      explanation: `Pregunta ${question.numero} del examen PAES Historia y Ciencias Sociales 2024 - Forma 123`,
-      difficulty: 'intermediate' as const,
-      bloom_level: 'comprender' as const
-    }));
+    const exercisesData = selectedQuestions.map(question => {
+      const correctOption = question.opciones.find(opt => opt.es_correcta);
+      const habilidadPAES = mapHistoriaQuestionToSkill(question.numero);
+      
+      return {
+        node_id: nodeId,
+        test_id: testId,
+        skill_id: skillId,
+        question: question.enunciado + (question.contexto ? `\n\nContexto: ${question.contexto}` : ''),
+        options: question.opciones.map(opt => opt.contenido),
+        correct_answer: correctOption?.contenido || question.opciones[0].contenido,
+        explanation: `Pregunta ${question.numero} del examen PAES Historia y Ciencias Sociales 2024 - Habilidad: ${habilidadPAES}`,
+        difficulty: 'intermediate' as const,
+        bloom_level: 'comprender' as const
+      };
+    });
     
     // Guardar los ejercicios en la base de datos
     for (const exerciseData of exercisesData) {

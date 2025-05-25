@@ -19,26 +19,26 @@ export const mapHistoriaSectionToPrueba = (section: string): TPAESPrueba => {
  * Mapea tipos de preguntas de Historia a habilidades PAES
  */
 export const mapHistoriaQuestionToSkill = (questionNumber: number): TPAESHabilidad => {
-  // Formación Ciudadana (1-12) - Análisis y evaluación
+  // Formación Ciudadana (1-12) - Análisis crítico y evaluación
   if (questionNumber >= 1 && questionNumber <= 12) {
-    return 'ANALYZE_EVALUATE';
+    return 'CRITICAL_THINKING';
   }
   
-  // Historia (13-57) - Interpretación y relación
+  // Historia (13-57) - Interpretación y análisis temporal
   if (questionNumber >= 13 && questionNumber <= 57) {
     if (questionNumber <= 30) {
-      return 'INTERPRET_RELATE';
+      return 'TEMPORAL_THINKING';
     } else {
-      return 'ANALYZE_EVALUATE';
+      return 'SOURCE_ANALYSIS';
     }
   }
   
-  // Sistema Económico (58-65) - Análisis y evaluación
+  // Sistema Económico (58-65) - Análisis multicausal
   if (questionNumber >= 58 && questionNumber <= 65) {
-    return 'ANALYZE_EVALUATE';
+    return 'MULTICAUSAL_ANALYSIS';
   }
   
-  return 'INTERPRET_RELATE';
+  return 'TEMPORAL_THINKING';
 };
 
 /**
