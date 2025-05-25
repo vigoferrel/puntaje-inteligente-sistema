@@ -99,7 +99,7 @@ const SubjectDetail: React.FC = () => {
   }
 
   const subjectNodes = diagnosticSystem.learningNodes.filter(node => 
-    node.subject_area?.toLowerCase().includes(currentSubject.subjectArea.toLowerCase())
+    node.subjectArea?.toLowerCase().includes(currentSubject.subjectArea.toLowerCase())
   );
 
   const completedNodes = subjectNodes.filter(node => 
