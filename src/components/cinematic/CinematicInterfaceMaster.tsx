@@ -209,42 +209,44 @@ export const CinematicInterfaceMaster: React.FC<CinematicInterfaceMasterProps> =
         {cinematicMode ? '🎬' : '📱'}
       </motion.button>
 
-      {/* Cinema CSS Styles */}
-      <style jsx>{`
-        .cinematic-master-container {
-          --cinema-primary: #0ea5e9;
-          --cinema-secondary: #8b5cf6;
-          --cinema-accent: #06b6d4;
-          --cinema-bg: #020617;
-          --cinema-glass: rgba(255, 255, 255, 0.1);
-          --cinema-blur: 16px;
-        }
+      {/* Cinema CSS Styles usando CSS-in-JS */}
+      <style>
+        {`
+          .cinematic-master-container {
+            --cinema-primary: #0ea5e9;
+            --cinema-secondary: #8b5cf6;
+            --cinema-accent: #06b6d4;
+            --cinema-bg: #020617;
+            --cinema-glass: rgba(255, 255, 255, 0.1);
+            --cinema-blur: 16px;
+          }
 
-        .cinema-background {
-          background: 
-            radial-gradient(ellipse at 20% 50%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-            radial-gradient(ellipse at 40% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-            linear-gradient(135deg, #020617 0%, #0f172a 100%);
-        }
+          .cinema-background {
+            background: 
+              radial-gradient(ellipse at 20% 50%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+              radial-gradient(ellipse at 40% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+              linear-gradient(135deg, #020617 0%, #0f172a 100%);
+          }
 
-        .cinematic-content-wrapper {
-          backdrop-filter: blur(1px);
-        }
+          .cinematic-content-wrapper {
+            backdrop-filter: blur(1px);
+          }
 
-        .cinematic-content-container {
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 
-            0 8px 32px rgba(0, 0, 0, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
+          .cinematic-content-container {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+              0 8px 32px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          }
 
-        .neural-grid {
-          mask: radial-gradient(ellipse at center, black 30%, transparent 70%);
-        }
-      `}</style>
+          .neural-grid {
+            mask: radial-gradient(ellipse at center, black 30%, transparent 70%);
+          }
+        `}
+      </style>
     </div>
   );
 };
