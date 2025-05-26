@@ -8,8 +8,8 @@ import { CinematicThemeProvider } from "@/contexts/CinematicThemeProvider";
 import { SimpleLoadingScreen } from "@/components/SimpleLoadingScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AutoRecoverySystem } from "@/components/recovery/AutoRecoverySystem";
-import { CinematicSystemWrapper } from "@/components/cinematic/CinematicSystemWrapper";
-import { AppLayout } from "@/components/app-layout";
+import { CinematicInterfaceMaster } from "@/components/cinematic/CinematicInterfaceMaster";
+import { useState } from "react";
 import { lazy } from "react";
 
 // Lazy imports simplificados con error handling
@@ -39,6 +39,18 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const [currentModule, setCurrentModule] = useState('dashboard');
+  const [userProgress] = useState({
+    totalProgress: 75,
+    currentStreak: 15,
+    paesScore: 685,
+    studyHours: 142
+  });
+
+  const handleModuleChange = (module: string) => {
+    setCurrentModule(module);
+  };
+
   return (
     <ErrorBoundary onError={(error) => console.error('Global error:', error)}>
       <AutoRecoverySystem>
@@ -46,17 +58,19 @@ const App = () => {
           <BrowserRouter>
             <AuthProvider>
               <CinematicThemeProvider>
-                <CinematicSystemWrapper cinematicMode={true}>
-                  <AppLayout>
-                    <Suspense fallback={<SimpleLoadingScreen />}>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/unified" element={<UnifiedPAESMaster />} />
-                        <Route path="/paes" element={<PAESDashboard />} />
-                      </Routes>
-                    </Suspense>
-                  </AppLayout>
-                </CinematicSystemWrapper>
+                <CinematicInterfaceMaster
+                  currentModule={currentModule}
+                  userProgress={userProgress}
+                  onModuleChange={handleModuleChange}
+                >
+                  <Suspense fallback={<SimpleLoadingScreen />}>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/unified" element={<UnifiedPAESMaster />} />
+                      <Route path="/paes" element={<PAESDashboard />} />
+                    </Routes>
+                  </Suspense>
+                </CinematicInterfaceMaster>
               </CinematicThemeProvider>
               <Toaster />
             </AuthProvider>
