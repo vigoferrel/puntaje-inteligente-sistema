@@ -1,139 +1,289 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/core/logging/SystemLogger';
+import { TPAESPrueba, TPAESHabilidad } from '@/types/system-types';
+
+interface StudentAnalytics {
+  userId: string;
+  averageScore: number;
+  completedExercises: number;
+  weakAreas: string[];
+  strongAreas: string[];
+  timeSpent: number;
+  lastActivity: string;
+  riskLevel: 'low' | 'medium' | 'high';
+}
 
 interface InstitutionalMetrics {
   totalStudents: number;
-  averageProgress: number;
-  toolUsageDistribution: Record<string, number>;
-  performanceBySubject: Record<string, number>;
-  engagementMetrics: {
-    dailyActiveUsers: number;
-    weeklyActiveUsers: number;
-    monthlyActiveUsers: number;
-    averageSessionTime: number;
+  activeStudents: number;
+  averageEngagement: number;
+  overallProgress: number;
+  riskDistribution: {
+    low: number;
+    medium: number;
+    high: number;
   };
-  riskStudents: Array<{
-    userId: string;
-    riskLevel: 'high' | 'medium' | 'low';
-    factors: string[];
-  }>;
-  recommendations: Array<{
-    type: 'intervention' | 'support' | 'acceleration';
-    description: string;
-    affectedStudents: number;
-    priority: number;
-  }>;
+  subjectPerformance: Record<string, number>;
+  toolUsage: Record<string, number>;
+  timestamp: string;
+  [key: string]: any; // Index signature for Json compatibility
 }
 
 interface ParentReport {
   studentId: string;
-  studentName: string;
-  overallProgress: number;
-  strengths: string[];
-  areasForImprovement: string[];
-  recentActivity: {
-    exercisesCompleted: number;
-    timeSpent: number;
-    averageAccuracy: number;
-    toolsUsed: string[];
-  };
+  parentId: string;
+  weeklyProgress: number;
+  exercisesCompleted: number;
+  timeSpent: number;
+  strongSubjects: string[];
+  improvementAreas: string[];
   recommendations: string[];
-  nextSteps: string[];
+  nextGoals: string[];
 }
 
 export class InstitutionalAnalyticsEngine {
   
   /**
-   * Genera métricas institucionales completas
+   * Genera analytics completos para una institución
    */
-  static async generateInstitutionalMetrics(): Promise<InstitutionalMetrics> {
+  static async generateInstitutionalAnalytics(institutionId: string): Promise<InstitutionalMetrics> {
+    logger.info('InstitutionalAnalytics', 'Generando analytics institucionales', { institutionId });
+    
     try {
-      logger.info('InstitutionalAnalytics', 'Generando métricas institucionales');
-
-      const [
-        totalStudents,
-        averageProgress,
-        toolUsage,
-        performanceBySubject,
-        engagementMetrics,
-        riskStudents,
-        recommendations
-      ] = await Promise.all([
-        this.getTotalStudents(),
-        this.calculateAverageProgress(),
-        this.getToolUsageDistribution(),
-        this.getPerformanceBySubject(),
-        this.calculateEngagementMetrics(),
-        this.identifyRiskStudents(),
-        this.generateInstitutionalRecommendations()
+      const [students, exercises, progress] = await Promise.all([
+        this.getInstitutionStudents(institutionId),
+        this.getStudentExerciseData(institutionId),
+        this.getStudentProgressData(institutionId)
       ]);
 
-      const metrics: InstitutionalMetrics = {
-        totalStudents,
-        averageProgress,
-        toolUsageDistribution: toolUsage,
-        performanceBySubject,
-        engagementMetrics,
-        riskStudents,
-        recommendations
-      };
-
-      // Guardar métricas para seguimiento histórico
-      await this.saveInstitutionalMetrics(metrics);
-
+      const metrics = await this.calculateInstitutionalMetrics(students, exercises, progress);
+      
+      // Almacenar métricas con Json-compatible data
+      await this.storeInstitutionalMetrics(institutionId, metrics);
+      
       return metrics;
-
     } catch (error) {
-      logger.error('InstitutionalAnalytics', 'Error generando métricas institucionales', error);
+      logger.error('InstitutionalAnalytics', 'Error generando analytics', error);
       throw error;
     }
   }
 
   /**
-   * Genera reporte individual para apoderados
+   * Obtiene estudiantes de una institución
    */
-  static async generateParentReport(studentId: string): Promise<ParentReport> {
+  private static async getInstitutionStudents(institutionId: string): Promise<any[]> {
+    const { data: students, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('institution_id', institutionId);
+
+    if (error) {
+      logger.error('InstitutionalAnalytics', 'Error obteniendo estudiantes', error);
+      return [];
+    }
+
+    return students || [];
+  }
+
+  /**
+   * Obtiene datos de ejercicios de estudiantes
+   */
+  private static async getStudentExerciseData(institutionId: string): Promise<any[]> {
+    const { data: exercises, error } = await supabase
+      .from('user_exercise_attempts')
+      .select(`
+        *,
+        profiles!inner(institution_id)
+      `)
+      .eq('profiles.institution_id', institutionId);
+
+    if (error) {
+      logger.error('InstitutionalAnalytics', 'Error obteniendo ejercicios', error);
+      return [];
+    }
+
+    return exercises || [];
+  }
+
+  /**
+   * Obtiene datos de progreso de estudiantes
+   */
+  private static async getStudentProgressData(institutionId: string): Promise<any[]> {
+    const { data: progress, error } = await supabase
+      .from('user_node_progress')
+      .select(`
+        *,
+        profiles!inner(institution_id)
+      `)
+      .eq('profiles.institution_id', institutionId);
+
+    if (error) {
+      logger.error('InstitutionalAnalytics', 'Error obteniendo progreso', error);
+      return [];
+    }
+
+    return progress || [];
+  }
+
+  /**
+   * Calcula métricas institucionales
+   */
+  private static async calculateInstitutionalMetrics(
+    students: any[], 
+    exercises: any[], 
+    progress: any[]
+  ): Promise<InstitutionalMetrics> {
+    const totalStudents = students.length;
+    const activeStudents = this.countActiveStudents(students);
+    
+    const riskDistribution = this.calculateRiskDistribution(students);
+    const subjectPerformance = this.calculateSubjectPerformance(exercises);
+    const toolUsage = this.calculateToolUsage(exercises);
+    
+    const averageEngagement = activeStudents > 0 ? (activeStudents / totalStudents) * 100 : 0;
+    const overallProgress = this.calculateOverallProgress(progress);
+
+    return {
+      totalStudents,
+      activeStudents,
+      averageEngagement,
+      overallProgress,
+      riskDistribution,
+      subjectPerformance,
+      toolUsage,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Cuenta estudiantes activos
+   */
+  private static countActiveStudents(students: any[]): number {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    return students.filter(student => 
+      new Date(student.last_active_at) > oneWeekAgo
+    ).length;
+  }
+
+  /**
+   * Calcula distribución de riesgo
+   */
+  private static calculateRiskDistribution(students: any[]): { low: number; medium: number; high: number } {
+    const distribution = { low: 0, medium: 0, high: 0 };
+    
+    students.forEach(student => {
+      const riskLevel = this.calculateStudentRiskLevel(student);
+      distribution[riskLevel]++;
+    });
+    
+    return distribution;
+  }
+
+  /**
+   * Calcula nivel de riesgo del estudiante
+   */
+  private static calculateStudentRiskLevel(student: any): 'low' | 'medium' | 'high' {
+    const lastActivity = new Date(student.last_active_at);
+    const daysInactive = Math.floor((Date.now() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysInactive <= 3) return 'low';
+    if (daysInactive <= 7) return 'medium';
+    return 'high';
+  }
+
+  /**
+   * Calcula rendimiento por materia
+   */
+  private static calculateSubjectPerformance(exercises: any[]): Record<string, number> {
+    const subjectScores: Record<string, number[]> = {};
+    
+    exercises.forEach(exercise => {
+      const subject = exercise.subject || 'general';
+      if (!subjectScores[subject]) {
+        subjectScores[subject] = [];
+      }
+      subjectScores[subject].push(exercise.is_correct ? 1 : 0);
+    });
+    
+    const performance: Record<string, number> = {};
+    Object.entries(subjectScores).forEach(([subject, scores]) => {
+      performance[subject] = scores.length > 0 
+        ? (scores.reduce((a, b) => a + b, 0) / scores.length) * 100 
+        : 0;
+    });
+    
+    return performance;
+  }
+
+  /**
+   * Calcula uso de herramientas
+   */
+  private static calculateToolUsage(exercises: any[]): Record<string, number> {
+    const toolCounts: Record<string, number> = {};
+    
+    exercises.forEach(exercise => {
+      const tool = exercise.tool_source || 'unknown';
+      toolCounts[tool] = (toolCounts[tool] || 0) + 1;
+    });
+    
+    return toolCounts;
+  }
+
+  /**
+   * Calcula progreso general
+   */
+  private static calculateOverallProgress(progress: any[]): number {
+    if (progress.length === 0) return 0;
+    
+    const totalProgress = progress.reduce((sum, p) => sum + (p.progress || 0), 0);
+    return totalProgress / progress.length;
+  }
+
+  /**
+   * Almacena métricas institucionales
+   */
+  private static async storeInstitutionalMetrics(
+    institutionId: string, 
+    metrics: InstitutionalMetrics
+  ): Promise<void> {
     try {
-      logger.info('InstitutionalAnalytics', 'Generando reporte para apoderados', { studentId });
+      const { error } = await supabase
+        .from('system_metrics')
+        .insert({
+          metric_type: 'institutional_analytics',
+          metric_value: metrics.totalStudents,
+          context: metrics as any, // Cast to any for Json compatibility
+          user_id: institutionId
+        });
 
-      // Obtener datos del estudiante
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', studentId)
-        .single();
+      if (error) {
+        logger.error('InstitutionalAnalytics', 'Error almacenando métricas', error);
+      }
+    } catch (error) {
+      logger.error('InstitutionalAnalytics', 'Error en almacenamiento', error);
+    }
+  }
 
-      const [
-        progressData,
-        recentActivity,
-        strengths,
-        improvements,
-        recommendations
-      ] = await Promise.all([
+  /**
+   * Genera reporte para apoderados
+   */
+  static async generateParentReport(studentId: string, parentId: string): Promise<ParentReport> {
+    try {
+      const [exercises, progress, profile] = await Promise.all([
+        this.getStudentExercises(studentId),
         this.getStudentProgress(studentId),
-        this.getRecentActivity(studentId),
-        this.getStudentStrengths(studentId),
-        this.getAreasForImprovement(studentId),
-        this.getPersonalizedRecommendations(studentId)
+        this.getStudentProfile(studentId)
       ]);
 
-      const report: ParentReport = {
-        studentId,
-        studentName: profile?.name || 'Estudiante',
-        overallProgress: progressData.overall,
-        strengths,
-        areasForImprovement: improvements,
-        recentActivity,
-        recommendations,
-        nextSteps: this.generateNextSteps(progressData, strengths, improvements)
-      };
-
-      // Registrar generación del reporte
-      await this.logReportGeneration(studentId, 'parent_report');
-
+      const report = this.calculateParentReport(studentId, parentId, exercises, progress, profile);
+      
+      // Enviar notificación al apoderado
+      await this.notifyParent(parentId, report);
+      
       return report;
-
     } catch (error) {
       logger.error('InstitutionalAnalytics', 'Error generando reporte para apoderados', error);
       throw error;
@@ -141,406 +291,236 @@ export class InstitutionalAnalyticsEngine {
   }
 
   /**
-   * Obtiene total de estudiantes activos
+   * Obtiene ejercicios del estudiante
    */
-  private static async getTotalStudents(): Promise<number> {
-    const { count } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .not('id', 'is', null);
-
-    return count || 0;
-  }
-
-  /**
-   * Calcula progreso promedio de todos los estudiantes
-   */
-  private static async calculateAverageProgress(): Promise<number> {
-    const { data: progressData } = await supabase
-      .from('user_node_progress')
-      .select('progress');
-
-    if (!progressData || progressData.length === 0) return 0;
-
-    const totalProgress = progressData.reduce((sum, item) => sum + (item.progress || 0), 0);
-    return totalProgress / progressData.length;
-  }
-
-  /**
-   * Obtiene distribución de uso por herramienta
-   */
-  private static async getToolUsageDistribution(): Promise<Record<string, number>> {
-    const { data: metrics } = await supabase
-      .from('neural_metrics')
-      .select('dimension_id, current_value')
-      .eq('metric_type', 'exercises_completed');
-
-    const distribution: Record<string, number> = {};
-
-    metrics?.forEach(metric => {
-      const tool = metric.dimension_id.split('_')[0];
-      distribution[tool] = (distribution[tool] || 0) + metric.current_value;
-    });
-
-    return distribution;
-  }
-
-  /**
-   * Calcula rendimiento por materia
-   */
-  private static async getPerformanceBySubject(): Promise<Record<string, number>> {
-    const { data: attempts } = await supabase
+  private static async getStudentExercises(studentId: string): Promise<any[]> {
+    const { data, error } = await supabase
       .from('user_exercise_attempts')
-      .select('is_correct, exercise_id')
-      .not('exercise_id', 'is', null);
-
-    const performance: Record<string, { correct: number; total: number }> = {};
-
-    // Aquí se podría mapear exercise_id a materia específica
-    // Por ahora usamos categorías generales
-    attempts?.forEach(attempt => {
-      const subject = 'general'; // Se podría obtener de la metadata del ejercicio
-      if (!performance[subject]) {
-        performance[subject] = { correct: 0, total: 0 };
-      }
-      performance[subject].total++;
-      if (attempt.is_correct) {
-        performance[subject].correct++;
-      }
-    });
-
-    const result: Record<string, number> = {};
-    Object.entries(performance).forEach(([subject, data]) => {
-      result[subject] = data.total > 0 ? data.correct / data.total : 0;
-    });
-
-    return result;
-  }
-
-  /**
-   * Calcula métricas de engagement
-   */
-  private static async calculateEngagementMetrics(): Promise<any> {
-    const now = new Date();
-    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    const [dailyActive, weeklyActive, monthlyActive] = await Promise.all([
-      this.getActiveUsersCount(dayAgo),
-      this.getActiveUsersCount(weekAgo),
-      this.getActiveUsersCount(monthAgo)
-    ]);
-
-    const averageSessionTime = await this.calculateAverageSessionTime();
-
-    return {
-      dailyActiveUsers: dailyActive,
-      weeklyActiveUsers: weeklyActive,
-      monthlyActiveUsers: monthlyActive,
-      averageSessionTime
-    };
-  }
-
-  /**
-   * Identifica estudiantes en riesgo
-   */
-  private static async identifyRiskStudents(): Promise<Array<any>> {
-    const { data: progressData } = await supabase
-      .from('user_node_progress')
-      .select('user_id, progress, success_rate, last_activity_at');
-
-    const riskStudents: Array<any> = [];
-
-    progressData?.forEach(progress => {
-      const factors: string[] = [];
-      let riskLevel: 'high' | 'medium' | 'low' = 'low';
-
-      // Factores de riesgo
-      if (progress.progress < 20) {
-        factors.push('Progreso muy bajo');
-        riskLevel = 'high';
-      } else if (progress.progress < 40) {
-        factors.push('Progreso bajo');
-        riskLevel = riskLevel === 'high' ? 'high' : 'medium';
-      }
-
-      if (progress.success_rate < 0.3) {
-        factors.push('Tasa de éxito baja');
-        riskLevel = 'high';
-      }
-
-      const lastActivity = new Date(progress.last_activity_at);
-      const daysSinceActivity = (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60 * 24);
-      
-      if (daysSinceActivity > 7) {
-        factors.push('Inactividad prolongada');
-        riskLevel = riskLevel === 'low' ? 'medium' : 'high';
-      }
-
-      if (factors.length > 0) {
-        riskStudents.push({
-          userId: progress.user_id,
-          riskLevel,
-          factors
-        });
-      }
-    });
-
-    return riskStudents;
-  }
-
-  /**
-   * Genera recomendaciones institucionales
-   */
-  private static async generateInstitutionalRecommendations(): Promise<Array<any>> {
-    const recommendations: Array<any> = [];
-
-    // Obtener datos para análisis
-    const [avgProgress, riskStudents, toolUsage] = await Promise.all([
-      this.calculateAverageProgress(),
-      this.identifyRiskStudents(),
-      this.getToolUsageDistribution()
-    ]);
-
-    // Recomendaciones basadas en progreso
-    if (avgProgress < 30) {
-      recommendations.push({
-        type: 'intervention',
-        description: 'Implementar programa de refuerzo general - progreso promedio bajo',
-        affectedStudents: await this.getTotalStudents(),
-        priority: 3
-      });
-    }
-
-    // Recomendaciones basadas en estudiantes en riesgo
-    const highRiskCount = riskStudents.filter(s => s.riskLevel === 'high').length;
-    if (highRiskCount > 0) {
-      recommendations.push({
-        type: 'intervention',
-        description: `Intervención urgente para ${highRiskCount} estudiantes en alto riesgo`,
-        affectedStudents: highRiskCount,
-        priority: 5
-      });
-    }
-
-    // Recomendaciones basadas en uso de herramientas
-    const totalUsage = Object.values(toolUsage).reduce((sum, val) => sum + val, 0);
-    const underusedTools = Object.entries(toolUsage)
-      .filter(([tool, usage]) => usage < totalUsage * 0.1)
-      .map(([tool]) => tool);
-
-    if (underusedTools.length > 0) {
-      recommendations.push({
-        type: 'support',
-        description: `Promover uso de herramientas infrautilizadas: ${underusedTools.join(', ')}`,
-        affectedStudents: await this.getTotalStudents(),
-        priority: 2
-      });
-    }
-
-    return recommendations.sort((a, b) => b.priority - a.priority);
-  }
-
-  // Métodos auxiliares para reportes de apoderados
-
-  private static async getStudentProgress(studentId: string): Promise<any> {
-    const { data: progress } = await supabase
-      .from('user_node_progress')
-      .select('progress')
-      .eq('user_id', studentId);
-
-    if (!progress || progress.length === 0) {
-      return { overall: 0 };
-    }
-
-    const overall = progress.reduce((sum, item) => sum + (item.progress || 0), 0) / progress.length;
-    return { overall };
-  }
-
-  private static async getRecentActivity(studentId: string): Promise<any> {
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-    const { data: attempts } = await supabase
-      .from('user_exercise_attempts')
-      .select('is_correct, time_taken_seconds, created_at')
+      .select('*')
       .eq('user_id', studentId)
-      .gte('created_at', weekAgo.toISOString());
+      .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
-    const exercisesCompleted = attempts?.length || 0;
-    const timeSpent = attempts?.reduce((sum, attempt) => sum + (attempt.time_taken_seconds || 0), 0) || 0;
-    const correctAnswers = attempts?.filter(a => a.is_correct).length || 0;
-    const averageAccuracy = exercisesCompleted > 0 ? correctAnswers / exercisesCompleted : 0;
+    return data || [];
+  }
+
+  /**
+   * Obtiene progreso del estudiante
+   */
+  private static async getStudentProgress(studentId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('user_node_progress')
+      .select('*')
+      .eq('user_id', studentId);
+
+    return data || [];
+  }
+
+  /**
+   * Obtiene perfil del estudiante
+   */
+  private static async getStudentProfile(studentId: string): Promise<any> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', studentId)
+      .single();
+
+    return data;
+  }
+
+  /**
+   * Calcula reporte para apoderados
+   */
+  private static calculateParentReport(
+    studentId: string,
+    parentId: string,
+    exercises: any[],
+    progress: any[],
+    profile: any
+  ): ParentReport {
+    const weeklyProgress = this.calculateWeeklyProgress(progress);
+    const exercisesCompleted = exercises.length;
+    const timeSpent = exercises.reduce((sum, ex) => sum + (ex.time_taken_seconds || 0), 0);
+    
+    const strongSubjects = this.identifyStrongSubjects(exercises);
+    const improvementAreas = this.identifyImprovementAreas(exercises);
+    
+    const recommendations = this.generateRecommendations(exercises, progress);
+    const nextGoals = this.generateNextGoals(progress);
 
     return {
+      studentId,
+      parentId,
+      weeklyProgress,
       exercisesCompleted,
-      timeSpent: Math.round(timeSpent / 60), // en minutos
-      averageAccuracy,
-      toolsUsed: ['lectoguia', 'diagnostic', 'training'] // Se podría obtener de metadata
+      timeSpent,
+      strongSubjects,
+      improvementAreas,
+      recommendations,
+      nextGoals
     };
   }
 
-  private static async getStudentStrengths(studentId: string): Promise<string[]> {
-    // Análisis basado en performance por skill
-    const { data: attempts } = await supabase
-      .from('user_exercise_attempts')
-      .select('skill_demonstrated, is_correct')
-      .eq('user_id', studentId);
-
-    const skillPerformance: Record<string, { correct: number; total: number }> = {};
-
-    attempts?.forEach(attempt => {
-      const skill = attempt.skill_demonstrated || 'general';
-      if (!skillPerformance[skill]) {
-        skillPerformance[skill] = { correct: 0, total: 0 };
-      }
-      skillPerformance[skill].total++;
-      if (attempt.is_correct) {
-        skillPerformance[skill].correct++;
-      }
-    });
-
-    const strengths: string[] = [];
-    Object.entries(skillPerformance).forEach(([skill, performance]) => {
-      if (performance.total >= 5 && performance.correct / performance.total >= 0.8) {
-        strengths.push(skill);
-      }
-    });
-
-    return strengths.length > 0 ? strengths : ['Comprometido con el aprendizaje'];
+  /**
+   * Calcula progreso semanal
+   */
+  private static calculateWeeklyProgress(progress: any[]): number {
+    if (progress.length === 0) return 0;
+    
+    const totalProgress = progress.reduce((sum, p) => sum + (p.progress || 0), 0);
+    return totalProgress / progress.length;
   }
 
-  private static async getAreasForImprovement(studentId: string): Promise<string[]> {
-    // Similar al método anterior pero para áreas débiles
-    const { data: attempts } = await supabase
-      .from('user_exercise_attempts')
-      .select('skill_demonstrated, is_correct')
-      .eq('user_id', studentId);
-
-    const skillPerformance: Record<string, { correct: number; total: number }> = {};
-
-    attempts?.forEach(attempt => {
-      const skill = attempt.skill_demonstrated || 'general';
-      if (!skillPerformance[skill]) {
-        skillPerformance[skill] = { correct: 0, total: 0 };
+  /**
+   * Identifica materias fuertes
+   */
+  private static identifyStrongSubjects(exercises: any[]): string[] {
+    const subjectScores: Record<string, number[]> = {};
+    
+    exercises.forEach(exercise => {
+      const subject = exercise.subject || 'general';
+      if (!subjectScores[subject]) {
+        subjectScores[subject] = [];
       }
-      skillPerformance[skill].total++;
-      if (attempt.is_correct) {
-        skillPerformance[skill].correct++;
-      }
+      subjectScores[subject].push(exercise.is_correct ? 1 : 0);
     });
-
-    const improvements: string[] = [];
-    Object.entries(skillPerformance).forEach(([skill, performance]) => {
-      if (performance.total >= 5 && performance.correct / performance.total <= 0.4) {
-        improvements.push(skill);
-      }
-    });
-
-    return improvements.length > 0 ? improvements : ['Mantener práctica constante'];
+    
+    return Object.entries(subjectScores)
+      .filter(([_, scores]) => {
+        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+        return average > 0.8;
+      })
+      .map(([subject, _]) => subject);
   }
 
-  private static async getPersonalizedRecommendations(studentId: string): Promise<string[]> {
-    // Generar recomendaciones basadas en el análisis del estudiante
-    const [progress, recentActivity, strengths, improvements] = await Promise.all([
-      this.getStudentProgress(studentId),
-      this.getRecentActivity(studentId),
-      this.getStudentStrengths(studentId),
-      this.getAreasForImprovement(studentId)
-    ]);
+  /**
+   * Identifica áreas de mejora
+   */
+  private static identifyImprovementAreas(exercises: any[]): string[] {
+    const subjectScores: Record<string, number[]> = {};
+    
+    exercises.forEach(exercise => {
+      const subject = exercise.subject || 'general';
+      if (!subjectScores[subject]) {
+        subjectScores[subject] = [];
+      }
+      subjectScores[subject].push(exercise.is_correct ? 1 : 0);
+    });
+    
+    return Object.entries(subjectScores)
+      .filter(([_, scores]) => {
+        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+        return average < 0.6;
+      })
+      .map(([subject, _]) => subject);
+  }
 
+  /**
+   * Genera recomendaciones
+   */
+  private static generateRecommendations(exercises: any[], progress: any[]): string[] {
     const recommendations: string[] = [];
-
-    if (progress.overall < 50) {
-      recommendations.push('Aumentar tiempo de estudio diario');
+    
+    if (exercises.length < 10) {
+      recommendations.push('Aumentar la práctica diaria de ejercicios');
     }
-
-    if (recentActivity.averageAccuracy < 0.6) {
-      recommendations.push('Revisar conceptos fundamentales antes de continuar');
+    
+    if (progress.some(p => p.progress < 30)) {
+      recommendations.push('Reforzar conceptos fundamentales');
     }
-
-    if (improvements.length > 0) {
-      recommendations.push(`Enfocarse especialmente en: ${improvements.slice(0, 2).join(', ')}`);
-    }
-
-    if (recentActivity.exercisesCompleted < 10) {
-      recommendations.push('Aumentar frecuencia de práctica con ejercicios');
-    }
-
-    return recommendations.length > 0 ? recommendations : ['Continuar con el ritmo actual de estudio'];
+    
+    return recommendations;
   }
 
-  private static generateNextSteps(progress: any, strengths: string[], improvements: string[]): string[] {
-    const nextSteps: string[] = [];
-
-    if (progress.overall < 30) {
-      nextSteps.push('Completar evaluación diagnóstica');
-      nextSteps.push('Establecer rutina de estudio diaria');
-    } else if (progress.overall < 70) {
-      nextSteps.push('Reforzar áreas identificadas como débiles');
-      nextSteps.push('Practicar ejercicios de dificultad intermedia');
-    } else {
-      nextSteps.push('Avanzar a ejercicios de mayor complejidad');
-      nextSteps.push('Prepararse para simulacros PAES');
+  /**
+   * Genera próximas metas
+   */
+  private static generateNextGoals(progress: any[]): string[] {
+    const goals: string[] = [];
+    
+    const uncompletedNodes = progress.filter(p => p.progress < 100);
+    if (uncompletedNodes.length > 0) {
+      goals.push(`Completar ${uncompletedNodes.length} nodos de aprendizaje`);
     }
-
-    return nextSteps;
+    
+    return goals;
   }
 
-  // Métodos auxiliares generales
-
-  private static async getActiveUsersCount(since: Date): Promise<number> {
-    const { count } = await supabase
-      .from('neural_metrics')
-      .select('user_id', { count: 'exact', head: true })
-      .gte('last_calculated_at', since.toISOString());
-
-    return count || 0;
-  }
-
-  private static async calculateAverageSessionTime(): Promise<number> {
-    // Estimación basada en tiempo de ejercicios
-    const { data: attempts } = await supabase
-      .from('user_exercise_attempts')
-      .select('time_taken_seconds')
-      .not('time_taken_seconds', 'is', null);
-
-    if (!attempts || attempts.length === 0) return 0;
-
-    const totalTime = attempts.reduce((sum, attempt) => sum + (attempt.time_taken_seconds || 0), 0);
-    return Math.round(totalTime / attempts.length / 60); // en minutos
-  }
-
-  private static async saveInstitutionalMetrics(metrics: InstitutionalMetrics): Promise<void> {
+  /**
+   * Notifica al apoderado
+   */
+  private static async notifyParent(parentId: string, report: ParentReport): Promise<void> {
     try {
-      await supabase
-        .from('system_metrics')
+      const { error } = await supabase
+        .from('user_notifications')
         .insert({
-          metric_type: 'institutional_analytics',
-          metric_value: metrics.totalStudents,
-          context: metrics,
-          recorded_at: new Date().toISOString()
-        });
-    } catch (error) {
-      logger.error('InstitutionalAnalytics', 'Error guardando métricas institucionales', error);
-    }
-  }
-
-  private static async logReportGeneration(studentId: string, reportType: string): Promise<void> {
-    try {
-      await supabase
-        .from('system_metrics')
-        .insert({
-          user_id: studentId,
-          metric_type: 'report_generated',
-          metric_value: 1,
-          context: {
-            reportType,
-            generatedAt: new Date().toISOString()
+          user_id: parentId,
+          notification_type: 'parent_report',
+          title: 'Reporte Semanal de Progreso',
+          message: `Progreso semanal: ${report.weeklyProgress.toFixed(1)}%`,
+          action_data: {
+            reportData: report
           }
         });
+
+      if (error) {
+        logger.error('InstitutionalAnalytics', 'Error notificando apoderado', error);
+      }
     } catch (error) {
-      logger.error('InstitutionalAnalytics', 'Error registrando generación de reporte', error);
+      logger.error('InstitutionalAnalytics', 'Error en notificación', error);
     }
+  }
+
+  /**
+   * Obtiene métricas de engagement
+   */
+  static async getEngagementMetrics(institutionId: string): Promise<any> {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    const { data: metrics, error } = await supabase
+      .from('system_metrics')
+      .select('*')
+      .eq('metric_type', 'institutional_analytics')
+      .eq('user_id', institutionId)
+      .gte('recorded_at', oneMonthAgo.toISOString())
+      .order('recorded_at', { ascending: false });
+
+    if (error) {
+      logger.error('InstitutionalAnalytics', 'Error obteniendo métricas', error);
+      return null;
+    }
+
+    return this.processEngagementTrends(metrics || []);
+  }
+
+  /**
+   * Procesa tendencias de engagement
+   */
+  private static processEngagementTrends(metrics: any[]): any {
+    if (metrics.length === 0) return null;
+
+    const trends = {
+      studentGrowth: 0,
+      engagementTrend: 'stable',
+      riskTrend: 'stable',
+      subjectTrends: {}
+    };
+
+    // Calcular tendencias básicas
+    if (metrics.length >= 2) {
+      const latest = metrics[0];
+      const previous = metrics[1];
+      
+      trends.studentGrowth = latest.context?.totalStudents - previous.context?.totalStudents || 0;
+      
+      if (latest.context?.averageEngagement > previous.context?.averageEngagement) {
+        trends.engagementTrend = 'increasing';
+      } else if (latest.context?.averageEngagement < previous.context?.averageEngagement) {
+        trends.engagementTrend = 'decreasing';
+      }
+    }
+
+    return trends;
   }
 }
