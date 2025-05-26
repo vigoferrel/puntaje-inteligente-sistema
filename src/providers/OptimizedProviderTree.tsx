@@ -1,53 +1,56 @@
 
-import React, { memo, ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
-import { OptimizedCacheProvider } from "@/core/performance/OptimizedCacheSystem";
-import { UnifiedContextCache } from "./UnifiedContextCache";
+import React from 'react';
+import { SystemErrorBoundary } from '@/core/error-handling/SystemErrorBoundary';
+import { PerformanceMonitor } from '@/core/performance/PerformanceMonitor';
+import { GlobalErrorRecoveryProvider } from '@/core/performance/GlobalErrorRecovery';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { Toaster } from '@/components/ui/toaster';
+import { logger } from '@/core/logging/SystemLogger';
 
-// QueryClient optimizado con configuración mejorada
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 10 * 60 * 1000, // 10 minutos
-      gcTime: 15 * 60 * 1000, // 15 minutos
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
-      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      retry: (failureCount, error) => {
+        logger.warn('QueryClient', `Query failed ${failureCount} times`, error);
+        return failureCount < 3;
+      },
     },
     mutations: {
-      retry: 1,
+      retry: (failureCount, error) => {
+        logger.warn('QueryClient', `Mutation failed ${failureCount} times`, error);
+        return failureCount < 2;
+      },
     },
   },
 });
 
 interface OptimizedProviderTreeProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-// Provider tree optimizado con memoización - SIN BrowserRouter
-export const OptimizedProviderTree = memo<OptimizedProviderTreeProps>(({ children }) => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <IntersectionalProvider>
-          <OptimizedCacheProvider>
-            <UnifiedContextCache>
-              <TooltipProvider>
-                <Toaster />
-                <SonnerToaster />
-                {children}
-              </TooltipProvider>
-            </UnifiedContextCache>
-          </OptimizedCacheProvider>
-        </IntersectionalProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
-});
+export const OptimizedProviderTree: React.FC<OptimizedProviderTreeProps> = ({ children }) => {
+  React.useEffect(() => {
+    logger.info('OptimizedProviderTree', 'Provider tree initialized');
+    
+    return () => {
+      logger.info('OptimizedProviderTree', 'Provider tree cleanup');
+    };
+  }, []);
 
-OptimizedProviderTree.displayName = 'OptimizedProviderTree';
+  return (
+    <SystemErrorBoundary moduleName="Provider Tree">
+      <PerformanceMonitor>
+        <GlobalErrorRecoveryProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </QueryClientProvider>
+        </GlobalErrorRecoveryProvider>
+      </PerformanceMonitor>
+    </SystemErrorBoundary>
+  );
+};
