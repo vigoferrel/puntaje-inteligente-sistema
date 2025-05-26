@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Activity, Cpu, Memory, Zap, AlertTriangle, CheckCircle, TrendingUp, Settings } from 'lucide-react';
+import { Activity, Cpu, HardDrive, Zap, AlertTriangle, CheckCircle, TrendingUp, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PerformanceMetric {
@@ -122,7 +121,7 @@ export const RealTimePerformanceDashboard: React.FC = () => {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-gray-800/50 p-2 rounded">
                   <div className="text-gray-400 flex items-center gap-1">
-                    <Memory className="w-3 h-3" />
+                    <HardDrive className="w-3 h-3" />
                     Memory
                   </div>
                   <div className="text-white font-mono">

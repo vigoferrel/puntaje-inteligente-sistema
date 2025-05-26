@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { AlertTriangle, CheckCircle, Info, Zap, Memory, Cpu, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Info, Zap, HardDrive, Cpu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -289,7 +288,7 @@ export const AlertsPanel: React.FC = () => {
 
   const getCategoryIcon = (category: AlertCategory) => {
     switch (category) {
-      case 'memory': return <Memory className="w-4 h-4" />;
+      case 'memory': return <HardDrive className="w-4 h-4" />;
       case 'performance': return <Zap className="w-4 h-4" />;
       case 'errors': return <AlertTriangle className="w-4 h-4" />;
       default: return <CheckCircle className="w-4 h-4" />;

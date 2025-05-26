@@ -17,11 +17,17 @@ interface CacheStats {
   }>;
 }
 
+interface CacheConfiguration {
+  defaultTTL: number;
+  maxSize: number;
+}
+
 class IntelligentCache {
   private cache = new Map<string, CacheEntry<any>>();
   private maxSize = 100;
+  private defaultTTL = 3600000;
 
-  set<T>(key: string, data: T, ttl: number = 3600000, priority: 'low' | 'medium' | 'high' = 'medium'): void {
+  set<T>(key: string, data: T, ttl: number = this.defaultTTL, priority: 'low' | 'medium' | 'high' = 'medium'): void {
     try {
       // Cleanup expired entries
       this.cleanup();
@@ -86,12 +92,23 @@ class IntelligentCache {
     };
   }
 
-  private cleanup(): void {
+  // Public method - Fixed accessibility
+  cleanup(): void {
     const now = Date.now();
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > entry.ttl) {
         this.cache.delete(key);
       }
+    }
+  }
+
+  // New public method - Added missing method
+  adjustConfiguration(config: Partial<CacheConfiguration>): void {
+    if (config.defaultTTL !== undefined) {
+      this.defaultTTL = config.defaultTTL;
+    }
+    if (config.maxSize !== undefined) {
+      this.maxSize = config.maxSize;
     }
   }
 
