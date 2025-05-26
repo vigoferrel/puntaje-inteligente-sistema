@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUnifiedApp } from '@/contexts/UnifiedAppProvider';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PAESTestInfo {
@@ -56,7 +55,6 @@ const setCachedData = (key: string, data: any, ttl: number = 300000) => {
 
 export const usePAESData = () => {
   const { user } = useAuth();
-  const { hasInitialized } = useUnifiedApp();
   const [tests, setTests] = useState<PAESTestInfo[]>([]);
   const [skills, setSkills] = useState<PAESSkillInfo[]>([]);
   const [recommendations, setRecommendations] = useState<SmartRecommendation[]>([]);
@@ -66,12 +64,12 @@ export const usePAESData = () => {
   const hasLoadedRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
 
-  // Guard simplificado
+  // Guard simplificado sin dependencia de UnifiedApp
   const shouldLoad = useCallback(() => {
-    if (!user?.id || !hasInitialized) return false;
+    if (!user?.id) return false;
     if (hasLoadedRef.current && lastUserIdRef.current === user.id) return false;
     return true;
-  }, [user?.id, hasInitialized]);
+  }, [user?.id]);
 
   const loadPAESData = useCallback(async () => {
     if (!shouldLoad()) {
@@ -155,9 +153,9 @@ export const usePAESData = () => {
     }
   }, [shouldLoad, user]);
 
-  // Effect optimizado
+  // Effect simplificado
   useEffect(() => {
-    if (!user?.id || !hasInitialized) return;
+    if (!user?.id) return;
 
     // Reset si cambió el usuario
     if (lastUserIdRef.current && lastUserIdRef.current !== user.id) {
@@ -166,7 +164,7 @@ export const usePAESData = () => {
 
     const timeoutId = setTimeout(loadPAESData, 100);
     return () => clearTimeout(timeoutId);
-  }, [user?.id, hasInitialized, loadPAESData]);
+  }, [user?.id, loadPAESData]);
 
   const generateSmartRecommendations = (tests: PAESTestInfo[], skills: PAESSkillInfo[]): SmartRecommendation[] => {
     return skills.slice(0, 3).map((skill, index) => ({

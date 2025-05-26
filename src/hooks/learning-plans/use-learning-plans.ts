@@ -1,13 +1,12 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { LearningPlan, PlanProgress } from "@/types/learning-plan";
-import { useUnifiedApp } from '@/contexts/UnifiedAppProvider';
 import { usePlanFetching } from "./plan-fetching";
 import { usePlanCreation } from "./plan-creation";
 import { usePlanProgress } from "./plan-progress";
 import { usePlanCache } from "./plan-cache";
 
 export const useLearningPlans = () => {
-  const { hasInitialized } = useUnifiedApp();
   const [plans, setPlans] = useState<LearningPlan[]>([]);
   const [currentPlan, setCurrentPlan] = useState<LearningPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +41,12 @@ export const useLearningPlans = () => {
     getPlanProgress 
   } = usePlanProgress();
 
-  // Guard más eficiente
+  // Guard simplificado sin dependencia de UnifiedApp
   const shouldFetchPlans = useCallback((userId: string) => {
-    if (!userId || !hasInitialized) return false;
+    if (!userId) return false;
     if (hasLoadedRef.current && lastUserIdRef.current === userId) return false;
     return true;
-  }, [hasInitialized]);
+  }, []);
 
   const fetchPlans = useCallback(async (userId: string) => {
     if (!shouldFetchPlans(userId)) {
@@ -90,7 +89,6 @@ export const useLearningPlans = () => {
     }
   }, [shouldFetchPlans, loadFromCache, originalFetchPlans, setPlanProgress]);
 
-  // Función de retry que acepta userId - CORREGIDO
   const retryFetchPlans = useCallback((userId: string) => {
     if (!userId) {
       console.warn('Cannot retry fetch: no userId provided');
@@ -99,7 +97,6 @@ export const useLearningPlans = () => {
     
     console.log('🔄 Retrying fetch plans for user:', userId);
     hasLoadedRef.current = false;
-    // Reiniciar el contador de retry y llamar a la función original con userId
     setRetryCount(0);
     originalRetryFetchPlans(userId);
   }, [originalRetryFetchPlans, setRetryCount]);
@@ -115,7 +112,6 @@ export const useLearningPlans = () => {
     setError(null);
 
     try {
-      // Llamar con userId, title y description como argumentos requeridos
       const newPlan = await originalCreatePlan(
         userId, 
         title, 
