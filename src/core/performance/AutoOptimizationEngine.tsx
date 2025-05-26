@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useCallback } from 'react';
 import { intelligentCache } from './IntelligentCacheSystem';
 import { toast } from 'sonner';
@@ -283,11 +282,16 @@ class AutoOptimizationEngine {
   }
 
   private preloadCriticalComponents() {
-    // Precargar componentes basado en patrones de navegación
-    const criticalComponents = ['dashboard', 'lectoguia', 'neural-command'];
-    criticalComponents.forEach(component => {
-      import(`@/components/${component}`).catch(() => {
-        // Ignore errors for non-existent components
+    // Precargar componentes basado en patrones de navegación con rutas específicas
+    const criticalComponentPaths = [
+      '@/components/dashboard/OptimizedDashboard',
+      '@/components/lectoguia/LectoGuiaUnified',
+      '@/components/neural-command/NeuralCommandCenter'
+    ];
+    
+    criticalComponentPaths.forEach(componentPath => {
+      import(componentPath).catch((error) => {
+        console.warn(`Failed to preload component ${componentPath}:`, error);
       });
     });
   }

@@ -57,7 +57,7 @@ export const LazyNeuralCommandCenter = createLazyComponent(
 export const preloadCriticalComponents = () => {
   if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
     requestIdleCallback(() => {
-      // Precargar componentes críticos
+      // Precargar componentes críticos con rutas específicas
       ComponentPreloader.preload(
         'dashboard',
         () => import('@/components/dashboard/OptimizedDashboard'),
@@ -79,14 +79,26 @@ export const preloadCriticalComponents = () => {
   }
 };
 
-// Hook para preloading inteligente
+// Hook para preloading inteligente con rutas específicas
 export const useIntelligentPreloading = (currentRoute: string) => {
   React.useEffect(() => {
-    const preloadMap: Record<string, string[]> = {
-      '/': ['lectoguia', 'calendar'],
-      '/lectoguia': ['dashboard', 'neural-command'],
-      '/calendar': ['dashboard', 'financial'],
-      '/financial': ['dashboard', 'calendar']
+    const preloadMap: Record<string, Array<{ key: string; path: string }>> = {
+      '/': [
+        { key: 'lectoguia', path: '@/components/lectoguia/LectoGuiaUnified' },
+        { key: 'calendar', path: '@/components/calendar/StudyCalendarIntegration' }
+      ],
+      '/lectoguia': [
+        { key: 'dashboard', path: '@/components/dashboard/OptimizedDashboard' },
+        { key: 'neural-command', path: '@/components/neural-command/NeuralCommandCenter' }
+      ],
+      '/calendar': [
+        { key: 'dashboard', path: '@/components/dashboard/OptimizedDashboard' },
+        { key: 'financial', path: '@/components/financial/PAESFinancialCalculator' }
+      ],
+      '/financial': [
+        { key: 'dashboard', path: '@/components/dashboard/OptimizedDashboard' },
+        { key: 'calendar', path: '@/components/calendar/StudyCalendarIntegration' }
+      ]
     };
     
     const componentsToPreload = preloadMap[currentRoute] || [];
@@ -95,8 +107,8 @@ export const useIntelligentPreloading = (currentRoute: string) => {
       const timer = setTimeout(() => {
         componentsToPreload.forEach((component, index) => {
           ComponentPreloader.preload(
-            component,
-            () => import(`@/components/${component}`),
+            component.key,
+            () => import(component.path),
             5 - index
           );
         });
