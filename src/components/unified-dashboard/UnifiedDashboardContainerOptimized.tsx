@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UnifiedHeader } from './UnifiedHeader';
@@ -58,6 +57,14 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
   const handleSubjectChange = useCallback((subject: string) => {
     updateContext({ subject });
   }, [updateContext]);
+
+  // Métricas del sistema por defecto
+  const systemMetrics = useMemo(() => ({
+    completedNodes: 15,
+    totalNodes: 50,
+    todayStudyTime: 45,
+    streakDays: 7
+  }), []);
 
   // Renderizado optimizado de herramientas
   const renderCurrentTool = useMemo(() => {
@@ -139,6 +146,7 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
           activeSubject={context.subject || 'COMPETENCIA_LECTORA'}
           onToolChange={handleToolChange}
           onSubjectChange={handleSubjectChange}
+          systemMetrics={systemMetrics}
           navigationHistory={navigationHistory}
           onGoBack={canGoBack ? goBack : undefined}
         />

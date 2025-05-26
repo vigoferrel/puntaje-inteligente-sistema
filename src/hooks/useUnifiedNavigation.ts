@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -12,6 +11,7 @@ export interface NavigationContext {
   systemMode?: 'neural' | 'unified';
   userIntent?: string;
   timestamp?: string;
+  navigationAction?: string;
 }
 
 export interface NavigationState {
