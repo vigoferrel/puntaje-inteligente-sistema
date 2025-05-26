@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,9 +19,9 @@ export const IntelligentPlanWrapper: React.FC = () => {
   const userMetrics = {
     strengths: ['MATEMATICA_1', 'CIENCIAS'],
     weaknesses: ['COMPETENCIA_LECTORA', 'HISTORIA'],
-    studyTime: Math.round((metrics?.adaptive_learning_score || 70) / 10),
+    studyTime: Math.round((metrics?.adaptive_learning_rate || 70) / 10),
     performance: Math.round(metrics?.neural_efficiency || 85),
-    completionRate: Math.round(metrics?.user_experience_harmony || 78)
+    completionRate: Math.round(metrics?.user_satisfaction || 78)
   };
 
   // Datos de ejemplo para visualización
@@ -30,8 +29,8 @@ export const IntelligentPlanWrapper: React.FC = () => {
     totalPlans: 12,
     activePlans: 3,
     completedPlans: 8,
-    totalStudyTime: Math.round((metrics?.adaptive_learning_score || 70) * 2),
-    averageCompletion: Math.round(metrics?.user_experience_harmony || 78),
+    totalStudyTime: Math.round((metrics?.adaptive_learning_rate || 70) * 2),
+    averageCompletion: Math.round(metrics?.user_satisfaction || 78),
     streakDays: Math.floor((metrics?.neural_efficiency || 85) / 10)
   };
 
@@ -48,14 +47,14 @@ export const IntelligentPlanWrapper: React.FC = () => {
   const subjectPerformance = [
     {
       subject: 'MATEMATICA_1',
-      progress: Math.round(metrics?.cross_pollination_rate || 85),
+      progress: Math.round(metrics?.innovation_index || 85),
       timeSpent: 24,
       efficiency: 92,
       trend: 'up' as const
     },
     {
       subject: 'COMPETENCIA_LECTORA',
-      progress: Math.round(metrics?.adaptive_learning_score || 68),
+      progress: Math.round(metrics?.adaptive_learning_rate || 68),
       timeSpent: 18,
       efficiency: 75,
       trend: 'stable' as const
@@ -69,7 +68,7 @@ export const IntelligentPlanWrapper: React.FC = () => {
     },
     {
       subject: 'HISTORIA',
-      progress: Math.round((metrics?.user_experience_harmony || 70) * 0.8),
+      progress: Math.round((metrics?.user_satisfaction || 70) * 0.8),
       timeSpent: 12,
       efficiency: 65,
       trend: 'down' as const
