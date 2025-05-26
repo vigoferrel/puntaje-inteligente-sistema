@@ -1,114 +1,76 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { OptimizedProviderTree } from '@/providers/OptimizedProviderTree';
-import { UnifiedDashboard } from '@/components/unified/UnifiedDashboard';
-import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
-import { IntelligentDiagnosticSystem } from '@/components/diagnostic/IntelligentDiagnosticSystem';
-import { CinematicCalendar } from '@/components/calendar/CinematicCalendar';
-import { SuperPAESMain } from '@/components/super-paes/SuperPAESMain';
-import { BackendExploitationDashboard } from '@/components/backend/BackendExploitationDashboard';
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
-import { EnhancedNeuralCommandCenter } from '@/components/neural-command/EnhancedNeuralCommandCenter';
-import { PlanInteligenteWrapper } from '@/components/plan/modern/PlanInteligenteWrapper';
-import { QualityDashboard } from '@/components/quality/QualityDashboard';
-import { EvaluationBank } from '@/components/evaluations/EvaluationBank';
+import { Suspense } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { SimpleLoadingScreen } from "@/components/SimpleLoadingScreen";
+import { useSimpleInitialization } from "@/hooks/useSimpleInitialization";
 
-// Universe Visualizations
-import { UniverseVisualizationHub } from '@/components/universe/UniverseVisualizationHub';
-import { EducationalUniverse } from '@/components/universe/EducationalUniverse';
-import { PAESUniverseDashboard } from '@/components/paes-universe/PAESUniverseDashboard';
-import { PAESLearningUniverse } from '@/components/paes-learning-universe/PAESLearningUniverse';
+// Importaciones lazy para evitar problemas de carga
+import { lazy } from "react";
 
-// NUEVAS IMPLEMENTACIONES UNIFICADAS
-import { AdvancedFinancialCenter } from '@/components/financial/AdvancedFinancialCenter';
-import { AIExerciseGenerator } from '@/components/exercise/AIExerciseGenerator';
-import { AdvancedSettings } from '@/components/settings/AdvancedSettings';
-import { HelpCenter } from '@/components/help/HelpCenter';
-import UnifiedPAESMaster from '@/pages/UnifiedPAESMaster';
-import { useAuth } from '@/contexts/AuthContext';
+const Index = lazy(() => import("./pages/Index"));
+const UnifiedPAESMaster = lazy(() => import("./pages/UnifiedPAESMaster"));
+const PAESDashboard = lazy(() => import("./pages/PAESDashboard"));
 
-const App: React.FC = () => {
-  return (
-    <Router>
-      <OptimizedProviderTree>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-          <Routes>
-            {/* Ruta principal - Dashboard Unificado */}
-            <Route path="/" element={<UnifiedPAESMaster />} />
-            <Route path="/dashboard" element={<UnifiedPAESMaster />} />
-            <Route path="/unified" element={<UnifiedPAESMaster />} />
-            
-            {/* Sistema Neural Mejorado */}
-            <Route path="/neural" element={<EnhancedNeuralCommandCenter />} />
-            
-            {/* Plan Inteligente */}
-            <Route path="/plan" element={<PlanInteligenteWrapper />} />
-            
-            {/* Sistema de Calidad */}
-            <Route path="/calidad" element={<QualityDashboard />} />
-            
-            {/* Banco de Evaluaciones */}
-            <Route path="/banco-evaluaciones" element={<EvaluationBank />} />
-            
-            {/* Universe Explorer */}
-            <Route path="/universe-hub" element={<UniverseVisualizationHub />} />
-            <Route path="/universe/educational" element={<EducationalUniverse initialMode="overview" />} />
-            <Route path="/universe/paes-dashboard" element={<PAESUniverseDashboard />} />
-            <Route path="/universe/learning" element={<PAESLearningUniverse />} />
-            
-            {/* NUEVAS SECCIONES IMPLEMENTADAS */}
-            
-            {/* Centro Financiero Avanzado */}
-            <Route path="/centro-financiero" element={<AdvancedFinancialCenter />} />
-            
-            {/* Generador de Ejercicios IA */}
-            <Route path="/ejercicios" element={<AIExerciseGenerator />} />
-            
-            {/* Sistema de Configuración */}
-            <Route path="/settings" element={<AdvancedSettings />} />
-            
-            {/* Centro de Ayuda */}
-            <Route path="/ayuda" element={<HelpCenter />} />
-            
-            {/* Panel de Administración */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            
-            {/* Backend Exploitation Dashboard */}
-            <Route path="/backend" element={<BackendExploitationDashboard />} />
-            
-            {/* Herramientas principales */}
-            <Route path="/lectoguia" element={<LectoGuiaUnified />} />
-            <Route path="/diagnostico" element={<IntelligentDiagnosticSystem />} />
-            <Route path="/calendario" element={<CinematicCalendar />} />
-            
-            {/* SuperPAES */}
-            <Route path="/superpaes" element={<SuperPAESMain />} />
-            
-            {/* Rutas legacy - redirigir al sistema unificado */}
-            <Route path="/reforzamiento" element={<Navigate to="/backend" replace />} />
-            <Route path="/entrenamiento" element={<Navigate to="/lectoguia" replace />} />
-            <Route path="/contenido" element={<Navigate to="/lectoguia" replace />} />
-            <Route path="/evaluaciones" element={<Navigate to="/banco-evaluaciones" replace />} />
-            <Route path="/analisis" element={<Navigate to="/unified" replace />} />
-            <Route path="/simulaciones" element={<Navigate to="/diagnostico" replace />} />
-            
-            {/* Redirecciones adicionales al sistema unificado */}
-            <Route path="/paes-dashboard" element={<Navigate to="/universe/paes-dashboard" replace />} />
-            <Route path="/paes-universe" element={<Navigate to="/universe/paes-dashboard" replace />} />
-            <Route path="/educational-universe" element={<Navigate to="/universe/educational" replace />} />
-            <Route path="/learning-universe" element={<Navigate to="/universe/learning" replace />} />
-            <Route path="/finanzas" element={<Navigate to="/centro-financiero" replace />} />
-            
-            {/* Dashboard optimizado redirige al unificado */}
-            <Route path="/optimized-dashboard" element={<Navigate to="/unified" replace />} />
-            
-            {/* Ruta por defecto */}
-            <Route path="*" element={<Navigate to="/unified" replace />} />
-          </Routes>
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      retry: 1, // Solo 1 reintento
+    },
+  },
+});
+
+// Componente interno para manejar la inicialización
+const AppContent: React.FC = () => {
+  const { isReady, error, hasUser } = useSimpleInitialization();
+
+  // Mostrar loading mientras se inicializa
+  if (!isReady) {
+    return <SimpleLoadingScreen />;
+  }
+
+  // Mostrar error si hay uno
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold mb-4">Error del Sistema</h1>
+          <p className="text-red-300 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white"
+          >
+            Recargar
+          </button>
         </div>
-      </OptimizedProviderTree>
-    </Router>
+      </div>
+    );
+  }
+
+  return (
+    <Suspense fallback={<SimpleLoadingScreen />}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/unified" element={<UnifiedPAESMaster />} />
+        <Route path="/paes" element={<PAESDashboard />} />
+      </Routes>
+    </Suspense>
+  );
+};
+
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppContent />
+          <Toaster />
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

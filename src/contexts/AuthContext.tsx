@@ -37,45 +37,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Cargar perfil del usuario desde la base de datos
-  const loadUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error loading profile:', error);
-        return;
-      }
-
-      if (data) {
-        setProfile({
-          id: data.id,
-          name: data.name || 'Usuario',
-          email: data.email,
-          role: 'student', // Por defecto student
-          target_career: data.target_career,
-          learning_phase: data.learning_phase
-        });
-      }
-    } catch (error) {
-      console.error('Error in loadUserProfile:', error);
-    }
-  };
-
   useEffect(() => {
-    // Configurar listener de cambios de autenticación
+    let mounted = true;
+
+    // Función para cargar perfil
+    const loadUserProfile = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error || !data) {
+          console.log('No profile found or error:', error);
+          return;
+        }
+
+        if (mounted) {
+          setProfile({
+            id: data.id,
+            name: data.name || 'Usuario',
+            email: data.email,
+            role: 'student',
+            target_career: data.target_career,
+            learning_phase: data.learning_phase
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
+    // Listener de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
+        if (!mounted) return;
+
+        console.log('Auth state changed:', event);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Cargar perfil cuando el usuario se autentica
           await loadUserProfile(session.user.id);
         } else {
           setProfile(null);
@@ -85,34 +89,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     );
 
-    // Verificar sesión existente
+    // Verificar sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         loadUserProfile(session.user.id);
+      } else {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) throw error;
-      
-      if (data.user) {
-        await loadUserProfile(data.user.id);
-      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -124,9 +129,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     try {
       await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setProfile(null);
     } catch (error) {
       console.error('Logout error:', error);
     }
