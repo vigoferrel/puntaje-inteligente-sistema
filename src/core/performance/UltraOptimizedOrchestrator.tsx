@@ -33,7 +33,7 @@ export const UltraOptimizedOrchestrator: React.FC<UltraOptimizedOrchestratorProp
     cacheHitRate: 0,
     averageResponseTime: 0,
     memoryOptimization: 0,
-    systemHealth: 'optimal' as const
+    systemHealth: 'optimal' as 'optimal' | 'good' | 'degraded' | 'critical'
   });
 
   const initializationRef = useRef(false);
