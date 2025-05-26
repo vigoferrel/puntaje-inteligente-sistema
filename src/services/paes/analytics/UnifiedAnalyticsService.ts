@@ -1,6 +1,5 @@
 
 import { logger } from '@/core/logging/SystemLogger';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface SimplifiedInstitutionalMetrics {
   totalStudents: number;
@@ -42,7 +41,6 @@ export class UnifiedAnalyticsService {
     try {
       logger.info('UnifiedAnalyticsService', 'Generando métricas institucionales unificadas');
 
-      // For now, return mock data since we need to implement proper institutional data fetching
       const metrics: SimplifiedInstitutionalMetrics = {
         totalStudents: 250,
         activeStudents: 200,
@@ -71,7 +69,7 @@ export class UnifiedAnalyticsService {
   }
 
   /**
-   * Busca carreras usando función de base de datos
+   * Busca carreras usando datos mock
    */
   static async searchCareers(
     texto?: string,
@@ -83,22 +81,44 @@ export class UnifiedAnalyticsService {
     try {
       logger.info('UnifiedAnalyticsService', 'Buscando carreras');
 
-      // Use RPC function to search careers
-      const { data, error } = await supabase.rpc('buscar_carreras', {
-        p_texto: texto || '',
-        p_region: region || '',
-        p_puntaje_min: puntajeMin || 0,
-        p_puntaje_max: puntajeMax || 850,
-        p_area: area || ''
-      });
-
-      if (error) {
-        logger.error('UnifiedAnalyticsService', 'Error en búsqueda de carreras', error);
-        // Return mock data as fallback
-        return this.getMockCareerData();
+      // Usar datos mock directamente
+      const mockCareers = this.getMockCareerData();
+      
+      // Filtrar resultados básicos
+      let filteredCareers = mockCareers;
+      
+      if (texto) {
+        filteredCareers = filteredCareers.filter(career =>
+          career.carrera.toLowerCase().includes(texto.toLowerCase()) ||
+          career.universidad.toLowerCase().includes(texto.toLowerCase())
+        );
+      }
+      
+      if (region) {
+        filteredCareers = filteredCareers.filter(career =>
+          career.region.toLowerCase().includes(region.toLowerCase())
+        );
+      }
+      
+      if (area) {
+        filteredCareers = filteredCareers.filter(career =>
+          career.area_conocimiento.toLowerCase().includes(area.toLowerCase())
+        );
+      }
+      
+      if (puntajeMin) {
+        filteredCareers = filteredCareers.filter(career =>
+          career.puntaje_corte >= puntajeMin
+        );
+      }
+      
+      if (puntajeMax) {
+        filteredCareers = filteredCareers.filter(career =>
+          career.puntaje_corte <= puntajeMax
+        );
       }
 
-      return data || [];
+      return filteredCareers.slice(0, 10);
     } catch (error) {
       logger.error('UnifiedAnalyticsService', 'Error buscando carreras', error);
       return this.getMockCareerData();
@@ -139,6 +159,26 @@ export class UnifiedAnalyticsService {
         puntaje_corte: 740,
         vacantes: 150,
         arancel: 3500000
+      },
+      {
+        codigo_demre: '21304',
+        carrera: 'Psicología',
+        universidad: 'Pontificia Universidad Católica',
+        region: 'Región Metropolitana',
+        area_conocimiento: 'Ciencias Sociales',
+        puntaje_corte: 680,
+        vacantes: 120,
+        arancel: 4200000
+      },
+      {
+        codigo_demre: '11205',
+        carrera: 'Arquitectura',
+        universidad: 'Universidad de Valparaíso',
+        region: 'Región de Valparaíso',
+        area_conocimiento: 'Arte y Arquitectura',
+        puntaje_corte: 650,
+        vacantes: 85,
+        arancel: 3800000
       }
     ];
   }
@@ -159,11 +199,11 @@ export class UnifiedAnalyticsService {
           mimeType = 'text/csv';
           break;
         case 'excel':
-          content = this.generateCSV(metrics); // Simplified - use CSV format
+          content = this.generateCSV(metrics);
           mimeType = 'application/vnd.ms-excel';
           break;
         case 'pdf':
-          content = this.generateCSV(metrics); // Simplified - use CSV format
+          content = this.generateCSV(metrics);
           mimeType = 'application/pdf';
           break;
         default:

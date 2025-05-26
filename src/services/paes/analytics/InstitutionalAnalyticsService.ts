@@ -13,7 +13,7 @@ export class InstitutionalAnalyticsService {
   static async generateInstitutionalReport(institutionId: string): Promise<InstitutionalMetrics> {
     logger.info('InstitutionalAnalyticsService', 'Generando reporte institucional');
     
-    // Mock implementation - replace with actual data fetching
+    // Mock implementation with all required properties
     return {
       totalStudents: 150,
       activeStudents: 120,
@@ -29,7 +29,13 @@ export class InstitutionalAnalyticsService {
         'Matemática M1': 0.68,
         'Ciencias': 0.71,
         'Historia': 0.69
-      }
+      },
+      toolUsage: {
+        'LectoGuía': 85,
+        'Diagnósticos': 120,
+        'Simulaciones': 65
+      },
+      timestamp: new Date().toISOString()
     };
   }
 

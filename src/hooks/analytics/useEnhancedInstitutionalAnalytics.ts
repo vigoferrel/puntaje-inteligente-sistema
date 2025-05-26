@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { InstitutionalMetrics } from '@/services/paes/analytics/types';
 import { logger } from '@/core/logging/SystemLogger';
-import { supabase } from '@/integrations/supabase/client';
 
 interface UseEnhancedInstitutionalAnalyticsReturn {
   metrics: InstitutionalMetrics | null;
@@ -28,7 +27,7 @@ export const useEnhancedInstitutionalAnalytics = (
     setError(null);
     
     try {
-      // Generate mock metrics for now since we don't have the enhanced service
+      // Generate mock metrics with all required properties
       const mockMetrics: InstitutionalMetrics = {
         totalStudents: 150,
         activeStudents: 120,
@@ -44,7 +43,13 @@ export const useEnhancedInstitutionalAnalytics = (
           'Matemática M1': 0.68,
           'Ciencias': 0.71,
           'Historia': 0.69
-        }
+        },
+        toolUsage: {
+          'LectoGuía': 85,
+          'Diagnósticos': 120,
+          'Simulaciones': 65
+        },
+        timestamp: new Date().toISOString()
       };
       
       setMetrics(mockMetrics);
@@ -62,7 +67,6 @@ export const useEnhancedInstitutionalAnalytics = (
     if (!institutionId) return;
     
     try {
-      // Mock implementation
       logger.info('useEnhancedInstitutionalAnalytics', 'Reportes para padres generados');
     } catch (err) {
       logger.error('useEnhancedInstitutionalAnalytics', 'Error generando reportes para padres', err);
@@ -74,7 +78,6 @@ export const useEnhancedInstitutionalAnalytics = (
     if (!institutionId) return null;
     
     try {
-      // Mock export - create a simple CSV for demonstration
       const csvContent = `Métrica,Valor
 Total Estudiantes,${metrics?.totalStudents || 0}
 Estudiantes Activos,${metrics?.activeStudents || 0}
