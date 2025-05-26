@@ -599,6 +599,66 @@ export type Database = {
           },
         ]
       }
+      battle_sessions: {
+        Row: {
+          battle_data: Json | null
+          battle_type: string
+          created_at: string
+          creator_id: string
+          creator_score: number | null
+          difficulty_level: string
+          ended_at: string | null
+          id: string
+          max_questions: number
+          opponent_id: string | null
+          opponent_score: number | null
+          started_at: string | null
+          status: string
+          subject_focus: string
+          time_limit_minutes: number
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          battle_data?: Json | null
+          battle_type?: string
+          created_at?: string
+          creator_id: string
+          creator_score?: number | null
+          difficulty_level?: string
+          ended_at?: string | null
+          id?: string
+          max_questions?: number
+          opponent_id?: string | null
+          opponent_score?: number | null
+          started_at?: string | null
+          status?: string
+          subject_focus: string
+          time_limit_minutes?: number
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          battle_data?: Json | null
+          battle_type?: string
+          created_at?: string
+          creator_id?: string
+          creator_score?: number | null
+          difficulty_level?: string
+          ended_at?: string | null
+          id?: string
+          max_questions?: number
+          opponent_id?: string | null
+          opponent_score?: number | null
+          started_at?: string | null
+          status?: string
+          subject_focus?: string
+          time_limit_minutes?: number
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
       becas_financiamiento: {
         Row: {
           carreras_elegibles: string[] | null
@@ -1472,6 +1532,45 @@ export type Database = {
         }
         Relationships: []
       }
+      neural_metrics: {
+        Row: {
+          change_rate: number | null
+          current_value: number
+          dimension_id: string
+          id: string
+          last_calculated_at: string
+          metadata: Json | null
+          metric_type: string
+          previous_value: number | null
+          trend: string
+          user_id: string
+        }
+        Insert: {
+          change_rate?: number | null
+          current_value?: number
+          dimension_id: string
+          id?: string
+          last_calculated_at?: string
+          metadata?: Json | null
+          metric_type: string
+          previous_value?: number | null
+          trend?: string
+          user_id: string
+        }
+        Update: {
+          change_rate?: number | null
+          current_value?: number
+          dimension_id?: string
+          id?: string
+          last_calculated_at?: string
+          metadata?: Json | null
+          metric_type?: string
+          previous_value?: number | null
+          trend?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       node_weights: {
         Row: {
           calculated_weight: number
@@ -2278,6 +2377,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          achievement_type: string
+          category: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          points_awarded: number
+          rarity: string
+          title: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          achievement_type: string
+          category: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          points_awarded?: number
+          rarity?: string
+          title: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          achievement_type?: string
+          category?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          points_awarded?: number
+          rarity?: string
+          title?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_diagnostic_results: {
         Row: {
           completed_at: string | null
@@ -2499,6 +2640,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_notifications: {
+        Row: {
+          action_data: Json | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          priority: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          action_data?: Json | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type: string
+          priority?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          action_data?: Json | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          priority?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_rankings: {
+        Row: {
+          best_score: number
+          id: string
+          last_battle_at: string | null
+          position: number | null
+          ranking_type: string
+          score: number
+          season: string
+          streak_count: number
+          tier: string
+          total_battles: number
+          updated_at: string
+          user_id: string
+          victories: number
+        }
+        Insert: {
+          best_score?: number
+          id?: string
+          last_battle_at?: string | null
+          position?: number | null
+          ranking_type: string
+          score?: number
+          season?: string
+          streak_count?: number
+          tier?: string
+          total_battles?: number
+          updated_at?: string
+          user_id: string
+          victories?: number
+        }
+        Update: {
+          best_score?: number
+          id?: string
+          last_battle_at?: string | null
+          position?: number | null
+          ranking_type?: string
+          score?: number
+          season?: string
+          streak_count?: number
+          tier?: string
+          total_battles?: number
+          updated_at?: string
+          user_id?: string
+          victories?: number
+        }
+        Relationships: []
       }
       user_study_schedules: {
         Row: {

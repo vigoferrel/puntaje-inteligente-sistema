@@ -1,177 +1,307 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export interface RealNeuralMetrics {
+interface NeuralMetric {
+  metric_type: string;
+  dimension_id: string;
+  current_value: number;
+  previous_value: number;
+  change_rate: number;
+  trend: 'improving' | 'stable' | 'declining';
+  last_calculated_at: string;
+  metadata: any;
+}
+
+interface RealNeuralMetrics {
   neural_efficiency: number;
+  cognitive_load: number;
+  learning_velocity: number;
+  pattern_recognition: number;
+  adaptive_intelligence: number;
+  creative_synthesis: number;
+  strategic_thinking: number;
+  emotional_intelligence: number;
+  leadership_potential: number;
+  innovation_index: number;
   universe_exploration_depth: number;
   paes_simulation_accuracy: number;
   gamification_engagement: number;
-  adaptive_learning_rate: number;
-  cognitive_load: number;
-  prediction_accuracy: number;
-  system_coherence: number;
-  user_satisfaction: number;
-  learning_velocity: number;
-}
-
-interface MetricsState {
-  metrics: RealNeuralMetrics | null;
-  isLoading: boolean;
-  error: string | null;
-  lastUpdate: Date | null;
+  achievement_momentum: number;
+  battle_readiness: number;
+  vocational_alignment: number;
 }
 
 export const useRealNeuralMetrics = () => {
   const { user } = useAuth();
-  const [state, setState] = useState<MetricsState>({
-    metrics: null,
-    isLoading: true,
-    error: null,
-    lastUpdate: null
-  });
+  const [metrics, setMetrics] = useState<RealNeuralMetrics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Calcular métricas basadas en datos reales existentes en Supabase
-  const calculateMetrics = useCallback(async () => {
-    if (!user?.id) {
-      setState(prev => ({ ...prev, isLoading: false, error: 'Usuario no autenticado' }));
-      return;
-    }
+  const calculateMetrics = async () => {
+    if (!user) return;
 
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setIsLoading(true);
+      
+      // Obtener métricas neurales del usuario
+      const { data: neuralData, error: neuralError } = await supabase
+        .from('neural_metrics')
+        .select('*')
+        .eq('user_id', user.id);
 
-      // Obtener datos reales de las tablas existentes
-      const [nodeProgressData, userGoalsData, exerciseAttemptsData] = await Promise.all([
-        supabase
-          .from('user_node_progress')
-          .select('mastery_level, status, time_spent_minutes')
-          .eq('user_id', user.id),
-        
-        supabase
-          .from('user_goals')
-          .select('target_score_cl, target_score_m1, target_score_m2, created_at')
-          .eq('user_id', user.id)
-          .eq('is_active', true),
-        
-        supabase
-          .from('user_exercise_attempts')
-          .select('is_correct, time_taken_seconds, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(50)
-      ]);
+      if (neuralError) throw neuralError;
 
-      // Calcular métricas neurales basadas en datos reales
-      const nodeProgress = nodeProgressData.data || [];
-      const userGoals = userGoalsData.data || [];
-      const exerciseAttempts = exerciseAttemptsData.data || [];
+      // Obtener progreso de nodos
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_node_progress')
+        .select('*')
+        .eq('user_id', user.id);
 
-      // Neural efficiency basada en progreso promedio de nodos
-      const neural_efficiency = nodeProgress.length > 0 
-        ? Math.round(nodeProgress.reduce((acc, curr) => acc + (curr.mastery_level || 0), 0) / nodeProgress.length * 100)
-        : 45;
+      if (progressError) throw progressError;
 
-      // Universe exploration basada en nodos completados
-      const completedNodes = nodeProgress.filter(n => n.status === 'completed').length;
-      const universe_exploration_depth = Math.min(95, Math.round((completedNodes / 50) * 100));
+      // Obtener logros
+      const { data: achievementsData, error: achievementsError } = await supabase
+        .from('user_achievements')
+        .select('*')
+        .eq('user_id', user.id);
 
-      // PAES accuracy basada en intentos de ejercicios recientes
-      const recentCorrectAttempts = exerciseAttempts.filter(a => a.is_correct).length;
-      const paes_simulation_accuracy = exerciseAttempts.length > 0
-        ? Math.round((recentCorrectAttempts / exerciseAttempts.length) * 100)
-        : 67;
+      if (achievementsError) throw achievementsError;
 
-      // Engagement basado en actividad reciente
-      const recentActivity = exerciseAttempts.filter(attempt => {
-        const date = new Date(attempt.created_at);
-        const daysAgo = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
-        return daysAgo <= 7;
-      });
+      // Obtener batallas
+      const { data: battlesData, error: battlesError } = await supabase
+        .from('battle_sessions')
+        .select('*')
+        .or(`creator_id.eq.${user.id},opponent_id.eq.${user.id}`);
 
-      const gamification_engagement = Math.min(92, Math.round((recentActivity.length / 20) * 100));
+      if (battlesError) throw battlesError;
 
-      // Adaptive learning rate basado en mejora de tiempo
-      const avgTimeRecent = recentActivity.slice(0, 10).reduce((acc, curr) => acc + (curr.time_taken_seconds || 0), 0) / 10;
-      const avgTimeOlder = exerciseAttempts.slice(10, 20).reduce((acc, curr) => acc + (curr.time_taken_seconds || 0), 0) / 10;
-      const adaptive_learning_rate = avgTimeOlder > 0 
-        ? Math.min(95, Math.round((1 - (avgTimeRecent / avgTimeOlder)) * 100 + 50))
-        : 78;
-
-      // Métricas calculadas dinámicamente
-      const cognitive_load = Math.max(20, 100 - neural_efficiency);
-      const prediction_accuracy = Math.round((neural_efficiency + paes_simulation_accuracy) / 2);
-      const system_coherence = Math.round((neural_efficiency + universe_exploration_depth + gamification_engagement) / 3);
-      const user_satisfaction = Math.round((gamification_engagement + adaptive_learning_rate) / 2);
-      const learning_velocity = Math.round((adaptive_learning_rate + neural_efficiency) / 2);
-
+      // Calcular métricas basadas en datos reales
       const calculatedMetrics: RealNeuralMetrics = {
-        neural_efficiency,
-        universe_exploration_depth,
-        paes_simulation_accuracy,
-        gamification_engagement,
-        adaptive_learning_rate,
-        cognitive_load,
-        prediction_accuracy,
-        system_coherence,
-        user_satisfaction,
-        learning_velocity
+        // Core Neural Metrics
+        neural_efficiency: calculateNeuralEfficiency(progressData, achievementsData),
+        cognitive_load: calculateCognitiveLoad(progressData),
+        learning_velocity: calculateLearningVelocity(progressData),
+        pattern_recognition: calculatePatternRecognition(progressData, battlesData),
+        adaptive_intelligence: calculateAdaptiveIntelligence(progressData),
+        
+        // Advanced Metrics
+        creative_synthesis: calculateCreativeSynthesis(achievementsData, progressData),
+        strategic_thinking: calculateStrategicThinking(battlesData, progressData),
+        emotional_intelligence: calculateEmotionalIntelligence(achievementsData),
+        leadership_potential: calculateLeadershipPotential(battlesData, achievementsData),
+        innovation_index: calculateInnovationIndex(progressData, achievementsData),
+        
+        // Application Metrics
+        universe_exploration_depth: calculateUniverseExploration(progressData),
+        paes_simulation_accuracy: calculatePAESAccuracy(progressData),
+        gamification_engagement: calculateGamificationEngagement(achievementsData, battlesData),
+        achievement_momentum: calculateAchievementMomentum(achievementsData),
+        battle_readiness: calculateBattleReadiness(battlesData),
+        vocational_alignment: calculateVocationalAlignment(progressData, achievementsData)
       };
 
-      setState({
-        metrics: calculatedMetrics,
-        isLoading: false,
-        error: null,
-        lastUpdate: new Date()
-      });
-
-      console.log('🧠 Métricas neurales calculadas:', calculatedMetrics);
-
-    } catch (error) {
-      console.error('❌ Error calculando métricas neurales:', error);
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: 'Error al calcular métricas neurales'
-      }));
+      // Actualizar métricas en la base de datos
+      await updateNeuralMetricsInDB(calculatedMetrics);
+      
+      setMetrics(calculatedMetrics);
+      setError(null);
+    } catch (err) {
+      console.error('Error calculating neural metrics:', err);
+      setError(err instanceof Error ? err.message : 'Error calculating metrics');
+    } finally {
+      setIsLoading(false);
     }
-  }, [user?.id]);
+  };
 
-  // Actualización automática de métricas
+  const updateNeuralMetricsInDB = async (calculatedMetrics: RealNeuralMetrics) => {
+    if (!user) return;
+
+    const metricsToUpdate = Object.entries(calculatedMetrics).map(([key, value]) => ({
+      user_id: user.id,
+      metric_type: 'neural_dimension',
+      dimension_id: key,
+      current_value: value,
+      last_calculated_at: new Date().toISOString(),
+      metadata: { calculation_source: 'real_time_analysis' }
+    }));
+
+    for (const metric of metricsToUpdate) {
+      await supabase
+        .from('neural_metrics')
+        .upsert(metric, { onConflict: 'user_id,metric_type,dimension_id' });
+    }
+  };
+
+  // Función helper para obtener métrica específica de una dimensión
+  const getMetricForDimension = (dimensionId: string): number => {
+    if (!metrics) return 0;
+    return metrics[dimensionId as keyof RealNeuralMetrics] || 0;
+  };
+
   useEffect(() => {
-    calculateMetrics();
-    
-    const interval = setInterval(calculateMetrics, 30000); // Cada 30 segundos
-    return () => clearInterval(interval);
-  }, [calculateMetrics]);
-
-  // Función para obtener métrica específica para una dimensión
-  const getMetricForDimension = useCallback((dimensionId: string): number => {
-    if (!state.metrics) return 0;
-
-    const dimensionMetricMap: Record<string, keyof RealNeuralMetrics> = {
-      'neural_command': 'neural_efficiency',
-      'educational_universe': 'universe_exploration_depth',
-      'neural_training': 'adaptive_learning_rate',
-      'progress_analysis': 'prediction_accuracy',
-      'paes_simulation': 'paes_simulation_accuracy',
-      'personalized_feedback': 'user_satisfaction',
-      'battle_mode': 'gamification_engagement',
-      'achievement_system': 'gamification_engagement',
-      'vocational_prediction': 'prediction_accuracy',
-      'financial_center': 'system_coherence',
-      'calendar_management': 'learning_velocity',
-      'settings_control': 'system_coherence'
-    };
-
-    const metricKey = dimensionMetricMap[dimensionId] || 'neural_efficiency';
-    return state.metrics[metricKey];
-  }, [state.metrics]);
+    if (user) {
+      calculateMetrics();
+      
+      // Actualizar métricas cada 5 minutos
+      const interval = setInterval(calculateMetrics, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   return {
-    ...state,
-    calculateMetrics,
+    metrics,
+    isLoading,
+    error,
+    refetch: calculateMetrics,
     getMetricForDimension
   };
 };
+
+// Funciones de cálculo de métricas
+function calculateNeuralEfficiency(progressData: any[], achievementsData: any[]): number {
+  const completedNodes = progressData.filter(p => p.status === 'completed').length;
+  const totalProgress = progressData.reduce((sum, p) => sum + p.progress, 0);
+  const achievementBonus = achievementsData.length * 2;
+  return Math.min(100, (totalProgress / Math.max(progressData.length, 1)) + achievementBonus);
+}
+
+function calculateCognitiveLoad(progressData: any[]): number {
+  const activeNodes = progressData.filter(p => p.status === 'in_progress').length;
+  const avgMastery = progressData.reduce((sum, p) => sum + p.mastery_level, 0) / Math.max(progressData.length, 1);
+  return Math.max(0, Math.min(100, (activeNodes * 10) + (100 - avgMastery * 100)));
+}
+
+function calculateLearningVelocity(progressData: any[]): number {
+  const recentProgress = progressData.filter(p => {
+    const lastActivity = new Date(p.last_activity_at);
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return lastActivity > weekAgo;
+  });
+  return Math.min(100, recentProgress.length * 8);
+}
+
+function calculatePatternRecognition(progressData: any[], battlesData: any[]): number {
+  const successRate = progressData.reduce((sum, p) => sum + p.success_rate, 0) / Math.max(progressData.length, 1);
+  const battleWins = battlesData.filter(b => b.winner_id).length;
+  return Math.min(100, (successRate * 70) + (battleWins * 5));
+}
+
+function calculateAdaptiveIntelligence(progressData: any[]): number {
+  const adaptiveNodes = progressData.filter(p => p.mastery_level > 0.7).length;
+  const diversityScore = new Set(progressData.map(p => p.node_id.split('-')[1])).size * 5;
+  return Math.min(100, adaptiveNodes * 3 + diversityScore);
+}
+
+function calculateCreativeSynthesis(achievementsData: any[], progressData: any[]): number {
+  const creativeAchievements = achievementsData.filter(a => 
+    a.category === 'creative' || a.achievement_type === 'innovation'
+  ).length;
+  const crossDisciplinaryProgress = progressData.filter(p => p.progress > 0.5).length;
+  return Math.min(100, creativeAchievements * 15 + crossDisciplinaryProgress * 2);
+}
+
+function calculateStrategicThinking(battlesData: any[], progressData: any[]): number {
+  const strategicWins = battlesData.filter(b => 
+    b.winner_id && b.battle_type === 'strategic'
+  ).length;
+  const planningScore = progressData.filter(p => p.status === 'completed').length * 2;
+  return Math.min(100, strategicWins * 20 + planningScore);
+}
+
+function calculateEmotionalIntelligence(achievementsData: any[]): number {
+  const socialAchievements = achievementsData.filter(a => 
+    a.category === 'social' || a.achievement_type === 'collaboration'
+  ).length;
+  const consistencyBonus = achievementsData.length > 10 ? 20 : 0;
+  return Math.min(100, socialAchievements * 12 + consistencyBonus);
+}
+
+function calculateLeadershipPotential(battlesData: any[], achievementsData: any[]): number {
+  const leadershipBattles = battlesData.filter(b => b.creator_id).length;
+  const leadershipAchievements = achievementsData.filter(a => 
+    a.category === 'leadership' || a.rarity === 'legendary'
+  ).length;
+  return Math.min(100, leadershipBattles * 8 + leadershipAchievements * 15);
+}
+
+function calculateInnovationIndex(progressData: any[], achievementsData: any[]): number {
+  const innovativeProgress = progressData.filter(p => 
+    p.node_id.includes('innovation') || p.mastery_level > 0.9
+  ).length;
+  const rareAchievements = achievementsData.filter(a => 
+    a.rarity === 'epic' || a.rarity === 'legendary'
+  ).length;
+  return Math.min(100, innovativeProgress * 10 + rareAchievements * 20);
+}
+
+function calculateUniverseExploration(progressData: any[]): number {
+  const universeNodes = progressData.filter(p => 
+    p.node_id.includes('universe') || p.node_id.includes('3d')
+  );
+  const explorationDepth = universeNodes.reduce((sum, p) => sum + p.progress, 0);
+  return Math.min(100, explorationDepth * 5);
+}
+
+function calculatePAESAccuracy(progressData: any[]): number {
+  const paesNodes = progressData.filter(p => 
+    p.node_id.includes('paes') || p.node_id.includes('simulation')
+  );
+  const avgAccuracy = paesNodes.reduce((sum, p) => sum + p.success_rate, 0) / Math.max(paesNodes.length, 1);
+  return Math.min(100, avgAccuracy * 100);
+}
+
+function calculateGamificationEngagement(achievementsData: any[], battlesData: any[]): number {
+  const gamificationScore = achievementsData.length * 3 + battlesData.length * 5;
+  const recentActivity = achievementsData.filter(a => {
+    const unlocked = new Date(a.unlocked_at);
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return unlocked > weekAgo;
+  }).length * 10;
+  return Math.min(100, gamificationScore + recentActivity);
+}
+
+function calculateAchievementMomentum(achievementsData: any[]): number {
+  const recentAchievements = achievementsData.filter(a => {
+    const unlocked = new Date(a.unlocked_at);
+    const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return unlocked > monthAgo;
+  });
+  
+  const momentum = recentAchievements.length * 8;
+  const rarityBonus = recentAchievements.reduce((sum, a) => {
+    switch (a.rarity) {
+      case 'legendary': return sum + 30;
+      case 'epic': return sum + 20;
+      case 'rare': return sum + 10;
+      default: return sum + 5;
+    }
+  }, 0);
+  
+  return Math.min(100, momentum + rarityBonus);
+}
+
+function calculateBattleReadiness(battlesData: any[]): number {
+  const totalBattles = battlesData.length;
+  const winRate = battlesData.filter(b => b.winner_id).length / Math.max(totalBattles, 1);
+  const recentBattles = battlesData.filter(b => {
+    const battleDate = new Date(b.created_at);
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return battleDate > weekAgo;
+  }).length;
+  
+  return Math.min(100, (winRate * 60) + (recentBattles * 10) + (totalBattles * 2));
+}
+
+function calculateVocationalAlignment(progressData: any[], achievementsData: any[]): number {
+  const vocationalNodes = progressData.filter(p => 
+    p.node_id.includes('vocational') || p.node_id.includes('career')
+  );
+  const vocationalProgress = vocationalNodes.reduce((sum, p) => sum + p.progress, 0);
+  const guidanceAchievements = achievementsData.filter(a => 
+    a.category === 'vocational' || a.achievement_type === 'career_guidance'
+  ).length;
+  
+  return Math.min(100, vocationalProgress * 10 + guidanceAchievements * 15);
+}
