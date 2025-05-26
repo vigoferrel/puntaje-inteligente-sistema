@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { OptimizedProviderTree } from '@/providers/OptimizedProviderTree';
@@ -7,16 +8,20 @@ import { IntelligentDiagnosticSystem } from '@/components/diagnostic/Intelligent
 import { CinematicCalendar } from '@/components/calendar/CinematicCalendar';
 import { SuperPAESMain } from '@/components/super-paes/SuperPAESMain';
 import { BackendExploitationDashboard } from '@/components/backend/BackendExploitationDashboard';
+import { AdminDashboard } from '@/components/admin/AdminDashboard';
 
 const App: React.FC = () => {
   return (
-    <OptimizedProviderTree>
-      <Router>
+    <Router>
+      <OptimizedProviderTree>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
           <Routes>
             {/* Ruta principal - Dashboard */}
             <Route path="/" element={<OptimizedDashboard />} />
             <Route path="/dashboard" element={<OptimizedDashboard />} />
+            
+            {/* Panel de Administración */}
+            <Route path="/admin" element={<AdminDashboard />} />
             
             {/* Backend Exploitation Dashboard */}
             <Route path="/backend" element={<BackendExploitationDashboard />} />
@@ -41,8 +46,8 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </div>
-      </Router>
-    </OptimizedProviderTree>
+      </OptimizedProviderTree>
+    </Router>
   );
 };
 
