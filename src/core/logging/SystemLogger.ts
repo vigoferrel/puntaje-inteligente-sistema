@@ -24,7 +24,7 @@ class SystemLogger {
   private constructor() {
     // Capturar errores globales
     window.addEventListener('error', (event) => {
-      this.error('Global Error', {
+      this.error('Global Error', `${event.message} at ${event.filename}:${event.lineno}:${event.colno}`, {
         message: event.message,
         filename: event.filename,
         lineno: event.lineno,
@@ -34,7 +34,7 @@ class SystemLogger {
     });
 
     window.addEventListener('unhandledrejection', (event) => {
-      this.error('Unhandled Promise Rejection', {
+      this.error('Unhandled Promise Rejection', `Promise rejected: ${event.reason}`, {
         reason: event.reason,
         promise: event.promise
       });

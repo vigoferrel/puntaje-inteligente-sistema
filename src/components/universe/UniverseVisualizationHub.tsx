@@ -5,7 +5,7 @@ import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SafeThreeProvider, useThreeSupport } from '@/core/three/SafeThreeProvider';
 import { SystemErrorBoundary } from '@/core/error-handling/SystemErrorBoundary';
-import { Cosmos, Atom, Brain, Sparkles } from 'lucide-react';
+import { Globe, Atom, Brain, Sparkles } from 'lucide-react';
 
 const UniverseContent: React.FC = () => {
   const threeSupported = useThreeSupport();
@@ -25,7 +25,7 @@ const UniverseContent: React.FC = () => {
         <Card className="bg-gradient-to-br from-purple-900/40 to-blue-900/40 border-white/20">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Cosmos className="w-5 h-5" />
+              <Globe className="w-5 h-5" />
               Universo Educativo
             </CardTitle>
           </CardHeader>

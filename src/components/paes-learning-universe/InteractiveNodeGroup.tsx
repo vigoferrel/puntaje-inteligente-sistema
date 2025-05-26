@@ -86,7 +86,8 @@ export const InteractiveNodeGroup: React.FC<InteractiveNodeGroupProps> = ({
       if (particlesRef.current) {
         particlesRef.current.rotation.y += 0.01;
         const time = state.clock.getElapsedTime();
-        particlesRef.current.material.opacity = 0.3 + Math.sin(time * 2) * 0.1;
+        const material = particlesRef.current.material as THREE.PointsMaterial;
+        material.opacity = 0.3 + Math.sin(time * 2) * 0.1;
       }
     });
 
