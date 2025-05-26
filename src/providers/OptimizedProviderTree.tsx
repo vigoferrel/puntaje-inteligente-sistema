@@ -13,13 +13,13 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutos
       retry: (failureCount, error) => {
-        logger.warn('QueryClient', `Query failed ${failureCount} times`, error);
+        logger.warn('QueryClient', `Query failed ${failureCount} times`, { error: error?.message || 'Unknown error' });
         return failureCount < 3;
       },
     },
     mutations: {
       retry: (failureCount, error) => {
-        logger.warn('QueryClient', `Mutation failed ${failureCount} times`, error);
+        logger.warn('QueryClient', `Mutation failed ${failureCount} times`, { error: error?.message || 'Unknown error' });
         return failureCount < 2;
       },
     },

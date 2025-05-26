@@ -22,22 +22,26 @@ class SystemLogger {
   }
 
   private constructor() {
-    // Capturar errores globales
+    // Capturar errores globales con manejo seguro
     window.addEventListener('error', (event) => {
-      this.error('Global Error', `${event.message} at ${event.filename}:${event.lineno}:${event.colno}`, {
-        message: event.message,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        error: event.error?.stack
-      });
+      const errorData = {
+        message: event.message || 'Unknown error',
+        filename: event.filename || 'Unknown file',
+        lineno: event.lineno || 0,
+        colno: event.colno || 0,
+        stack: event.error?.stack || 'No stack trace available'
+      };
+      
+      this.error('Global Error', `${errorData.message} at ${errorData.filename}:${errorData.lineno}:${errorData.colno}`, errorData);
     });
 
     window.addEventListener('unhandledrejection', (event) => {
-      this.error('Unhandled Promise Rejection', `Promise rejected: ${event.reason}`, {
-        reason: event.reason,
-        promise: event.promise
-      });
+      const rejectionData = {
+        reason: event.reason?.toString() || 'Unknown rejection reason',
+        promise: 'Promise object'
+      };
+      
+      this.error('Unhandled Promise Rejection', `Promise rejected: ${rejectionData.reason}`, rejectionData);
     });
   }
 
@@ -61,7 +65,8 @@ class SystemLogger {
     // Log en consola solo en desarrollo o errores críticos
     if (!this.isProduction || level === 'error' || level === 'critical') {
       const logMethod = this.getConsoleMethod(level);
-      logMethod(`[${module}] ${message}`, data || '');
+      const logData = data ? (typeof data === 'object' ? JSON.stringify(data, null, 2) : data) : '';
+      logMethod(`[${module}] ${message}`, logData);
     }
   }
 
