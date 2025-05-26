@@ -9,7 +9,7 @@ import { CinematicCalendar } from '@/components/calendar/CinematicCalendar';
 import { SuperPAESMain } from '@/components/super-paes/SuperPAESMain';
 import { BackendExploitationDashboard } from '@/components/backend/BackendExploitationDashboard';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
-import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCenter';
+import { EnhancedNeuralCommandCenter } from '@/components/neural-command/EnhancedNeuralCommandCenter';
 import { PlanInteligenteWrapper } from '@/components/plan/modern/PlanInteligenteWrapper';
 import { QualityDashboard } from '@/components/quality/QualityDashboard';
 import { EvaluationBank } from '@/components/evaluations/EvaluationBank';
@@ -24,8 +24,8 @@ const App: React.FC = () => {
             <Route path="/" element={<OptimizedDashboard />} />
             <Route path="/dashboard" element={<OptimizedDashboard />} />
             
-            {/* Sistema Neural Avanzado */}
-            <Route path="/neural" element={<NeuralCommandCenter />} />
+            {/* Sistema Neural Mejorado */}
+            <Route path="/neural" element={<EnhancedNeuralCommandCenter />} />
             
             {/* Plan Inteligente */}
             <Route path="/plan" element={<PlanInteligenteWrapper />} />
