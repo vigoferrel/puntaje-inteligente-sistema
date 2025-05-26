@@ -4,9 +4,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CinematicThemeProvider } from "@/contexts/CinematicThemeProvider";
 import { SimpleLoadingScreen } from "@/components/SimpleLoadingScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AutoRecoverySystem } from "@/components/recovery/AutoRecoverySystem";
+import { CinematicSystemWrapper } from "@/components/cinematic/CinematicSystemWrapper";
 import { AppLayout } from "@/components/app-layout";
 import { lazy } from "react";
 
@@ -43,15 +45,19 @@ const App = () => {
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <AuthProvider>
-              <AppLayout>
-                <Suspense fallback={<SimpleLoadingScreen />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/unified" element={<UnifiedPAESMaster />} />
-                    <Route path="/paes" element={<PAESDashboard />} />
-                  </Routes>
-                </Suspense>
-              </AppLayout>
+              <CinematicThemeProvider>
+                <CinematicSystemWrapper cinematicMode={true}>
+                  <AppLayout>
+                    <Suspense fallback={<SimpleLoadingScreen />}>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/unified" element={<UnifiedPAESMaster />} />
+                        <Route path="/paes" element={<PAESDashboard />} />
+                      </Routes>
+                    </Suspense>
+                  </AppLayout>
+                </CinematicSystemWrapper>
+              </CinematicThemeProvider>
               <Toaster />
             </AuthProvider>
           </BrowserRouter>
