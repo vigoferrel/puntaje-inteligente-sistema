@@ -116,7 +116,7 @@ export const EventModal: React.FC<EventModalProps> = ({
     }
   };
 
-  const getEventTypeColor = (type: string) => {
+  const getEventTypeGradient = (type: string) => {
     switch (type) {
       case 'study_session':
         return 'from-blue-500 to-cyan-500';
@@ -135,21 +135,21 @@ export const EventModal: React.FC<EventModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative bg-gray-900/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
+        className="relative premium-modal rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+        {/* Header con contraste mejorado */}
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center space-x-3">
-            <div className={`p-2 rounded-lg bg-gradient-to-r ${getEventTypeColor(formData.event_type)}`}>
+            <div className={`p-2 rounded-lg bg-gradient-to-r ${getEventTypeGradient(formData.event_type)}`}>
               {getEventTypeIcon(formData.event_type)}
             </div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-contrast-high">
               {event ? 'Editar Evento' : 'Nuevo Evento'}
             </h2>
           </div>
@@ -157,7 +157,7 @@ export const EventModal: React.FC<EventModalProps> = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-gray-400 hover:text-white hover:bg-gray-700/50"
+            className="text-gray-300 hover:text-white hover:bg-white/10"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -166,34 +166,34 @@ export const EventModal: React.FC<EventModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Event Type Selection */}
           <div className="space-y-2">
-            <Label htmlFor="event_type" className="text-white font-medium">Tipo de Evento</Label>
+            <Label htmlFor="event_type" className="text-contrast-high font-medium">Tipo de Evento</Label>
             <Select value={formData.event_type} onValueChange={(value: 'study_session' | 'paes_date' | 'deadline' | 'reminder') => handleInputChange('event_type', value)}>
-              <SelectTrigger className="bg-gray-800/50 border-gray-600 text-white">
+              <SelectTrigger className="premium-input">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectContent className="premium-glass border-white/10">
                 <SelectItem value="study_session">
                   <div className="flex items-center space-x-2">
                     <BookOpen className="w-4 h-4 text-blue-400" />
-                    <span>Sesión de Estudio</span>
+                    <span className="text-contrast-high">Sesión de Estudio</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="paes_date">
                   <div className="flex items-center space-x-2">
                     <Target className="w-4 h-4 text-red-400" />
-                    <span>Fecha PAES</span>
+                    <span className="text-contrast-high">Fecha PAES</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="deadline">
                   <div className="flex items-center space-x-2">
                     <Clock className="w-4 h-4 text-orange-400" />
-                    <span>Fecha Límite</span>
+                    <span className="text-contrast-high">Fecha Límite</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="reminder">
                   <div className="flex items-center space-x-2">
                     <Bell className="w-4 h-4 text-purple-400" />
-                    <span>Recordatorio</span>
+                    <span className="text-contrast-high">Recordatorio</span>
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -202,12 +202,12 @@ export const EventModal: React.FC<EventModalProps> = ({
 
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-white font-medium">Título</Label>
+            <Label htmlFor="title" className="text-contrast-high font-medium">Título</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
-              className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+              className="premium-input"
               placeholder="Ingresa el título del evento"
               required
             />
@@ -215,12 +215,12 @@ export const EventModal: React.FC<EventModalProps> = ({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-white font-medium">Descripción</Label>
+            <Label htmlFor="description" className="text-contrast-high font-medium">Descripción</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+              className="premium-input"
               placeholder="Describe los detalles del evento"
               rows={3}
             />
@@ -228,34 +228,34 @@ export const EventModal: React.FC<EventModalProps> = ({
 
           {/* Priority */}
           <div className="space-y-2">
-            <Label htmlFor="priority" className="text-white font-medium">Prioridad</Label>
+            <Label htmlFor="priority" className="text-contrast-high font-medium">Prioridad</Label>
             <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high' | 'critical') => handleInputChange('priority', value)}>
-              <SelectTrigger className="bg-gray-800/50 border-gray-600 text-white">
+              <SelectTrigger className="premium-input">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectContent className="premium-glass border-white/10">
                 <SelectItem value="low">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                    <span>Baja</span>
+                    <span className="text-contrast-high">Baja</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="medium">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span>Media</span>
+                    <span className="text-contrast-high">Media</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="high">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <span>Alta</span>
+                    <span className="text-contrast-high">Alta</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="critical">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span>Crítica</span>
+                    <span className="text-contrast-high">Crítica</span>
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -263,19 +263,19 @@ export const EventModal: React.FC<EventModalProps> = ({
           </div>
 
           {/* All Day Toggle */}
-          <div className="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
+          <div className="flex items-center space-x-3 p-3 premium-glass rounded-lg">
             <Switch
               id="all_day"
               checked={formData.all_day}
               onCheckedChange={(checked) => handleInputChange('all_day', checked)}
             />
-            <Label htmlFor="all_day" className="text-white font-medium">Todo el día</Label>
+            <Label htmlFor="all_day" className="text-contrast-high font-medium">Todo el día</Label>
           </div>
 
           {/* Date and Time */}
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start_date" className="text-white font-medium">
+              <Label htmlFor="start_date" className="text-contrast-high font-medium">
                 {formData.all_day ? 'Fecha' : 'Fecha y Hora de Inicio'}
               </Label>
               <Input
@@ -283,20 +283,20 @@ export const EventModal: React.FC<EventModalProps> = ({
                 type={formData.all_day ? "date" : "datetime-local"}
                 value={formData.all_day ? formData.start_date.slice(0, 10) : formData.start_date}
                 onChange={(e) => handleInputChange('start_date', formData.all_day ? e.target.value + 'T00:00' : e.target.value)}
-                className="bg-gray-800/50 border-gray-600 text-white"
+                className="premium-input"
                 required
               />
             </div>
 
             {!formData.all_day && (
               <div className="space-y-2">
-                <Label htmlFor="end_date" className="text-white font-medium">Fecha y Hora de Fin</Label>
+                <Label htmlFor="end_date" className="text-contrast-high font-medium">Fecha y Hora de Fin</Label>
                 <Input
                   id="end_date"
                   type="datetime-local"
                   value={formData.end_date}
                   onChange={(e) => handleInputChange('end_date', e.target.value)}
-                  className="bg-gray-800/50 border-gray-600 text-white"
+                  className="premium-input"
                 />
               </div>
             )}
@@ -304,24 +304,24 @@ export const EventModal: React.FC<EventModalProps> = ({
 
           {/* Location */}
           <div className="space-y-2">
-            <Label htmlFor="location" className="text-white font-medium">Ubicación</Label>
+            <Label htmlFor="location" className="text-contrast-high font-medium">Ubicación</Label>
             <Input
               id="location"
               value={formData.location}
               onChange={(e) => handleInputChange('location', e.target.value)}
-              className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400"
+              className="premium-input"
               placeholder="¿Dónde será el evento?"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between pt-4 border-t border-gray-700/50">
+          <div className="flex justify-between pt-4 border-t border-white/10">
             {event && onDelete && (
               <Button
                 type="button"
                 variant="destructive"
                 onClick={onDelete}
-                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700"
+                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Eliminar</span>
@@ -333,13 +333,13 @@ export const EventModal: React.FC<EventModalProps> = ({
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
+                className="border-gray-500 text-contrast-medium hover:bg-white/5 hover:text-contrast-high"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0"
+                className="premium-button border-0"
               >
                 {event ? 'Actualizar' : 'Crear Evento'}
               </Button>

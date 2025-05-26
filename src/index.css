@@ -1,11 +1,10 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Nueva paleta cromática premium */
+    /* Nueva paleta cromática premium con mejor contraste */
     --background: 10 10% 3.9%;
     --foreground: 0 0% 98%;
     
@@ -38,17 +37,27 @@
     
     --radius: 0.75rem;
     
-    /* Nuevas variables cromáticas premium */
+    /* Variables cromáticas premium con contraste mejorado */
     --premium-violet: 262 83% 58%;
     --premium-violet-dark: 262 83% 45%;
     --emerald-green: 158 64% 52%;
     --vibrant-coral: 43 96% 56%;
     --deep-black: 240 10% 3.9%;
-    --glass-bg: rgba(139, 92, 246, 0.1);
-    --glass-border: rgba(139, 92, 246, 0.2);
+    
+    /* Fondos con mejor contraste */
+    --glass-bg-dark: rgba(0, 0, 0, 0.8);
+    --glass-bg-medium: rgba(0, 0, 0, 0.6);
+    --glass-border: rgba(139, 92, 246, 0.3);
     --glow-violet: rgba(139, 92, 246, 0.4);
     --glow-emerald: rgba(16, 185, 129, 0.4);
     --glow-coral: rgba(245, 158, 11, 0.4);
+    
+    /* Texto con contraste optimizado */
+    --text-primary: #ffffff;
+    --text-secondary: #f3f4f6;
+    --text-accent-emerald: #10b981;
+    --text-accent-coral: #f59e0b;
+    --text-muted: #9ca3af;
     
     --sidebar-background: 0 0% 0%;
     --sidebar-foreground: 0 0% 100%;
@@ -120,36 +129,37 @@
 }
 
 @layer components {
-  /* Tipografía Premium */
+  /* Tipografía Premium con Contraste Mejorado */
   .premium-heading {
-    @apply font-poppins font-bold tracking-wide bg-gradient-to-r from-violet-400 via-purple-300 to-emerald-400 bg-clip-text text-transparent;
+    @apply font-poppins font-bold tracking-wide;
+    color: var(--text-primary);
     text-shadow: 0 0 30px var(--glow-violet);
   }
   
   .premium-title {
-    @apply font-poppins font-semibold tracking-wide text-violet-200;
+    @apply font-poppins font-semibold tracking-wide;
+    color: var(--text-primary);
   }
   
   .premium-subtitle {
-    @apply font-poppins font-medium tracking-normal text-emerald-300;
+    @apply font-poppins font-medium tracking-normal;
+    color: var(--text-accent-emerald);
   }
   
   .premium-body {
-    @apply font-poppins font-normal text-gray-200;
+    @apply font-poppins font-normal;
+    color: var(--text-secondary);
   }
 
-  /* Efectos Glassmorphism Mejorados */
+  /* Glassmorphism con Contraste Optimizado */
   .premium-glass {
-    background: linear-gradient(135deg, 
-      rgba(139, 92, 246, 0.15) 0%,
-      rgba(16, 185, 129, 0.1) 50%,
-      rgba(245, 158, 11, 0.1) 100%);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: var(--glass-bg-dark);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-border);
     box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      0 0 0 1px rgba(139, 92, 246, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(139, 92, 246, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
@@ -166,30 +176,75 @@
     animation: shimmer 3s ease-in-out infinite;
   }
 
-  /* Cards Premium */
+  /* Cards Premium con Contraste Mejorado */
   .premium-card {
-    @apply premium-glass rounded-2xl p-6 transition-all duration-500;
+    background: var(--glass-bg-dark);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(139, 92, 246, 0.2);
+    @apply rounded-2xl p-6 transition-all duration-500;
     transform-style: preserve-3d;
+    color: var(--text-primary);
   }
 
   .premium-card:hover {
     transform: translateY(-8px) rotateX(2deg) rotateY(2deg);
+    background: rgba(0, 0, 0, 0.9);
     box-shadow: 
-      0 20px 40px rgba(0, 0, 0, 0.4),
+      0 20px 40px rgba(0, 0, 0, 0.5),
       0 0 60px var(--glow-violet),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
     border-color: rgba(139, 92, 246, 0.6);
   }
 
-  /* Botones Premium */
+  /* Eventos del Calendario con Contraste Mejorado */
+  .calendar-event {
+    background: var(--glass-bg-dark);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: var(--text-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .calendar-event:hover {
+    background: rgba(0, 0, 0, 0.85);
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .calendar-event-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  }
+
+  .calendar-event-time {
+    color: var(--text-accent-emerald);
+    font-size: 0.875rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .calendar-event-location {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Botones Premium con Contraste */
   .premium-button {
     background: linear-gradient(135deg, 
       hsl(var(--premium-violet)) 0%,
       hsl(var(--emerald-green)) 50%,
       hsl(var(--vibrant-coral)) 100%);
     border: 1px solid rgba(139, 92, 246, 0.4);
-    color: white;
+    color: var(--text-primary);
     font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
@@ -220,76 +275,111 @@
       0 0 40px var(--glow-coral);
   }
 
-  /* Estados de Progreso */
-  .premium-progress {
-    background: linear-gradient(90deg, 
-      hsl(var(--emerald-green)) 0%,
-      hsl(var(--premium-violet)) 50%,
-      hsl(var(--vibrant-coral)) 100%);
-    box-shadow: 0 0 20px var(--glow-emerald);
-    animation: progress-glow 2s ease-in-out infinite alternate;
-  }
-
-  /* Headers Premium */
+  /* Headers Premium con Contraste */
   .premium-header {
-    background: linear-gradient(135deg, 
-      rgba(139, 92, 246, 0.2) 0%,
-      rgba(0, 0, 0, 0.8) 50%,
-      rgba(16, 185, 129, 0.2) 100%);
+    background: var(--glass-bg-medium);
     backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(139, 92, 246, 0.3);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+    color: var(--text-primary);
   }
 
-  /* Navegación Premium */
+  /* Navegación Premium con Contraste */
   .premium-nav-item {
-    @apply transition-all duration-300 relative;
-    background: rgba(139, 92, 246, 0.1);
+    background: var(--glass-bg-medium);
     border: 1px solid rgba(139, 92, 246, 0.2);
+    color: var(--text-primary);
+    @apply transition-all duration-300 relative;
   }
 
   .premium-nav-item:hover {
-    background: linear-gradient(135deg, 
-      rgba(139, 92, 246, 0.3) 0%,
-      rgba(16, 185, 129, 0.2) 100%);
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(16, 185, 129, 0.4);
     transform: translateX(4px);
     box-shadow: 0 4px 20px var(--glow-violet);
   }
 
   .premium-nav-item.active {
     background: linear-gradient(135deg, 
-      hsl(var(--premium-violet)) 0%,
-      hsl(var(--emerald-green)) 100%);
+      rgba(139, 92, 246, 0.4) 0%,
+      rgba(16, 185, 129, 0.3) 100%);
     border-color: rgba(16, 185, 129, 0.6);
     box-shadow: 0 0 30px var(--glow-emerald);
+    color: var(--text-primary);
   }
 
-  /* Inputs Premium */
+  /* Inputs Premium con Contraste */
   .premium-input {
-    background: rgba(139, 92, 246, 0.05);
+    background: var(--glass-bg-medium);
     border: 1px solid rgba(139, 92, 246, 0.3);
-    color: white;
+    color: var(--text-primary);
     transition: all 0.3s ease;
+  }
+
+  .premium-input::placeholder {
+    color: var(--text-muted);
   }
 
   .premium-input:focus {
     border-color: hsl(var(--emerald-green));
     box-shadow: 0 0 20px var(--glow-emerald);
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--text-primary);
   }
 
-  /* Badges Premium */
+  /* Badges Premium con Contraste */
   .premium-badge {
     background: linear-gradient(135deg, 
       hsl(var(--premium-violet)) 0%,
       hsl(var(--vibrant-coral)) 100%);
     border: 1px solid rgba(245, 158, 11, 0.4);
-    color: white;
+    color: var(--text-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     box-shadow: 0 0 15px var(--glow-coral);
     animation: badge-pulse 3s ease-in-out infinite;
   }
 
-  /* Efectos de Hover Globales */
+  /* Modal Premium con Contraste Mejorado */
+  .premium-modal {
+    background: var(--glass-bg-dark);
+    backdrop-filter: blur(32px);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 
+      0 20px 60px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(139, 92, 246, 0.1);
+    color: var(--text-primary);
+  }
+
+  /* Event Cards Específicos */
+  .event-card-paes {
+    background: linear-gradient(135deg, 
+      rgba(220, 38, 127, 0.2) 0%,
+      rgba(0, 0, 0, 0.8) 100%);
+    border-color: rgba(220, 38, 127, 0.4);
+  }
+
+  .event-card-study {
+    background: linear-gradient(135deg, 
+      rgba(59, 130, 246, 0.2) 0%,
+      rgba(0, 0, 0, 0.8) 100%);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  .event-card-deadline {
+    background: linear-gradient(135deg, 
+      rgba(245, 158, 11, 0.2) 0%,
+      rgba(0, 0, 0, 0.8) 100%);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+
+  .event-card-reminder {
+    background: linear-gradient(135deg, 
+      rgba(139, 92, 246, 0.2) 0%,
+      rgba(0, 0, 0, 0.8) 100%);
+    border-color: rgba(139, 92, 246, 0.4);
+  }
+
+  /* Efectos de Hover Globales con Contraste */
   .hover-glow:hover {
     box-shadow: 0 0 30px var(--glow-violet);
     transform: scale(1.02);
@@ -301,6 +391,27 @@
 
   .hover-coral:hover {
     box-shadow: 0 0 25px var(--glow-coral);
+  }
+
+  /* Text Utilities con Contraste Optimizado */
+  .text-contrast-high {
+    color: var(--text-primary);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  }
+
+  .text-contrast-medium {
+    color: var(--text-secondary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .text-accent-success {
+    color: var(--text-accent-emerald);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .text-accent-warning {
+    color: var(--text-accent-coral);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   }
 }
 
