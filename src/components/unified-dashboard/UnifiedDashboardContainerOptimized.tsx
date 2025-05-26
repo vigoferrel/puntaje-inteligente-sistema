@@ -2,16 +2,18 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OptimizedUnifiedHeader } from './OptimizedUnifiedHeader';
-import { OptimizedDashboard } from '@/components/dashboard/OptimizedDashboard';
-import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
-import { UnifiedNavigationCore } from '@/components/navigation/UnifiedNavigationCore';
 import { CinematicSkeletonOptimized } from './CinematicSkeletonOptimized';
-import { OptimizedSuspenseWrapper } from '@/components/optimization/OptimizedSuspenseWrapper';
-import { StudyCalendarIntegration } from '@/components/calendar/StudyCalendarIntegration';
-import { PAESFinancialCalculator } from '@/components/financial/PAESFinancialCalculator';
 import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
 import { useOptimizedNeuralMetrics } from '@/hooks/useOptimizedNeuralMetrics';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigationPredictor } from '@/core/performance/NavigationPredictor';
+import { 
+  LazyOptimizedDashboard,
+  LazyLectoGuiaUnified,
+  LazyStudyCalendar,
+  LazyFinancialCalculator,
+  useIntelligentPreloading
+} from '@/components/lazy/LazyComponents';
 
 interface UnifiedDashboardContainerOptimizedProps {
   initialTool?: string | null;
@@ -33,11 +35,16 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
     canGoBack
   } = useUnifiedNavigation();
 
+  const { predictions, recordNavigation } = useNavigationPredictor();
+  
+  // Preloading inteligente basado en la ruta actual
+  useIntelligentPreloading(currentTool);
+
   // Usar las métricas neurales optimizadas
   const { metrics: neuralMetrics } = useOptimizedNeuralMetrics({
     enableCache: true,
-    updateInterval: 45000, // 45 segundos
-    debounceTime: 2000 // 2 segundos
+    updateInterval: 45000,
+    debounceTime: 2000
   });
 
   // Inicialización con la herramienta inicial
@@ -47,26 +54,27 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
     }
   }, [initialTool, currentTool, navigateToTool]);
 
-  // Carga optimizada
+  // Carga ultra-optimizada
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 150); // Reducido para carga más rápida
+    }, 100); // Reducido a 100ms para carga instantánea
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Manejo de cambio de herramienta memoizado
+  // Manejo de cambio de herramienta con predicción
   const handleToolChange = useCallback((tool: string, toolContext?: any) => {
+    recordNavigation(tool);
     navigateToTool(tool, toolContext);
-  }, [navigateToTool]);
+  }, [navigateToTool, recordNavigation]);
 
   // Manejo de cambio de materia memoizado
   const handleSubjectChange = useCallback((subject: string) => {
     updateContext({ subject });
   }, [updateContext]);
 
-  // Métricas del sistema optimizadas basadas en métricas neurales reales
+  // Métricas del sistema optimizadas
   const systemMetrics = useMemo(() => ({
     completedNodes: Math.round((neuralMetrics.universe_exploration_depth * 50) / 100) || 15,
     totalNodes: 50,
@@ -85,36 +93,28 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
     return Math.round(avgMetrics);
   }, [neuralMetrics]);
 
-  // Renderizado optimizado de herramientas con lazy loading mejorado
+  // Renderizado optimizado con lazy loading
   const renderCurrentTool = useMemo(() => {
     const activeSubject = context.subject || 'COMPETENCIA_LECTORA';
     
     const toolComponents = {
       dashboard: () => (
-        <OptimizedSuspenseWrapper fallbackMessage="Cargando Dashboard Neural" componentName="OptimizedDashboard">
-          <OptimizedDashboard onNavigateToTool={handleToolChange} />
-        </OptimizedSuspenseWrapper>
+        <LazyOptimizedDashboard onNavigateToTool={handleToolChange} />
       ),
       
       lectoguia: () => (
-        <OptimizedSuspenseWrapper fallbackMessage="Inicializando LectoGuía IA" componentName="LectoGuiaUnified">
-          <LectoGuiaUnified
-            initialSubject={activeSubject}
-            onNavigateToTool={handleToolChange}
-          />
-        </OptimizedSuspenseWrapper>
+        <LazyLectoGuiaUnified
+          initialSubject={activeSubject}
+          onNavigateToTool={handleToolChange}
+        />
       ),
       
       calendar: () => (
-        <OptimizedSuspenseWrapper fallbackMessage="Inicializando Calendario" componentName="StudyCalendarIntegration">
-          <StudyCalendarIntegration />
-        </OptimizedSuspenseWrapper>
+        <LazyStudyCalendar />
       ),
       
       financial: () => (
-        <OptimizedSuspenseWrapper fallbackMessage="Cargando Calculadora PAES" componentName="PAESFinancialCalculator">
-          <PAESFinancialCalculator />
-        </OptimizedSuspenseWrapper>
+        <LazyFinancialCalculator />
       ),
         
       default: () => (
@@ -133,10 +133,24 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
             <p className="text-white/70 poppins-body">
               Sistema optimizado para {activeSubject}
             </p>
-            <UnifiedNavigationCore
-              onNavigate={handleToolChange}
-              currentTool={currentTool}
-            />
+            
+            {/* Mostrar predicciones de navegación */}
+            {predictions.length > 0 && (
+              <div className="mt-6 p-4 bg-white/5 rounded-lg">
+                <p className="text-sm text-cyan-400 mb-2">Sugerencias inteligentes:</p>
+                <div className="flex gap-2 justify-center">
+                  {predictions.map((tool) => (
+                    <button
+                      key={tool}
+                      onClick={() => handleToolChange(tool)}
+                      className="px-3 py-1 bg-cyan-600/20 text-cyan-300 rounded-md text-sm hover:bg-cyan-600/30 transition-colors"
+                    >
+                      {tool.replace('/', '')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
         </div>
       )
@@ -144,13 +158,13 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
 
     const ToolComponent = toolComponents[currentTool as keyof typeof toolComponents] || toolComponents.default;
     return <ToolComponent />;
-  }, [currentTool, context.subject, handleToolChange]);
+  }, [currentTool, context.subject, handleToolChange, predictions]);
 
   if (isLoading) {
     return (
       <CinematicSkeletonOptimized 
-        message="Inicializando Sistema Neural Optimizado" 
-        progress={95} 
+        message="Sistema Neural Cargado" 
+        progress={100} 
         variant="full"
       />
     );
@@ -173,11 +187,11 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
         <AnimatePresence mode="wait">
           <motion.div
             key={currentTool}
-            initial={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            exit={{ opacity: 0, scale: 0.99 }}
             transition={{ 
-              duration: 0.12, // Más rápido
+              duration: 0.08, // Ultra rápido
               ease: [0.4, 0, 0.2, 1] 
             }}
             className="min-h-[calc(100vh-80px)]"

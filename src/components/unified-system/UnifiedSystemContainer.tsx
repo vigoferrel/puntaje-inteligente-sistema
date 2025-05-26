@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCenter';
+import { LazyNeuralCommandCenter } from '@/components/lazy/LazyComponents';
 import { UnifiedDashboardContainerOptimized } from '@/components/unified-dashboard/UnifiedDashboardContainerOptimized';
 import { SystemModeToggle } from './SystemModeToggle';
 import { CinematicSkeletonOptimized } from '@/components/unified-dashboard/CinematicSkeletonOptimized';
 import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { preloadCriticalComponents } from '@/components/lazy/LazyComponents';
 
 type SystemMode = 'neural' | 'unified' | 'auto';
 
@@ -18,6 +19,11 @@ export const UnifiedSystemContainer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   const { currentTool, navigateToTool } = useUnifiedNavigation();
+
+  // Inicializar preloading crítico
+  useEffect(() => {
+    preloadCriticalComponents();
+  }, []);
 
   // Detección inteligente del modo
   const detectedMode = useMemo(() => {
@@ -35,7 +41,7 @@ export const UnifiedSystemContainer: React.FC = () => {
     if (neuralRoutes.some(route => location.pathname.includes(route))) return 'neural';
     if (unifiedRoutes.some(route => location.pathname.includes(route))) return 'unified';
     
-    return 'unified'; // Default mejorado
+    return 'unified';
   }, [location.pathname, location.search]);
 
   // Sincronización del modo
@@ -45,11 +51,11 @@ export const UnifiedSystemContainer: React.FC = () => {
     }
   }, [detectedMode, systemMode]);
 
-  // Inicialización optimizada
+  // Inicialización ultra-optimizada
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 600);
+    }, 50); // Casi instantáneo
 
     return () => clearTimeout(timer);
   }, []);
@@ -58,7 +64,6 @@ export const UnifiedSystemContainer: React.FC = () => {
   const handleNeuralNavigation = (tool: string, toolContext?: any) => {
     console.log('🔗 Neural navigation:', tool, toolContext);
     
-    // Mapeo de herramientas neurales a herramientas unificadas
     const toolMapping: Record<string, { tool: string; mode: 'neural' | 'unified' }> = {
       'dashboard': { tool: 'dashboard', mode: 'unified' },
       'lectoguia': { tool: 'lectoguia', mode: 'unified' },
@@ -92,8 +97,8 @@ export const UnifiedSystemContainer: React.FC = () => {
   if (isLoading) {
     return (
       <CinematicSkeletonOptimized 
-        message="Inicializando Sistema Unificado"
-        progress={85}
+        message="Sistema Optimizado Listo"
+        progress={100}
         variant="full"
       />
     );
@@ -104,25 +109,23 @@ export const UnifiedSystemContainer: React.FC = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Toggle de modo del sistema */}
       <SystemModeToggle
         currentMode={resolvedMode}
         onModeChange={handleModeToggle}
         className="fixed top-4 right-4 z-50"
       />
 
-      {/* Renderizado principal del sistema */}
       <AnimatePresence mode="wait">
         <motion.div
           key={resolvedMode}
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.99 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          exit={{ opacity: 0, scale: 0.99 }}
+          transition={{ duration: 0.15, ease: "easeInOut" }}
           className="w-full h-full"
         >
           {resolvedMode === 'neural' ? (
-            <NeuralCommandCenter 
+            <LazyNeuralCommandCenter 
               onNavigateToTool={handleNeuralNavigation}
               initialDimension={getNeuralDimensionFromTool(currentTool)}
             />
