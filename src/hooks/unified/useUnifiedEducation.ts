@@ -1,7 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { CentralizedEducationService, UnifiedDashboardData, OptimalPathData, PersonalizedAlert } from '@/services/unified/CentralizedEducationService';
+import { CentralizedEducationService } from '@/services/unified/CentralizedEducationService';
 import { logger } from '@/core/logging/SystemLogger';
+import type { UnifiedDashboardData, OptimalPathData, PersonalizedAlert } from '@/services/unified/types';
 
 interface UseUnifiedEducationReturn {
   dashboard: UnifiedDashboardData | null;

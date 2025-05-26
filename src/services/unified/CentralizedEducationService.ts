@@ -1,321 +1,142 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/core/logging/SystemLogger';
+import type { 
+  UnifiedDashboardData, 
+  OptimalPathData, 
+  PersonalizedAlert,
+  RawCalendarData,
+  RawScholarshipData,
+  ProcessedCalendarData,
+  ProcessedScholarshipData
+} from './types';
 
-// Interfaces actualizadas para tipos de datos
-export interface TimelineEvent {
-  fecha_id: number;
-  proceso: string;
-  descripcion: string;
-  fecha_inicio: string;
-  fecha_fin: string;
-  dias_restantes: number;
-  prioridad: number;
-  estado: string;
-  nextCriticalDate?: TimelineEvent;
-  upcomingDates?: TimelineEvent[];
-}
-
-export interface ScholarshipBenefit {
-  beneficio_id: number;
-  nombre: string;
-  categoria: string;
-  monto_anual: number;
-  porcentaje_cobertura: number;
-  compatibilidad: number;
-  estado_postulacion: string;
-  fecha_cierre: string;
-  potentialSavings?: number;
-  compatibleBenefits?: number;
-}
-
-export interface CareerRecommendation {
-  carrera_id: number;
-  nombre_carrera: string;
-  universidad: string;
-  puntaje_corte: number;
-  vacantes: number;
-  puntaje_postulacion: number;
-  probabilidad_ingreso: number;
-  region: string;
-  compatibleCareers?: number;
-  recommendations?: CareerRecommendation[];
-}
-
-export interface PersonalizedAlert {
-  id: string;
-  type: 'info' | 'warning' | 'urgent';
-  title: string;
-  message: string;
-  actionRequired: boolean;
-  dueDate?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-}
-
-export interface UnifiedDashboardData {
-  timeline: TimelineEvent[];
-  scholarships: ScholarshipBenefit[];
-  careers: CareerRecommendation[];
-  analytics: {
-    totalStudents: number;
-    activeStudents: number;
-    averageProgress: number;
-    weeklyGrowth: number;
-    overallProgress: number;
-    paesReadiness: number;
-    subjectStrengths: string[];
-    areasForImprovement: string[];
-  };
-  alerts: PersonalizedAlert[];
-  personalInfo?: {
-    name: string;
-    targetScore: number;
-    studyProgress: number;
-  };
-}
-
-export interface OptimalPathData {
-  recommendedNodes: string[];
-  estimatedHours: number;
-  priorityAreas: string[];
-  weeklySchedule: any;
-}
-
+/**
+ * Servicio centralizado para el sistema educativo PAES
+ * Maneja datos unificados con transformaciones consistentes
+ */
 export class CentralizedEducationService {
   private static cache = new Map<string, any>();
+  private static cacheExpiry = new Map<string, number>();
+  private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
   /**
-   * Obtiene dashboard unificado con datos reales y fallbacks
+   * Obtiene el dashboard unificado con todos los datos procesados
    */
   static async getUnifiedDashboard(userId: string): Promise<UnifiedDashboardData> {
     const cacheKey = `dashboard_${userId}`;
     
-    if (this.cache.has(cacheKey)) {
+    if (this.isCacheValid(cacheKey)) {
       return this.cache.get(cacheKey);
     }
 
     try {
-      logger.info('CentralizedEducationService', 'Cargando dashboard unificado');
+      logger.info('CentralizedEducationService', 'Cargando dashboard unificado', { userId });
 
-      // Obtener timeline con fallback
-      const timeline = await this.getTimeline();
-      
-      // Obtener becas con fallback
-      const scholarships = await this.getScholarships(userId);
-      
-      // Obtener carreras con fallback
-      const careers = await this.getCareers(userId);
+      // Obtener datos en paralelo
+      const [analytics, calendarData, scholarshipData] = await Promise.allSettled([
+        this.getAnalyticsData(userId),
+        this.getCalendarData(),
+        this.getScholarshipData()
+      ]);
 
-      const dashboardData: UnifiedDashboardData = {
-        timeline,
-        scholarships,
-        careers,
-        analytics: {
-          totalStudents: 1250,
-          activeStudents: 980,
-          averageProgress: 0.74,
-          weeklyGrowth: 0.12,
-          overallProgress: 0.74,
-          paesReadiness: 0.82,
-          subjectStrengths: ['Competencia Lectora', 'Historia'],
-          areasForImprovement: ['Matemática M2', 'Ciencias']
-        },
-        alerts: this.generatePersonalizedAlerts(userId),
-        personalInfo: {
-          name: 'Estudiante',
-          targetScore: 650,
-          studyProgress: 74
-        }
+      const dashboard: UnifiedDashboardData = {
+        analytics: this.extractSettledValue(analytics, this.getDefaultAnalytics()),
+        calendar: this.extractSettledValue(calendarData, this.getDefaultCalendar()),
+        scholarships: this.extractSettledValue(scholarshipData, this.getDefaultScholarships()),
+        lastUpdated: new Date()
       };
 
-      this.cache.set(cacheKey, dashboardData);
-      return dashboardData;
+      this.setCache(cacheKey, dashboard);
+      return dashboard;
 
     } catch (error) {
       logger.error('CentralizedEducationService', 'Error cargando dashboard', error);
-      return this.getFallbackDashboard();
+      return this.getDefaultDashboard();
     }
   }
 
   /**
-   * Obtiene timeline con datos reales o fallback usando tabla calendar_events
-   */
-  private static async getTimeline(): Promise<TimelineEvent[]> {
-    try {
-      // Usar tabla calendar_events existente
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .eq('event_type', 'paes_deadline')
-        .order('start_date', { ascending: true })
-        .limit(10);
-
-      if (error) {
-        logger.warn('CentralizedEducationService', 'Error en consulta timeline, usando fallback');
-        return this.getFallbackTimeline();
-      }
-
-      // Si no hay datos reales, usar fallback
-      if (!data || data.length === 0) {
-        return this.getFallbackTimeline();
-      }
-
-      const processedTimeline = data.map((item, index) => ({
-        fecha_id: index + 1,
-        proceso: item.title || 'PAES 2025',
-        descripcion: item.description || 'Proceso PAES',
-        fecha_inicio: item.start_date || '2024-12-02',
-        fecha_fin: item.end_date || item.start_date || '2024-12-02',
-        dias_restantes: this.calculateDaysRemaining(item.start_date || '2024-12-02'),
-        prioridad: item.priority === 'high' ? 1 : 2,
-        estado: 'PRÓXIMA'
-      }));
-
-      // Añadir propiedades especiales al primer evento
-      if (processedTimeline.length > 0) {
-        processedTimeline[0].nextCriticalDate = processedTimeline[0];
-        processedTimeline[0].upcomingDates = processedTimeline.slice(0, 3);
-      }
-
-      return processedTimeline;
-
-    } catch (error) {
-      logger.error('CentralizedEducationService', 'Error obteniendo timeline', error);
-      return this.getFallbackTimeline();
-    }
-  }
-
-  /**
-   * Obtiene becas compatibles con fallback usando tabla becas_financiamiento
-   */
-  private static async getScholarships(userId: string): Promise<ScholarshipBenefit[]> {
-    try {
-      // Obtener perfil del usuario
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      // Consulta a becas existentes
-      const { data, error } = await supabase
-        .from('becas_financiamiento')
-        .select('*')
-        .eq('estado', 'activa')
-        .limit(5);
-
-      if (error || !data) {
-        return this.getFallbackScholarships();
-      }
-
-      const processedScholarships = data.map((beca, index) => ({
-        beneficio_id: index + 1,
-        nombre: beca.nombre,
-        categoria: beca.tipo_beca,
-        monto_anual: Number(beca.monto_maximo) || 0,
-        porcentaje_cobertura: beca.porcentaje_cobertura || 0,
-        compatibilidad: this.calculateCompatibility(beca, profile),
-        estado_postulacion: 'ABIERTA',
-        fecha_cierre: '2025-03-13',
-        potentialSavings: Number(beca.monto_maximo) * 0.8 || 2000000,
-        compatibleBenefits: data.length
-      }));
-
-      return processedScholarships;
-
-    } catch (error) {
-      logger.error('CentralizedEducationService', 'Error obteniendo becas', error);
-      return this.getFallbackScholarships();
-    }
-  }
-
-  /**
-   * Obtiene carreras compatibles con fallback
-   */
-  private static async getCareers(userId: string): Promise<CareerRecommendation[]> {
-    try {
-      // Por ahora usar datos fallback hasta tener tabla de carreras completa
-      const fallbackCareers = this.getFallbackCareers();
-      
-      // Añadir propiedades especiales
-      return fallbackCareers.map(career => ({
-        ...career,
-        compatibleCareers: fallbackCareers.length,
-        recommendations: fallbackCareers.slice(0, 3)
-      }));
-
-    } catch (error) {
-      logger.error('CentralizedEducationService', 'Error obteniendo carreras', error);
-      return this.getFallbackCareers();
-    }
-  }
-
-  /**
-   * Calcula ruta óptima de estudio
+   * Calcula la ruta de aprendizaje óptima
    */
   static async calculateOptimalPath(userId: string, preferences: any = {}): Promise<OptimalPathData> {
-    try {
-      logger.info('CentralizedEducationService', 'Calculando ruta óptima');
+    const cacheKey = `optimal_path_${userId}`;
+    
+    if (this.isCacheValid(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
 
-      // Obtener nodos de aprendizaje
-      const { data: nodes } = await supabase
-        .from('learning_nodes')
-        .select('*')
-        .eq('tier_priority', 'tier1_critico')
-        .limit(10);
+    try {
+      logger.info('CentralizedEducationService', 'Calculando ruta óptima', { userId, preferences });
 
       // Obtener progreso del usuario
-      const { data: progress } = await supabase
+      const { data: userProgress } = await supabase
         .from('user_node_progress')
-        .select('*')
+        .select('node_id, mastery_level, status')
         .eq('user_id', userId);
 
-      const recommendedNodes = nodes?.map(node => node.code) || ['CL-01', 'CL-02', 'M1-01'];
+      // Obtener nodos de aprendizaje
+      const { data: learningNodes } = await supabase
+        .from('learning_nodes')
+        .select('id, title, difficulty, estimated_time_minutes, tier_priority')
+        .order('position');
+
+      const path = this.buildOptimalPath(userProgress || [], learningNodes || [], preferences);
       
-      return {
-        recommendedNodes,
-        estimatedHours: 40,
-        priorityAreas: ['Competencia Lectora', 'Matemática M1'],
-        weeklySchedule: {
-          lunes: ['CL-01'],
-          miercoles: ['M1-01'],
-          viernes: ['CL-02']
-        }
-      };
+      this.setCache(cacheKey, path);
+      return path;
 
     } catch (error) {
       logger.error('CentralizedEducationService', 'Error calculando ruta óptima', error);
-      return {
-        recommendedNodes: ['CL-01', 'M1-01'],
-        estimatedHours: 20,
-        priorityAreas: ['Competencia Lectora'],
-        weeklySchedule: {}
-      };
+      return this.getDefaultOptimalPath();
     }
   }
 
   /**
-   * Obtiene alertas personalizadas
+   * Obtiene alertas personalizadas para el usuario
    */
   static async getPersonalizedAlerts(userId: string): Promise<PersonalizedAlert[]> {
-    return this.generatePersonalizedAlerts(userId);
+    const cacheKey = `alerts_${userId}`;
+    
+    if (this.isCacheValid(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    try {
+      logger.info('CentralizedEducationService', 'Obteniendo alertas personalizadas', { userId });
+
+      // Obtener notificaciones del usuario
+      const { data: notifications } = await supabase
+        .from('user_notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_read', false)
+        .order('created_at', { ascending: false });
+
+      const alerts = this.transformNotificationsToAlerts(notifications || []);
+      
+      this.setCache(cacheKey, alerts);
+      return alerts;
+
+    } catch (error) {
+      logger.error('CentralizedEducationService', 'Error obteniendo alertas', error);
+      return this.getDefaultAlerts();
+    }
   }
 
   /**
-   * Exporta reporte completo
+   * Exporta reporte completo del usuario
    */
   static async exportCompleteReport(userId: string, format: 'pdf' | 'excel' | 'json'): Promise<Blob> {
     try {
-      const dashboard = await this.getUnifiedDashboard(userId);
-      const content = JSON.stringify(dashboard, null, 2);
-      
-      const mimeTypes = {
-        pdf: 'application/pdf',
-        excel: 'application/vnd.ms-excel',
-        json: 'application/json'
-      };
+      logger.info('CentralizedEducationService', 'Exportando reporte completo', { userId, format });
 
-      return new Blob([content], { type: mimeTypes[format] });
+      const dashboard = await this.getUnifiedDashboard(userId);
+      const reportData = this.generateReportData(dashboard, format);
+
+      return new Blob([reportData], { 
+        type: this.getContentType(format) 
+      });
 
     } catch (error) {
       logger.error('CentralizedEducationService', 'Error exportando reporte', error);
@@ -324,243 +145,222 @@ export class CentralizedEducationService {
   }
 
   /**
-   * Limpia cache del servicio
+   * Limpia el cache del servicio
    */
   static clearCache(): void {
     this.cache.clear();
+    this.cacheExpiry.clear();
     logger.info('CentralizedEducationService', 'Cache limpiado');
   }
 
-  // Métodos de fallback actualizados
-  private static getFallbackDashboard(): UnifiedDashboardData {
-    const timeline = this.getFallbackTimeline();
-    const scholarships = this.getFallbackScholarships();
-    const careers = this.getFallbackCareers();
+  // ========== MÉTODOS PRIVADOS DE OBTENCIÓN DE DATOS ==========
 
+  private static async getAnalyticsData(userId: string) {
+    // Datos mock mejorados para analytics
     return {
-      timeline,
-      scholarships,
-      careers,
-      analytics: {
-        totalStudents: 1000,
-        activeStudents: 750,
-        averageProgress: 0.65,
-        weeklyGrowth: 0.08,
-        overallProgress: 0.65,
-        paesReadiness: 0.70,
-        subjectStrengths: ['Competencia Lectora'],
-        areasForImprovement: ['Matemática M1', 'Ciencias']
+      totalStudents: 250,
+      activeStudents: 200,
+      averageEngagement: 0.78,
+      overallProgress: 0.72,
+      subjectPerformance: {
+        'Competencia Lectora': 0.74,
+        'Matemática M1': 0.70,
+        'Matemática M2': 0.68,
+        'Ciencias': 0.73,
+        'Historia': 0.71
       },
-      alerts: [],
-      personalInfo: {
-        name: 'Estudiante',
-        targetScore: 600,
-        studyProgress: 65
+      riskDistribution: {
+        high: 25,
+        medium: 75,
+        low: 150
       }
     };
   }
 
-  private static getFallbackTimeline(): TimelineEvent[] {
-    const events = [
-      {
-        fecha_id: 1,
-        proceso: 'PAES 2025',
-        descripcion: 'Rendición PAES Regular - Día 1',
-        fecha_inicio: '2024-12-02',
-        fecha_fin: '2024-12-02',
-        dias_restantes: this.calculateDaysRemaining('2024-12-02'),
-        prioridad: 1,
-        estado: 'PRÓXIMA'
-      },
-      {
-        fecha_id: 2,
-        proceso: 'Admisión 2025',
-        descripcion: 'Postulación a Universidades',
-        fecha_inicio: '2025-01-06',
-        fecha_fin: '2025-01-09',
-        dias_restantes: this.calculateDaysRemaining('2025-01-06'),
-        prioridad: 1,
-        estado: 'PRÓXIMA'
-      }
-    ];
+  private static async getCalendarData(): Promise<ProcessedCalendarData> {
+    try {
+      const { data: events } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .gte('start_date', new Date().toISOString())
+        .order('start_date')
+        .limit(10);
 
-    // Añadir propiedades especiales
-    events[0].nextCriticalDate = events[0];
-    events[0].upcomingDates = events;
-
-    return events;
+      return this.processCalendarData(events || []);
+    } catch (error) {
+      logger.error('CentralizedEducationService', 'Error obteniendo datos de calendario', error);
+      return this.getDefaultCalendar();
+    }
   }
 
-  private static getFallbackScholarships(): ScholarshipBenefit[] {
-    return [
-      {
-        beneficio_id: 1,
-        nombre: 'Gratuidad Universitaria',
-        categoria: 'estatal',
-        monto_anual: 0,
-        porcentaje_cobertura: 100,
-        compatibilidad: 85,
-        estado_postulacion: 'ABIERTA',
-        fecha_cierre: '2025-03-13',
-        potentialSavings: 3500000,
-        compatibleBenefits: 3
-      },
-      {
-        beneficio_id: 2,
-        nombre: 'Beca Excelencia Académica',
-        categoria: 'estatal',
-        monto_anual: 2650000,
-        porcentaje_cobertura: 0,
-        compatibilidad: 75,
-        estado_postulacion: 'ABIERTA',
-        fecha_cierre: '2025-03-13',
-        potentialSavings: 2650000,
-        compatibleBenefits: 3
-      }
-    ];
+  private static async getScholarshipData(): Promise<ProcessedScholarshipData> {
+    try {
+      const { data: scholarships } = await supabase
+        .from('becas_financiamiento')
+        .select('*')
+        .eq('estado', 'activa')
+        .order('monto_maximo', { ascending: false })
+        .limit(5);
+
+      return this.processScholarshipData(scholarships || []);
+    } catch (error) {
+      logger.error('CentralizedEducationService', 'Error obteniendo datos de becas', error);
+      return this.getDefaultScholarships();
+    }
   }
 
-  private static getFallbackCareers(): CareerRecommendation[] {
-    const careers = [
-      {
-        carrera_id: 1,
-        nombre_carrera: 'Ingeniería Civil Industrial',
-        universidad: 'Universidad de Chile',
-        puntaje_corte: 720,
-        vacantes: 180,
-        puntaje_postulacion: 650,
-        probabilidad_ingreso: 0.65,
-        region: 'Región Metropolitana'
-      },
-      {
-        carrera_id: 2,
-        nombre_carrera: 'Medicina',
-        universidad: 'Universidad de Chile',
-        puntaje_corte: 780,
-        vacantes: 180,
-        puntaje_postulacion: 650,
-        probabilidad_ingreso: 0.35,
-        region: 'Región Metropolitana'
-      }
-    ];
+  // ========== MÉTODOS DE TRANSFORMACIÓN DE DATOS ==========
 
-    return careers.map(career => ({
-      ...career,
-      compatibleCareers: careers.length,
-      recommendations: careers
+  private static processCalendarData(events: any[]): ProcessedCalendarData {
+    const upcomingDates = events.map(event => ({
+      date: event.start_date,
+      title: event.title,
+      type: event.event_type,
+      daysRemaining: Math.ceil((new Date(event.start_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    }));
+
+    return {
+      nextCriticalDate: events[0]?.start_date || new Date().toISOString(),
+      upcomingDates,
+      totalEvents: events.length
+    };
+  }
+
+  private static processScholarshipData(scholarships: any[]): ProcessedScholarshipData {
+    const eligibleScholarships = scholarships.map(scholarship => ({
+      name: scholarship.nombre,
+      institution: scholarship.institucion,
+      amount: scholarship.monto_maximo || 0,
+      deadline: scholarship.fechas_postulacion?.fin || 'No especificado'
+    }));
+
+    return {
+      availableCount: scholarships.length,
+      totalAmount: scholarships.reduce((sum, s) => sum + (s.monto_maximo || 0), 0),
+      eligibleScholarships
+    };
+  }
+
+  private static buildOptimalPath(userProgress: any[], learningNodes: any[], preferences: any): OptimalPathData {
+    // Lógica simplificada para construir la ruta óptima
+    const subjects = ['Competencia Lectora', 'Matemática M1', 'Ciencias'];
+    const milestones = Array.from({ length: 12 }, (_, i) => ({
+      week: i + 1,
+      goals: [`Meta semana ${i + 1}`],
+      estimatedCompletion: Math.min(100, (i + 1) * 8.33)
+    }));
+
+    return {
+      pathId: `path_${Date.now()}`,
+      estimatedHours: 120,
+      difficulty: 'medium',
+      subjects,
+      milestones,
+      adaptiveRecommendations: [
+        'Reforzar comprensión lectora',
+        'Practicar más ejercicios de matemática',
+        'Revisar conceptos de ciencias'
+      ]
+    };
+  }
+
+  private static transformNotificationsToAlerts(notifications: any[]): PersonalizedAlert[] {
+    return notifications.map(notification => ({
+      id: notification.id,
+      title: notification.title,
+      description: notification.message,
+      priority: notification.priority || 'medium',
+      type: 'info',
+      timestamp: new Date(notification.created_at),
+      isRead: notification.is_read
     }));
   }
 
-  private static generatePersonalizedAlerts(userId: string): PersonalizedAlert[] {
-    return [
-      {
-        id: '1',
-        type: 'urgent',
-        title: 'PAES en 15 días',
-        message: 'Intensifica tu preparación en Competencia Lectora',
-        actionRequired: true,
-        dueDate: '2024-11-30',
-        priority: 'urgent'
-      },
-      {
-        id: '2',
-        type: 'info',
-        title: 'Nueva beca disponible',
-        message: 'Revisa los requisitos para la Beca de Excelencia',
-        actionRequired: false,
-        priority: 'medium'
-      }
-    ];
+  // ========== MÉTODOS DE DEFAULTS ==========
+
+  private static getDefaultDashboard(): UnifiedDashboardData {
+    return {
+      analytics: this.getDefaultAnalytics(),
+      calendar: this.getDefaultCalendar(),
+      scholarships: this.getDefaultScholarships(),
+      lastUpdated: new Date()
+    };
   }
 
-  private static calculateDaysRemaining(dateString: string): number {
-    const targetDate = new Date(dateString);
-    const currentDate = new Date();
-    const diffTime = targetDate.getTime() - currentDate.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  private static getDefaultAnalytics() {
+    return {
+      totalStudents: 0,
+      activeStudents: 0,
+      averageEngagement: 0,
+      overallProgress: 0,
+      subjectPerformance: {},
+      riskDistribution: { high: 0, medium: 0, low: 0 }
+    };
   }
 
-  private static calculateCompatibility(beca: any, profile: any): number {
-    // Cálculo básico de compatibilidad
-    let score = 50;
-    
-    if (beca.puntaje_minimo_competencia_lectora && profile?.target_score) {
-      score += (profile.target_score >= beca.puntaje_minimo_competencia_lectora) ? 30 : -20;
-    }
-    
-    return Math.max(0, Math.min(100, score));
+  private static getDefaultCalendar(): ProcessedCalendarData {
+    return {
+      nextCriticalDate: new Date().toISOString(),
+      upcomingDates: [],
+      totalEvents: 0
+    };
   }
 
-  /**
-   * Calcula ruta óptima de estudio
-   */
-  static async calculateOptimalPath(userId: string, preferences: any = {}): Promise<OptimalPathData> {
-    try {
-      logger.info('CentralizedEducationService', 'Calculando ruta óptima');
-
-      // Obtener nodos de aprendizaje
-      const { data: nodes } = await supabase
-        .from('learning_nodes')
-        .select('*')
-        .eq('tier_priority', 'tier1_critico')
-        .limit(10);
-
-      // Obtener progreso del usuario
-      const { data: progress } = await supabase
-        .from('user_node_progress')
-        .select('*')
-        .eq('user_id', userId);
-
-      const recommendedNodes = nodes?.map(node => node.code) || ['CL-01', 'CL-02', 'M1-01'];
-      
-      return {
-        recommendedNodes,
-        estimatedHours: 40,
-        priorityAreas: ['Competencia Lectora', 'Matemática M1'],
-        weeklySchedule: {
-          lunes: ['CL-01'],
-          miercoles: ['M1-01'],
-          viernes: ['CL-02']
-        }
-      };
-
-    } catch (error) {
-      logger.error('CentralizedEducationService', 'Error calculando ruta óptima', error);
-      return {
-        recommendedNodes: ['CL-01', 'M1-01'],
-        estimatedHours: 20,
-        priorityAreas: ['Competencia Lectora'],
-        weeklySchedule: {}
-      };
-    }
+  private static getDefaultScholarships(): ProcessedScholarshipData {
+    return {
+      availableCount: 0,
+      totalAmount: 0,
+      eligibleScholarships: []
+    };
   }
 
-  /**
-   * Obtiene alertas personalizadas
-   */
-  static async getPersonalizedAlerts(userId: string): Promise<PersonalizedAlert[]> {
-    return this.generatePersonalizedAlerts(userId);
+  private static getDefaultOptimalPath(): OptimalPathData {
+    return {
+      pathId: 'default',
+      estimatedHours: 0,
+      difficulty: 'medium',
+      subjects: [],
+      milestones: [],
+      adaptiveRecommendations: []
+    };
   }
 
-  /**
-   * Exporta reporte completo
-   */
-  static async exportCompleteReport(userId: string, format: 'pdf' | 'excel' | 'json'): Promise<Blob> {
-    try {
-      const dashboard = await this.getUnifiedDashboard(userId);
-      const content = JSON.stringify(dashboard, null, 2);
-      
-      const mimeTypes = {
-        pdf: 'application/pdf',
-        excel: 'application/vnd.ms-excel',
-        json: 'application/json'
-      };
+  private static getDefaultAlerts(): PersonalizedAlert[] {
+    return [];
+  }
 
-      return new Blob([content], { type: mimeTypes[format] });
+  // ========== MÉTODOS UTILITARIOS ==========
 
-    } catch (error) {
-      logger.error('CentralizedEducationService', 'Error exportando reporte', error);
-      throw error;
-    }
+  private static extractSettledValue<T>(result: PromiseSettledResult<T>, defaultValue: T): T {
+    return result.status === 'fulfilled' ? result.value : defaultValue;
+  }
+
+  private static isCacheValid(key: string): boolean {
+    const expiry = this.cacheExpiry.get(key);
+    return expiry ? Date.now() < expiry : false;
+  }
+
+  private static setCache(key: string, value: any): void {
+    this.cache.set(key, value);
+    this.cacheExpiry.set(key, Date.now() + this.CACHE_DURATION);
+  }
+
+  private static generateReportData(dashboard: UnifiedDashboardData, format: string): string {
+    const data = {
+      generatedAt: new Date().toISOString(),
+      dashboard,
+      format
+    };
+
+    return format === 'json' ? JSON.stringify(data, null, 2) : `Reporte ${format.toUpperCase()}\n${JSON.stringify(data, null, 2)}`;
+  }
+
+  private static getContentType(format: string): string {
+    const types = {
+      'pdf': 'application/pdf',
+      'excel': 'application/vnd.ms-excel',
+      'json': 'application/json'
+    };
+    return types[format as keyof typeof types] || 'text/plain';
   }
 }
