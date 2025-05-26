@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { SystemErrorBoundary } from '@/core/error-handling/SystemErrorBoundary';
-import { PerformanceMonitor } from '@/core/performance/PerformanceMonitor';
+import { PerformanceMonitor } from '@/core/performance/PerformanceMonitor.tsx';
 import { GlobalErrorRecoveryProvider } from '@/core/performance/GlobalErrorRecovery';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
