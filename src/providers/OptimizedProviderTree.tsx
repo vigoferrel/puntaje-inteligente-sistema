@@ -3,7 +3,7 @@ import React, { memo, ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
-import { Sonner } from "@/components/ui/sonner";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
@@ -41,7 +41,7 @@ export const OptimizedProviderTree = memo<OptimizedProviderTreeProps>(({ childre
               <UnifiedContextCache>
                 <TooltipProvider>
                   <Toaster />
-                  <Sonner />
+                  <SonnerToaster />
                   {children}
                 </TooltipProvider>
               </UnifiedContextCache>
