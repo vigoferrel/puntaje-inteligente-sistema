@@ -1,7 +1,8 @@
 
 /**
- * Servicio de persistencia de datos de analytics
- * Responsabilidad única: interacción con base de datos
+ * DEPRECADO: Este archivo será eliminado gradualmente
+ * La funcionalidad ha sido migrada a EnhancedInstitutionalAnalyticsService
+ * que usa datos reales de las tablas institution_students y user_relationships
  */
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/core/logging/SystemLogger';
@@ -9,7 +10,7 @@ import { MetricsDTO, ParentReportDTO } from './types';
 
 export class DataPersistence {
   /**
-   * Almacena métricas institucionales en la base de datos
+   * @deprecated Usar EnhancedInstitutionalAnalyticsService.storeInstitutionalMetrics
    */
   static async storeInstitutionalMetrics(
     institutionId: string,
@@ -19,9 +20,9 @@ export class DataPersistence {
       const { error } = await supabase
         .from('system_metrics')
         .insert({
-          metric_type: 'institutional_analytics',
+          metric_type: 'institutional_analytics_legacy',
           metric_value: metrics.totalStudents,
-          context: metrics as any, // Conversión explícita para Supabase Json
+          context: metrics as any,
           user_id: institutionId
         });
 
@@ -38,7 +39,7 @@ export class DataPersistence {
   }
 
   /**
-   * Crea notificación para padres
+   * @deprecated Usar EnhancedInstitutionalAnalyticsService.generateAndSendParentReport
    */
   static async createParentNotification(
     parentId: string,
@@ -49,10 +50,10 @@ export class DataPersistence {
         .from('user_notifications')
         .insert({
           user_id: parentId,
-          notification_type: 'parent_report',
-          title: 'Reporte Semanal de Progreso',
+          notification_type: 'parent_report_legacy',
+          title: 'Reporte Semanal de Progreso (Legacy)',
           message: `Progreso semanal: ${report.weeklyProgress.toFixed(1)}%`,
-          action_data: report as any // Conversión explícita para Supabase Json
+          action_data: report as any
         });
 
       if (error) {
@@ -68,92 +69,26 @@ export class DataPersistence {
   }
 
   /**
-   * Obtiene datos de estudiantes - IMPLEMENTACIÓN TEMPORAL
-   * Retorna todos los perfiles hasta que se implemente la relación institución-estudiante
+   * @deprecated Usar EnhancedInstitutionalAnalyticsService.getRealStudentsData
    */
   static async getStudentsData(institutionId: string): Promise<any[]> {
-    try {
-      logger.warn('DataPersistence', `Obteniendo datos mock para institución ${institutionId} - columna institution_id no existe`);
-      
-      // Implementación temporal: obtener todos los perfiles
-      // TODO: Crear tabla institution_students o agregar institution_id a profiles
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, email, learning_phase, created_at')
-        .limit(50); // Limitar para evitar sobrecarga
-
-      if (error) {
-        logger.error('DataPersistence', 'Error obteniendo datos de estudiantes', error);
-        return [];
-      }
-
-      // Simular estudiantes de la institución con los primeros registros
-      return data?.slice(0, 10) || [];
-    } catch (error) {
-      logger.error('DataPersistence', 'Error en consulta de estudiantes', error);
-      return [];
-    }
+    logger.warn('DataPersistence', 'Método obsoleto - usar EnhancedInstitutionalAnalyticsService');
+    return [];
   }
 
   /**
-   * Obtiene datos de ejercicios de la institución
+   * @deprecated Funcionalidad migrada a EnhancedInstitutionalAnalyticsService
    */
   static async getExercisesData(institutionId: string): Promise<any[]> {
-    try {
-      const students = await this.getStudentsData(institutionId);
-      const studentIds = students.map(s => s.id);
-
-      if (studentIds.length === 0) {
-        logger.info('DataPersistence', 'No hay estudiantes para obtener ejercicios');
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('user_exercise_attempts')
-        .select('*')
-        .in('user_id', studentIds)
-        .limit(100); // Limitar consulta
-
-      if (error) {
-        logger.error('DataPersistence', 'Error obteniendo datos de ejercicios', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      logger.error('DataPersistence', 'Error en consulta de ejercicios', error);
-      return [];
-    }
+    logger.warn('DataPersistence', 'Método obsoleto - usar EnhancedInstitutionalAnalyticsService');
+    return [];
   }
 
   /**
-   * Obtiene datos de progreso de la institución
+   * @deprecated Funcionalidad migrada a EnhancedInstitutionalAnalyticsService
    */
   static async getProgressData(institutionId: string): Promise<any[]> {
-    try {
-      const students = await this.getStudentsData(institutionId);
-      const studentIds = students.map(s => s.id);
-
-      if (studentIds.length === 0) {
-        logger.info('DataPersistence', 'No hay estudiantes para obtener progreso');
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('user_node_progress')
-        .select('*')
-        .in('user_id', studentIds)
-        .limit(100); // Limitar consulta
-
-      if (error) {
-        logger.error('DataPersistence', 'Error obteniendo datos de progreso', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      logger.error('DataPersistence', 'Error en consulta de progreso', error);
-      return [];
-    }
+    logger.warn('DataPersistence', 'Método obsoleto - usar EnhancedInstitutionalAnalyticsService');
+    return [];
   }
 }

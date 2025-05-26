@@ -1499,6 +1499,83 @@ export type Database = {
           },
         ]
       }
+      institution_students: {
+        Row: {
+          created_at: string
+          enrollment_date: string | null
+          grade_level: string | null
+          id: string
+          institution_id: string
+          metadata: Json | null
+          status: string | null
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_date?: string | null
+          grade_level?: string | null
+          id?: string
+          institution_id: string
+          metadata?: Json | null
+          status?: string | null
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_date?: string | null
+          grade_level?: string | null
+          id?: string
+          institution_id?: string
+          metadata?: Json | null
+          status?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_students_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institutions: {
+        Row: {
+          code: string
+          contact_info: Json | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          settings: Json | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          contact_info?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          settings?: Json | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          contact_info?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          settings?: Json | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       learning_nodes: {
         Row: {
           adaptive_adjustment: number | null
@@ -2902,6 +2979,42 @@ export type Database = {
           updated_at?: string
           user_id?: string
           victories?: number
+        }
+        Relationships: []
+      }
+      user_relationships: {
+        Row: {
+          child_user_id: string
+          created_at: string
+          id: string
+          institution_id: string | null
+          is_active: boolean
+          metadata: Json | null
+          parent_user_id: string
+          relationship_type: string
+          updated_at: string
+        }
+        Insert: {
+          child_user_id: string
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean
+          metadata?: Json | null
+          parent_user_id: string
+          relationship_type?: string
+          updated_at?: string
+        }
+        Update: {
+          child_user_id?: string
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean
+          metadata?: Json | null
+          parent_user_id?: string
+          relationship_type?: string
+          updated_at?: string
         }
         Relationships: []
       }
