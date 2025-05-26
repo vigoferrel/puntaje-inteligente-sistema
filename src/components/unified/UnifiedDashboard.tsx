@@ -21,37 +21,6 @@ interface UnifiedDashboardProps {
   userId: string;
 }
 
-// Componente optimizado con memoización
-const MetricCard = memo<{
-  title: string;
-  value: string | number;
-  icon: React.ComponentType<any>;
-  color: string;
-  index: number;
-}>(({ title, value, icon: Icon, color, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-  >
-    <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-white/80 text-sm">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
-          </div>
-          <div className={`p-3 rounded-full bg-gradient-to-r ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-));
-
-MetricCard.displayName = 'MetricCard';
-
 // Loading component optimizado
 const LoadingSpinner = memo(() => (
   <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
@@ -103,34 +72,6 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = memo(({ userId 
     return <ErrorDisplay error={error} onRetry={loadDashboard} />;
   }
 
-  // Métricas optimizadas
-  const metrics = dashboard ? [
-    {
-      title: 'Estudiantes Total',
-      value: dashboard.analytics.totalStudents,
-      icon: Users,
-      color: 'from-blue-400 to-indigo-600'
-    },
-    {
-      title: 'Estudiantes Activos',
-      value: dashboard.analytics.activeStudents,
-      icon: CheckCircle,
-      color: 'from-green-400 to-emerald-600'
-    },
-    {
-      title: 'Engagement Promedio',
-      value: `${Math.round(dashboard.analytics.averageEngagement * 100)}%`,
-      icon: TrendingUp,
-      color: 'from-purple-400 to-pink-600'
-    },
-    {
-      title: 'Progreso General',
-      value: `${Math.round(dashboard.analytics.overallProgress * 100)}%`,
-      icon: Target,
-      color: 'from-yellow-400 to-orange-600'
-    }
-  ] : [];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -150,16 +91,68 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = memo(({ userId 
           </p>
         </motion.div>
 
-        {/* Métricas con memoización */}
+        {/* Métricas */}
         {dashboard && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {metrics.map((metric, index) => (
-              <MetricCard key={metric.title} {...metric} index={index} />
-            ))}
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Estudiantes Total</p>
+                    <p className="text-2xl font-bold text-white">{dashboard.analytics.totalStudents}</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-600">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Estudiantes Activos</p>
+                    <p className="text-2xl font-bold text-white">{dashboard.analytics.activeStudents}</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-gradient-to-r from-green-400 to-emerald-600">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Engagement Promedio</p>
+                    <p className="text-2xl font-bold text-white">{Math.round(dashboard.analytics.averageEngagement * 100)}%</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-gradient-to-r from-purple-400 to-pink-600">
+                    <TrendingUp className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Progreso General</p>
+                    <p className="text-2xl font-bold text-white">{Math.round(dashboard.analytics.overallProgress * 100)}%</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-gradient-to-r from-yellow-400 to-orange-600">
+                    <Target className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {/* Información del Calendario optimizada */}
+        {/* Calendario */}
         {dashboard?.calendar && (
           <Card className="bg-white/10 backdrop-blur-md border-white/20">
             <CardHeader>
@@ -177,7 +170,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = memo(({ userId 
           </Card>
         )}
 
-        {/* Información de Becas optimizada */}
+        {/* Becas */}
         {dashboard?.scholarships && (
           <Card className="bg-white/10 backdrop-blur-md border-white/20">
             <CardHeader>
@@ -195,7 +188,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = memo(({ userId 
           </Card>
         )}
 
-        {/* Alertas optimizadas */}
+        {/* Alertas */}
         {alerts.length > 0 && (
           <Card className="bg-white/10 backdrop-blur-md border-white/20">
             <CardHeader>
@@ -222,7 +215,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = memo(({ userId 
           </Card>
         )}
 
-        {/* Acciones optimizadas */}
+        {/* Acciones */}
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardHeader>
             <CardTitle className="text-white">Acciones del Sistema</CardTitle>
