@@ -5,10 +5,16 @@ import { SimpleUnifiedHeader } from './SimpleUnifiedHeader';
 import { useSimpleNavigation } from '@/hooks/useSimpleNavigation';
 import { Loader2 } from 'lucide-react';
 
-// Lazy loading simple con React.lazy
-const LazyOptimizedDashboard = lazy(() => 
-  import('@/components/dashboard/OptimizedDashboard').then(module => ({
-    default: module.OptimizedDashboard
+// Componentes optimizados con React.lazy
+const LazyRealMetricsDashboard = lazy(() => 
+  import('@/components/dashboard/RealMetricsDashboard').then(module => ({
+    default: module.RealMetricsDashboard
+  }))
+);
+
+const LazyIntelligentDiagnosticSystem = lazy(() => 
+  import('@/components/diagnostic/IntelligentDiagnosticSystem').then(module => ({
+    default: module.IntelligentDiagnosticSystem
   }))
 );
 
@@ -24,7 +30,7 @@ const LazyStudyCalendar = lazy(() =>
   }))
 );
 
-// Fallback simple y elegante
+// Fallback de carga simple
 const LoadingFallback: React.FC<{ componentName: string }> = ({ componentName }) => (
   <div className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
     <div className="text-center space-y-4">
@@ -47,7 +53,14 @@ export const SimplifiedDashboardContainer: React.FC = () => {
       case 'dashboard':
         return (
           <Suspense fallback={<LoadingFallback componentName="Dashboard" />}>
-            <LazyOptimizedDashboard onNavigateToTool={navigateToTool} />
+            <LazyRealMetricsDashboard />
+          </Suspense>
+        );
+        
+      case 'diagnostico':
+        return (
+          <Suspense fallback={<LoadingFallback componentName="Sistema Diagnóstico" />}>
+            <LazyIntelligentDiagnosticSystem />
           </Suspense>
         );
         
