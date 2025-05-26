@@ -6,16 +6,12 @@ import { OptimizedDashboard } from '@/components/dashboard/OptimizedDashboard';
 import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
 import { UnifiedNavigationCore } from '@/components/navigation/UnifiedNavigationCore';
 import { CinematicSkeletonOptimized } from './CinematicSkeletonOptimized';
-import { OptimizedCacheProvider, CachePerformanceMonitor } from '@/core/performance/OptimizedCacheSystem';
+import { OptimizedCacheProvider } from '@/core/performance/OptimizedCacheSystem';
 import { OptimizedSuspenseWrapper } from '@/components/optimization/OptimizedSuspenseWrapper';
-import { PerformanceMonitor } from '@/components/optimization/PerformanceMonitor';
-import { useSystemMetrics } from './SystemMetrics';
 import { StudyCalendarIntegration } from '@/components/calendar/StudyCalendarIntegration';
 import { PAESFinancialCalculator } from '@/components/financial/PAESFinancialCalculator';
 import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
-import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
 import { useAuth } from '@/contexts/AuthContext';
-import { loadValidator } from '@/core/performance/LoadValidationSystem';
 
 interface UnifiedDashboardContainerOptimizedProps {
   initialTool?: string | null;
@@ -26,7 +22,6 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const { markLoadComplete } = usePerformanceOptimization('UnifiedDashboardContainer');
   
   const { 
     currentTool, 
@@ -35,46 +30,36 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
     navigateToTool, 
     goBack, 
     updateContext,
-    canGoBack,
-    getNavigationAnalytics 
+    canGoBack
   } = useUnifiedNavigation();
-  
-  const systemMetrics = useSystemMetrics();
 
-  // Inicialización optimizada con validación
+  // Inicialización con la herramienta inicial
   useEffect(() => {
-    loadValidator.markNavigationStart();
-    
     if (initialTool && initialTool !== currentTool) {
       navigateToTool(initialTool);
     }
-    
-    loadValidator.markNavigationEnd();
   }, [initialTool, currentTool, navigateToTool]);
 
-  // Carga optimizada con métricas
+  // Carga optimizada
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-      markLoadComplete();
-    }, 300); // Reducido para mejor UX
+    }, 200);
 
     return () => clearTimeout(timer);
-  }, [markLoadComplete]);
+  }, []);
 
-  // Manejo unificado de herramientas optimizado
+  // Manejo de cambio de herramienta
   const handleToolChange = useCallback((tool: string, toolContext?: any) => {
-    loadValidator.markNavigationStart();
     navigateToTool(tool, toolContext);
-    loadValidator.markNavigationEnd();
   }, [navigateToTool]);
 
-  // Manejo de cambio de materia optimizado
+  // Manejo de cambio de materia
   const handleSubjectChange = useCallback((subject: string) => {
     updateContext({ subject });
   }, [updateContext]);
 
-  // Renderizado optimizado de herramientas con lazy loading
+  // Renderizado optimizado de herramientas
   const renderCurrentTool = useMemo(() => {
     const activeSubject = context.subject || 'COMPETENCIA_LECTORA';
     
@@ -90,15 +75,6 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
           <LectoGuiaUnified
             initialSubject={activeSubject}
             onNavigateToTool={handleToolChange}
-          />
-        </OptimizedSuspenseWrapper>
-      ),
-      
-      navigation: () => (
-        <OptimizedSuspenseWrapper fallbackMessage="Cargando Navegación Neural" componentName="UnifiedNavigationCore">
-          <UnifiedNavigationCore
-            onNavigate={handleToolChange}
-            currentTool={currentTool}
           />
         </OptimizedSuspenseWrapper>
       ),
@@ -126,6 +102,7 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
               {currentTool === 'exercises' && 'Ejercicios Adaptativos'}
               {currentTool === 'diagnostic' && 'Evaluación Diagnóstica'}
               {currentTool === 'plan' && 'Plan de Estudio Personalizado'}
+              {currentTool === 'evaluation' && 'Evaluación PAES'}
             </h2>
             <p className="text-white/70 poppins-body">
               Sistema optimizado para {activeSubject}
@@ -158,11 +135,10 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
       <div className="min-h-screen font-poppins bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
         <UnifiedHeader
           currentTool={currentTool}
-          totalProgress={systemMetrics.totalProgress}
+          totalProgress={85}
           activeSubject={context.subject || 'COMPETENCIA_LECTORA'}
           onToolChange={handleToolChange}
           onSubjectChange={handleSubjectChange}
-          systemMetrics={systemMetrics}
           navigationHistory={navigationHistory}
           onGoBack={canGoBack ? goBack : undefined}
         />
@@ -175,7 +151,7 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ 
-                duration: 0.15, // Reducido para mejor performance
+                duration: 0.15,
                 ease: [0.4, 0, 0.2, 1] 
               }}
               className="min-h-[calc(100vh-80px)]"
@@ -184,14 +160,6 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
             </motion.div>
           </AnimatePresence>
         </main>
-        
-        {/* Monitor de performance en desarrollo y producción */}
-        <PerformanceMonitor />
-        
-        {/* Monitor de cache solo en desarrollo */}
-        {process.env.NODE_ENV === 'development' && (
-          <CachePerformanceMonitor />
-        )}
       </div>
     </OptimizedCacheProvider>
   );

@@ -7,8 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from "@/contexts/AuthContext";
-import { LectoGuiaProvider } from "@/contexts/lectoguia";
-import { CinematicThemeProvider } from "@/contexts/CinematicThemeProvider";
 import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
 import { UnifiedSystemContainer } from "@/components/unified-system/UnifiedSystemContainer";
 import './index.css'
@@ -28,15 +26,11 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <IntersectionalProvider>
-          <LectoGuiaProvider>
-            <CinematicThemeProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <UnifiedSystemContainer />
-              </TooltipProvider>
-            </CinematicThemeProvider>
-          </LectoGuiaProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <UnifiedSystemContainer />
+          </TooltipProvider>
         </IntersectionalProvider>
       </AuthProvider>
     </QueryClientProvider>

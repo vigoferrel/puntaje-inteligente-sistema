@@ -6,7 +6,7 @@ import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCe
 import { UnifiedDashboardContainerOptimized } from '@/components/unified-dashboard/UnifiedDashboardContainerOptimized';
 import { SystemModeToggle } from './SystemModeToggle';
 import { CinematicSkeletonOptimized } from '@/components/unified-dashboard/CinematicSkeletonOptimized';
-import { useUnifiedRouting } from '@/hooks/useUnifiedRouting';
+import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 type SystemMode = 'neural' | 'unified' | 'auto';
@@ -17,57 +17,56 @@ export const UnifiedSystemContainer: React.FC = () => {
   const [systemMode, setSystemMode] = useState<SystemMode>('auto');
   const [isLoading, setIsLoading] = useState(true);
   
-  const { currentTool, currentRoute, navigateToTool } = useUnifiedRouting();
+  const { currentTool, navigateToTool } = useUnifiedNavigation();
 
-  // Intelligent system mode detection
+  // Detección inteligente del modo
   const detectedMode = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const urlMode = params.get('mode') as SystemMode;
     const savedMode = localStorage.getItem('preferred-system-mode') as SystemMode;
     
-    // URL takes precedence, then saved preference, then auto-detection
     if (urlMode && ['neural', 'unified'].includes(urlMode)) return urlMode;
     if (savedMode && ['neural', 'unified'].includes(savedMode)) return savedMode;
     
-    // Auto-detection based on current route
-    const neuralRoutes = ['/neural', '/universe', '/simulation', '/battle'];
+    // Auto-detección basada en la ruta actual
+    const neuralRoutes = ['/neural', '/command'];
     const unifiedRoutes = ['/dashboard', '/lectoguia', '/calendar', '/financial'];
     
     if (neuralRoutes.some(route => location.pathname.includes(route))) return 'neural';
     if (unifiedRoutes.some(route => location.pathname.includes(route))) return 'unified';
     
-    return 'neural'; // Default to neural
+    return 'unified'; // Default mejorado
   }, [location.pathname, location.search]);
 
-  // Sync system mode
+  // Sincronización del modo
   useEffect(() => {
     if (systemMode === 'auto') {
       setSystemMode(detectedMode);
     }
   }, [detectedMode, systemMode]);
 
-  // Initialize system
+  // Inicialización optimizada
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 800);
+    }, 600);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle tool navigation from Neural Command Center
+  // Manejo de navegación desde Neural Command Center
   const handleNeuralNavigation = (tool: string, toolContext?: any) => {
     console.log('🔗 Neural navigation:', tool, toolContext);
     
-    // Map neural tools to unified tools and switch modes accordingly
+    // Mapeo de herramientas neurales a herramientas unificadas
     const toolMapping: Record<string, { tool: string; mode: 'neural' | 'unified' }> = {
-      'universe': { tool: 'dashboard', mode: 'unified' },
+      'dashboard': { tool: 'dashboard', mode: 'unified' },
       'lectoguia': { tool: 'lectoguia', mode: 'unified' },
       'diagnostic': { tool: 'diagnostic', mode: 'unified' },
+      'exercises': { tool: 'exercises', mode: 'unified' },
       'plan': { tool: 'plan', mode: 'unified' },
       'calendar': { tool: 'calendar', mode: 'unified' },
       'financial': { tool: 'financial', mode: 'unified' },
-      'exercises': { tool: 'exercises', mode: 'unified' },
       'evaluation': { tool: 'evaluation', mode: 'unified' }
     };
 
@@ -80,42 +79,39 @@ export const UnifiedSystemContainer: React.FC = () => {
     }
   };
 
-  // Handle mode toggle
+  // Cambio de modo
   const handleModeToggle = (newMode: 'neural' | 'unified') => {
     setSystemMode(newMode);
     localStorage.setItem('preferred-system-mode', newMode);
     
-    // Update URL with mode parameter
     const params = new URLSearchParams(location.search);
     params.set('mode', newMode);
     window.history.replaceState({}, '', `${location.pathname}?${params.toString()}`);
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <CinematicSkeletonOptimized 
         message="Inicializando Sistema Unificado"
-        progress={75}
+        progress={85}
         variant="full"
       />
     );
   }
 
-  // Resolve active mode to ensure it's never 'auto'
   const activeMode = systemMode === 'auto' ? detectedMode : systemMode;
-  const resolvedMode: 'neural' | 'unified' = activeMode === 'auto' ? 'neural' : activeMode as 'neural' | 'unified';
+  const resolvedMode: 'neural' | 'unified' = activeMode === 'auto' ? 'unified' : activeMode as 'neural' | 'unified';
 
   return (
     <div className="min-h-screen relative">
-      {/* System Mode Toggle */}
+      {/* Toggle de modo del sistema */}
       <SystemModeToggle
         currentMode={resolvedMode}
         onModeChange={handleModeToggle}
         className="fixed top-4 right-4 z-50"
       />
 
-      {/* Main System Render */}
+      {/* Renderizado principal del sistema */}
       <AnimatePresence mode="wait">
         <motion.div
           key={resolvedMode}
@@ -141,10 +137,10 @@ export const UnifiedSystemContainer: React.FC = () => {
   );
 };
 
-// Helper function to map tools to neural dimensions
+// Mapeo de herramientas a dimensiones neurales
 const getNeuralDimensionFromTool = (tool: string) => {
   const mappings: Record<string, any> = {
-    'dashboard': 'universe_exploration',
+    'dashboard': 'educational_universe',
     'lectoguia': 'neural_training',
     'diagnostic': 'progress_analysis',
     'exercises': 'neural_training',
@@ -154,5 +150,5 @@ const getNeuralDimensionFromTool = (tool: string) => {
     'financial': 'financial_center'
   };
   
-  return mappings[tool] || 'universe_exploration';
+  return mappings[tool] || 'educational_universe';
 };
