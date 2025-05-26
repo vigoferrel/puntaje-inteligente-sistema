@@ -27,7 +27,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Dashboard',
     icon: Home,
     path: '/',
-    color: '#00FFFF',
+    color: '#8b5cf6',
     description: 'Panel principal de progreso'
   },
   {
@@ -35,7 +35,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Matemática M1',
     icon: Target,
     path: '/materias/matematica-1',
-    color: '#00FF88',
+    color: '#10b981',
     description: 'Álgebra y funciones'
   },
   {
@@ -43,7 +43,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Matemática M2',
     icon: BarChart3,
     path: '/materias/matematica-2',
-    color: '#8833FF',
+    color: '#f59e0b',
     description: 'Geometría y probabilidad'
   },
   {
@@ -51,7 +51,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Competencia Lectora',
     icon: BookOpen,
     path: '/materias/competencia-lectora',
-    color: '#FF8800',
+    color: '#06b6d4',
     description: 'Comprensión y análisis'
   },
   {
@@ -59,7 +59,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Ciencias',
     icon: Brain,
     path: '/materias/ciencias',
-    color: '#FF3366',
+    color: '#ec4899',
     description: 'Física, química y biología'
   },
   {
@@ -67,7 +67,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Historia',
     icon: Gamepad2,
     path: '/materias/historia',
-    color: '#FFAA00',
+    color: '#f97316',
     description: 'Historia y ciencias sociales'
   }
 ];
@@ -83,34 +83,34 @@ const CinematicSidebar: React.FC<{
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay Premium */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40 lg:hidden"
             onClick={onToggle}
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* Sidebar Premium */}
       <motion.div
         initial={{ x: -320 }}
         animate={{ x: isOpen ? 0 : -320 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed left-0 top-0 h-full w-80 bg-gradient-to-b from-slate-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-xl border-r border-cyan-500/30 z-50 lg:translate-x-0 lg:static lg:z-auto"
+        className="fixed left-0 top-0 h-full w-80 premium-glass border-r border-premium-violet-500/30 z-50 lg:translate-x-0 lg:static lg:z-auto premium-scanner"
       >
-        {/* Header */}
-        <div className="p-6 border-b border-cyan-500/30">
+        {/* Header Premium */}
+        <div className="p-6 border-b border-premium-violet-500/30 premium-header">
           <div className="flex items-center justify-between mb-4">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center"
+              className="w-12 h-12 bg-gradient-to-r from-premium-violet-500 to-emerald-premium-500 rounded-full flex items-center justify-center shadow-glow-violet"
             >
               <Brain className="w-6 h-6 text-white" />
             </motion.div>
@@ -118,7 +118,7 @@ const CinematicSidebar: React.FC<{
               variant="ghost"
               size="sm"
               onClick={onToggle}
-              className="lg:hidden text-white hover:bg-white/10"
+              className="lg:hidden text-white hover:bg-white/10 hover-glow"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -129,17 +129,17 @@ const CinematicSidebar: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <h2 className="text-xl font-bold text-white">PAES Command</h2>
-            <p className="text-cyan-400 text-sm">{profile?.name || 'Estudiante'}</p>
-            <Badge className="mt-2 bg-gradient-to-r from-cyan-600 to-blue-600">
+            <h2 className="text-xl font-bold premium-text-glow">PAES Command</h2>
+            <p className="text-emerald-premium-400 text-sm">{profile?.name || 'Estudiante'}</p>
+            <Badge className="mt-2 premium-badge animate-glow-pulse">
               Sistema Activo
             </Badge>
           </motion.div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex-1 p-4 space-y-2">
-          <div className="text-xs font-medium text-cyan-400 uppercase tracking-wider mb-4">
+        {/* Navigation Premium */}
+        <div className="flex-1 p-4 space-y-2 scrollbar-premium">
+          <div className="text-xs font-medium text-premium-violet-400 uppercase tracking-wider mb-4 premium-gradient-text">
             Materias PAES
           </div>
           
@@ -156,10 +156,8 @@ const CinematicSidebar: React.FC<{
               >
                 <Button
                   variant={isActive ? "default" : "ghost"}
-                  className={`w-full justify-start h-auto p-4 ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-cyan-600/20 to-purple-600/20 border border-cyan-500/50' 
-                      : 'text-white hover:bg-white/10 hover:border-white/20'
+                  className={`w-full justify-start h-auto p-4 premium-nav-item ${
+                    isActive ? 'active' : ''
                   }`}
                   onClick={() => {
                     onNavigate(item.path);
@@ -171,12 +169,12 @@ const CinematicSidebar: React.FC<{
                     style={{ color: item.color }} 
                   />
                   <div className="text-left flex-1">
-                    <div className="font-medium text-sm">{item.label}</div>
-                    <div className="text-xs opacity-70">{item.description}</div>
+                    <div className="font-medium text-sm text-white">{item.label}</div>
+                    <div className="text-xs opacity-70 text-gray-300">{item.description}</div>
                   </div>
                   {isActive && (
                     <motion.div
-                      className="w-2 h-2 bg-cyan-400 rounded-full"
+                      className="w-2 h-2 bg-emerald-premium-400 rounded-full shadow-glow-emerald"
                       layoutId="activeIndicator"
                     />
                   )}
@@ -186,13 +184,13 @@ const CinematicSidebar: React.FC<{
           })}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-white/10">
+        {/* Footer Premium */}
+        <div className="p-4 border-t border-white/10 premium-header">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-white/10"
+              className="text-white hover:bg-white/10 premium-button"
             >
               <HelpCircle className="w-4 h-4 mr-2" />
               Ayuda
@@ -201,7 +199,7 @@ const CinematicSidebar: React.FC<{
               variant="ghost"
               size="sm"
               onClick={toggleMute}
-              className="text-white hover:bg-white/10"
+              className="text-white hover:bg-white/10 hover-emerald"
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </Button>
@@ -225,9 +223,24 @@ export const CinematicLayout: React.FC = () => {
 
   return (
     <CinematicAudioProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
-        {/* Partículas de fondo */}
+      <div className="min-h-screen premium-body relative overflow-hidden premium-particles">
+        {/* Partículas de fondo premium */}
         <CinematicParticles />
+        
+        {/* Partículas premium adicionales */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div
+              key={i}
+              className="premium-particle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${i * 2}s`,
+                animationDuration: `${15 + Math.random() * 10}s`
+              }}
+            />
+          ))}
+        </div>
         
         {/* Layout Principal */}
         <div className="flex h-screen relative z-10">
@@ -241,27 +254,27 @@ export const CinematicLayout: React.FC = () => {
 
           {/* Contenido Principal */}
           <div className="flex-1 flex flex-col">
-            {/* Header Móvil */}
+            {/* Header Móvil Premium */}
             <motion.header
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="lg:hidden bg-black/20 backdrop-blur-xl border-b border-cyan-500/30 p-4"
+              className="lg:hidden premium-header border-b border-premium-violet-500/30 p-4"
             >
               <div className="flex items-center justify-between">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={toggleSidebar}
-                  className="text-white hover:bg-white/10"
+                  className="text-white hover:bg-white/10 hover-glow"
                 >
                   <Menu className="w-5 h-5" />
                 </Button>
-                <h1 className="text-lg font-bold text-white">PAES Command</h1>
-                <div className="w-10" /> {/* Spacer */}
+                <h1 className="text-lg font-bold premium-text-glow">PAES Command</h1>
+                <div className="w-10" />
               </div>
             </motion.header>
 
-            {/* Contenido de la Página */}
+            {/* Contenido de la Página Premium */}
             <main className="flex-1 relative">
               <AnimatePresence mode="wait">
                 <motion.div
