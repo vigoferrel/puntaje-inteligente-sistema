@@ -1,160 +1,144 @@
 
-import React, { useState } from "react";
-import { AppLayout } from "@/components/app-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
-import { PAESEvaluationDashboard } from "@/components/paes/PAESEvaluationDashboard";
-import { 
-  TrendingUp, 
-  Target, 
-  Award,
-  BarChart3,
-  Calendar,
-  PlayCircle
-} from "lucide-react";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link, useNavigate } from "react-router-dom";
+import React from 'react';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useAuth } from '@/contexts/AuthContext';
+import { SimpleLoadingScreen } from '@/components/SimpleLoadingScreen';
+import { Brain, GraduationCap, Target, TrendingUp } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const PAESDashboard = () => {
-  const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'analytics' | 'schedule'>('dashboard');
+const PAESDashboard: React.FC = () => {
+  const { user, isLoading, error } = useAuth();
 
-  const handleStartDiagnostic = () => {
-    navigate('/diagnostico');
-  };
+  if (isLoading) {
+    return <SimpleLoadingScreen />;
+  }
 
-  const handleViewResults = () => {
-    navigate('/analisis');
-  };
-
-  const handleScheduleTest = () => {
-    navigate('/calendario');
-  };
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold mb-4">Error de Autenticación</h1>
+          <p className="text-red-300 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.href = '/'} 
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
+          >
+            Volver al Inicio
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AppLayout>
-      <div className="container py-8">
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link to="/">Inicio</Link></BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink>Evaluación PAES</BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-green-500/20 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-green-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Evaluación PAES</h1>
-              <p className="text-muted-foreground">
-                Dashboard completo de tu preparación y resultados PAES
-              </p>
-            </div>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white flex items-center justify-center gap-3 mb-4">
+              <GraduationCap className="w-10 h-10 text-green-400" />
+              Dashboard PAES
+            </h1>
+            <p className="text-white/80 text-xl">
+              Evaluaciones, resultados y preparación PAES
+            </p>
           </div>
 
-          {/* Navigation */}
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
-            {[
-              { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-              { id: 'analytics', label: 'Análisis', icon: TrendingUp },
-              { id: 'schedule', label: 'Cronograma', icon: Calendar }
-            ].map((tab) => (
-              <Button
-                key={tab.id}
-                variant={activeSection === tab.id ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setActiveSection(tab.id as any)}
-                className="gap-2"
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </Button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Main Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <PAESEvaluationDashboard 
-            onStartDiagnostic={handleStartDiagnostic}
-            onViewResults={handleViewResults}
-            onScheduleTest={handleScheduleTest}
-          />
-        </motion.div>
-
-        {/* Additional Analytics */}
-        {activeSection === 'analytics' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-8"
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Análisis Avanzado</CardTitle>
-                <CardDescription>
-                  Métricas detalladas de tu preparación PAES
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Métricas */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium mb-3">Tendencias de Puntaje</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Comprensión Lectora</span>
-                        <Badge variant="default" className="bg-green-600">+15%</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Matemática M1</span>
-                        <Badge variant="default" className="bg-blue-600">+8%</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Ciencias</span>
-                        <Badge variant="secondary">+3%</Badge>
-                      </div>
-                    </div>
+                    <p className="text-white/80 text-sm">Evaluaciones Completadas</p>
+                    <p className="text-2xl font-bold text-white">12</p>
                   </div>
-
-                  <div>
-                    <h4 className="font-medium mb-3">Predicciones IA</h4>
-                    <div className="space-y-2">
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <div className="text-sm text-blue-700">Puntaje Proyectado</div>
-                        <div className="font-bold text-blue-900">720 puntos</div>
-                      </div>
-                      <div className="p-3 bg-green-50 rounded-lg">
-                        <div className="text-sm text-green-700">Probabilidad de Meta</div>
-                        <div className="font-bold text-green-900">87%</div>
-                      </div>
-                    </div>
+                  <div className="p-3 rounded-full bg-gradient-to-r from-green-400 to-emerald-600">
+                    <Target className="w-6 h-6 text-white" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-        )}
+
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Promedio General</p>
+                    <p className="text-2xl font-bold text-white">675</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-600">
+                    <TrendingUp className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Mejor Puntaje</p>
+                    <p className="text-2xl font-bold text-white">750</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-gradient-to-r from-purple-400 to-pink-600">
+                    <Brain className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Tiempo Estudiado</p>
+                    <p className="text-2xl font-bold text-white">45h</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-gradient-to-r from-yellow-400 to-orange-600">
+                    <GraduationCap className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Contenido principal */}
+          <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white">Próximas Evaluaciones</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-white/90 space-y-4">
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <h3 className="font-semibold">Simulacro PAES Matemática</h3>
+                  <p className="text-sm text-white/70">Programado para el próximo viernes</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <h3 className="font-semibold">Evaluación Comprensión Lectora</h3>
+                  <p className="text-sm text-white/70">Disponible desde mañana</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <h3 className="font-semibold">Test de Ciencias</h3>
+                  <p className="text-sm text-white/70">Próxima semana</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Status */}
+          <div className="text-center mt-8">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-white text-sm">
+                Sistema PAES Activo • {user ? 'Usuario: ' + (user.email || 'Anónimo') : 'Visitante'}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-    </AppLayout>
+    </ErrorBoundary>
   );
 };
 
