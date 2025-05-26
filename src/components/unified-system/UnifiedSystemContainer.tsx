@@ -4,12 +4,13 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LazyNeuralCommandCenter } from '@/components/lazy/LazyComponents';
 import { UnifiedDashboardContainerOptimized } from '@/components/unified-dashboard/UnifiedDashboardContainerOptimized';
-import { SystemModeToggle } from './SystemModeToggle';
+import { MinimizableSystemModeToggle } from './MinimizableSystemModeToggle';
 import { CinematicSkeletonOptimized } from '@/components/unified-dashboard/CinematicSkeletonOptimized';
 import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { preloadCriticalComponents } from '@/components/lazy/LazyComponents';
-import PerformanceOrchestrator from '@/core/performance/PerformanceOrchestrator';
+import { MinimizablePerformanceOrchestrator } from '@/core/performance/MinimizablePerformanceOrchestrator';
+import { MinimizablePerformanceMonitor } from '@/components/optimization/MinimizablePerformanceMonitor';
 
 type SystemMode = 'neural' | 'unified' | 'auto';
 
@@ -54,9 +55,10 @@ export const UnifiedSystemContainer: React.FC = () => {
 
   // Inicialización ultra-optimizada
   useEffect(() => {
+    preloadCriticalComponents();
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 50); // Casi instantáneo
+    }, 50);
 
     return () => clearTimeout(timer);
   }, []);
@@ -110,18 +112,19 @@ export const UnifiedSystemContainer: React.FC = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Sistema de Performance Orchestrator - Fase 4 */}
-      <PerformanceOrchestrator 
+      {/* Componentes minimizables con z-index reorganizado */}
+      <MinimizablePerformanceOrchestrator 
         enableAutoOptimization={true}
         enablePredictiveAnalytics={true}
         enableIntelligentAlerts={true}
         enableRealTimeDashboard={true}
       />
 
-      <SystemModeToggle
+      <MinimizablePerformanceMonitor />
+
+      <MinimizableSystemModeToggle
         currentMode={resolvedMode}
         onModeChange={handleModeToggle}
-        className="fixed top-4 right-4 z-50"
       />
 
       <AnimatePresence mode="wait">
