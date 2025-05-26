@@ -1,4 +1,6 @@
 
+import { useState, useEffect } from 'react';
+
 // Configuración avanzada de code splitting
 
 export const ChunkStrategy = {
@@ -69,7 +71,7 @@ export const getViteBuildConfig = () => ({
         },
         
         // Optimización de nombres de chunks
-        chunkFileNames: (chunkInfo) => {
+        chunkFileNames: (chunkInfo: any) => {
           const name = chunkInfo.name || 'chunk';
           return `assets/${name}-[hash].js`;
         },
@@ -84,7 +86,7 @@ export const getViteBuildConfig = () => ({
     
     // Optimizaciones adicionales
     target: 'esnext',
-    minify: 'terser',
+    minify: 'terser' as const,
     terserOptions: {
       compress: {
         drop_console: true,

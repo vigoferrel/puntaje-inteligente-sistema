@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { createLazyComponent, ComponentPreloader } from '@/core/performance/LazyComponentLoader';
 
 // Componentes principales con lazy loading
