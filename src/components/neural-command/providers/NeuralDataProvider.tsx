@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useRealNeuralMetrics } from '@/hooks/useRealNeuralMetrics';
+import { useOptimizedRealNeuralMetrics } from '@/hooks/useOptimizedRealNeuralMetrics';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface NeuralDataContextType {
@@ -19,7 +19,7 @@ interface NeuralDataProviderProps {
 
 export const NeuralDataProvider: React.FC<NeuralDataProviderProps> = ({ children }) => {
   const { user } = useAuth();
-  const { metrics, isLoading, error, getMetricForDimension } = useRealNeuralMetrics();
+  const { metrics, isLoading, error, getMetricForDimension } = useOptimizedRealNeuralMetrics();
 
   const value = {
     metrics,
