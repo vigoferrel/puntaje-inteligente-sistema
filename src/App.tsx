@@ -14,11 +14,17 @@ import { PlanInteligenteWrapper } from '@/components/plan/modern/PlanInteligente
 import { QualityDashboard } from '@/components/quality/QualityDashboard';
 import { EvaluationBank } from '@/components/evaluations/EvaluationBank';
 
-// NUEVAS IMPORTACIONES: Universe Visualizations
+// Universe Visualizations
 import { UniverseVisualizationHub } from '@/components/universe/UniverseVisualizationHub';
 import { EducationalUniverse } from '@/components/universe/EducationalUniverse';
 import { PAESUniverseDashboard } from '@/components/paes-universe/PAESUniverseDashboard';
 import { PAESLearningUniverse } from '@/components/paes-learning-universe/PAESLearningUniverse';
+
+// NUEVAS IMPLEMENTACIONES
+import { AdvancedFinancialCenter } from '@/components/financial/AdvancedFinancialCenter';
+import { AIExerciseGenerator } from '@/components/exercise/AIExerciseGenerator';
+import { AdvancedSettings } from '@/components/settings/AdvancedSettings';
+import { HelpCenter } from '@/components/help/HelpCenter';
 
 const App: React.FC = () => {
   return (
@@ -42,11 +48,25 @@ const App: React.FC = () => {
             {/* Banco de Evaluaciones */}
             <Route path="/banco-evaluaciones" element={<EvaluationBank />} />
             
-            {/* NUEVAS RUTAS: Universe Explorer */}
+            {/* Universe Explorer */}
             <Route path="/universe-hub" element={<UniverseVisualizationHub />} />
             <Route path="/universe/educational" element={<EducationalUniverse initialMode="overview" />} />
             <Route path="/universe/paes-dashboard" element={<PAESUniverseDashboard />} />
             <Route path="/universe/learning" element={<PAESLearningUniverse />} />
+            
+            {/* NUEVAS SECCIONES IMPLEMENTADAS */}
+            
+            {/* Centro Financiero Avanzado */}
+            <Route path="/centro-financiero" element={<AdvancedFinancialCenter />} />
+            
+            {/* Generador de Ejercicios IA */}
+            <Route path="/ejercicios" element={<AIExerciseGenerator />} />
+            
+            {/* Sistema de Configuración */}
+            <Route path="/settings" element={<AdvancedSettings />} />
+            
+            {/* Centro de Ayuda */}
+            <Route path="/ayuda" element={<HelpCenter />} />
             
             {/* Panel de Administración */}
             <Route path="/admin" element={<AdminDashboard />} />
@@ -70,11 +90,12 @@ const App: React.FC = () => {
             <Route path="/analisis" element={<Navigate to="/dashboard" replace />} />
             <Route path="/simulaciones" element={<Navigate to="/diagnostico" replace />} />
             
-            {/* Redirecciones adicionales para universes */}
+            {/* Redirecciones adicionales */}
             <Route path="/paes-dashboard" element={<Navigate to="/universe/paes-dashboard" replace />} />
             <Route path="/paes-universe" element={<Navigate to="/universe/paes-dashboard" replace />} />
             <Route path="/educational-universe" element={<Navigate to="/universe/educational" replace />} />
             <Route path="/learning-universe" element={<Navigate to="/universe/learning" replace />} />
+            <Route path="/finanzas" element={<Navigate to="/centro-financiero" replace />} />
             
             {/* Ruta por defecto */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
