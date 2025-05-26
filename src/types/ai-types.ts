@@ -24,6 +24,14 @@ export interface Exercise {
   node?: string; // Para compatibilidad con el generador PAES
   subject?: string; // Para compatibilidad con el generador PAES
   estimatedTime?: number; // Para compatibilidad con el generador PAES
+  metadata?: {
+    source?: string;
+    generatedAt?: string;
+    prueba?: string;
+    skill?: string;
+    difficulty?: string;
+    [key: string]: any;
+  };
 }
 
 /**

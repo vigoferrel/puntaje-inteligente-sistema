@@ -1,4 +1,3 @@
-
 import { Exercise } from '@/types/ai-types';
 import { TPAESPrueba, TPAESHabilidad } from '@/types/system-types';
 
@@ -57,24 +56,12 @@ export class QualityValidator {
    * Calcula métricas de calidad específicas
    */
   private async calculateMetrics(exercise: Exercise, prueba: TPAESPrueba, skill: TPAESHabilidad): Promise<Omit<QualityMetrics, 'overallScore'>> {
-    // Precisión del contenido
-    const contentAccuracy = this.validateContentAccuracy(exercise);
-    
-    // Cumplimiento con estándares PAES
-    const paesCompliance = this.validatePAESCompliance(exercise, prueba);
-    
-    // Consistencia de dificultad
-    const difficultyConsistency = this.validateDifficultyConsistency(exercise);
-    
-    // Relevancia por materia
-    const subjectRelevance = this.validateSubjectRelevance(exercise, prueba, skill);
-    
-    return {
-      contentAccuracy,
-      paesCompliance,
-      difficultyConsistency,
-      subjectRelevance
-    };
+    return Promise.resolve({
+      contentAccuracy: this.validateContentAccuracy(exercise),
+      paesCompliance: this.validatePAESCompliance(exercise, prueba),
+      difficultyConsistency: this.validateDifficultyConsistency(exercise),
+      subjectRelevance: this.validateSubjectRelevance(exercise, prueba, skill)
+    });
   }
 
   /**
@@ -235,7 +222,12 @@ export class QualityValidator {
   }
 
   private determineSource(exercise: Exercise): 'oficial' | 'ai_generated' | 'hybrid' {
-    if (exercise.id?.startsWith('paes-') || exercise.id?.startsWith('oficial-')) {
+    const exerciseId = exercise.id;
+    
+    // Convertir a string si es number para poder usar startsWith
+    const idString = exerciseId ? String(exerciseId) : '';
+    
+    if (idString.startsWith('paes-') || idString.startsWith('oficial-')) {
       return 'oficial';
     }
     if (exercise.explanation?.includes('Esta pregunta fue generada')) {
