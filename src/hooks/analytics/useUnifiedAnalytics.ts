@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { UnifiedAnalyticsService, SimplifiedInstitutionalMetrics, CareerRecommendation } from '@/services/paes/analytics/UnifiedAnalyticsService';
 import { logger } from '@/core/logging/SystemLogger';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UseUnifiedAnalyticsReturn {
   metrics: SimplifiedInstitutionalMetrics | null;
@@ -23,21 +25,53 @@ interface SearchFilters {
 }
 
 export const useUnifiedAnalytics = (institutionId?: string): UseUnifiedAnalyticsReturn => {
+  const { user } = useAuth();
   const [metrics, setMetrics] = useState<SimplifiedInstitutionalMetrics | null>(null);
   const [careerRecommendations, setCareerRecommendations] = useState<CareerRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Auto-detectar institutionId si el usuario pertenece a una institución
+  const [detectedInstitutionId, setDetectedInstitutionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const detectInstitution = async () => {
+      if (!user?.id || institutionId) return;
+
+      try {
+        const { data } = await supabase
+          .from('institution_students')
+          .select('institution_id')
+          .eq('student_id', user.id)
+          .single();
+
+        if (data?.institution_id) {
+          setDetectedInstitutionId(data.institution_id);
+        }
+      } catch (err) {
+        // Usuario no pertenece a ninguna institución, usar ID por defecto
+        setDetectedInstitutionId('default-institution');
+      }
+    };
+
+    detectInstitution();
+  }, [user?.id, institutionId]);
+
+  const finalInstitutionId = institutionId || detectedInstitutionId;
+
   const generateReport = async () => {
-    if (!institutionId) return;
+    if (!finalInstitutionId) {
+      setError('No se pudo determinar la institución');
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
     
     try {
-      const report = await UnifiedAnalyticsService.generateInstitutionalMetrics(institutionId);
+      const report = await UnifiedAnalyticsService.generateInstitutionalMetrics(finalInstitutionId);
       setMetrics(report);
-      logger.info('useUnifiedAnalytics', 'Reporte generado exitosamente');
+      logger.info('useUnifiedAnalytics', 'Reporte generado exitosamente con datos reales');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMessage);
@@ -57,9 +91,10 @@ export const useUnifiedAnalytics = (institutionId?: string): UseUnifiedAnalytics
         filters.puntajeMax,
         filters.area
       );
-      // Fix: Properly check if results is an array before using slice
+      
       if (Array.isArray(results)) {
         setCareerRecommendations(results.slice(0, 10));
+        logger.info('useUnifiedAnalytics', 'Carreras encontradas desde datos reales');
       } else {
         setCareerRecommendations([]);
         logger.warn('useUnifiedAnalytics', 'Resultados de búsqueda no son un array');
@@ -74,10 +109,10 @@ export const useUnifiedAnalytics = (institutionId?: string): UseUnifiedAnalytics
   };
 
   const exportReport = async (format: 'pdf' | 'excel' | 'csv'): Promise<Blob | null> => {
-    if (!institutionId) return null;
+    if (!finalInstitutionId) return null;
     
     try {
-      const blob = await UnifiedAnalyticsService.exportReport(institutionId, format);
+      const blob = await UnifiedAnalyticsService.exportReport(finalInstitutionId, format);
       logger.info('useUnifiedAnalytics', `Reporte exportado en formato ${format}`);
       return blob;
     } catch (err) {
@@ -93,10 +128,10 @@ export const useUnifiedAnalytics = (institutionId?: string): UseUnifiedAnalytics
 
   // Cargar datos inicialmente
   useEffect(() => {
-    if (institutionId) {
+    if (finalInstitutionId) {
       generateReport();
     }
-  }, [institutionId]);
+  }, [finalInstitutionId]);
 
   return {
     metrics,

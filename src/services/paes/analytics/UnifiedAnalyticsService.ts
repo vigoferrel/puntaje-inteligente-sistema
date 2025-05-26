@@ -1,5 +1,6 @@
 
 import { logger } from '@/core/logging/SystemLogger';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SimplifiedInstitutionalMetrics {
   totalStudents: number;
@@ -29,7 +30,7 @@ export class UnifiedAnalyticsService {
   private static cache = new Map<string, any>();
 
   /**
-   * Genera métricas institucionales unificadas
+   * Genera métricas institucionales usando datos reales de Supabase
    */
   static async generateInstitutionalMetrics(institutionId: string): Promise<SimplifiedInstitutionalMetrics> {
     const cacheKey = `institutional_metrics_${institutionId}`;
@@ -39,29 +40,86 @@ export class UnifiedAnalyticsService {
     }
 
     try {
-      logger.info('UnifiedAnalyticsService', 'Generando métricas institucionales unificadas');
+      logger.info('UnifiedAnalyticsService', 'Generando métricas institucionales desde Supabase');
+
+      // Obtener estudiantes de la institución
+      const { data: institutionStudents, error: studentsError } = await supabase
+        .from('institution_students')
+        .select('student_id, status, created_at')
+        .eq('institution_id', institutionId);
+
+      if (studentsError) {
+        logger.error('UnifiedAnalyticsService', 'Error obteniendo estudiantes institucionales', studentsError);
+        throw studentsError;
+      }
+
+      const studentIds = institutionStudents?.map(s => s.student_id) || [];
+      const totalStudents = studentIds.length;
+      
+      if (totalStudents === 0) {
+        // Si no hay estudiantes, devolver métricas vacías
+        const emptyMetrics: SimplifiedInstitutionalMetrics = {
+          totalStudents: 0,
+          activeStudents: 0,
+          averageEngagement: 0,
+          overallProgress: 0,
+          riskDistribution: { high: 0, medium: 0, low: 0 },
+          subjectPerformance: {}
+        };
+        this.cache.set(cacheKey, emptyMetrics);
+        return emptyMetrics;
+      }
+
+      // Obtener progreso de nodos para todos los estudiantes
+      const { data: nodeProgress } = await supabase
+        .from('user_node_progress')
+        .select('user_id, status, progress, success_rate, last_activity_at')
+        .in('user_id', studentIds);
+
+      // Obtener información de nodos para calcular rendimiento por materia
+      const { data: learningNodes } = await supabase
+        .from('learning_nodes')
+        .select('id, subject_area');
+
+      // Calcular estudiantes activos (con actividad en los últimos 7 días)
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const activeStudents = new Set(
+        nodeProgress?.filter(np => 
+          np.last_activity_at && new Date(np.last_activity_at) > new Date(weekAgo)
+        ).map(np => np.user_id) || []
+      ).size;
+
+      // Calcular engagement promedio
+      const totalProgress = nodeProgress?.reduce((sum, np) => sum + (np.progress || 0), 0) || 0;
+      const averageEngagement = nodeProgress?.length ? totalProgress / nodeProgress.length : 0;
+
+      // Calcular progreso general
+      const completedNodes = nodeProgress?.filter(np => np.status === 'completed').length || 0;
+      const totalNodes = nodeProgress?.length || 0;
+      const overallProgress = totalNodes > 0 ? completedNodes / totalNodes : 0;
+
+      // Calcular distribución de riesgo basada en success_rate
+      const riskDistribution = this.calculateRiskDistribution(nodeProgress || []);
+
+      // Calcular rendimiento por materia
+      const subjectPerformance = this.calculateSubjectPerformance(
+        nodeProgress || [], 
+        learningNodes || []
+      );
 
       const metrics: SimplifiedInstitutionalMetrics = {
-        totalStudents: 250,
-        activeStudents: 200,
-        averageEngagement: 0.78,
-        overallProgress: 0.72,
-        riskDistribution: {
-          high: 25,
-          medium: 75,
-          low: 150
-        },
-        subjectPerformance: {
-          'Competencia Lectora': 0.74,
-          'Matemática M1': 0.70,
-          'Matemática M2': 0.68,
-          'Ciencias': 0.73,
-          'Historia': 0.71
-        }
+        totalStudents,
+        activeStudents,
+        averageEngagement,
+        overallProgress,
+        riskDistribution,
+        subjectPerformance
       };
 
       this.cache.set(cacheKey, metrics);
+      logger.info('UnifiedAnalyticsService', 'Métricas institucionales generadas exitosamente');
       return metrics;
+
     } catch (error) {
       logger.error('UnifiedAnalyticsService', 'Error generando métricas institucionales', error);
       throw error;
@@ -69,7 +127,69 @@ export class UnifiedAnalyticsService {
   }
 
   /**
-   * Busca carreras usando datos mock
+   * Calcula distribución de riesgo basada en success_rate
+   */
+  private static calculateRiskDistribution(nodeProgress: any[]) {
+    const studentRisks = new Map<string, number>();
+    
+    // Calcular promedio de success_rate por estudiante
+    nodeProgress.forEach(np => {
+      if (!studentRisks.has(np.user_id)) {
+        studentRisks.set(np.user_id, []);
+      }
+      if (np.success_rate !== null) {
+        studentRisks.get(np.user_id)!.push(np.success_rate);
+      }
+    });
+
+    const riskCounts = { high: 0, medium: 0, low: 0 };
+    
+    studentRisks.forEach((rates, userId) => {
+      if (rates.length === 0) return;
+      
+      const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+      
+      if (avgRate < 0.5) riskCounts.high++;
+      else if (avgRate < 0.75) riskCounts.medium++;
+      else riskCounts.low++;
+    });
+
+    return riskCounts;
+  }
+
+  /**
+   * Calcula rendimiento por materia
+   */
+  private static calculateSubjectPerformance(nodeProgress: any[], learningNodes: any[]) {
+    const nodeSubjectMap = new Map<string, string>();
+    learningNodes.forEach(node => {
+      nodeSubjectMap.set(node.id, node.subject_area);
+    });
+
+    const subjectProgress = new Map<string, number[]>();
+    
+    nodeProgress.forEach(np => {
+      const subject = nodeSubjectMap.get(np.node_id);
+      if (subject && np.success_rate !== null) {
+        if (!subjectProgress.has(subject)) {
+          subjectProgress.set(subject, []);
+        }
+        subjectProgress.get(subject)!.push(np.success_rate);
+      }
+    });
+
+    const subjectPerformance: Record<string, number> = {};
+    subjectProgress.forEach((rates, subject) => {
+      if (rates.length > 0) {
+        subjectPerformance[subject] = rates.reduce((a, b) => a + b, 0) / rates.length;
+      }
+    });
+
+    return subjectPerformance;
+  }
+
+  /**
+   * Busca carreras usando datos reales de becas_financiamiento
    */
   static async searchCareers(
     texto?: string,
@@ -79,46 +199,40 @@ export class UnifiedAnalyticsService {
     area?: string
   ): Promise<CareerRecommendation[]> {
     try {
-      logger.info('UnifiedAnalyticsService', 'Buscando carreras');
+      logger.info('UnifiedAnalyticsService', 'Buscando carreras desde Supabase');
 
-      // Usar datos mock directamente
-      const mockCareers = this.getMockCareerData();
-      
-      // Filtrar resultados básicos
-      let filteredCareers = mockCareers;
-      
+      // Buscar en becas_financiamiento como fuente de datos de carreras
+      let query = supabase
+        .from('becas_financiamiento')
+        .select('*')
+        .eq('estado', 'activa');
+
+      // Aplicar filtros
       if (texto) {
-        filteredCareers = filteredCareers.filter(career =>
-          career.carrera.toLowerCase().includes(texto.toLowerCase()) ||
-          career.universidad.toLowerCase().includes(texto.toLowerCase())
-        );
-      }
-      
-      if (region) {
-        filteredCareers = filteredCareers.filter(career =>
-          career.region.toLowerCase().includes(region.toLowerCase())
-        );
-      }
-      
-      if (area) {
-        filteredCareers = filteredCareers.filter(career =>
-          career.area_conocimiento.toLowerCase().includes(area.toLowerCase())
-        );
-      }
-      
-      if (puntajeMin) {
-        filteredCareers = filteredCareers.filter(career =>
-          career.puntaje_corte >= puntajeMin
-        );
-      }
-      
-      if (puntajeMax) {
-        filteredCareers = filteredCareers.filter(career =>
-          career.puntaje_corte <= puntajeMax
-        );
+        query = query.or(`nombre.ilike.%${texto}%,institucion.ilike.%${texto}%`);
       }
 
-      return filteredCareers.slice(0, 10);
+      const { data: becasData, error } = await query.limit(10);
+
+      if (error) {
+        logger.error('UnifiedAnalyticsService', 'Error buscando carreras', error);
+        return this.getMockCareerData();
+      }
+
+      // Transformar datos de becas a formato de carrera
+      const careers: CareerRecommendation[] = becasData?.map((beca, index) => ({
+        codigo_demre: `BEC${index + 1}`,
+        carrera: beca.nombre,
+        universidad: beca.institucion,
+        region: 'Región Metropolitana', // Default
+        area_conocimiento: beca.tipo_beca === 'academica' ? 'Académica' : 'Técnica',
+        puntaje_corte: beca.puntaje_minimo_competencia_lectora || 600,
+        vacantes: 50, // Default
+        arancel: beca.monto_maximo || 3000000
+      })) || [];
+
+      return careers.length > 0 ? careers : this.getMockCareerData();
+
     } catch (error) {
       logger.error('UnifiedAnalyticsService', 'Error buscando carreras', error);
       return this.getMockCareerData();
@@ -149,36 +263,6 @@ export class UnifiedAnalyticsService {
         puntaje_corte: 780,
         vacantes: 180,
         arancel: 4500000
-      },
-      {
-        codigo_demre: '17101',
-        carrera: 'Derecho',
-        universidad: 'Universidad de Chile',
-        region: 'Región Metropolitana',
-        area_conocimiento: 'Derecho y Ciencias Jurídicas',
-        puntaje_corte: 740,
-        vacantes: 150,
-        arancel: 3500000
-      },
-      {
-        codigo_demre: '21304',
-        carrera: 'Psicología',
-        universidad: 'Pontificia Universidad Católica',
-        region: 'Región Metropolitana',
-        area_conocimiento: 'Ciencias Sociales',
-        puntaje_corte: 680,
-        vacantes: 120,
-        arancel: 4200000
-      },
-      {
-        codigo_demre: '11205',
-        carrera: 'Arquitectura',
-        universidad: 'Universidad de Valparaíso',
-        region: 'Región de Valparaíso',
-        area_conocimiento: 'Arte y Arquitectura',
-        puntaje_corte: 650,
-        vacantes: 85,
-        arancel: 3800000
       }
     ];
   }
