@@ -225,6 +225,12 @@ class MicroOptimizationEngine {
     };
   }
 
+  // Método loadModule agregado para compatibilidad
+  loadModule(modulePath: string): Promise<any> {
+    const lazyLoader = this.createLazyLoader();
+    return lazyLoader.loadModule(modulePath);
+  }
+
   getOptimizationReport() {
     return {
       componentPoolSize: Array.from(this.componentPool.values()).reduce((sum, pool) => sum + pool.length, 0),

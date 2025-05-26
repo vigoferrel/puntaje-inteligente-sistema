@@ -141,15 +141,28 @@ export const UltraOptimizedOrchestrator: React.FC<UltraOptimizedOrchestratorProp
     const memoryOptimization = memory ? 
       Math.max(0, 100 - (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100) : 0;
 
+    // Mapear el estado de salud del auto-healing al estado del sistema
+    const mappedSystemHealth = mapHealthStatus(healthStatus.overall);
+
     setMetrics({
       cacheHitRate,
       averageResponseTime: cacheMetrics.averageResponseTime,
       memoryOptimization,
-      systemHealth: healthStatus.overall
+      systemHealth: mappedSystemHealth
     });
 
     // Actualizar estado general del sistema
     updateSystemStatus(healthStatus, cacheHitRate, memoryOptimization);
+  };
+
+  // Función para mapear estados de salud
+  const mapHealthStatus = (healthStatus: 'healthy' | 'degraded' | 'critical'): 'optimal' | 'good' | 'degraded' | 'critical' => {
+    switch (healthStatus) {
+      case 'healthy': return 'optimal';
+      case 'degraded': return 'degraded';
+      case 'critical': return 'critical';
+      default: return 'good';
+    }
   };
 
   const analyzeSystemPerformance = () => {
