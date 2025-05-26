@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { TLearningCyclePhase, getLearningCyclePhaseDisplayName } from "@/types/system-types";
 import { LucideIcon } from "lucide-react";
 
@@ -13,6 +13,7 @@ interface PhaseCardProps {
   isPending: boolean;
   phaseProgress: number;
   icon: LucideIcon;
+  onNavigate?: (tool: string) => void;
 }
 
 export const PhaseCard = ({
@@ -21,11 +22,25 @@ export const PhaseCard = ({
   isCompleted,
   isPending,
   phaseProgress,
-  icon: Icon
+  icon: Icon,
+  onNavigate
 }: PhaseCardProps) => {
+  
+  const handlePhaseClick = () => {
+    if (onNavigate) {
+      const route = getUnifiedPhaseRoute(phase);
+      onNavigate(route);
+    }
+  };
+
   return (
-    <Link to={getPhaseRoute(phase)}>
-      <Card className={`h-full transition-all hover:shadow-md ${
+    <Button
+      onClick={handlePhaseClick}
+      variant="ghost"
+      className="h-auto p-0 w-full"
+      disabled={isPending}
+    >
+      <Card className={`h-full w-full transition-all hover:shadow-md ${
         isActive ? "bg-primary/10 border-primary" : 
         isCompleted ? "bg-green-50 border-green-200" : 
         "bg-background"
@@ -55,22 +70,37 @@ export const PhaseCard = ({
           )}
         </CardContent>
       </Card>
-    </Link>
+    </Button>
   );
 };
 
-// Helper function to get route for each phase
-export const getPhaseRoute = (phase: TLearningCyclePhase) => {
-  const routes = {
-    DIAGNOSIS: "/diagnostico",
-    PERSONALIZED_PLAN: "/plan",
-    SKILL_TRAINING: "/entrenamiento",
-    CONTENT_STUDY: "/contenido",
-    PERIODIC_TESTS: "/evaluaciones",
-    FEEDBACK_ANALYSIS: "/analisis",
-    REINFORCEMENT: "/reforzamiento",
-    FINAL_SIMULATIONS: "/simulaciones",
+/**
+ * Mapeo consolidado de fases a rutas del sistema unificado
+ */
+export const getUnifiedPhaseRoute = (phase: TLearningCyclePhase): string => {
+  const unifiedRoutes = {
+    // Fases principales - todas van al sistema unificado
+    DIAGNOSIS: "diagnostico",
+    PERSONALIZED_PLAN: "dashboard", // Plan se maneja desde el dashboard
+    SKILL_TRAINING: "lectoguia", // Entrenamiento a través de LectoGuía
+    CONTENT_STUDY: "lectoguia", // Estudio de contenido a través de LectoGuía
+    PERIODIC_TESTS: "diagnostico", // Tests periódicos a través del sistema diagnóstico
+    FEEDBACK_ANALYSIS: "dashboard", // Análisis desde el dashboard
+    REINFORCEMENT: "lectoguia", // Reforzamiento a través de ejercicios en LectoGuía
+    FINAL_SIMULATIONS: "diagnostico", // Simulaciones finales a través del diagnóstico
+    
+    // Fases de Kolb - integradas al sistema unificado
+    EXPERIENCIA_CONCRETA: "lectoguia",
+    OBSERVACION_REFLEXIVA: "dashboard",
+    CONCEPTUALIZACION_ABSTRACTA: "lectoguia",
+    EXPERIMENTACION_ACTIVA: "diagnostico",
+    
+    // Legacy phases - redirigidas al sistema unificado
+    diagnostic: "diagnostico",
+    exploration: "lectoguia",
+    practice: "lectoguia",
+    application: "diagnostico"
   };
   
-  return routes[phase] || "/";
+  return unifiedRoutes[phase] || "dashboard";
 };

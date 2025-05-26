@@ -6,6 +6,7 @@ import { LazyNeuralCommandCenter } from '@/components/lazy/LazyComponents';
 import { SimplifiedDashboardContainer } from '@/components/unified-dashboard/SimplifiedDashboardContainer';
 import { MinimizableSystemModeToggle } from './MinimizableSystemModeToggle';
 import { useSimpleNavigation } from '@/hooks/useSimpleNavigation';
+import { useLegacyRouteCleanup } from '@/hooks/useLegacyRouteCleanup';
 import { useAuth } from '@/contexts/AuthContext';
 import { CinematicAudioProvider } from '@/components/cinematic/UniversalCinematicSystem';
 
@@ -16,6 +17,9 @@ export const ConsolidatedUnifiedSystem: React.FC = () => {
   const location = useLocation();
   const [systemMode, setSystemMode] = useState<SystemMode>('auto');
   const { currentTool, navigateToTool } = useSimpleNavigation();
+  
+  // Limpiar rutas legacy automáticamente
+  useLegacyRouteCleanup();
 
   // Detección simple del modo
   const detectedMode = useMemo(() => {

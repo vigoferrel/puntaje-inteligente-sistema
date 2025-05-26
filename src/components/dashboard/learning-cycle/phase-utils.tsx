@@ -1,7 +1,7 @@
 
 import { TLearningCyclePhase } from "@/types/system-types";
 import { BookOpen, BrainCircuit, CheckCheck, FileSpreadsheet, BarChart2, 
-  ClipboardCheck, Hammer, Timer, BookIcon, LightbulbIcon, PenToolIcon, GlobeIcon, Eye, Brain, Zap, Target } from "lucide-react";
+  ClipboardCheck, Hammer, Timer, Eye, Brain, Zap, Target } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 /**
@@ -17,16 +17,16 @@ export const getPhaseIcon = (phase: TLearningCyclePhase): LucideIcon => {
     FEEDBACK_ANALYSIS: BarChart2,
     REINFORCEMENT: Hammer,
     FINAL_SIMULATIONS: Timer,
-    // Fases del Ciclo de Kolb
+    // Fases del Ciclo de Kolb - integradas al sistema unificado
     EXPERIENCIA_CONCRETA: Target,
     OBSERVACION_REFLEXIVA: Eye,
     CONCEPTUALIZACION_ABSTRACTA: Brain,
     EXPERIMENTACION_ACTIVA: Zap,
-    // Older phase types
+    // Legacy phases - now redirected to unified system
     diagnostic: ClipboardCheck,
-    exploration: LightbulbIcon,
-    practice: PenToolIcon,
-    application: GlobeIcon
+    exploration: Brain,
+    practice: BookOpen,
+    application: Target
   };
   
   return icons[phase] || BookOpen;
@@ -50,7 +50,7 @@ export const getPhaseTimeEstimate = (phase: TLearningCyclePhase): number => {
     OBSERVACION_REFLEXIVA: 5,
     CONCEPTUALIZACION_ABSTRACTA: 7,
     EXPERIMENTACION_ACTIVA: 4,
-    // Older phase types
+    // Legacy phases
     diagnostic: 1,
     exploration: 3,
     practice: 5,
@@ -67,28 +67,13 @@ export const isPhaseAvailable = (
   phase: TLearningCyclePhase, 
   currentPhase: TLearningCyclePhase
 ): boolean => {
-  // Combine old and new phases for robust comparison
   const allPhasesInOrder = [
-    "diagnostic", "exploration", "practice", "application", // Old phases
     "DIAGNOSIS", "PERSONALIZED_PLAN", "SKILL_TRAINING", "CONTENT_STUDY", 
     "PERIODIC_TESTS", "FEEDBACK_ANALYSIS", "REINFORCEMENT", "FINAL_SIMULATIONS"
   ];
   
-  // Map old phases to their new equivalents
-  const phaseMapping: Record<string, string> = {
-    "diagnostic": "DIAGNOSIS",
-    "exploration": "SKILL_TRAINING",
-    "practice": "CONTENT_STUDY",
-    "application": "FINAL_SIMULATIONS"
-  };
-  
-  // Get normalized versions of the phases for comparison
-  const normalizedPhase = phaseMapping[phase] || phase;
-  const normalizedCurrentPhase = phaseMapping[currentPhase] || currentPhase;
-  
-  // Get the indices for comparison
-  const phaseIndex = allPhasesInOrder.indexOf(normalizedPhase);
-  const currentIndex = allPhasesInOrder.indexOf(normalizedCurrentPhase);
+  const phaseIndex = allPhasesInOrder.indexOf(phase);
+  const currentIndex = allPhasesInOrder.indexOf(currentPhase);
   
   return phaseIndex <= currentIndex;
 };
