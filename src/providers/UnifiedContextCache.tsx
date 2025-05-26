@@ -29,7 +29,7 @@ export const UnifiedContextCache: React.FC<UnifiedContextCacheProps> = ({ childr
   const contextCache = useMemo(() => {
     const cache = new Map<string, CacheEntry>();
     
-    const get = <T>(key: string): T | null => {
+    const get = <T,>(key: string): T | null => {
       const entry = cache.get(key);
       if (!entry) return null;
       
@@ -42,7 +42,7 @@ export const UnifiedContextCache: React.FC<UnifiedContextCacheProps> = ({ childr
       return entry.data as T;
     };
     
-    const set = <T>(key: string, data: T, ttl: number = 600000) => {
+    const set = <T,>(key: string, data: T, ttl: number = 600000) => {
       cache.set(key, {
         data,
         timestamp: Date.now(),
