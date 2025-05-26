@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { usePAESContext } from '@/contexts/PAESContext';
 import { PAESGlobalMetrics } from '@/components/paes-unified/PAESGlobalMetrics';
@@ -23,6 +22,8 @@ import {
   AlertTriangle,
   Calendar
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { RealPAESDataService } from '@/services/dashboard/RealPAESDataService';
 
 type PAESViewMode = 'unified' | 'evaluation' | 'universe';
 
@@ -37,53 +38,45 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
 }) => {
   const [currentMode, setCurrentMode] = useState<PAESViewMode>(initialMode);
   const [activeTestView, setActiveTestView] = useState<string>('global');
+  const [evaluationStats, setEvaluationStats] = useState<any>(null);
+  const [subjectScores, setSubjectScores] = useState<any[]>([]);
+  const [upcomingTests, setUpcomingTests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  const { user } = useAuth();
   const {
-    loading,
+    loading: paesLoading,
     testPerformances,
     unifiedMetrics,
     comparativeAnalysis,
     refreshData
   } = usePAESContext();
 
-  // Evaluation stats (from PAESEvaluationDashboard)
-  const evaluationStats = {
-    lastScore: 625,
-    targetScore: 700,
-    improvement: 45,
-    testsCompleted: 8,
-    nextTest: "15 días",
-    readinessLevel: 78
+  // Cargar datos reales
+  const loadRealData = async () => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      const [stats, scores, tests] = await Promise.all([
+        RealPAESDataService.getEvaluationStats(user.id),
+        RealPAESDataService.getSubjectScores(user.id),
+        RealPAESDataService.getUpcomingTests(user.id)
+      ]);
+
+      setEvaluationStats(stats);
+      setSubjectScores(scores);
+      setUpcomingTests(tests);
+    } catch (error) {
+      console.error('Error loading PAES data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const subjectScores = [
-    { subject: "Comprensión Lectora", current: 680, target: 720, progress: 85 },
-    { subject: "Matemática M1", current: 590, target: 650, progress: 72 },
-    { subject: "Matemática M2", current: 610, target: 680, progress: 68 },
-    { subject: "Ciencias", current: 640, target: 700, progress: 78 },
-    { subject: "Historia", current: 705, target: 750, progress: 88 }
-  ];
-
-  const upcomingTests = [
-    {
-      date: "2024-02-15",
-      type: "Diagnóstico Integral",
-      duration: "3.5 horas",
-      status: "scheduled"
-    },
-    {
-      date: "2024-02-28",
-      type: "Simulacro PAES",
-      duration: "4 horas",
-      status: "available"
-    },
-    {
-      date: "2024-03-15",
-      type: "Evaluación Final",
-      duration: "4.5 horas",
-      status: "pending"
-    }
-  ];
+  useEffect(() => {
+    loadRealData();
+  }, [user?.id]);
 
   const handleTestSelect = (testId: string) => {
     setActiveTestView(testId);
@@ -91,6 +84,11 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
 
   const handleModeSwitch = (mode: PAESViewMode) => {
     setCurrentMode(mode);
+  };
+
+  const handleRefresh = () => {
+    refreshData();
+    loadRealData();
   };
 
   // Unified mode content (from PAESUnifiedDashboard)
@@ -195,10 +193,10 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
     );
   };
 
-  // Evaluation mode content (from PAESEvaluationDashboard)
+  // Evaluation mode content with real data
   const renderEvaluationMode = () => (
     <div className="space-y-6">
-      {/* Overview Cards */}
+      {/* Overview Cards with real data */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-white/10 border-white/20">
           <CardContent className="p-4">
@@ -206,10 +204,14 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
               <Target className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium text-white">Puntaje Actual</span>
             </div>
-            <div className="text-2xl font-bold text-white">{evaluationStats.lastScore}</div>
+            <div className="text-2xl font-bold text-white">
+              {evaluationStats?.lastScore || 450}
+            </div>
             <div className="flex items-center gap-1 text-sm">
               <TrendingUp className="w-3 h-3 text-green-500" />
-              <span className="text-green-500">+{evaluationStats.improvement} vs inicio</span>
+              <span className="text-green-500">
+                +{evaluationStats?.improvement || 0} vs inicio
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -220,9 +222,11 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
               <Award className="w-4 h-4 text-yellow-500" />
               <span className="text-sm font-medium text-white">Meta</span>
             </div>
-            <div className="text-2xl font-bold text-white">{evaluationStats.targetScore}</div>
+            <div className="text-2xl font-bold text-white">
+              {evaluationStats?.targetScore || 700}
+            </div>
             <div className="text-sm text-gray-400">
-              {evaluationStats.targetScore - evaluationStats.lastScore} puntos restantes
+              {((evaluationStats?.targetScore || 700) - (evaluationStats?.lastScore || 450))} puntos restantes
             </div>
           </CardContent>
         </Card>
@@ -233,8 +237,12 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
               <Clock className="w-4 h-4 text-purple-500" />
               <span className="text-sm font-medium text-white">Próximo Test</span>
             </div>
-            <div className="text-2xl font-bold text-white">{evaluationStats.nextTest}</div>
-            <div className="text-sm text-gray-400">Diagnóstico programado</div>
+            <div className="text-2xl font-bold text-white">
+              {evaluationStats?.nextTest || 'Sin programar'}
+            </div>
+            <div className="text-sm text-gray-400">
+              {upcomingTests.length > 0 ? upcomingTests[0].type : 'No programado'}
+            </div>
           </CardContent>
         </Card>
 
@@ -244,13 +252,15 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
               <BarChart3 className="w-4 h-4 text-green-500" />
               <span className="text-sm font-medium text-white">Preparación</span>
             </div>
-            <div className="text-2xl font-bold text-white">{evaluationStats.readinessLevel}%</div>
-            <Progress value={evaluationStats.readinessLevel} className="mt-2" />
+            <div className="text-2xl font-bold text-white">
+              {evaluationStats?.readinessLevel || 0}%
+            </div>
+            <Progress value={evaluationStats?.readinessLevel || 0} className="mt-2" />
           </CardContent>
         </Card>
       </div>
 
-      {/* Subject Progress */}
+      {/* Subject Progress with real data */}
       <Card className="bg-white/10 border-white/20">
         <CardHeader>
           <CardTitle className="text-white">Progreso por Materia</CardTitle>
@@ -260,7 +270,9 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
             <div key={subject.subject} className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-white font-medium">{subject.subject}</span>
-                <span className="text-cyan-400 font-bold">{subject.current}/{subject.target}</span>
+                <span className="text-cyan-400 font-bold">
+                  {subject.current}/{subject.target}
+                </span>
               </div>
               <Progress value={subject.progress} className="h-2" />
             </div>
@@ -268,7 +280,7 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
         </CardContent>
       </Card>
 
-      {/* Upcoming Tests */}
+      {/* Upcoming Tests with real data */}
       <Card className="bg-white/10 border-white/20">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -278,7 +290,7 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {upcomingTests.map((test, index) => (
+            {upcomingTests.length > 0 ? upcomingTests.map((test, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                 <div>
                   <div className="text-white font-medium">{test.type}</div>
@@ -292,7 +304,11 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
                    test.status === 'available' ? 'Disponible' : 'Pendiente'}
                 </Badge>
               </div>
-            ))}
+            )) : (
+              <div className="text-center text-gray-400 py-4">
+                No hay evaluaciones programadas
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -325,7 +341,7 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
     }
   };
 
-  if (loading) {
+  if (loading || paesLoading) {
     return (
       <div className={`space-y-6 ${className || ''}`}>
         <div className="animate-pulse space-y-6">
@@ -379,7 +395,7 @@ export const PAESSpecializedDashboard: React.FC<PAESSpecializedDashboardProps> =
           </div>
 
           <Button
-            onClick={refreshData}
+            onClick={handleRefresh}
             variant="outline"
             className="flex items-center gap-2"
           >

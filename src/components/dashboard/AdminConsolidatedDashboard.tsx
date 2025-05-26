@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import {
   Shield,
   Zap
 } from 'lucide-react';
+import { RealAdminDataService } from '@/services/dashboard/RealAdminDataService';
 
 type AdminViewMode = 'cost' | 'system' | 'users';
 
@@ -32,55 +32,42 @@ export const AdminConsolidatedDashboard: React.FC<AdminConsolidatedDashboardProp
   className 
 }) => {
   const [currentMode, setCurrentMode] = useState<AdminViewMode>(initialMode);
+  const [costData, setCostData] = useState<any>(null);
+  const [systemData, setSystemData] = useState<any>(null);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - en producción vendría de APIs reales
-  const costData = {
-    monthlySpent: 847.32,
-    monthlyBudget: 1200,
-    dailyAverage: 28.24,
-    topModels: [
-      { name: 'GPT-4', cost: 234.56, usage: 15234 },
-      { name: 'Claude-3', cost: 187.43, usage: 12456 },
-      { name: 'Gemini Pro', cost: 156.78, usage: 9876 }
-    ],
-    alerts: [
-      { type: 'warning', message: 'Consumo alto en GPT-4 este mes' },
-      { type: 'info', message: 'Nuevo modelo disponible: Claude-3.5' }
-    ]
+  const loadRealData = async () => {
+    try {
+      setLoading(true);
+      const [cost, system, users] = await Promise.all([
+        RealAdminDataService.getCostData(),
+        RealAdminDataService.getSystemData(),
+        RealAdminDataService.getUserData()
+      ]);
+
+      setCostData(cost);
+      setSystemData(system);
+      setUserData(users);
+    } catch (error) {
+      console.error('Error loading admin data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const systemData = {
-    uptime: 99.8,
-    activeUsers: 1247,
-    requestsToday: 45632,
-    errorRate: 0.12,
-    services: [
-      { name: 'OpenRouter API', status: 'active', latency: 145 },
-      { name: 'Supabase', status: 'active', latency: 87 },
-      { name: 'Neural Engine', status: 'warning', latency: 234 }
-    ]
-  };
-
-  const userData = {
-    totalUsers: 2847,
-    activeToday: 342,
-    newThisWeek: 89,
-    retention: 73.5,
-    topActivities: [
-      { activity: 'LectoGuía Chat', users: 892 },
-      { activity: 'Diagnósticos', users: 567 },
-      { activity: 'Plan Estudios', users: 445 }
-    ]
-  };
+  useEffect(() => {
+    loadRealData();
+  }, []);
 
   const handleModeSwitch = (mode: AdminViewMode) => {
     setCurrentMode(mode);
   };
 
-  // Cost Management Mode
+  // Cost Management Mode with real data
   const renderCostMode = () => (
     <div className="space-y-6">
-      {/* Cost Overview */}
+      {/* Cost Overview with real data */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-white/10 border-white/20">
           <CardContent className="p-4">
@@ -88,9 +75,11 @@ export const AdminConsolidatedDashboard: React.FC<AdminConsolidatedDashboardProp
               <DollarSign className="w-4 h-4 text-green-500" />
               <span className="text-sm font-medium text-white">Gasto Mensual</span>
             </div>
-            <div className="text-2xl font-bold text-white">${costData.monthlySpent}</div>
+            <div className="text-2xl font-bold text-white">
+              ${costData?.monthlySpent || 0}
+            </div>
             <div className="text-sm text-gray-400">
-              de ${costData.monthlyBudget} presupuestado
+              de ${costData?.monthlyBudget || 1200} presupuestado
             </div>
           </CardContent>
         </Card>
@@ -101,8 +90,10 @@ export const AdminConsolidatedDashboard: React.FC<AdminConsolidatedDashboardProp
               <TrendingUp className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium text-white">Promedio Diario</span>
             </div>
-            <div className="text-2xl font-bold text-white">${costData.dailyAverage}</div>
-            <div className="text-sm text-green-400">-12% vs mes anterior</div>
+            <div className="text-2xl font-bold text-white">
+              ${costData?.dailyAverage || 0}
+            </div>
+            <div className="text-sm text-green-400">Tiempo real</div>
           </CardContent>
         </Card>
 
@@ -113,10 +104,10 @@ export const AdminConsolidatedDashboard: React.FC<AdminConsolidatedDashboardProp
               <span className="text-sm font-medium text-white">Uso Presupuesto</span>
             </div>
             <div className="text-2xl font-bold text-white">
-              {Math.round((costData.monthlySpent / costData.monthlyBudget) * 100)}%
+              {costData ? Math.round((costData.monthlySpent / costData.monthlyBudget) * 100) : 0}%
             </div>
             <Progress 
-              value={(costData.monthlySpent / costData.monthlyBudget) * 100} 
+              value={costData ? (costData.monthlySpent / costData.monthlyBudget) * 100 : 0} 
               className="mt-2" 
             />
           </CardContent>
@@ -128,45 +119,51 @@ export const AdminConsolidatedDashboard: React.FC<AdminConsolidatedDashboardProp
               <AlertTriangle className="w-4 h-4 text-yellow-500" />
               <span className="text-sm font-medium text-white">Alertas</span>
             </div>
-            <div className="text-2xl font-bold text-white">{costData.alerts.length}</div>
-            <div className="text-sm text-yellow-400">Requieren atención</div>
+            <div className="text-2xl font-bold text-white">
+              {costData?.alerts?.length || 0}
+            </div>
+            <div className="text-sm text-yellow-400">Activas</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Top Models Usage */}
+      {/* Top Models Usage with real data */}
       <Card className="bg-white/10 border-white/20">
         <CardHeader>
           <CardTitle className="text-white">Modelos Más Usados</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {costData.topModels.map((model, index) => (
+            {costData?.topModels?.length > 0 ? costData.topModels.map((model: any, index: number) => (
               <div key={model.name} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                 <div>
                   <div className="text-white font-medium">{model.name}</div>
                   <div className="text-sm text-gray-400">{model.usage.toLocaleString()} tokens</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-white font-bold">${model.cost}</div>
+                  <div className="text-white font-bold">${model.cost.toFixed(2)}</div>
                   <Badge variant="outline" className="text-xs">
                     #{index + 1}
                   </Badge>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center text-gray-400 py-4">
+                No hay datos de modelos disponibles
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Alerts */}
+      {/* Alerts with real data */}
       <Card className="bg-white/10 border-white/20">
         <CardHeader>
           <CardTitle className="text-white">Alertas de Costos</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {costData.alerts.map((alert, index) => (
+            {costData?.alerts?.length > 0 ? costData.alerts.map((alert: any, index: number) => (
               <div key={index} className={`flex items-center gap-3 p-3 rounded-lg ${
                 alert.type === 'warning' ? 'bg-yellow-500/10 border border-yellow-500/30' :
                 'bg-blue-500/10 border border-blue-500/30'
@@ -176,7 +173,11 @@ export const AdminConsolidatedDashboard: React.FC<AdminConsolidatedDashboardProp
                 }`} />
                 <span className="text-white">{alert.message}</span>
               </div>
-            ))}
+            )) : (
+              <div className="text-center text-gray-400 py-4">
+                No hay alertas activas
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -341,6 +342,20 @@ export const AdminConsolidatedDashboard: React.FC<AdminConsolidatedDashboardProp
   );
 
   const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded-lg" />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     switch (currentMode) {
       case 'cost':
         return renderCostMode();
