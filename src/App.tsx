@@ -11,6 +11,8 @@ import { BackendExploitationDashboard } from '@/components/backend/BackendExploi
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCenter';
 import { PlanInteligenteWrapper } from '@/components/plan/modern/PlanInteligenteWrapper';
+import { QualityDashboard } from '@/components/quality/QualityDashboard';
+import { EvaluationBank } from '@/components/evaluations/EvaluationBank';
 
 const App: React.FC = () => {
   return (
@@ -27,6 +29,12 @@ const App: React.FC = () => {
             
             {/* Plan Inteligente */}
             <Route path="/plan" element={<PlanInteligenteWrapper />} />
+            
+            {/* Sistema de Calidad */}
+            <Route path="/calidad" element={<QualityDashboard />} />
+            
+            {/* Banco de Evaluaciones */}
+            <Route path="/banco-evaluaciones" element={<EvaluationBank />} />
             
             {/* Panel de Administración */}
             <Route path="/admin" element={<AdminDashboard />} />
@@ -46,7 +54,7 @@ const App: React.FC = () => {
             <Route path="/reforzamiento" element={<Navigate to="/backend" replace />} />
             <Route path="/entrenamiento" element={<Navigate to="/lectoguia" replace />} />
             <Route path="/contenido" element={<Navigate to="/lectoguia" replace />} />
-            <Route path="/evaluaciones" element={<Navigate to="/diagnostico" replace />} />
+            <Route path="/evaluaciones" element={<Navigate to="/banco-evaluaciones" replace />} />
             <Route path="/analisis" element={<Navigate to="/dashboard" replace />} />
             <Route path="/simulaciones" element={<Navigate to="/diagnostico" replace />} />
             

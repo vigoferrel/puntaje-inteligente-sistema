@@ -16,7 +16,9 @@ import {
   Users,
   Settings,
   Zap,
-  MapPin
+  MapPin,
+  Shield,
+  Database
 } from 'lucide-react';
 
 export const OptimizedDashboard: React.FC = () => {
@@ -45,6 +47,16 @@ export const OptimizedDashboard: React.FC = () => {
       priority: 'high'
     },
     {
+      id: 'calidad',
+      title: 'Sistema de Calidad',
+      description: 'Garantía de excelencia educativa',
+      icon: Shield,
+      path: '/calidad',
+      color: 'from-green-600 to-emerald-700',
+      badge: 'Garantizado',
+      priority: 'high'
+    },
+    {
       id: 'lectoguia',
       title: 'LectoGuía IA',
       description: 'Sistema de comprensión lectora con IA',
@@ -52,6 +64,15 @@ export const OptimizedDashboard: React.FC = () => {
       path: '/lectoguia',
       color: 'from-blue-600 to-blue-700',
       badge: 'IA Avanzada'
+    },
+    {
+      id: 'banco-evaluaciones',
+      title: 'Banco de Evaluaciones',
+      description: 'Biblioteca completa de evaluaciones PAES',
+      icon: Database,
+      path: '/banco-evaluaciones',
+      color: 'from-cyan-600 to-blue-700',
+      badge: '722 Evaluaciones'
     },
     {
       id: 'diagnostico',
@@ -145,7 +166,7 @@ export const OptimizedDashboard: React.FC = () => {
             <Zap className="w-6 h-6 text-yellow-400" />
             Herramientas Principales
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {priorityTools.map((tool, index) => (
               <motion.div
                 key={tool.id}
@@ -245,7 +266,7 @@ export const OptimizedDashboard: React.FC = () => {
                 <div className="text-sm text-gray-300">Sistema</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">8</div>
+                <div className="text-2xl font-bold text-blue-400">10</div>
                 <div className="text-sm text-gray-300">Herramientas</div>
               </div>
               <div className="text-center">
