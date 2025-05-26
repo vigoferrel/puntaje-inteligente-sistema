@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +18,8 @@ import {
   BarChart3,
   Sparkles,
   BookOpen,
-  Calendar
+  Calendar,
+  Database
 } from 'lucide-react';
 
 export const OptimizedDashboard: React.FC = () => {
