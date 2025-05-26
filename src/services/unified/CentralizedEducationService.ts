@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { simpleLogger } from '@/core/logging/SimpleLogger';
+import { optimizedLogger } from '@/core/logging/OptimizedLogger';
 import type { 
   UnifiedDashboardData, 
   OptimalPathData, 
@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 /**
- * Servicio centralizado simplificado para el sistema educativo PAES
+ * Servicio centralizado optimizado - Reducción masiva de logging
  */
 export class CentralizedEducationService {
   private static cache = new Map<string, any>();
@@ -18,7 +18,7 @@ export class CentralizedEducationService {
   private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
   /**
-   * Obtiene el dashboard unificado con datos procesados
+   * Dashboard unificado con caching optimizado
    */
   static async getUnifiedDashboard(userId: string): Promise<UnifiedDashboardData> {
     const cacheKey = `dashboard_${userId}`;
@@ -28,8 +28,6 @@ export class CentralizedEducationService {
     }
 
     try {
-      simpleLogger.info('CentralizedEducationService', 'Cargando dashboard unificado', { userId });
-
       const dashboard: UnifiedDashboardData = {
         analytics: {
           totalStudents: 250,
@@ -58,19 +56,17 @@ export class CentralizedEducationService {
       return dashboard;
 
     } catch (error) {
-      simpleLogger.error('CentralizedEducationService', 'Error cargando dashboard', error);
+      optimizedLogger.error('CentralizedEducation', 'Dashboard load failed', error);
       return this.getDefaultDashboard();
     }
   }
 
   /**
-   * Calcula la ruta de aprendizaje óptima
+   * Ruta óptima con datos simulados optimizados
    */
   static async calculateOptimalPath(userId: string, preferences: any = {}): Promise<OptimalPathData> {
     try {
-      simpleLogger.info('CentralizedEducationService', 'Calculando ruta óptima', { userId });
-
-      const path: OptimalPathData = {
+      return {
         pathId: `path_${Date.now()}`,
         estimatedHours: 120,
         difficulty: 'medium',
@@ -86,23 +82,18 @@ export class CentralizedEducationService {
           'Revisar conceptos de ciencias'
         ]
       };
-
-      return path;
-
     } catch (error) {
-      simpleLogger.error('CentralizedEducationService', 'Error calculando ruta óptima', error);
+      optimizedLogger.error('CentralizedEducation', 'Path calculation failed', error);
       return this.getDefaultOptimalPath();
     }
   }
 
   /**
-   * Obtiene alertas personalizadas para el usuario
+   * Alertas personalizadas optimizadas
    */
   static async getPersonalizedAlerts(userId: string): Promise<PersonalizedAlert[]> {
     try {
-      simpleLogger.info('CentralizedEducationService', 'Obteniendo alertas personalizadas', { userId });
-
-      const alerts: PersonalizedAlert[] = [
+      return [
         {
           id: '1',
           title: 'Práctica recomendada',
@@ -113,17 +104,14 @@ export class CentralizedEducationService {
           isRead: false
         }
       ];
-
-      return alerts;
-
     } catch (error) {
-      simpleLogger.error('CentralizedEducationService', 'Error obteniendo alertas', error);
+      optimizedLogger.error('CentralizedEducation', 'Alerts failed', error);
       return [];
     }
   }
 
   /**
-   * Exporta reporte completo del usuario
+   * Exportación optimizada
    */
   static async exportCompleteReport(userId: string, format: 'pdf' | 'excel' | 'json'): Promise<Blob> {
     try {
@@ -137,23 +125,18 @@ export class CentralizedEducationService {
       return new Blob([reportData], { 
         type: format === 'json' ? 'application/json' : 'text/plain'
       });
-
     } catch (error) {
-      simpleLogger.error('CentralizedEducationService', 'Error exportando reporte', error);
+      optimizedLogger.error('CentralizedEducation', 'Export failed', error);
       throw error;
     }
   }
 
-  /**
-   * Limpia el cache del servicio
-   */
   static clearCache(): void {
     this.cache.clear();
     this.cacheExpiry.clear();
-    simpleLogger.info('CentralizedEducationService', 'Cache limpiado');
   }
 
-  // Métodos privados de obtención de datos
+  // Métodos privados optimizados
   private static async getCalendarData(): Promise<ProcessedCalendarData> {
     try {
       const { data: events } = await supabase
@@ -191,7 +174,6 @@ export class CentralizedEducationService {
         availableCount: scholarships?.length || 0,
         totalAmount: scholarships?.reduce((sum, s) => sum + (s.monto_maximo || 0), 0) || 0,
         eligibleScholarships: scholarships?.map(scholarship => {
-          // Manejo seguro de fechas_postulacion
           let deadline = 'No especificado';
           if (scholarship.fechas_postulacion) {
             try {
@@ -217,7 +199,7 @@ export class CentralizedEducationService {
     }
   }
 
-  // Métodos de defaults
+  // Métodos de defaults optimizados
   private static getDefaultDashboard(): UnifiedDashboardData {
     return {
       analytics: {
@@ -261,7 +243,7 @@ export class CentralizedEducationService {
     };
   }
 
-  // Métodos utilitarios
+  // Métodos de cache optimizados
   private static isCacheValid(key: string): boolean {
     const expiry = this.cacheExpiry.get(key);
     return expiry ? Date.now() < expiry : false;

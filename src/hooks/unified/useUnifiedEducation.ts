@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { CentralizedEducationService } from '@/services/unified/CentralizedEducationService';
-import { simpleLogger } from '@/core/logging/SimpleLogger';
+import { optimizedLogger } from '@/core/logging/OptimizedLogger';
 import type { UnifiedDashboardData, OptimalPathData, PersonalizedAlert } from '@/services/unified/types';
 
 interface UseUnifiedEducationReturn {
@@ -11,23 +11,22 @@ interface UseUnifiedEducationReturn {
   isLoading: boolean;
   error: string | null;
   
-  // Actions
+  // Actions optimizadas
   loadDashboard: () => Promise<void>;
   calculateOptimalPath: (preferences?: any) => Promise<void>;
   refreshAlerts: () => Promise<void>;
   exportReport: (format: 'pdf' | 'excel' | 'json') => Promise<Blob | null>;
   clearCache: () => void;
   
-  // Stats
+  // Stats mínimas
   stats: {
     lastUpdated: Date | null;
-    cacheHits: number;
     totalRequests: number;
   };
 }
 
 /**
- * Hook unificado simplificado para el sistema educativo
+ * Hook unificado optimizado - Logging mínimo, performance mejorada
  */
 export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn => {
   const [dashboard, setDashboard] = useState<UnifiedDashboardData | null>(null);
@@ -37,18 +36,15 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     lastUpdated: null as Date | null,
-    cacheHits: 0,
     totalRequests: 0
   });
 
   const updateStats = useCallback((operation: string) => {
     setStats(prev => ({
-      ...prev,
       totalRequests: prev.totalRequests + 1,
       lastUpdated: new Date()
     }));
-    simpleLogger.info('useUnifiedEducation', `Operación ejecutada: ${operation}`, { userId });
-  }, [userId]);
+  }, []);
 
   const loadDashboard = useCallback(async () => {
     if (!userId) return;
@@ -64,7 +60,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error cargando dashboard';
       setError(errorMessage);
-      simpleLogger.error('useUnifiedEducation', 'Error en loadDashboard', err);
+      optimizedLogger.error('useUnifiedEducation', 'Dashboard load failed', err);
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +80,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error calculando ruta óptima';
       setError(errorMessage);
-      simpleLogger.error('useUnifiedEducation', 'Error en calculateOptimalPath', err);
+      optimizedLogger.error('useUnifiedEducation', 'Path calculation failed', err);
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +95,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
       updateStats('refreshAlerts');
       
     } catch (err) {
-      simpleLogger.error('useUnifiedEducation', 'Error refrescando alertas', err);
+      optimizedLogger.error('useUnifiedEducation', 'Alerts refresh failed', err);
     }
   }, [userId, updateStats]);
 
@@ -112,7 +108,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
       return blob;
       
     } catch (err) {
-      simpleLogger.error('useUnifiedEducation', 'Error exportando reporte', err);
+      optimizedLogger.error('useUnifiedEducation', 'Export failed', err);
       return null;
     }
   }, [userId, updateStats]);
@@ -120,14 +116,17 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
   const clearCache = useCallback(() => {
     CentralizedEducationService.clearCache();
     updateStats('clearCache');
-    simpleLogger.info('useUnifiedEducation', 'Cache limpiado por usuario');
   }, [updateStats]);
 
-  // Carga inicial automática
+  // Carga inicial automática con debounce
   useEffect(() => {
     if (userId) {
-      loadDashboard();
-      refreshAlerts();
+      const timer = setTimeout(() => {
+        loadDashboard();
+        refreshAlerts();
+      }, 100); // Micro-delay para evitar renders múltiples
+
+      return () => clearTimeout(timer);
     }
   }, [userId, loadDashboard, refreshAlerts]);
 
