@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/core/logging/SystemLogger';
 import { TPAESPrueba, TPAESHabilidad } from '@/types/system-types';
@@ -27,7 +26,6 @@ interface InstitutionalMetrics {
   subjectPerformance: Record<string, number>;
   toolUsage: Record<string, number>;
   timestamp: string;
-  [key: string]: any; // Index signature for Json compatibility
 }
 
 interface ParentReport {
@@ -59,7 +57,7 @@ export class InstitutionalAnalyticsEngine {
 
       const metrics = await this.calculateInstitutionalMetrics(students, exercises, progress);
       
-      // Almacenar métricas con Json-compatible data
+      // Almacenar métricas con datos compatibles con Json
       await this.storeInstitutionalMetrics(institutionId, metrics);
       
       return metrics;
@@ -250,12 +248,24 @@ export class InstitutionalAnalyticsEngine {
     metrics: InstitutionalMetrics
   ): Promise<void> {
     try {
+      // Convertir a formato Json compatible
+      const jsonCompatibleMetrics = {
+        totalStudents: metrics.totalStudents,
+        activeStudents: metrics.activeStudents,
+        averageEngagement: metrics.averageEngagement,
+        overallProgress: metrics.overallProgress,
+        riskDistribution: metrics.riskDistribution,
+        subjectPerformance: metrics.subjectPerformance,
+        toolUsage: metrics.toolUsage,
+        timestamp: metrics.timestamp
+      };
+
       const { error } = await supabase
         .from('system_metrics')
         .insert({
           metric_type: 'institutional_analytics',
           metric_value: metrics.totalStudents,
-          context: metrics as any, // Cast to any for Json compatibility
+          context: jsonCompatibleMetrics,
           user_id: institutionId
         });
 
@@ -451,6 +461,19 @@ export class InstitutionalAnalyticsEngine {
    */
   private static async notifyParent(parentId: string, report: ParentReport): Promise<void> {
     try {
+      // Convertir reporte a formato Json compatible
+      const jsonCompatibleReport = {
+        studentId: report.studentId,
+        parentId: report.parentId,
+        weeklyProgress: report.weeklyProgress,
+        exercisesCompleted: report.exercisesCompleted,
+        timeSpent: report.timeSpent,
+        strongSubjects: report.strongSubjects,
+        improvementAreas: report.improvementAreas,
+        recommendations: report.recommendations,
+        nextGoals: report.nextGoals
+      };
+
       const { error } = await supabase
         .from('user_notifications')
         .insert({
@@ -458,9 +481,7 @@ export class InstitutionalAnalyticsEngine {
           notification_type: 'parent_report',
           title: 'Reporte Semanal de Progreso',
           message: `Progreso semanal: ${report.weeklyProgress.toFixed(1)}%`,
-          action_data: {
-            reportData: report
-          }
+          action_data: jsonCompatibleReport
         });
 
       if (error) {
