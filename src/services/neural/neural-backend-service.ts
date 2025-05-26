@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface BattleSession {
@@ -135,7 +136,10 @@ export class NeuralBackendService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(battle => ({
+      ...battle,
+      status: battle.status as BattleSession['status']
+    }));
   }
 
   static async getUserBattles(userId: string): Promise<BattleSession[]> {
@@ -146,7 +150,10 @@ export class NeuralBackendService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(battle => ({
+      ...battle,
+      status: battle.status as BattleSession['status']
+    }));
   }
 
   // Achievement Services
@@ -174,7 +181,10 @@ export class NeuralBackendService {
       .single();
 
     if (error) throw error;
-    return data as Achievement;
+    return {
+      ...data,
+      rarity: data.rarity as Achievement['rarity']
+    };
   }
 
   static async getUserAchievements(userId: string): Promise<Achievement[]> {
@@ -185,7 +195,10 @@ export class NeuralBackendService {
       .order('unlocked_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as Achievement[];
+    return (data || []).map(achievement => ({
+      ...achievement,
+      rarity: achievement.rarity as Achievement['rarity']
+    }));
   }
 
   // Notification Services
@@ -209,7 +222,10 @@ export class NeuralBackendService {
       .single();
 
     if (error) throw error;
-    return data as NeuralNotification;
+    return {
+      ...data,
+      priority: data.priority as NeuralNotification['priority']
+    };
   }
 
   static async getUserNotifications(userId: string, unreadOnly = false): Promise<NeuralNotification[]> {
@@ -225,7 +241,10 @@ export class NeuralBackendService {
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as NeuralNotification[];
+    return (data || []).map(notification => ({
+      ...notification,
+      priority: notification.priority as NeuralNotification['priority']
+    }));
   }
 
   static async markNotificationAsRead(notificationId: string): Promise<void> {
@@ -333,7 +352,10 @@ export class NeuralBackendService {
           table: 'user_notifications',
           filter: `user_id=eq.${userId}`
         },
-        (payload) => callback(payload.new as NeuralNotification)
+        (payload) => callback({
+          ...payload.new,
+          priority: payload.new.priority as NeuralNotification['priority']
+        } as NeuralNotification)
       )
       .subscribe();
   }
@@ -349,7 +371,10 @@ export class NeuralBackendService {
           table: 'battle_sessions',
           filter: `id=eq.${battleId}`
         },
-        (payload) => callback(payload.new as BattleSession)
+        (payload) => callback({
+          ...payload.new,
+          status: payload.new.status as BattleSession['status']
+        } as BattleSession)
       )
       .subscribe();
   }
