@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIntersectional } from '@/contexts/IntersectionalProvider';
 import { useUnifiedState } from '@/hooks/useUnifiedState';
 import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
-import { UnifiedNavigationCore } from '@/components/navigation/UnifiedNavigationCore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,9 @@ import {
   Award,
   Clock,
   BarChart3,
-  Sparkles
+  Sparkles,
+  BookOpen,
+  Calendar
 } from 'lucide-react';
 
 interface OptimizedDashboardProps {
@@ -67,6 +68,38 @@ export const OptimizedDashboard: React.FC<OptimizedDashboardProps> = ({
   const handleViewChange = useCallback((view: 'overview' | 'lectoguia' | 'navigation') => {
     setSelectedView(view);
   }, []);
+
+  // Navegación simple sin componente externo
+  const renderSimpleNavigation = () => (
+    <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
+      <CardHeader>
+        <CardTitle className="text-cyan-400 flex items-center gap-2">
+          <Target className="w-5 h-5" />
+          Navegación Rápida
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { tool: 'diagnostico', label: 'Diagnóstico', icon: Brain, color: 'blue' },
+            { tool: 'lectoguia', label: 'LectoGuía', icon: BookOpen, color: 'green' },
+            { tool: 'calendario', label: 'Calendario', icon: Calendar, color: 'purple' },
+            { tool: 'ejercicios', label: 'Ejercicios', icon: Target, color: 'orange' }
+          ].map((item) => (
+            <Button
+              key={item.tool}
+              onClick={() => handleNavigation(item.tool)}
+              className={`flex flex-col items-center gap-2 h-20 bg-${item.color}-600/20 hover:bg-${item.color}-600/30 border-${item.color}-500/30`}
+              variant="outline"
+            >
+              <item.icon className={`w-6 h-6 text-${item.color}-400`} />
+              <span className="text-sm text-white">{item.label}</span>
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
@@ -217,12 +250,7 @@ export const OptimizedDashboard: React.FC<OptimizedDashboardProps> = ({
               <LectoGuiaUnified onNavigateToTool={handleNavigation} />
             )}
 
-            {selectedView === 'navigation' && (
-              <UnifiedNavigationCore 
-                onNavigate={handleNavigation}
-                currentTool={currentTool}
-              />
-            )}
+            {selectedView === 'navigation' && renderSimpleNavigation()}
           </motion.div>
         </AnimatePresence>
       </motion.div>
