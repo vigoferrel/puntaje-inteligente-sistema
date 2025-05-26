@@ -14,6 +14,7 @@ interface LectoGuiaStats {
   timeSpent: number;
   currentStreak: number;
   totalSessions: number;
+  totalMessages: number;
 }
 
 export const useLectoGuiaSimplified = () => {
@@ -35,7 +36,7 @@ export const useLectoGuiaSimplified = () => {
   const {
     messages,
     isTyping,
-    handleSendMessage
+    sendMessage: handleSendMessage
   } = useLectoGuiaChat();
 
   /**
@@ -103,7 +104,8 @@ export const useLectoGuiaSimplified = () => {
       averageScore: exerciseStats?.averageQuality || 0,
       timeSpent: 0, // Calcular desde sesiones
       currentStreak: 0, // Obtener de progreso de usuario
-      totalSessions: messages.length || 0
+      totalSessions: messages.length || 0,
+      totalMessages: messages.length || 0
     };
   }, [exerciseStats, messages.length]);
 

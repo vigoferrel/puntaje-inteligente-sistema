@@ -50,7 +50,8 @@ export const useRealDashboardData = () => {
   const [calendarData, setCalendarData] = useState<any>({ events: [] });
   const [lectoGuiaData, setLectoGuiaData] = useState<any>({
     enabled: true,
-    sessionCount: 0
+    sessionCount: 0,
+    totalMessages: 0
   });
 
   const loadData = async () => {

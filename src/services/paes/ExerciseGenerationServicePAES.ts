@@ -250,19 +250,22 @@ EJEMPLO ESTRUCTURA:
       
       if (!response) return null;
       
+      // Type-safe access to response properties
+      const responseData = response as any;
+      
       const exercise: Exercise = {
         id: `paes-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        question: response.question || '',
-        text: response.text || '',
-        options: response.options || [],
-        correctAnswer: response.correctAnswer || '',
-        explanation: response.explanation || '',
+        question: responseData.question || '',
+        text: responseData.text || '',
+        options: responseData.options || [],
+        correctAnswer: responseData.correctAnswer || '',
+        explanation: responseData.explanation || '',
         skill: config.skill,
         prueba: config.prueba,
         difficulty: config.difficulty,
-        hasVisualContent: response.hasVisualContent || false,
-        visualType: response.visualType || undefined,
-        estimatedTime: response.estimatedTime || 120,
+        hasVisualContent: responseData.hasVisualContent || false,
+        visualType: responseData.visualType || undefined,
+        estimatedTime: responseData.estimatedTime || 120,
         metadata: {
           source: 'ai_paes_specialized',
           generatedAt: new Date().toISOString(),
@@ -306,12 +309,15 @@ EJEMPLO ESTRUCTURA:
           }
         });
         
-        if (visualResponse?.description) {
-          exercise.graphData = {
-            description: visualResponse.description,
-            type: exercise.visualType || 'graph',
-            elements: visualResponse.elements || []
-          };
+        if (visualResponse) {
+          const visualData = visualResponse as any;
+          if (visualData.description) {
+            exercise.graphData = {
+              description: visualData.description,
+              type: exercise.visualType || 'graph',
+              elements: visualData.elements || []
+            };
+          }
         }
       }
       
