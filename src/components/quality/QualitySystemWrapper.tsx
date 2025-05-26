@@ -327,7 +327,7 @@ export const QualitySystemWrapper: React.FC = () => {
                     </div>
                     <div>
                       <span className="text-gray-400">Crítico:</span>
-                      <span className="text-red-400 ml-2">< 75%</span>
+                      <span className="text-red-400 ml-2">&lt; 75%</span>
                     </div>
                   </div>
                 </div>
