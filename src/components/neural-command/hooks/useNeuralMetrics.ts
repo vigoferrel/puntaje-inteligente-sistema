@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { useRealNeuralMetrics } from '@/hooks/useRealNeuralMetrics';
 
-// Updated legacy interface to match what the code expects
+// Legacy interface para compatibilidad
 interface NeuralMetrics {
   neural_efficiency: number;
   adaptive_learning_rate: number;
@@ -15,8 +15,7 @@ interface NeuralMetrics {
 }
 
 export const useNeuralMetrics = () => {
-  // Now redirects to real data hook
-  const { metrics, isLoading, error, getMetricForDimension, calculateMetrics } = useRealNeuralMetrics();
+  const { metrics, isLoading, error, getMetricForDimension, refetch } = useRealNeuralMetrics();
 
   // Legacy compatibility wrapper
   const systemVitals = useMemo(() => ({
@@ -47,6 +46,6 @@ export const useNeuralMetrics = () => {
     getMetricForDimension,
     isLoading,
     error,
-    refetch: calculateMetrics
+    refetch
   };
 };

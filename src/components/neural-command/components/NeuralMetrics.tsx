@@ -50,11 +50,11 @@ export const NeuralMetrics: React.FC<NeuralMetricsProps> = ({ metrics }) => {
       transition={{ duration: 0.8, delay: 0.2 }}
     >
       {metricConfigs.map((config, index) => {
-        const value = metrics[config.key];
+        const value = Math.round(metrics[config.key]);
         
         return (
           <motion.div
-            key={config.key}
+            key={String(config.key)}
             className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}

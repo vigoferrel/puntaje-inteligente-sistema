@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface BattleSession {
@@ -51,15 +50,31 @@ export interface NeuralNotification {
 export class NeuralBackendService {
   
   // Battle Mode Services
-  static async createBattleSession(battleData: Partial<BattleSession>): Promise<BattleSession> {
+  static async createBattleSession(battleData: {
+    creator_id: string;
+    battle_type?: string;
+    difficulty_level?: string;
+    subject_focus: string;
+    max_questions?: number;
+    time_limit_minutes?: number;
+    status?: string;
+  }): Promise<BattleSession> {
     const { data, error } = await supabase
       .from('battle_sessions')
-      .insert(battleData)
+      .insert({
+        creator_id: battleData.creator_id,
+        battle_type: battleData.battle_type || 'paes_duel',
+        difficulty_level: battleData.difficulty_level || 'intermediate',
+        subject_focus: battleData.subject_focus,
+        max_questions: battleData.max_questions || 10,
+        time_limit_minutes: battleData.time_limit_minutes || 15,
+        status: battleData.status || 'waiting'
+      })
       .select()
       .single();
     
     if (error) throw error;
-    return data;
+    return data as BattleSession;
   }
 
   static async joinBattle(battleId: string, userId: string): Promise<BattleSession> {
@@ -76,7 +91,7 @@ export class NeuralBackendService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as BattleSession;
   }
 
   static async updateBattleScore(battleId: string, userId: string, score: number): Promise<void> {
@@ -137,7 +152,16 @@ export class NeuralBackendService {
   // Achievement Services
   static async unlockAchievement(
     userId: string, 
-    achievementData: Omit<Achievement, 'id' | 'user_id' | 'unlocked_at'>
+    achievementData: {
+      achievement_type: string;
+      achievement_id: string;
+      title: string;
+      description?: string;
+      points_awarded: number;
+      rarity: 'common' | 'rare' | 'epic' | 'legendary';
+      category: string;
+      metadata?: any;
+    }
   ): Promise<Achievement> {
     const { data, error } = await supabase
       .from('user_achievements')
@@ -150,7 +174,7 @@ export class NeuralBackendService {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Achievement;
   }
 
   static async getUserAchievements(userId: string): Promise<Achievement[]> {
@@ -161,11 +185,20 @@ export class NeuralBackendService {
       .order('unlocked_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as Achievement[];
   }
 
   // Notification Services
-  static async createNotification(notificationData: Omit<NeuralNotification, 'id' | 'created_at'>): Promise<NeuralNotification> {
+  static async createNotification(notificationData: {
+    user_id: string;
+    notification_type: string;
+    title: string;
+    message: string;
+    action_data?: any;
+    is_read?: boolean;
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+    expires_at?: string;
+  }): Promise<NeuralNotification> {
     const { data, error } = await supabase
       .from('user_notifications')
       .insert({
@@ -176,7 +209,7 @@ export class NeuralBackendService {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as NeuralNotification;
   }
 
   static async getUserNotifications(userId: string, unreadOnly = false): Promise<NeuralNotification[]> {
@@ -192,7 +225,7 @@ export class NeuralBackendService {
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as NeuralNotification[];
   }
 
   static async markNotificationAsRead(notificationId: string): Promise<void> {
