@@ -1,250 +1,188 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
+import React from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useIntersectional } from '@/contexts/IntersectionalProvider';
-import { useUnifiedState } from '@/hooks/useUnifiedState';
-import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Brain, 
-  TrendingUp, 
-  Zap, 
   Target, 
-  Award,
-  Clock,
-  BarChart3,
-  Sparkles,
   BookOpen,
   Calendar,
-  Database
+  BarChart3,
+  Sparkles,
+  Users,
+  Settings
 } from 'lucide-react';
 
 export const OptimizedDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { isIntersectionalReady, neuralHealth, generateIntersectionalInsights } = useIntersectional();
-  const { systemMetrics, userProgress } = useUnifiedState();
-  
-  const [selectedView, setSelectedView] = useState<'overview' | 'lectoguia' | 'navigation'>('overview');
 
-  // Métricas en tiempo real consolidadas
-  const realTimeMetrics = useMemo(() => ({
-    neuralEfficiency: Math.round(neuralHealth.neural_efficiency),
-    adaptiveLearning: Math.round(neuralHealth.adaptive_learning_score),
-    userExperience: Math.round(neuralHealth.user_experience_harmony),
-    systemPerformance: Math.round((neuralHealth.neural_efficiency + neuralHealth.adaptive_learning_score + neuralHealth.user_experience_harmony) / 3),
-    streak: userProgress.streakDays,
-    studyTime: systemMetrics.todayStudyTime,
-    completedNodes: systemMetrics.completedNodes,
-    totalNodes: systemMetrics.totalNodes
-  }), [neuralHealth, userProgress, systemMetrics]);
+  const tools = [
+    {
+      id: 'lectoguia',
+      title: 'LectoGuía IA',
+      description: 'Sistema de comprensión lectora con IA',
+      icon: Brain,
+      path: '/lectoguia',
+      color: 'from-blue-600 to-blue-700',
+      badge: 'IA Avanzada'
+    },
+    {
+      id: 'diagnostico',
+      title: 'Diagnóstico Inteligente',
+      description: 'Sistema de evaluación adaptativa',
+      icon: Target,
+      path: '/diagnostico',
+      color: 'from-green-600 to-green-700',
+      badge: 'Adaptativo'
+    },
+    {
+      id: 'calendario',
+      title: 'Calendario Cinematográfico',
+      description: 'Planificación de estudios inteligente',
+      icon: Calendar,
+      path: '/calendario',
+      color: 'from-purple-600 to-purple-700',
+      badge: 'Planificación'
+    },
+    {
+      id: 'superpaes',
+      title: 'SuperPAES',
+      description: 'Sistema completo de preparación PAES',
+      icon: Sparkles,
+      path: '/superpaes',
+      color: 'from-yellow-600 to-orange-600',
+      badge: 'Completo'
+    },
+    {
+      id: 'backend',
+      title: 'Backend Dashboard',
+      description: 'Exploración de datos y métricas',
+      icon: BarChart3,
+      path: '/backend',
+      color: 'from-gray-600 to-gray-700',
+      badge: 'Datos'
+    },
+    {
+      id: 'admin',
+      title: 'Panel Administrativo',
+      description: 'Gestión y control de costos OpenRouter',
+      icon: Settings,
+      path: '/admin',
+      color: 'from-red-600 to-red-700',
+      badge: 'Admin'
+    }
+  ];
 
-  // Insights inteligentes
-  const smartInsights = useMemo(() => {
-    const insights = generateIntersectionalInsights();
-    return insights.slice(0, 3).map(insight => ({
-      ...insight,
-      priority: insight.level === 'excellent' ? 'low' : 'high',
-      icon: insight.level === 'excellent' ? Award : Target
-    }));
-  }, [generateIntersectionalInsights]);
-
-  // Navegación optimizada
-  const handleNavigation = useCallback((tool: string) => {
-    navigate(`/${tool}`);
-  }, [navigate]);
-
-  // Cambio de vista con animación
-  const handleViewChange = useCallback((view: 'overview' | 'lectoguia' | 'navigation') => {
-    setSelectedView(view);
-  }, []);
-
-  // Navegación simple sin componente externo
-  const renderSimpleNavigation = () => (
-    <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
-      <CardHeader>
-        <CardTitle className="text-cyan-400 flex items-center gap-2">
-          <Target className="w-5 h-5" />
-          Navegación Rápida
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { tool: 'diagnostico', label: 'Diagnóstico', icon: Brain, color: 'blue' },
-            { tool: 'lectoguia', label: 'LectoGuía', icon: BookOpen, color: 'green' },
-            { tool: 'calendario', label: 'Calendario', icon: Calendar, color: 'purple' }
-          ].map((item) => (
-            <Button
-              key={item.tool}
-              onClick={() => handleNavigation(item.tool)}
-              className={`flex flex-col items-center gap-2 h-20 bg-${item.color}-600/20 hover:bg-${item.color}-600/30 border-${item.color}-500/30`}
-              variant="outline"
-            >
-              <item.icon className={`w-6 h-6 text-${item.color}-400`} />
-              <span className="text-sm text-white">{item.label}</span>
-            </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto space-y-6"
+        className="max-w-7xl mx-auto space-y-8"
       >
-        {/* Header Principal */}
+        {/* Header */}
         <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Brain className="w-10 h-10 text-cyan-400" />
-                <div>
-                  <CardTitle className="text-white text-3xl">Dashboard PAES</CardTitle>
-                  <p className="text-cyan-300">Sistema de Aprendizaje PAES</p>
-                </div>
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Brain className="w-12 h-12 text-cyan-400" />
+              <div>
+                <CardTitle className="text-white text-4xl">Sistema PAES</CardTitle>
+                <p className="text-cyan-300 text-lg">Plataforma Integrada de Aprendizaje</p>
               </div>
-              
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className="text-green-400 border-green-400">
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  Neural: {realTimeMetrics.neuralEfficiency}%
-                </Badge>
-                <Badge variant="outline" className="text-purple-400 border-purple-400">
-                  <Zap className="w-4 h-4 mr-1" />
-                  Sistema: {realTimeMetrics.systemPerformance}%
-                </Badge>
-                {isIntersectionalReady && (
-                  <Badge variant="outline" className="text-cyan-400 border-cyan-400">
-                    <Brain className="w-4 h-4 mr-1" />
-                    Sistema Activo
-                  </Badge>
-                )}
-              </div>
+            </div>
+            
+            <div className="flex items-center justify-center gap-4">
+              <Badge variant="outline" className="text-green-400 border-green-400">
+                <Users className="w-4 h-4 mr-1" />
+                Usuario: {user?.email || 'Invitado'}
+              </Badge>
+              <Badge variant="outline" className="text-purple-400 border-purple-400">
+                <Sparkles className="w-4 h-4 mr-1" />
+                Sistema Activo
+              </Badge>
             </div>
           </CardHeader>
         </Card>
 
-        {/* Selector de Vista */}
-        <div className="flex justify-center">
-          <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/30 rounded-lg p-1">
-            <div className="flex gap-1">
-              {[
-                { id: 'overview', label: 'Vista General', icon: BarChart3 },
-                { id: 'lectoguia', label: 'LectoGuía IA', icon: Brain },
-                { id: 'navigation', label: 'Navegación', icon: Target }
-              ].map((view) => (
-                <Button
-                  key={view.id}
-                  onClick={() => handleViewChange(view.id as any)}
-                  variant={selectedView === view.id ? 'default' : 'ghost'}
-                  className={`${
-                    selectedView === view.id 
-                      ? 'bg-cyan-600 text-white' 
-                      : 'text-gray-400 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <view.icon className="w-4 h-4 mr-2" />
-                  {view.label}
-                </Button>
-              ))}
-            </div>
-          </div>
+        {/* Tools Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tools.map((tool, index) => (
+            <motion.div
+              key={tool.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="group"
+            >
+              <Card className="bg-black/40 backdrop-blur-xl border-white/20 hover:border-white/40 transition-all duration-300 h-full">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-xl bg-gradient-to-r ${tool.color}`}>
+                      <tool.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {tool.badge}
+                    </Badge>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
+                    {tool.title}
+                  </h3>
+                  <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+                    {tool.description}
+                  </p>
+                  
+                  <Button
+                    onClick={() => handleNavigation(tool.path)}
+                    className={`w-full bg-gradient-to-r ${tool.color} hover:opacity-90 transition-all duration-200`}
+                  >
+                    Acceder
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Contenido Principal */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedView}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {selectedView === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Métricas Principales */}
-                <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
-                  <CardContent className="p-6 text-center">
-                    <Brain className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                    <div className="text-3xl font-bold text-white">{realTimeMetrics.neuralEfficiency}%</div>
-                    <div className="text-sm text-cyan-300">Eficiencia Neural</div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-black/40 backdrop-blur-xl border-purple-500/30">
-                  <CardContent className="p-6 text-center">
-                    <TrendingUp className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-                    <div className="text-3xl font-bold text-white">{realTimeMetrics.adaptiveLearning}%</div>
-                    <div className="text-sm text-purple-300">Aprendizaje Adaptativo</div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-black/40 backdrop-blur-xl border-green-500/30">
-                  <CardContent className="p-6 text-center">
-                    <Award className="w-8 h-8 text-green-400 mx-auto mb-3" />
-                    <div className="text-3xl font-bold text-white">{realTimeMetrics.streak}</div>
-                    <div className="text-sm text-green-300">Días de Racha</div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-black/40 backdrop-blur-xl border-orange-500/30">
-                  <CardContent className="p-6 text-center">
-                    <Clock className="w-8 h-8 text-orange-400 mx-auto mb-3" />
-                    <div className="text-3xl font-bold text-white">{realTimeMetrics.studyTime}</div>
-                    <div className="text-sm text-orange-300">Minutos Hoy</div>
-                  </CardContent>
-                </Card>
-
-                {/* Insights Inteligentes */}
-                <Card className="md:col-span-2 lg:col-span-4 bg-black/40 backdrop-blur-xl border-cyan-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-cyan-400 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5" />
-                      Insights Inteligentes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-3 gap-4">
-                      {smartInsights.map((insight, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="p-4 bg-gray-800/50 rounded-lg"
-                        >
-                          <div className="flex items-start gap-3">
-                            <insight.icon className={`w-5 h-5 mt-1 ${
-                              insight.priority === 'high' ? 'text-red-400' : 'text-green-400'
-                            }`} />
-                            <div>
-                              <h4 className="font-medium text-white mb-1">{insight.title}</h4>
-                              <p className="text-sm text-gray-300">{insight.description}</p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+        {/* Quick Stats */}
+        <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Estado del Sistema
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400">Activo</div>
+                <div className="text-sm text-gray-300">Sistema</div>
               </div>
-            )}
-
-            {selectedView === 'lectoguia' && (
-              <LectoGuiaUnified onNavigateToTool={handleNavigation} />
-            )}
-
-            {selectedView === 'navigation' && renderSimpleNavigation()}
-          </motion.div>
-        </AnimatePresence>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400">6</div>
+                <div className="text-sm text-gray-300">Herramientas</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400">24/7</div>
+                <div className="text-sm text-gray-300">Disponibilidad</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-400">IA</div>
+                <div className="text-sm text-gray-300">Potenciado</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
     </div>
   );
