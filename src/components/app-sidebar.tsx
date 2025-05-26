@@ -27,7 +27,6 @@ import {
   Sparkles,
   Zap,
   TrendingUp,
-  Shield,
   GraduationCap,
   Calendar,
   Settings,
@@ -130,7 +129,6 @@ export function AppSidebar() {
   const currentPlan = useGlobalStore(state => state.currentPlan);
   const [showPAESSubjects, setShowPAESSubjects] = React.useState(false);
 
-  // Función simplificada para obtener estado de las fases - ahora todas están disponibles
   const getPhaseStatus = (phase: string) => {
     const stats = dashboardData.stats;
     switch (phase) {
@@ -171,27 +169,27 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar className="font-luxury border-r border-cyan-500/20 bg-black/90 backdrop-blur-xl">
-      <SidebarHeader className="p-6 border-b border-cyan-500/20">
+    <Sidebar className="font-luxury border-r border-premium-violet-500/20 premium-glass">
+      <SidebarHeader className="p-6 border-b border-premium-violet-500/20 premium-header">
         <motion.div 
           className="flex items-center gap-3"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-cyan-400 to-purple-500 shadow-lg shadow-cyan-500/30">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-premium-violet-500 to-emerald-premium-500 shadow-glow-violet">
             <GraduationCap className="h-4 w-4 text-white" />
           </div>
           <div>
-            <span className="text-lg font-semibold text-white tracking-wide">PAES Command</span>
-            <div className="text-xs text-cyan-400 font-light">Sistema IA</div>
+            <span className="text-lg font-semibold premium-text-glow">PAES Command</span>
+            <div className="text-xs text-emerald-premium-400 font-light">Sistema IA</div>
           </div>
         </motion.div>
       </SidebarHeader>
 
-      <SidebarContent className="px-4 py-2">
+      <SidebarContent className="px-4 py-2 scrollbar-premium">
         {/* Workflow Principal */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-medium text-cyan-400 px-2 py-3 flex items-center space-x-2 tracking-wide">
+          <SidebarGroupLabel className="text-xs font-medium text-premium-violet-400 px-2 py-3 flex items-center space-x-2 tracking-wide premium-gradient-text">
             <Sparkles className="w-3 h-3" />
             <span>Workflow de Aprendizaje</span>
           </SidebarGroupLabel>
@@ -213,19 +211,13 @@ export function AppSidebar() {
                         <NavLink 
                           to={item.url}
                           className={({ isActive }) =>
-                            `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
-                              isActive 
-                                ? isCoordinator
-                                  ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 border border-purple-500/30 shadow-lg shadow-purple-500/20"
-                                  : "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/20"
-                                : "text-gray-300 hover:text-white hover:bg-white/5"
-                            }`
+                            `premium-nav-item ${isActive ? 'active' : ''}`
                           }
                         >
                           <item.icon className="h-4 w-4" />
-                          <span className="flex-1">{item.title}</span>
+                          <span className="flex-1 text-contrast-high">{item.title}</span>
                           {item.badge && (
-                            <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 font-medium bg-purple-600 text-white">
+                            <Badge className="premium-badge text-xs px-1.5 py-0 h-4">
                               {item.badge}
                             </Badge>
                           )}
@@ -321,12 +313,12 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Materias PAES - Siempre visible */}
+        {/* Materias PAES */}
         <SidebarGroup>
           <Collapsible open={showPAESSubjects} onOpenChange={setShowPAESSubjects}>
-            <SidebarGroupLabel className="text-xs font-medium text-green-400 px-2 py-3">
+            <SidebarGroupLabel className="text-xs font-medium text-emerald-premium-400 px-2 py-3">
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 h-auto text-green-400 hover:text-green-300 font-medium tracking-wide">
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto text-emerald-premium-400 hover:text-emerald-premium-300 font-medium tracking-wide">
                   <div className="flex items-center space-x-2">
                     <Target className="w-3 h-3" />
                     <span>Materias PAES</span>
@@ -349,12 +341,12 @@ export function AppSidebar() {
                         <SidebarMenuButton asChild>
                           <NavLink 
                             to={subject.url}
-                            className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-all duration-300 text-gray-400 hover:text-white hover:bg-white/5"
+                            className="premium-nav-item text-xs"
                           >
                             <subject.icon className="h-3 w-3" />
                             <div className="flex-1">
-                              <div>{subject.name}</div>
-                              <div className="text-xs text-gray-500 font-light">{subject.nodes} nodos</div>
+                              <div className="text-contrast-high">{subject.name}</div>
+                              <div className="text-xs text-contrast-medium">{subject.nodes} nodos</div>
                             </div>
                           </NavLink>
                         </SidebarMenuButton>
@@ -368,25 +360,25 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-cyan-500/20">
+      <SidebarFooter className="p-4 border-t border-premium-violet-500/20 premium-header">
         <motion.div 
-          className="rounded-xl bg-gradient-to-r from-gray-900/80 via-cyan-900/30 to-purple-900/30 p-4 backdrop-blur-md border border-cyan-500/20"
+          className="premium-card p-4"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="text-xs font-medium text-cyan-300 flex items-center space-x-2 mb-2">
+          <div className="text-xs font-medium text-emerald-premium-400 flex items-center space-x-2 mb-2">
             <Brain className="w-3 h-3" />
             <span>Sistema Neural PAES</span>
           </div>
-          <div className="text-2xl font-bold text-white mb-1">277</div>
-          <div className="text-xs text-gray-400 font-light">nodos activos</div>
+          <div className="text-2xl font-bold text-contrast-high mb-1">277</div>
+          <div className="text-xs text-contrast-medium">nodos activos</div>
           
           <div className="flex gap-1 mt-3">
-            <Badge variant="default" className="text-xs px-2 py-0.5 bg-green-600 font-medium">
+            <Badge className="premium-badge text-xs">
               Sistema Activo
             </Badge>
-            <Badge className="text-xs px-2 py-0.5 bg-cyan-600 font-medium">
+            <Badge className="premium-badge text-xs">
               IA Conectada
             </Badge>
           </div>
