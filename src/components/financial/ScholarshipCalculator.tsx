@@ -108,7 +108,7 @@ export const ScholarshipCalculator: React.FC<ScholarshipCalculatorProps> = ({ us
                 <SelectContent>
                   <SelectItem value="low">Bajos (≤ $400.000)</SelectItem>
                   <SelectItem value="middle">Medios ($400.000 - $1.200.000)</SelectItem>
-                  <SelectItem value="high">Altos (> $1.200.000)</SelectItem>
+                  <SelectItem value="high">Altos (&gt; $1.200.000)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
