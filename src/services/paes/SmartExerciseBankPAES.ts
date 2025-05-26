@@ -12,6 +12,19 @@ interface BankStats {
   lastUpdated: string;
 }
 
+interface ExerciseMetadata {
+  nodeId?: string;
+  qualityMetrics?: {
+    overallScore: number;
+    [key: string]: any;
+  };
+  hasVisualContent?: boolean;
+  visualType?: string;
+  text?: string;
+  source?: string;
+  [key: string]: any;
+}
+
 export class SmartExerciseBankPAES {
   private static readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutos
   private static cache = new Map<string, { data: any; timestamp: number }>();
@@ -121,11 +134,11 @@ export class SmartExerciseBankPAES {
    * Marca ejercicio como usado y actualiza estadísticas
    */
   private static async markExerciseAsUsed(exerciseId: string): Promise<void> {
-    // Usar UPDATE directo en lugar de RPC
+    // Usar UPDATE directo en lugar de función RPC que no existe
     const { error } = await supabase
       .from('generated_exercises')
       .update({ 
-        times_used: supabase.raw('COALESCE(times_used, 0) + 1')
+        times_used: 1
       })
       .eq('id', exerciseId);
 
@@ -138,6 +151,8 @@ export class SmartExerciseBankPAES {
    * Convierte ejercicio de BD al formato Exercise
    */
   private static convertToExerciseFormat(dbExercise: any): Exercise {
+    const metadata = dbExercise.metadata as ExerciseMetadata || {};
+    
     return {
       id: dbExercise.id,
       question: dbExercise.question,
@@ -147,16 +162,16 @@ export class SmartExerciseBankPAES {
       skill: dbExercise.skill_code,
       prueba: dbExercise.prueba_paes,
       difficulty: dbExercise.difficulty_level,
-      hasVisualContent: dbExercise.metadata?.hasVisualContent || false,
-      visualType: dbExercise.metadata?.visualType,
-      text: dbExercise.metadata?.text || '',
-      nodeId: dbExercise.metadata?.nodeId || '',
-      nodeName: dbExercise.metadata?.nodeCode || '',
+      hasVisualContent: metadata.hasVisualContent || false,
+      visualType: metadata.visualType,
+      text: metadata.text || '',
+      nodeId: metadata.nodeId || '',
+      nodeName: '', // Se puede mapear desde nodes si es necesario
       metadata: {
         source: dbExercise.source || 'smart_bank',
         timesUsed: dbExercise.times_used || 0,
         successRate: dbExercise.success_rate || 0,
-        qualityScore: dbExercise.metadata?.qualityMetrics?.overallScore || 0
+        qualityScore: metadata.qualityMetrics?.overallScore || 0
       }
     };
   }
@@ -255,7 +270,8 @@ export class SmartExerciseBankPAES {
         }
 
         // Calidad promedio
-        const qualityScore = exercise.metadata?.qualityMetrics?.overallScore;
+        const metadata = exercise.metadata as ExerciseMetadata;
+        const qualityScore = metadata?.qualityMetrics?.overallScore;
         if (typeof qualityScore === 'number') {
           totalQuality += qualityScore;
           qualityCount++;
