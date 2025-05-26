@@ -7,46 +7,12 @@ import {
 } from 'recharts';
 import { 
   Users, TrendingUp, AlertTriangle, Settings, Download, Eye, 
-  Server, Activity, Shield, Bell, Target, Award 
+  Server, Activity, Shield, Bell, Target, Award, DollarSign 
 } from 'lucide-react';
-import { useDashboardStats } from '@/hooks/use-dashboard-stats';
+import { useAdminAnalytics } from '@/hooks/useAdminAnalytics';
 
 export const AdminModernDashboard: React.FC = () => {
-  const { loading, stats } = useDashboardStats();
-
-  // Mock admin data - in real app this would come from your admin analytics
-  const systemMetrics = {
-    totalUsers: 15847,
-    activeUsers: 12453,
-    completionRate: 87.2,
-    avgScore: 673,
-    totalExams: 45672,
-    systemHealth: 98.5,
-    serverLoad: 34.2,
-    responseTime: 145
-  };
-
-  const usersByGrade = [
-    { grade: '1° Medio', count: 2847, active: 2234, percentage: 78.5 },
-    { grade: '2° Medio', count: 3521, active: 2876, percentage: 81.7 },
-    { grade: '3° Medio', count: 4982, active: 4123, percentage: 82.8 },
-    { grade: '4° Medio', count: 4497, active: 3220, percentage: 71.6 }
-  ];
-
-  const skillsPerformance = [
-    { skill: 'Competencia Lectora', avg: 678, trend: '+3.2%', students: 8342 },
-    { skill: 'Matemática M1', avg: 642, trend: '+1.8%', students: 7234 },
-    { skill: 'Matemática M2', avg: 598, trend: '+2.1%', students: 6891 },
-    { skill: 'Historia', avg: 656, trend: '+4.1%', students: 5672 },
-    { skill: 'Ciencias', avg: 671, trend: '+2.9%', students: 6234 }
-  ];
-
-  const systemAlerts = [
-    { type: 'warning', title: 'Servidor de Simulacros', message: 'Latencia elevada (450ms)', priority: 'medium' },
-    { type: 'success', title: 'Engagement Estudiantil', message: '+15% esta semana', priority: 'low' },
-    { type: 'info', title: 'Actualización Pendiente', message: 'Nuevos nodos de Historia disponibles', priority: 'low' },
-    { type: 'error', title: 'Base de Datos', message: 'Conexión inestable detectada', priority: 'high' }
-  ];
+  const { analytics, isLoading, error } = useAdminAnalytics();
 
   const AdminMetricCard = ({ 
     title, 
@@ -96,7 +62,7 @@ export const AdminModernDashboard: React.FC = () => {
     </motion.div>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-8">
         <div className="animate-pulse space-y-6">
@@ -107,6 +73,16 @@ export const AdminModernDashboard: React.FC = () => {
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (error || !analytics) {
+    return (
+      <div className="text-center py-12">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar métricas</h3>
+        <p className="text-gray-600">{error || 'No se pudieron cargar los datos'}</p>
       </div>
     );
   }
@@ -133,61 +109,63 @@ export const AdminModernDashboard: React.FC = () => {
               <p className="text-gray-300 text-lg">Sistema PAES Pro • Monitoreo en tiempo real</p>
               <div className="flex items-center text-gray-400 mt-1">
                 <Activity className="w-4 h-4 mr-2" />
-                <span>277 nodos activos • 15.8k usuarios registrados</span>
+                <span>OpenRouter + Gemini Flash 1.5 • {analytics.topUsers.length} usuarios activos</span>
               </div>
             </div>
           </div>
           <div className="text-right">
             <div className="flex items-center justify-end mb-2">
-              <div className="w-3 h-3 bg-green-400 rounded-full mr-2 animate-pulse" />
-              <span className="text-2xl font-bold text-green-400">{systemMetrics.systemHealth}%</span>
+              <DollarSign className="w-6 h-6 mr-2 text-green-400" />
+              <span className="text-2xl font-bold text-green-400">
+                ${analytics.monthlyMetrics.totalCost.toFixed(2)}
+              </span>
             </div>
-            <div className="text-gray-300">Salud del Sistema</div>
+            <div className="text-gray-300">Costo Mensual</div>
             <div className="text-sm text-gray-400 mt-1">
-              {systemMetrics.serverLoad}% carga • {systemMetrics.responseTime}ms
+              {analytics.monthlyMetrics.totalRequests} requests totales
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Admin Metrics */}
+      {/* Admin Metrics con datos reales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <AdminMetricCard
-          title="Usuarios Totales"
-          value={systemMetrics.totalUsers.toLocaleString()}
-          subtitle={`${systemMetrics.activeUsers.toLocaleString()} activos`}
+          title="Costo Diario"
+          value={`$${analytics.dailyMetrics.totalCost.toFixed(4)}`}
+          subtitle={`${analytics.dailyMetrics.totalRequests} requests`}
+          icon={<DollarSign className="w-6 h-6" />}
+          gradient="from-green-600 to-green-700"
+          trend={`${analytics.dailyMetrics.successRate.toFixed(1)}% éxito`}
+        />
+        <AdminMetricCard
+          title="Usuarios Activos"
+          value={analytics.topUsers.length}
+          subtitle="Este mes"
           icon={<Users className="w-6 h-6" />}
           gradient="from-blue-600 to-blue-700"
-          trend="+12.5% este mes"
+          trend="Mes activo"
         />
         <AdminMetricCard
-          title="Tasa de Finalización"
-          value={`${systemMetrics.completionRate}%`}
+          title="Tiempo Respuesta"
+          value={`${analytics.monthlyMetrics.avgResponseTime.toFixed(0)}ms`}
           subtitle="Promedio mensual"
-          icon={<Target className="w-6 h-6" />}
-          gradient="from-green-600 to-green-700"
-          trend="+2.3% vs mes anterior"
-        />
-        <AdminMetricCard
-          title="Puntaje Promedio"
-          value={systemMetrics.avgScore}
-          subtitle="Todas las materias"
-          icon={<Award className="w-6 h-6" />}
+          icon={<Activity className="w-6 h-6" />}
           gradient="from-yellow-600 to-orange-600"
-          trend="+8 puntos"
+          trend="Optimizado"
         />
         <AdminMetricCard
-          title="Carga del Servidor"
-          value={`${systemMetrics.serverLoad}%`}
-          subtitle={`${systemMetrics.responseTime}ms respuesta`}
-          icon={<Server className="w-6 h-6" />}
-          gradient="from-purple-600 to-purple-700"
-          status={systemMetrics.serverLoad > 80 ? 'warning' : 'normal'}
+          title="Alertas Activas"
+          value={analytics.alerts.length}
+          subtitle={`${analytics.alerts.filter(a => a.severity === 'high').length} críticas`}
+          icon={<AlertTriangle className="w-6 h-6" />}
+          gradient="from-red-600 to-red-700"
+          status={analytics.alerts.length > 0 ? 'warning' : 'normal'}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Users by Grade */}
+        {/* Tendencias de costo en tiempo real */}
         <motion.div 
           className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20"
           initial={{ opacity: 0, x: -20 }}
@@ -195,13 +173,13 @@ export const AdminModernDashboard: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Distribución por Curso</h2>
-            <Users className="w-5 h-5 text-gray-600" />
+            <h2 className="text-xl font-bold text-gray-800">Tendencias de Costo (30 días)</h2>
+            <TrendingUp className="w-5 h-5 text-gray-600" />
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={usersByGrade}>
+            <AreaChart data={analytics.costTrends}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="grade" tick={{ fontSize: 12 }} />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip 
                 contentStyle={{
@@ -211,13 +189,18 @@ export const AdminModernDashboard: React.FC = () => {
                   boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
                 }}
               />
-              <Bar dataKey="count" fill="#3B82F6" name="Total" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="active" fill="#10B981" name="Activos" radius={[4, 4, 0, 0]} />
-            </BarChart>
+              <Area 
+                type="monotone" 
+                dataKey="cost" 
+                stroke="#3B82F6" 
+                fill="#3B82F6" 
+                fillOpacity={0.2}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Skills Performance */}
+        {/* Rendimiento por módulo con datos reales */}
         <motion.div 
           className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20"
           initial={{ opacity: 0, x: 20 }}
@@ -225,30 +208,37 @@ export const AdminModernDashboard: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Rendimiento por Materia</h2>
-            <TrendingUp className="w-5 h-5 text-gray-600" />
+            <h2 className="text-xl font-bold text-gray-800">Rendimiento por Módulo</h2>
+            <Target className="w-5 h-5 text-gray-600" />
           </div>
           <div className="space-y-4">
-            {skillsPerformance.map((skill, index) => (
+            {analytics.modulePerformance.map((module, index) => (
               <motion.div 
-                key={index}
+                key={module.module}
                 className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
                 <div>
-                  <div className="font-medium text-gray-800">{skill.skill}</div>
-                  <div className="text-2xl font-bold text-blue-600">{skill.avg}</div>
-                  <div className="text-sm text-gray-500">{skill.students.toLocaleString()} estudiantes</div>
+                  <div className="font-medium text-gray-800 capitalize">
+                    {module.module.replace('_', ' ')}
+                  </div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    ${module.cost.toFixed(4)}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {module.requests} requests • {module.avgResponseTime}ms
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className={`text-sm font-medium ${
-                    skill.trend.startsWith('+') ? 'text-green-600' : 'text-red-600'
+                    module.successRate > 90 ? 'text-green-600' : 
+                    module.successRate > 70 ? 'text-yellow-600' : 'text-red-600'
                   }`}>
-                    {skill.trend}
+                    {module.successRate.toFixed(1)}% éxito
                   </div>
-                  <div className="text-sm text-gray-500">vs mes anterior</div>
+                  <div className="text-sm text-gray-500">tasa de éxito</div>
                 </div>
               </motion.div>
             ))}
@@ -257,7 +247,7 @@ export const AdminModernDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* System Alerts */}
+        {/* Top usuarios con datos reales */}
         <motion.div 
           className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20"
           initial={{ opacity: 0, y: 20 }}
@@ -265,65 +255,42 @@ export const AdminModernDashboard: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Alertas del Sistema</h2>
-            <Bell className="w-5 h-5 text-gray-600" />
+            <h2 className="text-xl font-bold text-gray-800">Top Usuarios (Costo)</h2>
+            <Users className="w-5 h-5 text-gray-600" />
           </div>
           <div className="space-y-4">
-            {systemAlerts.map((alert, index) => (
+            {analytics.topUsers.slice(0, 8).map((user, index) => (
               <motion.div 
-                key={index}
-                className={`flex items-center p-4 rounded-xl border ${
-                  alert.type === 'error' ? 'bg-red-50 border-red-200' :
-                  alert.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
-                  alert.type === 'success' ? 'bg-green-50 border-green-200' :
-                  'bg-blue-50 border-blue-200'
-                }`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                key={user.userId}
+                className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <div className={`p-2 rounded-lg mr-3 ${
-                  alert.type === 'error' ? 'bg-red-100' :
-                  alert.type === 'warning' ? 'bg-yellow-100' :
-                  alert.type === 'success' ? 'bg-green-100' :
-                  'bg-blue-100'
-                }`}>
-                  {alert.type === 'error' ? <AlertTriangle className="w-5 h-5 text-red-600" /> :
-                   alert.type === 'warning' ? <AlertTriangle className="w-5 h-5 text-yellow-600" /> :
-                   alert.type === 'success' ? <TrendingUp className="w-5 h-5 text-green-600" /> :
-                   <Bell className="w-5 h-5 text-blue-600" />}
-                </div>
-                <div className="flex-grow">
-                  <div className={`font-medium ${
-                    alert.type === 'error' ? 'text-red-800' :
-                    alert.type === 'warning' ? 'text-yellow-800' :
-                    alert.type === 'success' ? 'text-green-800' :
-                    'text-blue-800'
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold mr-3 ${
+                    index === 0 ? 'bg-yellow-500' : 
+                    index === 1 ? 'bg-gray-400' : 
+                    index === 2 ? 'bg-orange-500' : 'bg-blue-500'
                   }`}>
-                    {alert.title}
+                    {index + 1}
                   </div>
-                  <div className={`text-sm ${
-                    alert.type === 'error' ? 'text-red-600' :
-                    alert.type === 'warning' ? 'text-yellow-600' :
-                    alert.type === 'success' ? 'text-green-600' :
-                    'text-blue-600'
-                  }`}>
-                    {alert.message}
+                  <div>
+                    <div className="font-medium text-gray-800">{user.name}</div>
+                    <div className="text-sm text-gray-500">{user.email}</div>
                   </div>
                 </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  alert.priority === 'high' ? 'bg-red-100 text-red-800' :
-                  alert.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {alert.priority}
+                <div className="text-right">
+                  <div className="font-bold text-blue-600">${user.totalCost.toFixed(4)}</div>
+                  <div className="text-sm text-gray-500">{user.totalRequests} requests</div>
+                  <div className="text-xs text-green-600">Q: {user.avgQuality.toFixed(2)}</div>
                 </div>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Acciones rápidas actualizadas */}
         <motion.div 
           className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20"
           initial={{ opacity: 0, y: 20 }}
@@ -336,14 +303,14 @@ export const AdminModernDashboard: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 gap-4">
             <motion.button 
-              className="flex items-center p-4 rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-gray-900 hover:to-black transition-all"
+              className="flex items-center p-4 rounded-xl bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transition-all"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Settings className="w-5 h-5 mr-3" />
+              <DollarSign className="w-5 h-5 mr-3" />
               <div className="text-left">
-                <div className="font-medium">Configuración Sistema</div>
-                <div className="text-sm text-gray-300">Ajustar parámetros globales</div>
+                <div className="font-medium">Configurar Límites</div>
+                <div className="text-sm text-green-100">Establecer presupuestos por usuario</div>
               </div>
             </motion.button>
             
@@ -354,20 +321,8 @@ export const AdminModernDashboard: React.FC = () => {
             >
               <Download className="w-5 h-5 mr-3" />
               <div className="text-left">
-                <div className="font-medium">Exportar Datos</div>
-                <div className="text-sm text-blue-100">Descargar reportes analíticos</div>
-              </div>
-            </motion.button>
-            
-            <motion.button 
-              className="flex items-center p-4 rounded-xl bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Eye className="w-5 h-5 mr-3" />
-              <div className="text-left">
-                <div className="font-medium">Ver Logs del Sistema</div>
-                <div className="text-sm text-green-100">Monitorear actividad en tiempo real</div>
+                <div className="font-medium">Exportar Métricas</div>
+                <div className="text-sm text-blue-100">Descargar reportes de costos</div>
               </div>
             </motion.button>
             
@@ -376,10 +331,24 @@ export const AdminModernDashboard: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Users className="w-5 h-5 mr-3" />
+              <Eye className="w-5 h-5 mr-3" />
               <div className="text-left">
-                <div className="font-medium">Gestionar Usuarios</div>
-                <div className="text-sm text-purple-100">Administrar cuentas y permisos</div>
+                <div className="font-medium">Monitor en Tiempo Real</div>
+                <div className="text-sm text-purple-100">Ver actividad de OpenRouter</div>
+              </div>
+            </motion.button>
+            
+            <motion.button 
+              className="flex items-center p-4 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <AlertTriangle className="w-5 h-5 mr-3" />
+              <div className="text-left">
+                <div className="font-medium">Gestionar Alertas</div>
+                <div className="text-sm text-red-100">
+                  {analytics.alerts.length} alertas activas
+                </div>
               </div>
             </motion.button>
           </div>

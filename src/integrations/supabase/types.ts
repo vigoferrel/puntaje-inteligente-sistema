@@ -9,6 +9,102 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_cost_alerts: {
+        Row: {
+          alert_type: string
+          current_value: number | null
+          id: string
+          is_active: boolean | null
+          message: string | null
+          module_source: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          threshold_value: number | null
+          triggered_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          current_value?: number | null
+          id?: string
+          is_active?: boolean | null
+          message?: string | null
+          module_source?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          threshold_value?: number | null
+          triggered_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          current_value?: number | null
+          id?: string
+          is_active?: boolean | null
+          message?: string | null
+          module_source?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          threshold_value?: number | null
+          triggered_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_cost_analytics: {
+        Row: {
+          avg_quality: number | null
+          avg_response_time: number | null
+          cost_trends: Json | null
+          created_at: string | null
+          id: string
+          module_breakdown: Json | null
+          period_date: string
+          period_type: string
+          success_rate: number | null
+          top_users: Json | null
+          total_cost: number | null
+          total_requests: number | null
+          total_tokens: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_quality?: number | null
+          avg_response_time?: number | null
+          cost_trends?: Json | null
+          created_at?: string | null
+          id?: string
+          module_breakdown?: Json | null
+          period_date: string
+          period_type: string
+          success_rate?: number | null
+          top_users?: Json | null
+          total_cost?: number | null
+          total_requests?: number | null
+          total_tokens?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_quality?: number | null
+          avg_response_time?: number | null
+          cost_trends?: Json | null
+          created_at?: string | null
+          id?: string
+          module_breakdown?: Json | null
+          period_date?: string
+          period_type?: string
+          success_rate?: number | null
+          top_users?: Json | null
+          total_cost?: number | null
+          total_requests?: number | null
+          total_tokens?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ai_generated_plans: {
         Row: {
           adaptation_rules: Json | null
@@ -47,6 +143,51 @@ export type Database = {
           target_tests?: string[]
           total_hours?: number
           updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_model_usage: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          estimated_cost: number | null
+          id: string
+          metadata: Json | null
+          model_name: string
+          module_source: string
+          quality_score: number | null
+          response_time_ms: number | null
+          success: boolean | null
+          token_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          estimated_cost?: number | null
+          id?: string
+          metadata?: Json | null
+          model_name: string
+          module_source: string
+          quality_score?: number | null
+          response_time_ms?: number | null
+          success?: boolean | null
+          token_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          estimated_cost?: number | null
+          id?: string
+          metadata?: Json | null
+          model_name?: string
+          module_source?: string
+          quality_score?: number | null
+          response_time_ms?: number | null
+          success?: boolean | null
+          token_count?: number | null
           user_id?: string | null
         }
         Relationships: []
@@ -2419,6 +2560,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_cost_limits: {
+        Row: {
+          created_at: string | null
+          daily_limit: number | null
+          id: string
+          is_active: boolean | null
+          module_limits: Json | null
+          monthly_limit: number | null
+          updated_at: string | null
+          user_id: string | null
+          weekly_limit: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_limit?: number | null
+          id?: string
+          is_active?: boolean | null
+          module_limits?: Json | null
+          monthly_limit?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_limit?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_limit?: number | null
+          id?: string
+          is_active?: boolean | null
+          module_limits?: Json | null
+          monthly_limit?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_limit?: number | null
+        }
+        Relationships: []
+      }
       user_diagnostic_results: {
         Row: {
           completed_at: string | null
@@ -2766,6 +2943,20 @@ export type Database = {
       }
     }
     Views: {
+      admin_dashboard_metrics: {
+        Row: {
+          avg_quality: number | null
+          avg_response_time: number | null
+          date: string | null
+          module_source: string | null
+          success_rate: number | null
+          total_cost: number | null
+          total_requests: number | null
+          total_tokens: number | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
       cognitive_distribution_m2_2024: {
         Row: {
           cognitive_demand: string | null
@@ -2855,6 +3046,10 @@ export type Database = {
           preguntas_validas: number
           porcentaje_logro: number
         }[]
+      }
+      calculate_gemini_cost: {
+        Args: { tokens: number }
+        Returns: number
       }
       calculate_weighted_score_ciencias: {
         Args: { exam_code_param: string; user_responses: Json }
