@@ -21,7 +21,7 @@ export class DataPersistence {
         .insert({
           metric_type: 'institutional_analytics',
           metric_value: metrics.totalStudents,
-          context: metrics,
+          context: metrics as any, // Conversión explícita para Supabase Json
           user_id: institutionId
         });
 
@@ -52,7 +52,7 @@ export class DataPersistence {
           notification_type: 'parent_report',
           title: 'Reporte Semanal de Progreso',
           message: `Progreso semanal: ${report.weeklyProgress.toFixed(1)}%`,
-          action_data: report
+          action_data: report as any // Conversión explícita para Supabase Json
         });
 
       if (error) {
@@ -71,55 +71,81 @@ export class DataPersistence {
    * Obtiene datos de estudiantes de la institución
    */
   static async getStudentsData(institutionId: string): Promise<any[]> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('institution_id', institutionId);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('institution_id', institutionId);
 
-    if (error) {
-      logger.error('DataPersistence', 'Error obteniendo datos de estudiantes', error);
-      throw error;
+      if (error) {
+        logger.error('DataPersistence', 'Error obteniendo datos de estudiantes', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      logger.error('DataPersistence', 'Error en consulta de estudiantes', error);
+      return [];
     }
-
-    return data || [];
   }
 
   /**
    * Obtiene datos de ejercicios de la institución
    */
   static async getExercisesData(institutionId: string): Promise<any[]> {
-    const { data, error } = await supabase
-      .from('user_exercise_attempts')
-      .select('*')
-      .in('user_id', await this.getStudentIds(institutionId));
+    try {
+      // Primero obtenemos los IDs de estudiantes
+      const students = await this.getStudentsData(institutionId);
+      const studentIds = students.map(s => s.id);
 
-    if (error) {
-      logger.error('DataPersistence', 'Error obteniendo datos de ejercicios', error);
-      throw error;
+      if (studentIds.length === 0) {
+        return [];
+      }
+
+      const { data, error } = await supabase
+        .from('user_exercise_attempts')
+        .select('*')
+        .in('user_id', studentIds);
+
+      if (error) {
+        logger.error('DataPersistence', 'Error obteniendo datos de ejercicios', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      logger.error('DataPersistence', 'Error en consulta de ejercicios', error);
+      return [];
     }
-
-    return data || [];
   }
 
   /**
    * Obtiene datos de progreso de la institución
    */
   static async getProgressData(institutionId: string): Promise<any[]> {
-    const { data, error } = await supabase
-      .from('user_node_progress')
-      .select('*')
-      .in('user_id', await this.getStudentIds(institutionId));
+    try {
+      // Primero obtenemos los IDs de estudiantes
+      const students = await this.getStudentsData(institutionId);
+      const studentIds = students.map(s => s.id);
 
-    if (error) {
-      logger.error('DataPersistence', 'Error obteniendo datos de progreso', error);
-      throw error;
+      if (studentIds.length === 0) {
+        return [];
+      }
+
+      const { data, error } = await supabase
+        .from('user_node_progress')
+        .select('*')
+        .in('user_id', studentIds);
+
+      if (error) {
+        logger.error('DataPersistence', 'Error obteniendo datos de progreso', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      logger.error('DataPersistence', 'Error en consulta de progreso', error);
+      return [];
     }
-
-    return data || [];
-  }
-
-  private static async getStudentIds(institutionId: string): Promise<string[]> {
-    const students = await this.getStudentsData(institutionId);
-    return students.map(s => s.id);
   }
 }
