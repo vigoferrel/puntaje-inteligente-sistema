@@ -1,4 +1,3 @@
-
 import { TPAESPrueba, TPAESHabilidad } from '@/types/system-types';
 import { Exercise } from '@/types/ai-types';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,10 +121,13 @@ export class SmartExerciseBankPAES {
    * Marca ejercicio como usado y actualiza estadísticas
    */
   private static async markExerciseAsUsed(exerciseId: string): Promise<void> {
-    // Incrementar contador de uso
-    const { error } = await supabase.rpc('increment_times_used', {
-      exercise_id: exerciseId
-    });
+    // Usar UPDATE directo en lugar de RPC
+    const { error } = await supabase
+      .from('generated_exercises')
+      .update({ 
+        times_used: supabase.raw('COALESCE(times_used, 0) + 1')
+      })
+      .eq('id', exerciseId);
 
     if (error) {
       logger.warn('SmartExerciseBankPAES', 'Error actualizando uso de ejercicio', error);

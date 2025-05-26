@@ -36,7 +36,7 @@ export const useLectoGuiaSimplified = () => {
   const {
     messages,
     isTyping,
-    sendMessage: handleSendMessage
+    processUserMessage: handleSendMessage
   } = useLectoGuiaChat();
 
   /**

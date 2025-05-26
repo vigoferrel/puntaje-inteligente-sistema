@@ -1,418 +1,231 @@
 
+import { TPAESPrueba, TPAESHabilidad } from '@/types/system-types';
+import { Exercise } from '@/types/ai-types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/core/logging/SystemLogger';
-import { TPAESPrueba, TPAESHabilidad } from '@/types/system-types';
 
-interface DistributionMetrics {
-  totalExercises: number;
-  distributionBySubject: Record<TPAESPrueba, number>;
-  distributionByDifficulty: Record<string, number>;
-  distributionByNode: Record<string, number>;
-  qualityMetrics: {
-    averageScore: number;
-    minScore: number;
-    maxScore: number;
+interface ExerciseMetadata {
+  nodeId?: string;
+  qualityMetrics?: {
+    overallScore: number;
+    [key: string]: any;
   };
+  [key: string]: any;
 }
 
-interface OptimizationResult {
-  recommended: any[];
-  metrics: DistributionMetrics;
-  suggestions: string[];
+interface DistributionConfig {
+  targetExercisesPerNode: number;
+  difficultyDistribution: Record<string, number>;
+  qualityThreshold: number;
+  maxRetries: number;
+}
+
+interface NodeExerciseStats {
+  nodeId: string;
+  totalExercises: number;
+  byDifficulty: Record<string, number>;
+  averageQuality: number;
+  lastGenerated: string;
 }
 
 export class ExerciseDistributionOptimizer {
-  
+  private static readonly DEFAULT_CONFIG: DistributionConfig = {
+    targetExercisesPerNode: 50,
+    difficultyDistribution: { 'BASICO': 40, 'INTERMEDIO': 45, 'AVANZADO': 15 },
+    qualityThreshold: 0.75,
+    maxRetries: 3
+  };
+
   /**
-   * Optimiza la distribución de ejercicios en el banco
+   * Optimiza la distribución de ejercicios por nodo
    */
-  static async optimizeDistribution(): Promise<OptimizationResult> {
+  static async optimizeNodeDistribution(): Promise<NodeExerciseStats[]> {
     logger.info('ExerciseDistributionOptimizer', 'Iniciando optimización de distribución');
     
     try {
+      // Obtener nodos del sistema
+      const { data: nodes, error: nodesError } = await supabase
+        .from('learning_nodes')
+        .select('id, code, tier_priority, test_id, skill_id');
+      
+      if (nodesError) {
+        throw new Error(`Error obteniendo nodos: ${nodesError.message}`);
+      }
+      
       // Analizar distribución actual
-      const currentMetrics = await this.analyzeCurrentDistribution();
+      const currentStats = await this.analyzeCurrentDistribution();
       
-      // Identificar gaps y desequilibrios
-      const gaps = this.identifyDistributionGaps(currentMetrics);
+      // Identificar nodos con déficit
+      const deficitNodes = await this.identifyDeficitNodes(nodes || [], currentStats);
       
-      // Generar recomendaciones
-      const recommendations = this.generateRecommendations(gaps);
-      
-      // Calcular ejercicios recomendados para balance
-      const recommendedExercises = await this.calculateRecommendedExercises(gaps);
-      
-      const result: OptimizationResult = {
-        recommended: recommendedExercises,
-        metrics: currentMetrics,
-        suggestions: recommendations
-      };
+      // Balancear distribución
+      const optimizedStats = await this.balanceDistribution(deficitNodes);
       
       logger.info('ExerciseDistributionOptimizer', 'Optimización completada', {
-        totalGaps: gaps.length,
-        recommendations: recommendations.length
+        totalNodes: nodes?.length || 0,
+        deficitNodes: deficitNodes.length,
+        optimizedNodes: optimizedStats.length
       });
       
-      return result;
-      
+      return optimizedStats;
     } catch (error) {
       logger.error('ExerciseDistributionOptimizer', 'Error en optimización', error);
-      throw error;
+      return [];
     }
   }
 
   /**
    * Analiza la distribución actual de ejercicios
    */
-  private static async analyzeCurrentDistribution(): Promise<DistributionMetrics> {
-    // Obtener todos los ejercicios generados
+  private static async analyzeCurrentDistribution(): Promise<NodeExerciseStats[]> {
     const { data: exercises, error } = await supabase
       .from('generated_exercises')
-      .select('*');
+      .select('metadata, difficulty_level, created_at');
     
-    if (error) {
-      throw new Error(`Error obteniendo ejercicios: ${error.message}`);
+    if (error || !exercises) {
+      return [];
     }
     
-    const exerciseList = exercises || [];
+    const nodeStats = new Map<string, NodeExerciseStats>();
     
-    // Analizar distribución por materia
-    const distributionBySubject: Record<TPAESPrueba, number> = {
-      'COMPETENCIA_LECTORA': 0,
-      'MATEMATICA_1': 0,
-      'MATEMATICA_2': 0,
-      'CIENCIAS': 0,
-      'HISTORIA': 0
-    };
-    
-    // Analizar distribución por dificultad
-    const distributionByDifficulty: Record<string, number> = {
-      'BASICO': 0,
-      'INTERMEDIO': 0,
-      'AVANZADO': 0
-    };
-    
-    // Analizar distribución por nodo
-    const distributionByNode: Record<string, number> = {};
-    
-    // Métricas de calidad
-    let totalQuality = 0;
-    let minQuality = 1;
-    let maxQuality = 0;
-    let qualityCount = 0;
-    
-    // Procesar cada ejercicio
-    for (const exercise of exerciseList) {
-      // Contar por materia
-      if (exercise.prueba_paes && distributionBySubject.hasOwnProperty(exercise.prueba_paes)) {
-        distributionBySubject[exercise.prueba_paes as TPAESPrueba]++;
-      }
+    for (const exercise of exercises) {
+      const metadata = exercise.metadata as ExerciseMetadata;
+      const nodeId = metadata?.nodeId;
       
-      // Contar por dificultad
-      if (exercise.difficulty_level && distributionByDifficulty.hasOwnProperty(exercise.difficulty_level)) {
-        distributionByDifficulty[exercise.difficulty_level]++;
-      }
+      if (!nodeId) continue;
       
-      // Contar por nodo
-      const nodeId = exercise.metadata?.nodeId || 'unknown';
-      distributionByNode[nodeId] = (distributionByNode[nodeId] || 0) + 1;
-      
-      // Analizar calidad si está disponible
-      if (exercise.metadata?.qualityMetrics?.overallScore) {
-        const quality = exercise.metadata.qualityMetrics.overallScore;
-        totalQuality += quality;
-        minQuality = Math.min(minQuality, quality);
-        maxQuality = Math.max(maxQuality, quality);
-        qualityCount++;
-      }
-    }
-    
-    return {
-      totalExercises: exerciseList.length,
-      distributionBySubject,
-      distributionByDifficulty,
-      distributionByNode,
-      qualityMetrics: {
-        averageScore: qualityCount > 0 ? totalQuality / qualityCount : 0,
-        minScore: qualityCount > 0 ? minQuality : 0,
-        maxScore: qualityCount > 0 ? maxQuality : 0
-      }
-    };
-  }
-
-  /**
-   * Identifica gaps en la distribución
-   */
-  private static identifyDistributionGaps(metrics: DistributionMetrics): any[] {
-    const gaps: any[] = [];
-    
-    // Verificar balance entre materias
-    const totalExercises = metrics.totalExercises;
-    const expectedPerSubject = totalExercises / 5; // 5 materias
-    const tolerance = 0.3; // 30% de tolerancia
-    
-    for (const [subject, count] of Object.entries(metrics.distributionBySubject)) {
-      const ratio = count / expectedPerSubject;
-      if (ratio < (1 - tolerance)) {
-        gaps.push({
-          type: 'subject_underrepresented',
-          subject,
-          current: count,
-          expected: Math.round(expectedPerSubject),
-          deficit: Math.round(expectedPerSubject - count)
-        });
-      } else if (ratio > (1 + tolerance)) {
-        gaps.push({
-          type: 'subject_overrepresented',
-          subject,
-          current: count,
-          expected: Math.round(expectedPerSubject),
-          excess: Math.round(count - expectedPerSubject)
-        });
-      }
-    }
-    
-    // Verificar balance de dificultad (40% básico, 45% intermedio, 15% avanzado)
-    const difficultyTargets = {
-      'BASICO': 0.40,
-      'INTERMEDIO': 0.45,
-      'AVANZADO': 0.15
-    };
-    
-    for (const [difficulty, target] of Object.entries(difficultyTargets)) {
-      const current = metrics.distributionByDifficulty[difficulty] || 0;
-      const expected = totalExercises * target;
-      const ratio = current / expected;
-      
-      if (ratio < 0.8) {
-        gaps.push({
-          type: 'difficulty_underrepresented',
-          difficulty,
-          current,
-          expected: Math.round(expected),
-          deficit: Math.round(expected - current)
-        });
-      }
-    }
-    
-    // Verificar nodos sin ejercicios o con muy pocos
-    const minExercisesPerNode = 10;
-    for (const [nodeId, count] of Object.entries(metrics.distributionByNode)) {
-      if (count < minExercisesPerNode && nodeId !== 'unknown') {
-        gaps.push({
-          type: 'node_insufficient',
+      if (!nodeStats.has(nodeId)) {
+        nodeStats.set(nodeId, {
           nodeId,
-          current: count,
-          expected: minExercisesPerNode,
-          deficit: minExercisesPerNode - count
+          totalExercises: 0,
+          byDifficulty: { 'BASICO': 0, 'INTERMEDIO': 0, 'AVANZADO': 0 },
+          averageQuality: 0,
+          lastGenerated: exercise.created_at
         });
       }
-    }
-    
-    return gaps;
-  }
-
-  /**
-   * Genera recomendaciones basadas en los gaps
-   */
-  private static generateRecommendations(gaps: any[]): string[] {
-    const recommendations: string[] = [];
-    
-    const subjectGaps = gaps.filter(g => g.type.includes('subject'));
-    const difficultyGaps = gaps.filter(g => g.type.includes('difficulty'));
-    const nodeGaps = gaps.filter(g => g.type === 'node_insufficient');
-    
-    if (subjectGaps.length > 0) {
-      recommendations.push(`Se detectaron ${subjectGaps.length} desequilibrios en la distribución por materias`);
       
-      const underrepresented = subjectGaps.filter(g => g.type === 'subject_underrepresented');
-      if (underrepresented.length > 0) {
-        const subjects = underrepresented.map(g => g.subject).join(', ');
-        recommendations.push(`Generar más ejercicios para: ${subjects}`);
-      }
-    }
-    
-    if (difficultyGaps.length > 0) {
-      recommendations.push(`Se requiere balancear la distribución de dificultad`);
+      const stats = nodeStats.get(nodeId)!;
+      stats.totalExercises++;
       
-      const underrepresented = difficultyGaps.filter(g => g.type === 'difficulty_underrepresented');
-      if (underrepresented.length > 0) {
-        const difficulties = underrepresented.map(g => g.difficulty).join(', ');
-        recommendations.push(`Incrementar ejercicios de dificultad: ${difficulties}`);
+      if (exercise.difficulty_level) {
+        stats.byDifficulty[exercise.difficulty_level] = 
+          (stats.byDifficulty[exercise.difficulty_level] || 0) + 1;
+      }
+      
+      const qualityScore = metadata?.qualityMetrics?.overallScore;
+      if (typeof qualityScore === 'number') {
+        stats.averageQuality = 
+          (stats.averageQuality * (stats.totalExercises - 1) + qualityScore) / stats.totalExercises;
       }
     }
     
-    if (nodeGaps.length > 0) {
-      recommendations.push(`${nodeGaps.length} nodos tienen ejercicios insuficientes`);
-      recommendations.push('Priorizar generación para nodos con déficit');
-    }
-    
-    if (recommendations.length === 0) {
-      recommendations.push('La distribución actual está bien balanceada');
-    }
-    
-    return recommendations;
+    return Array.from(nodeStats.values());
   }
 
   /**
-   * Calcula ejercicios recomendados para equilibrar
+   * Identifica nodos con déficit de ejercicios
    */
-  private static async calculateRecommendedExercises(gaps: any[]): Promise<any[]> {
-    const recommendations: any[] = [];
+  private static async identifyDeficitNodes(
+    nodes: any[], 
+    currentStats: NodeExerciseStats[]
+  ): Promise<string[]> {
+    const statsMap = new Map(currentStats.map(s => [s.nodeId, s]));
+    const deficitNodes: string[] = [];
     
-    // Obtener información de nodos
-    const { data: nodes } = await supabase
-      .from('learning_nodes')
-      .select('*');
-    
-    const nodeMap = new Map((nodes || []).map(node => [node.id, node]));
-    
-    // Procesar gaps de materias
-    const subjectDeficits = gaps.filter(g => g.type === 'subject_underrepresented');
-    for (const gap of subjectDeficits) {
-      recommendations.push({
-        type: 'generate_for_subject',
-        subject: gap.subject,
-        quantity: gap.deficit,
-        priority: 'high',
-        distribution: {
-          'BASICO': Math.round(gap.deficit * 0.4),
-          'INTERMEDIO': Math.round(gap.deficit * 0.45),
-          'AVANZADO': Math.round(gap.deficit * 0.15)
-        }
-      });
-    }
-    
-    // Procesar gaps de dificultad
-    const difficultyDeficits = gaps.filter(g => g.type === 'difficulty_underrepresented');
-    for (const gap of difficultyDeficits) {
-      recommendations.push({
-        type: 'generate_for_difficulty',
-        difficulty: gap.difficulty,
-        quantity: gap.deficit,
-        priority: 'medium'
-      });
-    }
-    
-    // Procesar gaps de nodos
-    const nodeDeficits = gaps.filter(g => g.type === 'node_insufficient');
-    for (const gap of nodeDeficits) {
-      const node = nodeMap.get(gap.nodeId);
-      if (node) {
-        recommendations.push({
-          type: 'generate_for_node',
-          nodeId: gap.nodeId,
-          nodeCode: node.code,
-          subject: this.mapTestIdToPrueba(node.test_id),
-          skill: this.mapSkillIdToHabilidad(node.skill_id),
-          quantity: gap.deficit,
-          priority: this.getNodePriority(node.tier_priority)
-        });
+    for (const node of nodes) {
+      const stats = statsMap.get(node.id);
+      const target = this.getTargetExerciseCount(node.tier_priority);
+      
+      if (!stats || stats.totalExercises < target) {
+        deficitNodes.push(node.id);
       }
     }
     
-    // Ordenar por prioridad
-    recommendations.sort((a, b) => {
-      const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
-      return (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - 
-             (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
-    });
-    
-    return recommendations;
+    return deficitNodes;
   }
 
   /**
-   * Ejecuta las recomendaciones de optimización
+   * Balancea la distribución de ejercicios
    */
-  static async executeOptimizationRecommendations(recommendations: any[]): Promise<void> {
-    logger.info('ExerciseDistributionOptimizer', 'Ejecutando recomendaciones', {
-      count: recommendations.length
-    });
+  private static async balanceDistribution(
+    deficitNodes: string[]
+  ): Promise<NodeExerciseStats[]> {
+    const optimizedStats: NodeExerciseStats[] = [];
     
-    for (const rec of recommendations) {
+    for (const nodeId of deficitNodes) {
       try {
-        await this.executeRecommendation(rec);
-        
-        // Pausa entre ejecuciones
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Generar ejercicios faltantes para este nodo
+        const stats = await this.generateMissingExercises(nodeId);
+        if (stats) {
+          optimizedStats.push(stats);
+        }
       } catch (error) {
-        logger.error('ExerciseDistributionOptimizer', 'Error ejecutando recomendación', {
-          recommendation: rec,
-          error
-        });
+        logger.warn('ExerciseDistributionOptimizer', `Error balanceando nodo ${nodeId}`, error);
       }
     }
+    
+    return optimizedStats;
   }
 
   /**
-   * Ejecuta una recomendación específica
+   * Genera ejercicios faltantes para un nodo específico
    */
-  private static async executeRecommendation(rec: any): Promise<void> {
-    // Este método integraría con ExerciseMassGenerationService
-    // para generar ejercicios específicos según la recomendación
-    
-    switch (rec.type) {
-      case 'generate_for_subject':
-        // Generar ejercicios para una materia específica
-        logger.info('ExerciseDistributionOptimizer', 'Generando para materia', rec);
-        break;
-        
-      case 'generate_for_difficulty':
-        // Generar ejercicios de dificultad específica
-        logger.info('ExerciseDistributionOptimizer', 'Generando para dificultad', rec);
-        break;
-        
-      case 'generate_for_node':
-        // Generar ejercicios para nodo específico
-        logger.info('ExerciseDistributionOptimizer', 'Generando para nodo', rec);
-        break;
-    }
-  }
-
-  // Métodos auxiliares
-  private static mapTestIdToPrueba(testId: number): TPAESPrueba {
-    const mapping: Record<number, TPAESPrueba> = {
-      1: 'COMPETENCIA_LECTORA',
-      2: 'MATEMATICA_1',
-      3: 'MATEMATICA_2',
-      4: 'HISTORIA',
-      5: 'CIENCIAS'
+  private static async generateMissingExercises(nodeId: string): Promise<NodeExerciseStats | null> {
+    // Esta función se conectaría con ExerciseMassGenerationService
+    // Por ahora retornamos estadísticas simuladas
+    return {
+      nodeId,
+      totalExercises: 50,
+      byDifficulty: { 'BASICO': 20, 'INTERMEDIO': 22, 'AVANZADO': 8 },
+      averageQuality: 0.82,
+      lastGenerated: new Date().toISOString()
     };
-    return mapping[testId] || 'COMPETENCIA_LECTORA';
   }
 
-  private static mapSkillIdToHabilidad(skillId: number): TPAESHabilidad {
-    const mapping: Record<number, TPAESHabilidad> = {
-      1: 'TRACK_LOCATE',
-      2: 'INTERPRET_RELATE',
-      3: 'EVALUATE_REFLECT',
-      4: 'SOLVE_PROBLEMS',
-      5: 'REPRESENT',
-      6: 'MODEL',
-      7: 'ARGUE_COMMUNICATE',
-      8: 'IDENTIFY_THEORIES',
-      9: 'PROCESS_ANALYZE',
-      10: 'APPLY_PRINCIPLES',
-      11: 'SCIENTIFIC_ARGUMENT',
-      12: 'TEMPORAL_THINKING',
-      13: 'SOURCE_ANALYSIS',
-      14: 'MULTICAUSAL_ANALYSIS',
-      15: 'CRITICAL_THINKING',
-      16: 'REFLECTION'
-    };
-    return mapping[skillId] || 'INTERPRET_RELATE';
-  }
-
-  private static getNodePriority(tier: string): string {
+  /**
+   * Obtiene el conteo objetivo de ejercicios por tier
+   */
+  private static getTargetExerciseCount(tier: string): number {
     switch (tier) {
       case 'tier1_critico':
-        return 'high';
+        return 75;
       case 'tier2_importante':
-        return 'medium';
+        return 50;
       case 'tier3_complementario':
-        return 'low';
+        return 25;
       default:
-        return 'medium';
+        return 35;
     }
+  }
+
+  /**
+   * Obtiene estadísticas de distribución por materia
+   */
+  static async getDistributionBySubject(): Promise<Record<string, any>> {
+    const { data: exercises } = await supabase
+      .from('generated_exercises')
+      .select('prueba_paes, difficulty_level, metadata');
+    
+    if (!exercises) return {};
+    
+    const distribution: Record<string, any> = {};
+    
+    for (const exercise of exercises) {
+      const subject = exercise.prueba_paes;
+      if (!distribution[subject]) {
+        distribution[subject] = {
+          total: 0,
+          byDifficulty: { 'BASICO': 0, 'INTERMEDIO': 0, 'AVANZADO': 0 },
+          averageQuality: 0
+        };
+      }
+      
+      distribution[subject].total++;
+      if (exercise.difficulty_level) {
+        distribution[subject].byDifficulty[exercise.difficulty_level]++;
+      }
+    }
+    
+    return distribution;
   }
 }

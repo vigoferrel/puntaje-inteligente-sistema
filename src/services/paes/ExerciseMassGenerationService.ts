@@ -324,9 +324,15 @@ export class ExerciseMassGenerationService {
         metric_type: 'mass_generation_completed',
         metric_value: stats.approved,
         context: {
-          stats,
+          stats: {
+            generated: stats.generated,
+            approved: stats.approved,
+            rejected: stats.rejected,
+            totalNodes: stats.totalNodes,
+            estimatedTime: stats.estimatedTime
+          },
           completedAt: new Date().toISOString()
-        }
+        } as any
       });
     
     if (error) {

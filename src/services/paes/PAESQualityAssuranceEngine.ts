@@ -1,4 +1,3 @@
-
 import { Exercise } from '@/types/ai-types';
 import { TPAESPrueba } from '@/types/system-types';
 import { ExerciseQualityMetrics } from '@/types/exercise-quality-types';
@@ -21,7 +20,7 @@ export class PAESQualityAssuranceEngine {
       prueba: exercise.prueba
     });
     
-    const checks = this.getQualityChecks(exercise.prueba);
+    const checks = this.getQualityChecks(exercise.prueba as TPAESPrueba);
     const metrics: ExerciseQualityMetrics = {
       structuralValidity: 0,
       contentQuality: 0,
