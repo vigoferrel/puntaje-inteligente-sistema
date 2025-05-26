@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './app-sidebar';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -9,7 +9,7 @@ interface AppLayoutProps {
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
-    <SidebarProvider>
+    <ErrorBoundary>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
         <AppSidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
@@ -18,6 +18,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </div>
         </main>
       </div>
-    </SidebarProvider>
+    </ErrorBoundary>
   );
 };
