@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Sparkles, ArrowUpRight } from "lucide-react";
 import { TLearningCyclePhase } from "@/types/system-types";
-import { getPhaseRoute } from "./phase-card";
+import { getUnifiedPhaseRoute } from "./phase-card";
 
 interface ActionButtonsProps {
   currentPhase: TLearningCyclePhase;
@@ -27,7 +27,7 @@ export const ActionButtons = ({ currentPhase, onLectoGuiaClick }: ActionButtonsP
       </Button>
 
       <Button asChild size="sm">
-        <Link to={getPhaseRoute(currentPhase)}>
+        <Link to={getUnifiedPhaseRoute(currentPhase)}>
           {getActionText(currentPhase)}
           <ArrowUpRight className="ml-2 h-4 w-4" />
         </Link>

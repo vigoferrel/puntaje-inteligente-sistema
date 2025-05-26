@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { TLearningCyclePhase } from "@/types/system-types";
 import { getPhaseIcon } from "./learning-cycle/phase-utils";
 import { ArrowRight } from "lucide-react";
-import { getPhaseRoute } from "./learning-cycle/phase-card";
+import { getUnifiedPhaseRoute } from "./learning-cycle/phase-card";
 
 interface NextRecommendedStepProps {
   currentPhase: TLearningCyclePhase;
@@ -76,7 +76,7 @@ export const NextRecommendedStep = ({
     if (currentPhase === "SKILL_TRAINING" && nextNodeId) {
       return `/node/${nextNodeId}`;
     }
-    return getPhaseRoute(currentPhase);
+    return getUnifiedPhaseRoute(currentPhase);
   };
 
   return (
