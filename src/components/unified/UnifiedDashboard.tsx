@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { 
   Brain, 
   Calendar, 
@@ -13,8 +12,8 @@ import {
   Users, 
   AlertTriangle,
   CheckCircle,
-  Clock,
-  Target
+  Target,
+  RefreshCw
 } from 'lucide-react';
 import { useUnifiedEducation } from '@/hooks/unified/useUnifiedEducation';
 
@@ -206,6 +205,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ userId }) =>
           <CardContent>
             <div className="flex flex-wrap gap-3">
               <Button onClick={loadDashboard} disabled={isLoading}>
+                <RefreshCw className="w-4 h-4 mr-2" />
                 Actualizar Dashboard
               </Button>
               <Button onClick={() => calculateOptimalPath()} disabled={isLoading}>

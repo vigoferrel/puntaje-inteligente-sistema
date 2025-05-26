@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { CentralizedEducationService } from '@/services/unified/CentralizedEducationService';
-import { logger } from '@/core/logging/SystemLogger';
+import { simpleLogger } from '@/core/logging/SimpleLogger';
 import type { UnifiedDashboardData, OptimalPathData, PersonalizedAlert } from '@/services/unified/types';
 
 interface UseUnifiedEducationReturn {
@@ -27,8 +27,7 @@ interface UseUnifiedEducationReturn {
 }
 
 /**
- * Hook unificado para todo el sistema educativo
- * Reemplaza múltiples hooks especializados
+ * Hook unificado simplificado para el sistema educativo
  */
 export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn => {
   const [dashboard, setDashboard] = useState<UnifiedDashboardData | null>(null);
@@ -48,7 +47,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
       totalRequests: prev.totalRequests + 1,
       lastUpdated: new Date()
     }));
-    logger.info('useUnifiedEducation', `Operación ejecutada: ${operation}`, { userId });
+    simpleLogger.info('useUnifiedEducation', `Operación ejecutada: ${operation}`, { userId });
   }, [userId]);
 
   const loadDashboard = useCallback(async () => {
@@ -65,7 +64,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error cargando dashboard';
       setError(errorMessage);
-      logger.error('useUnifiedEducation', 'Error en loadDashboard', err);
+      simpleLogger.error('useUnifiedEducation', 'Error en loadDashboard', err);
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +84,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error calculando ruta óptima';
       setError(errorMessage);
-      logger.error('useUnifiedEducation', 'Error en calculateOptimalPath', err);
+      simpleLogger.error('useUnifiedEducation', 'Error en calculateOptimalPath', err);
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +99,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
       updateStats('refreshAlerts');
       
     } catch (err) {
-      logger.error('useUnifiedEducation', 'Error refrescando alertas', err);
+      simpleLogger.error('useUnifiedEducation', 'Error refrescando alertas', err);
     }
   }, [userId, updateStats]);
 
@@ -113,7 +112,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
       return blob;
       
     } catch (err) {
-      logger.error('useUnifiedEducation', 'Error exportando reporte', err);
+      simpleLogger.error('useUnifiedEducation', 'Error exportando reporte', err);
       return null;
     }
   }, [userId, updateStats]);
@@ -121,7 +120,7 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
   const clearCache = useCallback(() => {
     CentralizedEducationService.clearCache();
     updateStats('clearCache');
-    logger.info('useUnifiedEducation', 'Cache limpiado por usuario');
+    simpleLogger.info('useUnifiedEducation', 'Cache limpiado por usuario');
   }, [updateStats]);
 
   // Carga inicial automática
@@ -131,17 +130,6 @@ export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn 
       refreshAlerts();
     }
   }, [userId, loadDashboard, refreshAlerts]);
-
-  // Actualización periódica de alertas
-  useEffect(() => {
-    if (!userId) return;
-
-    const interval = setInterval(() => {
-      refreshAlerts();
-    }, 300000); // 5 minutos
-
-    return () => clearInterval(interval);
-  }, [userId, refreshAlerts]);
 
   return {
     dashboard,
