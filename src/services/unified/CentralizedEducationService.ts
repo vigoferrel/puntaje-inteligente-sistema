@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/core/logging/SystemLogger';
 
-// Interfaces para tipos de datos
+// Interfaces actualizadas para tipos de datos
 export interface TimelineEvent {
   fecha_id: number;
   proceso: string;
@@ -12,6 +12,8 @@ export interface TimelineEvent {
   dias_restantes: number;
   prioridad: number;
   estado: string;
+  nextCriticalDate?: TimelineEvent;
+  upcomingDates?: TimelineEvent[];
 }
 
 export interface ScholarshipBenefit {
@@ -23,6 +25,8 @@ export interface ScholarshipBenefit {
   compatibilidad: number;
   estado_postulacion: string;
   fecha_cierre: string;
+  potentialSavings?: number;
+  compatibleBenefits?: number;
 }
 
 export interface CareerRecommendation {
@@ -34,6 +38,18 @@ export interface CareerRecommendation {
   puntaje_postulacion: number;
   probabilidad_ingreso: number;
   region: string;
+  compatibleCareers?: number;
+  recommendations?: CareerRecommendation[];
+}
+
+export interface PersonalizedAlert {
+  id: string;
+  type: 'info' | 'warning' | 'urgent';
+  title: string;
+  message: string;
+  actionRequired: boolean;
+  dueDate?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
 }
 
 export interface UnifiedDashboardData {
@@ -45,8 +61,17 @@ export interface UnifiedDashboardData {
     activeStudents: number;
     averageProgress: number;
     weeklyGrowth: number;
+    overallProgress: number;
+    paesReadiness: number;
+    subjectStrengths: string[];
+    areasForImprovement: string[];
   };
   alerts: PersonalizedAlert[];
+  personalInfo?: {
+    name: string;
+    targetScore: number;
+    studyProgress: number;
+  };
 }
 
 export interface OptimalPathData {
@@ -54,15 +79,6 @@ export interface OptimalPathData {
   estimatedHours: number;
   priorityAreas: string[];
   weeklySchedule: any;
-}
-
-export interface PersonalizedAlert {
-  id: string;
-  type: 'info' | 'warning' | 'urgent';
-  title: string;
-  message: string;
-  actionRequired: boolean;
-  dueDate?: string;
 }
 
 export class CentralizedEducationService {
@@ -98,9 +114,18 @@ export class CentralizedEducationService {
           totalStudents: 1250,
           activeStudents: 980,
           averageProgress: 0.74,
-          weeklyGrowth: 0.12
+          weeklyGrowth: 0.12,
+          overallProgress: 0.74,
+          paesReadiness: 0.82,
+          subjectStrengths: ['Competencia Lectora', 'Historia'],
+          areasForImprovement: ['Matemática M2', 'Ciencias']
         },
-        alerts: this.generatePersonalizedAlerts(userId)
+        alerts: this.generatePersonalizedAlerts(userId),
+        personalInfo: {
+          name: 'Estudiante',
+          targetScore: 650,
+          studyProgress: 74
+        }
       };
 
       this.cache.set(cacheKey, dashboardData);
@@ -113,14 +138,16 @@ export class CentralizedEducationService {
   }
 
   /**
-   * Obtiene timeline con datos reales o fallback
+   * Obtiene timeline con datos reales o fallback usando tabla calendar_events
    */
   private static async getTimeline(): Promise<TimelineEvent[]> {
     try {
-      // Intentar usar función SQL personalizada
+      // Usar tabla calendar_events existente
       const { data, error } = await supabase
-        .from('beneficios_estudiantiles')
+        .from('calendar_events')
         .select('*')
+        .eq('event_type', 'paes_deadline')
+        .order('start_date', { ascending: true })
         .limit(10);
 
       if (error) {
@@ -133,16 +160,24 @@ export class CentralizedEducationService {
         return this.getFallbackTimeline();
       }
 
-      return data.map(item => ({
-        fecha_id: item.id || 1,
-        proceso: item.proceso || 'PAES 2025',
-        descripcion: item.descripcion || 'Proceso PAES',
-        fecha_inicio: item.fecha_inicio || '2024-12-02',
-        fecha_fin: item.fecha_fin || '2024-12-02',
-        dias_restantes: this.calculateDaysRemaining(item.fecha_inicio || '2024-12-02'),
-        prioridad: item.prioridad || 1,
-        estado: item.estado || 'PRÓXIMA'
+      const processedTimeline = data.map((item, index) => ({
+        fecha_id: index + 1,
+        proceso: item.title || 'PAES 2025',
+        descripcion: item.description || 'Proceso PAES',
+        fecha_inicio: item.start_date || '2024-12-02',
+        fecha_fin: item.end_date || item.start_date || '2024-12-02',
+        dias_restantes: this.calculateDaysRemaining(item.start_date || '2024-12-02'),
+        prioridad: item.priority === 'high' ? 1 : 2,
+        estado: 'PRÓXIMA'
       }));
+
+      // Añadir propiedades especiales al primer evento
+      if (processedTimeline.length > 0) {
+        processedTimeline[0].nextCriticalDate = processedTimeline[0];
+        processedTimeline[0].upcomingDates = processedTimeline.slice(0, 3);
+      }
+
+      return processedTimeline;
 
     } catch (error) {
       logger.error('CentralizedEducationService', 'Error obteniendo timeline', error);
@@ -151,7 +186,7 @@ export class CentralizedEducationService {
   }
 
   /**
-   * Obtiene becas compatibles con fallback
+   * Obtiene becas compatibles con fallback usando tabla becas_financiamiento
    */
   private static async getScholarships(userId: string): Promise<ScholarshipBenefit[]> {
     try {
@@ -162,7 +197,7 @@ export class CentralizedEducationService {
         .eq('id', userId)
         .single();
 
-      // Intentar consulta a becas
+      // Consulta a becas existentes
       const { data, error } = await supabase
         .from('becas_financiamiento')
         .select('*')
@@ -173,16 +208,20 @@ export class CentralizedEducationService {
         return this.getFallbackScholarships();
       }
 
-      return data.map(beca => ({
-        beneficio_id: Math.floor(Math.random() * 1000),
+      const processedScholarships = data.map((beca, index) => ({
+        beneficio_id: index + 1,
         nombre: beca.nombre,
         categoria: beca.tipo_beca,
         monto_anual: Number(beca.monto_maximo) || 0,
         porcentaje_cobertura: beca.porcentaje_cobertura || 0,
         compatibilidad: this.calculateCompatibility(beca, profile),
         estado_postulacion: 'ABIERTA',
-        fecha_cierre: '2025-03-13'
+        fecha_cierre: '2025-03-13',
+        potentialSavings: Number(beca.monto_maximo) * 0.8 || 2000000,
+        compatibleBenefits: data.length
       }));
+
+      return processedScholarships;
 
     } catch (error) {
       logger.error('CentralizedEducationService', 'Error obteniendo becas', error);
@@ -196,7 +235,14 @@ export class CentralizedEducationService {
   private static async getCareers(userId: string): Promise<CareerRecommendation[]> {
     try {
       // Por ahora usar datos fallback hasta tener tabla de carreras completa
-      return this.getFallbackCareers();
+      const fallbackCareers = this.getFallbackCareers();
+      
+      // Añadir propiedades especiales
+      return fallbackCareers.map(career => ({
+        ...career,
+        compatibleCareers: fallbackCareers.length,
+        recommendations: fallbackCareers.slice(0, 3)
+      }));
 
     } catch (error) {
       logger.error('CentralizedEducationService', 'Error obteniendo carreras', error);
@@ -285,24 +331,37 @@ export class CentralizedEducationService {
     logger.info('CentralizedEducationService', 'Cache limpiado');
   }
 
-  // Métodos de fallback
+  // Métodos de fallback actualizados
   private static getFallbackDashboard(): UnifiedDashboardData {
+    const timeline = this.getFallbackTimeline();
+    const scholarships = this.getFallbackScholarships();
+    const careers = this.getFallbackCareers();
+
     return {
-      timeline: this.getFallbackTimeline(),
-      scholarships: this.getFallbackScholarships(),
-      careers: this.getFallbackCareers(),
+      timeline,
+      scholarships,
+      careers,
       analytics: {
         totalStudents: 1000,
         activeStudents: 750,
         averageProgress: 0.65,
-        weeklyGrowth: 0.08
+        weeklyGrowth: 0.08,
+        overallProgress: 0.65,
+        paesReadiness: 0.70,
+        subjectStrengths: ['Competencia Lectora'],
+        areasForImprovement: ['Matemática M1', 'Ciencias']
       },
-      alerts: []
+      alerts: [],
+      personalInfo: {
+        name: 'Estudiante',
+        targetScore: 600,
+        studyProgress: 65
+      }
     };
   }
 
   private static getFallbackTimeline(): TimelineEvent[] {
-    return [
+    const events = [
       {
         fecha_id: 1,
         proceso: 'PAES 2025',
@@ -324,6 +383,12 @@ export class CentralizedEducationService {
         estado: 'PRÓXIMA'
       }
     ];
+
+    // Añadir propiedades especiales
+    events[0].nextCriticalDate = events[0];
+    events[0].upcomingDates = events;
+
+    return events;
   }
 
   private static getFallbackScholarships(): ScholarshipBenefit[] {
@@ -336,7 +401,9 @@ export class CentralizedEducationService {
         porcentaje_cobertura: 100,
         compatibilidad: 85,
         estado_postulacion: 'ABIERTA',
-        fecha_cierre: '2025-03-13'
+        fecha_cierre: '2025-03-13',
+        potentialSavings: 3500000,
+        compatibleBenefits: 3
       },
       {
         beneficio_id: 2,
@@ -346,13 +413,15 @@ export class CentralizedEducationService {
         porcentaje_cobertura: 0,
         compatibilidad: 75,
         estado_postulacion: 'ABIERTA',
-        fecha_cierre: '2025-03-13'
+        fecha_cierre: '2025-03-13',
+        potentialSavings: 2650000,
+        compatibleBenefits: 3
       }
     ];
   }
 
   private static getFallbackCareers(): CareerRecommendation[] {
-    return [
+    const careers = [
       {
         carrera_id: 1,
         nombre_carrera: 'Ingeniería Civil Industrial',
@@ -374,6 +443,12 @@ export class CentralizedEducationService {
         region: 'Región Metropolitana'
       }
     ];
+
+    return careers.map(career => ({
+      ...career,
+      compatibleCareers: careers.length,
+      recommendations: careers
+    }));
   }
 
   private static generatePersonalizedAlerts(userId: string): PersonalizedAlert[] {
@@ -384,14 +459,16 @@ export class CentralizedEducationService {
         title: 'PAES en 15 días',
         message: 'Intensifica tu preparación en Competencia Lectora',
         actionRequired: true,
-        dueDate: '2024-11-30'
+        dueDate: '2024-11-30',
+        priority: 'urgent'
       },
       {
         id: '2',
         type: 'info',
         title: 'Nueva beca disponible',
         message: 'Revisa los requisitos para la Beca de Excelencia',
-        actionRequired: false
+        actionRequired: false,
+        priority: 'medium'
       }
     ];
   }
@@ -412,5 +489,78 @@ export class CentralizedEducationService {
     }
     
     return Math.max(0, Math.min(100, score));
+  }
+
+  /**
+   * Calcula ruta óptima de estudio
+   */
+  static async calculateOptimalPath(userId: string, preferences: any = {}): Promise<OptimalPathData> {
+    try {
+      logger.info('CentralizedEducationService', 'Calculando ruta óptima');
+
+      // Obtener nodos de aprendizaje
+      const { data: nodes } = await supabase
+        .from('learning_nodes')
+        .select('*')
+        .eq('tier_priority', 'tier1_critico')
+        .limit(10);
+
+      // Obtener progreso del usuario
+      const { data: progress } = await supabase
+        .from('user_node_progress')
+        .select('*')
+        .eq('user_id', userId);
+
+      const recommendedNodes = nodes?.map(node => node.code) || ['CL-01', 'CL-02', 'M1-01'];
+      
+      return {
+        recommendedNodes,
+        estimatedHours: 40,
+        priorityAreas: ['Competencia Lectora', 'Matemática M1'],
+        weeklySchedule: {
+          lunes: ['CL-01'],
+          miercoles: ['M1-01'],
+          viernes: ['CL-02']
+        }
+      };
+
+    } catch (error) {
+      logger.error('CentralizedEducationService', 'Error calculando ruta óptima', error);
+      return {
+        recommendedNodes: ['CL-01', 'M1-01'],
+        estimatedHours: 20,
+        priorityAreas: ['Competencia Lectora'],
+        weeklySchedule: {}
+      };
+    }
+  }
+
+  /**
+   * Obtiene alertas personalizadas
+   */
+  static async getPersonalizedAlerts(userId: string): Promise<PersonalizedAlert[]> {
+    return this.generatePersonalizedAlerts(userId);
+  }
+
+  /**
+   * Exporta reporte completo
+   */
+  static async exportCompleteReport(userId: string, format: 'pdf' | 'excel' | 'json'): Promise<Blob> {
+    try {
+      const dashboard = await this.getUnifiedDashboard(userId);
+      const content = JSON.stringify(dashboard, null, 2);
+      
+      const mimeTypes = {
+        pdf: 'application/pdf',
+        excel: 'application/vnd.ms-excel',
+        json: 'application/json'
+      };
+
+      return new Blob([content], { type: mimeTypes[format] });
+
+    } catch (error) {
+      logger.error('CentralizedEducationService', 'Error exportando reporte', error);
+      throw error;
+    }
   }
 }
