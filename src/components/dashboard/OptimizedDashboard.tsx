@@ -1,6 +1,7 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIntersectional } from '@/contexts/IntersectionalProvider';
 import { useUnifiedState } from '@/hooks/useUnifiedState';
@@ -21,16 +22,11 @@ import {
   Calendar
 } from 'lucide-react';
 
-interface OptimizedDashboardProps {
-  onNavigateToTool?: (tool: string, context?: any) => void;
-}
-
-export const OptimizedDashboard: React.FC<OptimizedDashboardProps> = ({
-  onNavigateToTool
-}) => {
+export const OptimizedDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { isIntersectionalReady, neuralHealth, generateIntersectionalInsights } = useIntersectional();
-  const { currentTool, systemMetrics, userProgress, setCurrentTool } = useUnifiedState();
+  const { systemMetrics, userProgress } = useUnifiedState();
   
   const [selectedView, setSelectedView] = useState<'overview' | 'lectoguia' | 'navigation'>('overview');
 
@@ -57,12 +53,9 @@ export const OptimizedDashboard: React.FC<OptimizedDashboardProps> = ({
   }, [generateIntersectionalInsights]);
 
   // Navegación optimizada
-  const handleNavigation = useCallback((tool: string, context?: any) => {
-    setCurrentTool(tool);
-    if (onNavigateToTool) {
-      onNavigateToTool(tool, context);
-    }
-  }, [setCurrentTool, onNavigateToTool]);
+  const handleNavigation = useCallback((tool: string) => {
+    navigate(`/${tool}`);
+  }, [navigate]);
 
   // Cambio de vista con animación
   const handleViewChange = useCallback((view: 'overview' | 'lectoguia' | 'navigation') => {
@@ -83,8 +76,7 @@ export const OptimizedDashboard: React.FC<OptimizedDashboardProps> = ({
           {[
             { tool: 'diagnostico', label: 'Diagnóstico', icon: Brain, color: 'blue' },
             { tool: 'lectoguia', label: 'LectoGuía', icon: BookOpen, color: 'green' },
-            { tool: 'calendario', label: 'Calendario', icon: Calendar, color: 'purple' },
-            { tool: 'ejercicios', label: 'Ejercicios', icon: Target, color: 'orange' }
+            { tool: 'calendario', label: 'Calendario', icon: Calendar, color: 'purple' }
           ].map((item) => (
             <Button
               key={item.tool}
@@ -115,8 +107,8 @@ export const OptimizedDashboard: React.FC<OptimizedDashboardProps> = ({
               <div className="flex items-center gap-4">
                 <Brain className="w-10 h-10 text-cyan-400" />
                 <div>
-                  <CardTitle className="text-white text-3xl">Dashboard Neural</CardTitle>
-                  <p className="text-cyan-300">Sistema Unificado de Aprendizaje PAES</p>
+                  <CardTitle className="text-white text-3xl">Dashboard PAES</CardTitle>
+                  <p className="text-cyan-300">Sistema de Aprendizaje PAES</p>
                 </div>
               </div>
               
@@ -132,7 +124,7 @@ export const OptimizedDashboard: React.FC<OptimizedDashboardProps> = ({
                 {isIntersectionalReady && (
                   <Badge variant="outline" className="text-cyan-400 border-cyan-400">
                     <Brain className="w-4 h-4 mr-1" />
-                    Intersectional Ready
+                    Sistema Activo
                   </Badge>
                 )}
               </div>

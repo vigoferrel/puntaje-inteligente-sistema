@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { TLearningCyclePhase, getLearningCyclePhaseDisplayName } from "@/types/system-types";
 import { LucideIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface PhaseCardProps {
   phase: TLearningCyclePhase;
@@ -13,7 +14,6 @@ interface PhaseCardProps {
   isPending: boolean;
   phaseProgress: number;
   icon: LucideIcon;
-  onNavigate?: (tool: string) => void;
 }
 
 export const PhaseCard = ({
@@ -22,15 +22,13 @@ export const PhaseCard = ({
   isCompleted,
   isPending,
   phaseProgress,
-  icon: Icon,
-  onNavigate
+  icon: Icon
 }: PhaseCardProps) => {
+  const navigate = useNavigate();
   
   const handlePhaseClick = () => {
-    if (onNavigate) {
-      const route = getUnifiedPhaseRoute(phase);
-      onNavigate(route);
-    }
+    const route = getUnifiedPhaseRoute(phase);
+    navigate(route);
   };
 
   return (
@@ -75,32 +73,32 @@ export const PhaseCard = ({
 };
 
 /**
- * Mapeo consolidado de fases a rutas del sistema unificado
+ * Mapeo simplificado de fases a rutas estándar
  */
 export const getUnifiedPhaseRoute = (phase: TLearningCyclePhase): string => {
-  const unifiedRoutes = {
-    // Fases principales - todas van al sistema unificado
-    DIAGNOSIS: "diagnostico",
-    PERSONALIZED_PLAN: "dashboard", // Plan se maneja desde el dashboard
-    SKILL_TRAINING: "lectoguia", // Entrenamiento a través de LectoGuía
-    CONTENT_STUDY: "lectoguia", // Estudio de contenido a través de LectoGuía
-    PERIODIC_TESTS: "diagnostico", // Tests periódicos a través del sistema diagnóstico
-    FEEDBACK_ANALYSIS: "dashboard", // Análisis desde el dashboard
-    REINFORCEMENT: "lectoguia", // Reforzamiento a través de ejercicios en LectoGuía
-    FINAL_SIMULATIONS: "diagnostico", // Simulaciones finales a través del diagnóstico
+  const routes = {
+    // Fases principales
+    DIAGNOSIS: "/diagnostico",
+    PERSONALIZED_PLAN: "/dashboard",
+    SKILL_TRAINING: "/lectoguia",
+    CONTENT_STUDY: "/lectoguia",
+    PERIODIC_TESTS: "/diagnostico",
+    FEEDBACK_ANALYSIS: "/dashboard",
+    REINFORCEMENT: "/lectoguia",
+    FINAL_SIMULATIONS: "/diagnostico",
     
-    // Fases de Kolb - integradas al sistema unificado
-    EXPERIENCIA_CONCRETA: "lectoguia",
-    OBSERVACION_REFLEXIVA: "dashboard",
-    CONCEPTUALIZACION_ABSTRACTA: "lectoguia",
-    EXPERIMENTACION_ACTIVA: "diagnostico",
+    // Fases de Kolb
+    EXPERIENCIA_CONCRETA: "/lectoguia",
+    OBSERVACION_REFLEXIVA: "/dashboard",
+    CONCEPTUALIZACION_ABSTRACTA: "/lectoguia",
+    EXPERIMENTACION_ACTIVA: "/diagnostico",
     
-    // Legacy phases - redirigidas al sistema unificado
-    diagnostic: "diagnostico",
-    exploration: "lectoguia",
-    practice: "lectoguia",
-    application: "diagnostico"
+    // Legacy phases
+    diagnostic: "/diagnostico",
+    exploration: "/lectoguia",
+    practice: "/lectoguia",
+    application: "/diagnostico"
   };
   
-  return unifiedRoutes[phase] || "dashboard";
+  return routes[phase] || "/dashboard";
 };
