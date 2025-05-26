@@ -1,34 +1,27 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
-  Brain, 
   Target, 
-  Calendar, 
-  BookOpen, 
+  Brain, 
   TrendingUp, 
   Clock, 
-  CheckCircle,
-  AlertCircle,
-  Play,
+  Award,
+  BookOpen,
   BarChart3,
   Zap,
-  Users,
-  Award,
-  ChevronRight,
-  Calculator,
-  DollarSign,
-  Star
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
+  Calendar,
+  CheckCircle,
+  PlayCircle,
+  AlertTriangle
+} from "lucide-react";
+import { useRealDashboardData } from '@/hooks/dashboard/useRealDashboardData';
 
 export const CinematicUnifiedDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<string>('overview');
-  
   const {
     metrics,
     systemStatus,
@@ -39,599 +32,288 @@ export const CinematicUnifiedDashboard: React.FC = () => {
     calendarData,
     lectoGuiaData,
     navigateToSection,
-    getSmartRecommendations
-  } = useDashboardData();
-
-  const quickActions = [
-    {
-      id: 'start-session',
-      title: 'Iniciar Sesión de Estudio',
-      description: 'Continúa con tu nodo recomendado',
-      icon: Play,
-      color: 'from-blue-500 to-cyan-500',
-      action: () => navigate('/lectoguia'),
-      urgent: true
-    },
-    {
-      id: 'diagnostic',
-      title: 'Diagnóstico Rápido',
-      description: 'Evalúa tu progreso actual',
-      icon: Brain,
-      color: 'from-purple-500 to-violet-500',
-      action: () => navigate('/diagnostico')
-    },
-    {
-      id: 'paes-dashboard',
-      title: 'Dashboard PAES',
-      description: 'Monitorea tu preparación integral',
-      icon: Target,
-      color: 'from-red-500 to-pink-500',
-      action: () => navigate('/paes')
-    },
-    {
-      id: 'exercises',
-      title: 'Generar Ejercicios',
-      description: 'Practica con ejercicios personalizados',
-      icon: Zap,
-      color: 'from-yellow-500 to-orange-500',
-      action: () => navigate('/ejercicios')
-    },
-    {
-      id: 'calendar',
-      title: 'Ver Calendario',
-      description: 'Gestiona tu horario de estudio',
-      icon: Calendar,
-      color: 'from-green-500 to-emerald-500',
-      action: () => navigate('/calendario')
-    },
-    {
-      id: 'plan',
-      title: 'Mi Plan de Estudio',
-      description: 'Revisa tu progreso y objetivos',
-      icon: BookOpen,
-      color: 'from-indigo-500 to-purple-500',
-      action: () => navigate('/plan')
-    },
-    {
-      id: 'financial',
-      title: 'Centro Financiero',
-      description: 'Planifica tu futuro universitario',
-      icon: DollarSign,
-      color: 'from-cyan-500 to-blue-500',
-      action: () => navigate('/finanzas')
-    }
-  ];
+    getSmartRecommendations,
+    refreshData
+  } = useRealDashboardData();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <h2 className="text-xl font-semibold text-white">Cargando Dashboard</h2>
-          <p className="text-gray-300">Sincronizando datos del sistema...</p>
-        </motion.div>
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-white border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-      {/* Header cinemático */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-3xl" />
-        <div className="relative z-10 p-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              Centro de Control PAES
-            </h1>
-            <p className="text-xl text-cyan-200 mb-8">
-              Tu comando centralizado para el éxito académico
-            </p>
-            
-            {/* Estado del sistema */}
-            <div className="flex items-center justify-center gap-4 mb-8">
-              {isSystemReady ? (
-                <Badge variant="default" className="bg-green-600 text-white">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Sistema Operativo
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="bg-yellow-600 text-white">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  Sincronizando...
-                </Badge>
-              )}
-              
-              <Badge variant="outline" className="text-white border-white/20">
-                Nodos: {diagnosticData.learningNodes.length}
-              </Badge>
-              
-              <Badge variant="outline" className="text-white border-white/20">
-                Planes: {planData.plans.length}
-              </Badge>
-            </div>
-            
-            {/* Métricas principales */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/10 backdrop-blur-xl rounded-lg p-4 border border-cyan-500/30"
-              >
-                <div className="text-2xl font-bold text-cyan-400">{metrics.completedNodes}</div>
-                <div className="text-sm text-gray-300">Nodos Completados</div>
-              </motion.div>
-              
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/10 backdrop-blur-xl rounded-lg p-4 border border-blue-500/30"
-              >
-                <div className="text-2xl font-bold text-blue-400">{Math.round(metrics.weeklyProgress)}%</div>
-                <div className="text-sm text-gray-300">Progreso Semanal</div>
-              </motion.div>
-              
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/10 backdrop-blur-xl rounded-lg p-4 border border-purple-500/30"
-              >
-                <div className="text-2xl font-bold text-purple-400">{metrics.totalStudyTime}m</div>
-                <div className="text-sm text-gray-300">Tiempo de Estudio</div>
-              </motion.div>
-              
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/10 backdrop-blur-xl rounded-lg p-4 border border-green-500/30"
-              >
-                <div className="text-2xl font-bold text-green-400">{metrics.currentStreak}</div>
-                <div className="text-sm text-gray-300">Racha Actual</div>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header Cinematográfico */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-4 mb-8"
+        >
+          <h1 className="text-4xl font-bold text-white">
+            Dashboard Neural PAES 🎯
+          </h1>
+          <p className="text-white/80 text-xl">
+            Sistema de Preparación Adaptativo Inteligente
+          </p>
+        </motion.div>
 
-      {/* Panel de navegación */}
-      <div className="px-8 py-6">
-        <div className="flex flex-wrap gap-4 justify-center mb-8">
-          {['overview', 'study', 'progress', 'schedule', 'tools'].map((section) => (
-            <Button
-              key={section}
-              onClick={() => setActiveSection(section)}
-              variant={activeSection === section ? 'default' : 'outline'}
-              className={`
-                px-6 py-3 rounded-lg transition-all duration-300
-                ${activeSection === section 
-                  ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
-                  : 'border-gray-600 text-gray-300 hover:bg-gray-800'
-                }
-              `}
+        {/* Métricas Principales */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {[
+            {
+              title: 'Nodos Completados',
+              value: metrics.completedNodes,
+              icon: CheckCircle,
+              color: 'from-green-400 to-emerald-600'
+            },
+            {
+              title: 'Progreso Semanal',
+              value: `${metrics.weeklyProgress}%`,
+              icon: TrendingUp,
+              color: 'from-blue-400 to-indigo-600'
+            },
+            {
+              title: 'Tiempo de Estudio',
+              value: `${metrics.totalStudyTime}min`,
+              icon: Clock,
+              color: 'from-purple-400 to-pink-600'
+            },
+            {
+              title: 'Racha Actual',
+              value: `${metrics.currentStreak} días`,
+              icon: Award,
+              color: 'from-yellow-400 to-orange-600'
+            }
+          ].map((metric, index) => (
+            <motion.div
+              key={metric.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
             >
-              {section === 'overview' && 'Resumen'}
-              {section === 'study' && 'Estudio'}
-              {section === 'progress' && 'Progreso'}
-              {section === 'schedule' && 'Calendario'}
-              {section === 'tools' && 'Herramientas'}
-            </Button>
+              <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white/80 text-sm">{metric.title}</p>
+                      <p className="text-2xl font-bold">{metric.value}</p>
+                    </div>
+                    <div className={`p-3 rounded-full bg-gradient-to-r ${metric.color}`}>
+                      <metric.icon className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
-        {/* Contenido dinámico por sección */}
+        {/* Estado del Sistema */}
         <motion.div
-          key={activeSection}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ delay: 0.4 }}
         >
-          {activeSection === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {/* Acciones rápidas principales */}
-              <Card className="lg:col-span-2 bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-yellow-400" />
-                    Acciones Rápidas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {quickActions.slice(0, 4).map((action) => (
-                      <motion.div
-                        key={action.id}
-                        whileHover={{ scale: 1.02 }}
-                        className={`
-                          relative p-4 rounded-lg cursor-pointer transition-all duration-300
-                          bg-gradient-to-r ${action.color} hover:shadow-lg
-                          ${action.urgent ? 'ring-2 ring-yellow-400 ring-opacity-50' : ''}
-                        `}
-                        onClick={action.action}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-white/20 rounded-lg">
-                            <action.icon className="w-5 h-5 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-white">{action.title}</h4>
-                            <p className="text-sm text-white/80">{action.description}</p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-white/60" />
-                        </div>
-                        {action.urgent && (
-                          <div className="absolute -top-1 -right-1">
-                            <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse" />
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Estado del sistema mejorado */}
-              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-green-400" />
-                    Estado del Sistema
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {Object.entries(systemStatus).map(([system, status]) => (
-                    <div key={system} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          status.status === 'ready' || status.status === 'active' 
-                            ? 'bg-green-400' 
-                            : status.status === 'loading' || status.status === 'initializing'
-                            ? 'bg-yellow-400 animate-pulse'
-                            : 'bg-gray-400'
-                        }`} />
-                        <span className="text-white capitalize">{system}</span>
-                      </div>
-                      <span className="text-sm text-gray-400">{status.data}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Recomendaciones inteligentes */}
-              <Card className="lg:col-span-3 bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-purple-400" />
-                    Recomendaciones Inteligentes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {getSmartRecommendations.slice(0, 6).map((rec) => (
-                      <motion.div
-                        key={rec.id}
-                        whileHover={{ scale: 1.02 }}
-                        className={`
-                          p-4 rounded-lg border cursor-pointer transition-all
-                          ${rec.priority === 'urgent' 
-                            ? 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20' 
-                            : rec.priority === 'high'
-                            ? 'bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20'
-                            : 'bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20'
-                          }
-                        `}
-                        onClick={rec.action}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${
-                              rec.priority === 'urgent' ? 'border-red-400 text-red-300' :
-                              rec.priority === 'high' ? 'border-orange-400 text-orange-300' :
-                              'border-blue-400 text-blue-300'
-                            }`}
-                          >
-                            {rec.priority}
-                          </Badge>
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
-                        </div>
-                        <h4 className="font-medium text-white mb-1">{rec.title}</h4>
-                        <p className="text-sm text-gray-400">{rec.description}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === 'tools' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {/* Herramientas adicionales */}
-              <Card className="lg:col-span-3 bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Calculator className="w-5 h-5 text-cyan-400" />
-                    Herramientas Especializadas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {quickActions.map((action) => (
-                      <motion.div
-                        key={action.id}
-                        whileHover={{ scale: 1.02 }}
-                        className={`
-                          relative p-4 rounded-lg cursor-pointer transition-all duration-300
-                          bg-gradient-to-r ${action.color} hover:shadow-lg
-                        `}
-                        onClick={action.action}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-white/20 rounded-lg">
-                            <action.icon className="w-5 h-5 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-white">{action.title}</h4>
-                            <p className="text-sm text-white/80">{action.description}</p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-white/60" />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === 'study' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Nodos recomendados */}
-              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-blue-400" />
-                    Nodos Recomendados
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {diagnosticData.tier1Nodes.slice(0, 5).map((node, index) => (
-                      <motion.div
-                        key={node.id}
-                        whileHover={{ scale: 1.02 }}
-                        className="p-3 bg-gray-700/50 rounded-lg cursor-pointer border border-gray-600 hover:border-blue-500 transition-all"
-                        onClick={() => navigate('/lectoguia')}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="text-white font-medium">{node.title}</h4>
-                            <p className="text-sm text-gray-400">{node.estimatedTimeMinutes} min</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              Prioridad {index + 1}
-                            </Badge>
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Plan actual */}
-              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Target className="w-5 h-5 text-purple-400" />
-                    Plan de Estudio Actual
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {planData.currentPlan ? (
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="text-white font-medium">{planData.currentPlan.title}</h4>
-                        <p className="text-sm text-gray-400">{planData.currentPlan.description}</p>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Progreso</span>
-                          <span className="text-cyan-400">{planData.currentPlan.progress?.percentage || 0}%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
-                          <div 
-                            className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full"
-                            style={{ width: `${planData.currentPlan.progress?.percentage || 0}%` }}
-                          />
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={() => navigate('/plan')}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
-                      >
-                        Ver Plan Completo
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-                      <p className="text-gray-400 mb-4">No tienes un plan de estudio activo</p>
-                      <Button 
-                        onClick={() => navigate('/plan')}
-                        className="bg-purple-600 hover:bg-purple-700"
-                      >
-                        Crear Plan
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === 'progress' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Métricas de progreso */}
-              <Card className="lg:col-span-2 bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-green-400" />
-                    Análisis de Progreso
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center p-4 bg-gray-700/50 rounded-lg">
-                      <div className="text-2xl font-bold text-cyan-400 mb-2">
-                        {diagnosticData.learningNodes.length}
-                      </div>
-                      <div className="text-sm text-gray-400">Nodos Totales</div>
-                    </div>
-                    <div className="text-center p-4 bg-gray-700/50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-400 mb-2">
-                        {metrics.completedNodes}
-                      </div>
-                      <div className="text-sm text-gray-400">Completados</div>
-                    </div>
-                    <div className="text-center p-4 bg-gray-700/50 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-400 mb-2">
-                        {Math.round(metrics.weeklyProgress)}%
-                      </div>
-                      <div className="text-sm text-gray-400">Progreso Total</div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <Button 
-                      onClick={() => navigate('/diagnostico')}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      Ver Análisis Detallado
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Logros */}
-              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Award className="w-5 h-5 text-yellow-400" />
-                    Logros
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {metrics.currentStreak > 0 && (
-                      <div className="flex items-center gap-3 p-2 bg-yellow-500/20 rounded-lg">
-                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-black">{metrics.currentStreak}</span>
-                        </div>
-                        <div>
-                          <div className="text-white font-medium">Racha de Estudio</div>
-                          <div className="text-xs text-gray-400">Sesiones consecutivas</div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {metrics.completedNodes >= 5 && (
-                      <div className="flex items-center gap-3 p-2 bg-blue-500/20 rounded-lg">
-                        <CheckCircle className="w-8 h-8 text-blue-400" />
-                        <div>
-                          <div className="text-white font-medium">Estudiante Dedicado</div>
-                          <div className="text-xs text-gray-400">5+ nodos completados</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === 'schedule' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Próximos eventos */}
-              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-cyan-400" />
-                    Próximos Eventos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {calendarData.events.length > 0 ? (
-                    <div className="space-y-3">
-                      {calendarData.events.slice(0, 5).map((event) => (
-                        <div key={event.id} className="p-3 bg-gray-700/50 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="text-white font-medium">{event.title}</h4>
-                              <p className="text-sm text-gray-400">
-                                {new Date(event.start_date).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <Badge variant="outline" className="text-xs">
-                              {event.event_type}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-400 mb-4">No hay eventos programados</p>
-                    </div>
-                  )}
-                  
-                  <Button 
-                    onClick={() => navigate('/calendario')}
-                    className="w-full mt-4 bg-cyan-600 hover:bg-cyan-700"
+          <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                Estado del Sistema Neural
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {Object.entries(systemStatus).map(([key, status]) => (
+                <div key={key} className="text-center">
+                  <Badge 
+                    variant={status.status === 'ready' || status.status === 'active' ? 'default' : 'outline'}
+                    className="mb-2"
                   >
-                    Gestionar Calendario
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Resumen de tiempo */}
-              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-orange-400" />
-                    Gestión del Tiempo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="text-center p-4 bg-gray-700/50 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-400 mb-2">
-                        {metrics.totalStudyTime}
-                      </div>
-                      <div className="text-sm text-gray-400">Minutos esta semana</div>
-                    </div>
-                    
-                    {metrics.nextDeadline && (
-                      <div className="p-3 bg-red-500/20 rounded-lg border border-red-500/30">
-                        <div className="text-red-300 font-medium">Próximo Deadline</div>
-                        <div className="text-sm text-red-200">
-                          {metrics.nextDeadline.toLocaleDateString()}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                    {status.status === 'ready' && <CheckCircle className="w-3 h-3 mr-1" />}
+                    {status.status === 'active' && <PlayCircle className="w-3 h-3 mr-1" />}
+                    {status.status === 'error' && <AlertTriangle className="w-3 h-3 mr-1" />}
+                    {status.status}
+                  </Badge>
+                  <p className="text-white/80 text-sm capitalize">{key}</p>
+                  <p className="text-white/60 text-xs">{status.data}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </motion.div>
+
+        {/* Acciones Rápidas */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                Centro de Comando Neural
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                {
+                  title: 'LectoGuía IA',
+                  description: `${lectoGuiaData.sessionCount} sesiones activas`,
+                  icon: Brain,
+                  action: () => navigateToSection('lectoguia'),
+                  color: 'from-blue-500 to-indigo-600'
+                },
+                {
+                  title: 'Diagnóstico Neural',
+                  description: `${diagnosticData.learningNodes.length} nodos disponibles`,
+                  icon: BarChart3,
+                  action: () => navigateToSection('diagnostico'),
+                  color: 'from-purple-500 to-violet-600'
+                },
+                {
+                  title: 'Plan Inteligente',
+                  description: planData.currentPlan ? 'Plan activo' : 'Crear plan',
+                  icon: BookOpen,
+                  action: () => navigateToSection('plan'),
+                  color: 'from-green-500 to-emerald-600'
+                },
+                {
+                  title: 'Calendario PAES',
+                  description: `${calendarData.events.length} eventos programados`,
+                  icon: Calendar,
+                  action: () => navigateToSection('calendario'),
+                  color: 'from-orange-500 to-red-600'
+                },
+                {
+                  title: 'Generador de Ejercicios',
+                  description: 'IA generativa de contenido',
+                  icon: Zap,
+                  action: () => navigateToSection('ejercicios'),
+                  color: 'from-pink-500 to-rose-600'
+                },
+                {
+                  title: 'Centro Financiero',
+                  description: 'Simulador de costos PAES',
+                  icon: Award,
+                  action: () => navigateToSection('finanzas'),
+                  color: 'from-yellow-500 to-amber-600'
+                }
+              ].map((action, index) => (
+                <motion.div
+                  key={action.title}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    onClick={action.action}
+                    className={`h-auto p-6 bg-gradient-to-r ${action.color} hover:opacity-90 transition-all duration-200 w-full`}
+                  >
+                    <div className="text-center space-y-2">
+                      <action.icon className="w-8 h-8 mx-auto" />
+                      <div>
+                        <h3 className="font-semibold text-sm">{action.title}</h3>
+                        <p className="text-xs opacity-90">{action.description}</p>
+                      </div>
+                    </div>
+                  </Button>
+                </motion.div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Recomendaciones Inteligentes */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Brain className="w-5 h-5" />
+                Recomendaciones Neurales Adaptativas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {getSmartRecommendations().slice(0, 6).map((rec) => (
+                <motion.div
+                  key={rec.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.01 }}
+                  className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                    rec.priority === 'urgent' ? 'bg-red-500/20 border-red-500/40' :
+                    rec.priority === 'high' ? 'bg-orange-500/20 border-orange-500/40' :
+                    rec.priority === 'medium' ? 'bg-yellow-500/20 border-yellow-500/40' :
+                    'bg-blue-500/20 border-blue-500/40'
+                  }`}
+                  onClick={rec.action}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-white mb-1">{rec.title}</h4>
+                      <p className="text-white/80 text-sm">{rec.description}</p>
+                    </div>
+                    <Badge 
+                      variant={rec.priority === 'urgent' ? 'destructive' : 'outline'}
+                      className="ml-4"
+                    >
+                      {rec.priority}
+                    </Badge>
+                  </div>
+                </motion.div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Progreso de Plan Actual */}
+        {planData.currentPlan && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+          >
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Plan de Estudio Activo
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="text-white font-semibold mb-2">{planData.currentPlan.title}</h3>
+                  <p className="text-white/80 text-sm mb-4">{planData.currentPlan.description}</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-white/80">Progreso General</span>
+                      <span className="text-white font-semibold">{planData.currentPlan.progress.percentage}%</span>
+                    </div>
+                    <Progress value={planData.currentPlan.progress.percentage} className="h-2" />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigateToSection('plan')}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90"
+                >
+                  Ver Plan Completo
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
       </div>
     </div>
   );
