@@ -1,15 +1,16 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UnifiedHeader } from './UnifiedHeader';
+import { OptimizedUnifiedHeader } from './OptimizedUnifiedHeader';
 import { OptimizedDashboard } from '@/components/dashboard/OptimizedDashboard';
 import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
 import { UnifiedNavigationCore } from '@/components/navigation/UnifiedNavigationCore';
 import { CinematicSkeletonOptimized } from './CinematicSkeletonOptimized';
-import { OptimizedCacheProvider } from '@/core/performance/OptimizedCacheSystem';
 import { OptimizedSuspenseWrapper } from '@/components/optimization/OptimizedSuspenseWrapper';
 import { StudyCalendarIntegration } from '@/components/calendar/StudyCalendarIntegration';
 import { PAESFinancialCalculator } from '@/components/financial/PAESFinancialCalculator';
 import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
+import { useOptimizedNeuralMetrics } from '@/hooks/useOptimizedNeuralMetrics';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface UnifiedDashboardContainerOptimizedProps {
@@ -32,6 +33,13 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
     canGoBack
   } = useUnifiedNavigation();
 
+  // Usar las métricas neurales optimizadas
+  const { metrics: neuralMetrics } = useOptimizedNeuralMetrics({
+    enableCache: true,
+    updateInterval: 45000, // 45 segundos
+    debounceTime: 2000 // 2 segundos
+  });
+
   // Inicialización con la herramienta inicial
   useEffect(() => {
     if (initialTool && initialTool !== currentTool) {
@@ -43,30 +51,41 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 200);
+    }, 150); // Reducido para carga más rápida
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Manejo de cambio de herramienta
+  // Manejo de cambio de herramienta memoizado
   const handleToolChange = useCallback((tool: string, toolContext?: any) => {
     navigateToTool(tool, toolContext);
   }, [navigateToTool]);
 
-  // Manejo de cambio de materia
+  // Manejo de cambio de materia memoizado
   const handleSubjectChange = useCallback((subject: string) => {
     updateContext({ subject });
   }, [updateContext]);
 
-  // Métricas del sistema por defecto
+  // Métricas del sistema optimizadas basadas en métricas neurales reales
   const systemMetrics = useMemo(() => ({
-    completedNodes: 15,
+    completedNodes: Math.round((neuralMetrics.universe_exploration_depth * 50) / 100) || 15,
     totalNodes: 50,
-    todayStudyTime: 45,
-    streakDays: 7
-  }), []);
+    todayStudyTime: Math.round((neuralMetrics.gamification_engagement * 60) / 100) || 45,
+    streakDays: Math.round((neuralMetrics.achievement_momentum * 10) / 100) || 7
+  }), [neuralMetrics]);
 
-  // Renderizado optimizado de herramientas
+  // Progress total calculado desde métricas reales
+  const totalProgress = useMemo(() => {
+    const avgMetrics = (
+      neuralMetrics.neural_efficiency +
+      neuralMetrics.universe_exploration_depth +
+      neuralMetrics.paes_simulation_accuracy +
+      neuralMetrics.gamification_engagement
+    ) / 4;
+    return Math.round(avgMetrics);
+  }, [neuralMetrics]);
+
+  // Renderizado optimizado de herramientas con lazy loading mejorado
   const renderCurrentTool = useMemo(() => {
     const activeSubject = context.subject || 'COMPETENCIA_LECTORA';
     
@@ -138,37 +157,35 @@ export const UnifiedDashboardContainerOptimized: React.FC<UnifiedDashboardContai
   }
 
   return (
-    <OptimizedCacheProvider>
-      <div className="min-h-screen font-poppins bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <UnifiedHeader
-          currentTool={currentTool}
-          totalProgress={85}
-          activeSubject={context.subject || 'COMPETENCIA_LECTORA'}
-          onToolChange={handleToolChange}
-          onSubjectChange={handleSubjectChange}
-          systemMetrics={systemMetrics}
-          navigationHistory={navigationHistory}
-          onGoBack={canGoBack ? goBack : undefined}
-        />
-        
-        <main className="relative overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentTool}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ 
-                duration: 0.15,
-                ease: [0.4, 0, 0.2, 1] 
-              }}
-              className="min-h-[calc(100vh-80px)]"
-            >
-              {renderCurrentTool}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-      </div>
-    </OptimizedCacheProvider>
+    <div className="min-h-screen font-poppins bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <OptimizedUnifiedHeader
+        currentTool={currentTool}
+        totalProgress={totalProgress}
+        activeSubject={context.subject || 'COMPETENCIA_LECTORA'}
+        onToolChange={handleToolChange}
+        onSubjectChange={handleSubjectChange}
+        systemMetrics={systemMetrics}
+        navigationHistory={navigationHistory}
+        onGoBack={canGoBack ? goBack : undefined}
+      />
+      
+      <main className="relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentTool}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ 
+              duration: 0.12, // Más rápido
+              ease: [0.4, 0, 0.2, 1] 
+            }}
+            className="min-h-[calc(100vh-80px)]"
+          >
+            {renderCurrentTool}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+    </div>
   );
 };

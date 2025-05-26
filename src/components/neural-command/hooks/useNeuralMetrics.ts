@@ -1,6 +1,6 @@
 
 import { useMemo } from 'react';
-import { useRealNeuralMetrics } from '@/hooks/useRealNeuralMetrics';
+import { useOptimizedNeuralMetrics } from '@/hooks/useOptimizedNeuralMetrics';
 
 // Legacy interface para compatibilidad
 interface NeuralMetrics {
@@ -15,7 +15,11 @@ interface NeuralMetrics {
 }
 
 export const useNeuralMetrics = () => {
-  const { metrics, isLoading, error, getMetricForDimension, refetch } = useRealNeuralMetrics();
+  const { metrics, isLoading, error, getMetricForDimension, refetch } = useOptimizedNeuralMetrics({
+    enableCache: true,
+    updateInterval: 60000, // 1 minuto para compatibilidad
+    debounceTime: 3000 // 3 segundos
+  });
 
   // Legacy compatibility wrapper
   const systemVitals = useMemo(() => ({
