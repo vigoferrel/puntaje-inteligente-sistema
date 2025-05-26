@@ -190,12 +190,27 @@ export class CentralizedEducationService {
       return {
         availableCount: scholarships?.length || 0,
         totalAmount: scholarships?.reduce((sum, s) => sum + (s.monto_maximo || 0), 0) || 0,
-        eligibleScholarships: scholarships?.map(scholarship => ({
-          name: scholarship.nombre,
-          institution: scholarship.institucion,
-          amount: scholarship.monto_maximo || 0,
-          deadline: scholarship.fechas_postulacion?.fin || 'No especificado'
-        })) || []
+        eligibleScholarships: scholarships?.map(scholarship => {
+          // Manejo seguro de fechas_postulacion
+          let deadline = 'No especificado';
+          if (scholarship.fechas_postulacion) {
+            try {
+              const fechas = typeof scholarship.fechas_postulacion === 'string' 
+                ? JSON.parse(scholarship.fechas_postulacion)
+                : scholarship.fechas_postulacion;
+              deadline = fechas?.fin || 'No especificado';
+            } catch (e) {
+              deadline = 'No especificado';
+            }
+          }
+
+          return {
+            name: scholarship.nombre,
+            institution: scholarship.institucion,
+            amount: scholarship.monto_maximo || 0,
+            deadline
+          };
+        }) || []
       };
     } catch (error) {
       return this.getDefaultScholarships();
