@@ -14,8 +14,36 @@ interface FinancialPredictorProps {
   };
 }
 
+interface ROIData {
+  investment: number;
+  avgSalary: number;
+  paybackYears: number;
+  roi: number;
+}
+
+interface CareerRecommendation {
+  career: string;
+  score: number;
+  reasoning: string;
+  salaryRange: string;
+  jobSecurity: number;
+}
+
+interface MarketTrends {
+  techGrowth: number;
+  healthGrowth: number;
+  sustainabilityGrowth: number;
+  digitalTransformation: number;
+}
+
+interface PredictionData {
+  roi: Record<string, ROIData>;
+  recommendations: CareerRecommendation[];
+  marketTrends: MarketTrends;
+}
+
 export const FinancialPredictor: React.FC<FinancialPredictorProps> = ({ userProfile }) => {
-  const [prediction, setPrediction] = useState(null);
+  const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePrediction = async () => {
@@ -24,7 +52,7 @@ export const FinancialPredictor: React.FC<FinancialPredictorProps> = ({ userProf
     // Simular análisis IA
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const predictions = {
+    const predictions: PredictionData = {
       roi: {
         medicine: { investment: 60000000, avgSalary: 2500000, paybackYears: 8, roi: 320 },
         engineering: { investment: 35000000, avgSalary: 1800000, paybackYears: 6, roi: 280 },
@@ -119,7 +147,7 @@ export const FinancialPredictor: React.FC<FinancialPredictorProps> = ({ userProf
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(prediction.roi).map(([career, data]) => (
+                {Object.entries(prediction.roi).map(([career, data]: [string, ROIData]) => (
                   <Card key={career} className="bg-white/5 border-white/10">
                     <CardContent className="p-4">
                       <h4 className="text-white font-bold capitalize mb-3">{career}</h4>
