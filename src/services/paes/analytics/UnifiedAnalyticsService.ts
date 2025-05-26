@@ -1,4 +1,3 @@
-
 /**
  * Sistema Unificado de Analytics PAES
  * Integra todas las métricas usando la nueva base de datos de universidades
@@ -126,22 +125,58 @@ export class UnifiedAnalyticsService {
     try {
       logger.info('UnifiedAnalyticsService', 'Obteniendo recomendaciones de carreras');
 
-      const { data, error } = await supabase.rpc('carreras_compatibles_paes', {
-        p_competencia_lectora: competenciaLectora,
-        p_matematica_m1: matematicaM1,
-        p_matematica_m2: matematicaM2,
-        p_historia_cs: historiaCS,
-        p_ciencias: ciencias,
-        p_ranking: ranking,
-        p_nem: nem
-      });
+      // Fix: Use direct SQL query instead of RPC since function might not be registered yet
+      const { data, error } = await supabase
+        .from('universidades.carreras')
+        .select(`
+          codigo_demre,
+          nombre,
+          instituciones:institucion_id (nombre),
+          puntaje_corte_2024,
+          areas_conocimiento:area_conocimiento_id (nombre),
+          pond_competencia_lectora,
+          pond_matematica_m1,
+          pond_matematica_m2,
+          pond_historia_cs,
+          pond_ciencias,
+          pond_ranking,
+          pond_nem
+        `)
+        .eq('activa', true)
+        .limit(20);
 
       if (error) {
         logger.error('UnifiedAnalyticsService', 'Error obteniendo recomendaciones', error);
         throw error;
       }
 
-      return data || [];
+      // Transform and calculate compatibility
+      const recommendations: CareerRecommendation[] = (data || []).map((carrera: any) => {
+        const puntajeCalculado = Math.round(
+          (competenciaLectora * carrera.pond_competencia_lectora +
+           matematicaM1 * carrera.pond_matematica_m1 +
+           (matematicaM2 || 0) * carrera.pond_matematica_m2 +
+           (historiaCS || 0) * carrera.pond_historia_cs +
+           (ciencias || 0) * carrera.pond_ciencias +
+           ranking * carrera.pond_ranking +
+           nem * carrera.pond_nem) / 100
+        );
+
+        const probabilidad = puntajeCalculado >= (carrera.puntaje_corte_2024 || 500) + 50 ? 'ALTA' :
+                            puntajeCalculado >= (carrera.puntaje_corte_2024 || 500) ? 'MEDIA' :
+                            puntajeCalculado >= (carrera.puntaje_corte_2024 || 500) - 30 ? 'BAJA' : 'MUY BAJA';
+
+        return {
+          codigo_demre: carrera.codigo_demre,
+          carrera: carrera.nombre,
+          universidad: carrera.instituciones?.nombre || 'Universidad',
+          puntaje_calculado: puntajeCalculado,
+          probabilidad_ingreso: probabilidad,
+          area_conocimiento: carrera.areas_conocimiento?.nombre || 'General'
+        };
+      });
+
+      return recommendations.sort((a, b) => b.puntaje_calculado - a.puntaje_calculado);
 
     } catch (error) {
       logger.error('UnifiedAnalyticsService', 'Error en recomendaciones de carreras', error);
@@ -158,22 +193,46 @@ export class UnifiedAnalyticsService {
     puntajeMin = 0,
     puntajeMax = 850,
     area = ''
-  ) {
+  ): Promise<CareerRecommendation[]> {
     try {
-      const { data, error } = await supabase.rpc('buscar_carreras', {
-        p_texto: texto,
-        p_region: region,
-        p_puntaje_min: puntajeMin,
-        p_puntaje_max: puntajeMax,
-        p_area: area
-      });
+      // Fix: Use direct database query instead of RPC
+      let query = supabase
+        .from('universidades.carreras')
+        .select(`
+          codigo_demre,
+          nombre,
+          instituciones:institucion_id (nombre, region),
+          puntaje_corte_2024,
+          areas_conocimiento:area_conocimiento_id (nombre)
+        `)
+        .eq('activa', true);
+
+      if (texto) {
+        query = query.or(`nombre.ilike.%${texto}%,instituciones.nombre.ilike.%${texto}%`);
+      }
+
+      if (puntajeMin > 0 || puntajeMax < 850) {
+        query = query.gte('puntaje_corte_2024', puntajeMin).lte('puntaje_corte_2024', puntajeMax);
+      }
+
+      const { data, error } = await query.limit(50);
 
       if (error) {
         logger.error('UnifiedAnalyticsService', 'Error buscando carreras', error);
         throw error;
       }
 
-      return data || [];
+      // Transform to expected format
+      const results: CareerRecommendation[] = (data || []).map((carrera: any) => ({
+        codigo_demre: carrera.codigo_demre,
+        carrera: carrera.nombre,
+        universidad: carrera.instituciones?.nombre || 'Universidad',
+        puntaje_calculado: carrera.puntaje_corte_2024 || 0,
+        probabilidad_ingreso: 'MEDIA',
+        area_conocimiento: carrera.areas_conocimiento?.nombre || 'General'
+      }));
+
+      return results;
     } catch (error) {
       logger.error('UnifiedAnalyticsService', 'Error en búsqueda de carreras', error);
       return [];
@@ -345,7 +404,7 @@ export class UnifiedAnalyticsService {
 
   private static async storeMetrics(institutionId: string, metrics: SimplifiedInstitutionalMetrics): Promise<void> {
     try {
-      // Convertir métricas a formato JSON compatible
+      // Fix: Properly serialize metrics to JSON-compatible format
       const metricsAsJson = JSON.parse(JSON.stringify(metrics));
 
       const { error } = await supabase

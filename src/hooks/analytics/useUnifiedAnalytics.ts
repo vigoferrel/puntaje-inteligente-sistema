@@ -57,10 +57,17 @@ export const useUnifiedAnalytics = (institutionId?: string): UseUnifiedAnalytics
         filters.puntajeMax,
         filters.area
       );
-      setCareerRecommendations(results.slice(0, 10)); // Limitar a 10 resultados
+      // Fix: Properly check if results is an array before using slice
+      if (Array.isArray(results)) {
+        setCareerRecommendations(results.slice(0, 10));
+      } else {
+        setCareerRecommendations([]);
+        logger.warn('useUnifiedAnalytics', 'Resultados de búsqueda no son un array');
+      }
     } catch (err) {
       logger.error('useUnifiedAnalytics', 'Error buscando carreras', err);
       setError('Error buscando carreras');
+      setCareerRecommendations([]);
     } finally {
       setIsLoading(false);
     }
