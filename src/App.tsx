@@ -2,7 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { OptimizedProviderTree } from '@/providers/OptimizedProviderTree';
-import { OptimizedDashboard } from '@/components/dashboard/OptimizedDashboard';
+import { UnifiedDashboard } from '@/components/unified/UnifiedDashboard';
 import { LectoGuiaUnified } from '@/components/lectoguia/LectoGuiaUnified';
 import { IntelligentDiagnosticSystem } from '@/components/diagnostic/IntelligentDiagnosticSystem';
 import { CinematicCalendar } from '@/components/calendar/CinematicCalendar';
@@ -20,11 +20,13 @@ import { EducationalUniverse } from '@/components/universe/EducationalUniverse';
 import { PAESUniverseDashboard } from '@/components/paes-universe/PAESUniverseDashboard';
 import { PAESLearningUniverse } from '@/components/paes-learning-universe/PAESLearningUniverse';
 
-// NUEVAS IMPLEMENTACIONES
+// NUEVAS IMPLEMENTACIONES UNIFICADAS
 import { AdvancedFinancialCenter } from '@/components/financial/AdvancedFinancialCenter';
 import { AIExerciseGenerator } from '@/components/exercise/AIExerciseGenerator';
 import { AdvancedSettings } from '@/components/settings/AdvancedSettings';
 import { HelpCenter } from '@/components/help/HelpCenter';
+import UnifiedPAESMaster from '@/pages/UnifiedPAESMaster';
+import { useAuth } from '@/contexts/AuthContext';
 
 const App: React.FC = () => {
   return (
@@ -32,9 +34,10 @@ const App: React.FC = () => {
       <OptimizedProviderTree>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
           <Routes>
-            {/* Ruta principal - Dashboard */}
-            <Route path="/" element={<OptimizedDashboard />} />
-            <Route path="/dashboard" element={<OptimizedDashboard />} />
+            {/* Ruta principal - Dashboard Unificado */}
+            <Route path="/" element={<UnifiedPAESMaster />} />
+            <Route path="/dashboard" element={<UnifiedPAESMaster />} />
+            <Route path="/unified" element={<UnifiedPAESMaster />} />
             
             {/* Sistema Neural Mejorado */}
             <Route path="/neural" element={<EnhancedNeuralCommandCenter />} />
@@ -82,23 +85,26 @@ const App: React.FC = () => {
             {/* SuperPAES */}
             <Route path="/superpaes" element={<SuperPAESMain />} />
             
-            {/* Rutas legacy - redirigir al sistema principal */}
+            {/* Rutas legacy - redirigir al sistema unificado */}
             <Route path="/reforzamiento" element={<Navigate to="/backend" replace />} />
             <Route path="/entrenamiento" element={<Navigate to="/lectoguia" replace />} />
             <Route path="/contenido" element={<Navigate to="/lectoguia" replace />} />
             <Route path="/evaluaciones" element={<Navigate to="/banco-evaluaciones" replace />} />
-            <Route path="/analisis" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/analisis" element={<Navigate to="/unified" replace />} />
             <Route path="/simulaciones" element={<Navigate to="/diagnostico" replace />} />
             
-            {/* Redirecciones adicionales */}
+            {/* Redirecciones adicionales al sistema unificado */}
             <Route path="/paes-dashboard" element={<Navigate to="/universe/paes-dashboard" replace />} />
             <Route path="/paes-universe" element={<Navigate to="/universe/paes-dashboard" replace />} />
             <Route path="/educational-universe" element={<Navigate to="/universe/educational" replace />} />
             <Route path="/learning-universe" element={<Navigate to="/universe/learning" replace />} />
             <Route path="/finanzas" element={<Navigate to="/centro-financiero" replace />} />
             
+            {/* Dashboard optimizado redirige al unificado */}
+            <Route path="/optimized-dashboard" element={<Navigate to="/unified" replace />} />
+            
             {/* Ruta por defecto */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/unified" replace />} />
           </Routes>
         </div>
       </OptimizedProviderTree>
