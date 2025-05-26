@@ -28,6 +28,7 @@ export interface EnhancedExerciseResponse {
 
 /**
  * Servicio Mejorado de OpenRouter con Validación de Calidad
+ * Optimizado para usar Gemini Flash 1.5 y reducir costos
  */
 export class EnhancedOpenRouterService {
   private static instance: EnhancedOpenRouterService;
@@ -44,7 +45,7 @@ export class EnhancedOpenRouterService {
    */
   async generateQualityExercise(request: EnhancedExerciseRequest): Promise<EnhancedExerciseResponse> {
     const startTime = Date.now();
-    const maxRetries = request.maxRetries || 3;
+    const maxRetries = request.maxRetries || 2; // Reducido para optimizar costos
     const qualityThreshold = request.qualityThreshold || 0.7;
     
     console.log(`🎯 Generando ejercicio de calidad: ${request.prueba}/${request.skill} (${request.difficulty})`);
@@ -68,7 +69,7 @@ export class EnhancedOpenRouterService {
           request.userContext
         );
         
-        // Llamar a OpenRouter con prompt optimizado
+        // Llamar a OpenRouter con prompt optimizado - usar Gemini Flash 1.5
         const response = await this.callOpenRouterWithRetry(promptTemplate);
         
         // Parsear respuesta
@@ -98,7 +99,7 @@ export class EnhancedOpenRouterService {
             exercise,
             qualityReport,
             generationMetadata: {
-              model: 'anthropic/claude-3.5-sonnet',
+              model: 'google/gemini-flash-1.5',  // Actualizado a Gemini Flash 1.5
               attempts,
               processingTime,
               source: 'ai_generated',
@@ -129,7 +130,7 @@ export class EnhancedOpenRouterService {
         exercise: bestExercise,
         qualityReport: finalQualityReport,
         generationMetadata: {
-          model: 'anthropic/claude-3.5-sonnet',
+          model: 'google/gemini-flash-1.5',  // Actualizado a Gemini Flash 1.5
           attempts,
           processingTime,
           source: 'ai_generated',
@@ -144,9 +145,9 @@ export class EnhancedOpenRouterService {
   }
 
   /**
-   * Llama a OpenRouter con reintentos automáticos
+   * Llama a OpenRouter con reintentos automáticos - Optimizado para Gemini Flash 1.5
    */
-  private async callOpenRouterWithRetry(promptTemplate: any, retries: number = 2): Promise<any> {
+  private async callOpenRouterWithRetry(promptTemplate: any, retries: number = 1): Promise<any> {
     for (let i = 0; i <= retries; i++) {
       try {
         const response = await openRouterService({
@@ -154,9 +155,9 @@ export class EnhancedOpenRouterService {
           payload: {
             systemPrompt: promptTemplate.systemPrompt,
             userPrompt: promptTemplate.userPrompt,
-            model: 'anthropic/claude-3.5-sonnet',
+            model: 'google/gemini-flash-1.5',  // Usar Gemini Flash 1.5 específicamente
             temperature: 0.7,
-            max_tokens: 1500
+            max_tokens: 1000  // Reducido para optimizar costos
           }
         });
         
@@ -167,8 +168,8 @@ export class EnhancedOpenRouterService {
         console.error(`Error en llamada OpenRouter (intento ${i + 1}):`, error);
         if (i === retries) throw error;
         
-        // Esperar antes del siguiente intento
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        // Esperar menos tiempo entre reintentos para optimizar velocidad
+        await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
       }
     }
     
@@ -295,7 +296,7 @@ export class EnhancedOpenRouterService {
   }
 
   /**
-   * Prueba la conectividad con OpenRouter
+   * Prueba la conectividad con OpenRouter usando Gemini Flash 1.5
    */
   async testConnection(): Promise<{ connected: boolean; latency: number; error?: string }> {
     const startTime = Date.now();
@@ -306,8 +307,8 @@ export class EnhancedOpenRouterService {
         payload: {
           systemPrompt: 'Eres un asistente de prueba.',
           userPrompt: 'Responde solo con "OK" si me puedes escuchar.',
-          model: 'anthropic/claude-3.5-haiku',
-          max_tokens: 50
+          model: 'google/gemini-flash-1.5',  // Usar Gemini Flash 1.5 para pruebas
+          max_tokens: 10  // Muy bajo para prueba rápida y económica
         }
       });
       
