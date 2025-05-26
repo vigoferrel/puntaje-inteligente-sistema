@@ -9,6 +9,7 @@ import { CinematicSkeletonOptimized } from '@/components/unified-dashboard/Cinem
 import { useUnifiedNavigation } from '@/hooks/useUnifiedNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { preloadCriticalComponents } from '@/components/lazy/LazyComponents';
+import PerformanceOrchestrator from '@/core/performance/PerformanceOrchestrator';
 
 type SystemMode = 'neural' | 'unified' | 'auto';
 
@@ -109,6 +110,14 @@ export const UnifiedSystemContainer: React.FC = () => {
 
   return (
     <div className="min-h-screen relative">
+      {/* Sistema de Performance Orchestrator - Fase 4 */}
+      <PerformanceOrchestrator 
+        enableAutoOptimization={true}
+        enablePredictiveAnalytics={true}
+        enableIntelligentAlerts={true}
+        enableRealTimeDashboard={true}
+      />
+
       <SystemModeToggle
         currentMode={resolvedMode}
         onModeChange={handleModeToggle}
