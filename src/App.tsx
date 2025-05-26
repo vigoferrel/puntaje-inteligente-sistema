@@ -14,6 +14,12 @@ import { PlanInteligenteWrapper } from '@/components/plan/modern/PlanInteligente
 import { QualityDashboard } from '@/components/quality/QualityDashboard';
 import { EvaluationBank } from '@/components/evaluations/EvaluationBank';
 
+// NUEVAS IMPORTACIONES: Universe Visualizations
+import { UniverseVisualizationHub } from '@/components/universe/UniverseVisualizationHub';
+import { EducationalUniverse } from '@/components/universe/EducationalUniverse';
+import { PAESUniverseDashboard } from '@/components/paes-universe/PAESUniverseDashboard';
+import { PAESLearningUniverse } from '@/components/paes-learning-universe/PAESLearningUniverse';
+
 const App: React.FC = () => {
   return (
     <Router>
@@ -36,6 +42,12 @@ const App: React.FC = () => {
             {/* Banco de Evaluaciones */}
             <Route path="/banco-evaluaciones" element={<EvaluationBank />} />
             
+            {/* NUEVAS RUTAS: Universe Explorer */}
+            <Route path="/universe-hub" element={<UniverseVisualizationHub />} />
+            <Route path="/universe/educational" element={<EducationalUniverse initialMode="overview" />} />
+            <Route path="/universe/paes-dashboard" element={<PAESUniverseDashboard />} />
+            <Route path="/universe/learning" element={<PAESLearningUniverse />} />
+            
             {/* Panel de Administración */}
             <Route path="/admin" element={<AdminDashboard />} />
             
@@ -57,6 +69,12 @@ const App: React.FC = () => {
             <Route path="/evaluaciones" element={<Navigate to="/banco-evaluaciones" replace />} />
             <Route path="/analisis" element={<Navigate to="/dashboard" replace />} />
             <Route path="/simulaciones" element={<Navigate to="/diagnostico" replace />} />
+            
+            {/* Redirecciones adicionales para universes */}
+            <Route path="/paes-dashboard" element={<Navigate to="/universe/paes-dashboard" replace />} />
+            <Route path="/paes-universe" element={<Navigate to="/universe/paes-dashboard" replace />} />
+            <Route path="/educational-universe" element={<Navigate to="/universe/educational" replace />} />
+            <Route path="/learning-universe" element={<Navigate to="/universe/learning" replace />} />
             
             {/* Ruta por defecto */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

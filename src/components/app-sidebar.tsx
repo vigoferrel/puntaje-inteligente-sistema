@@ -1,3 +1,4 @@
+
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -35,7 +36,10 @@ import {
   ClipboardList,
   BarChart2,
   Dumbbell,
-  Compass
+  Compass,
+  Globe,
+  Star,
+  Eye
 } from "lucide-react";
 import { useCinematicDashboard } from "@/hooks/dashboard/useCinematicDashboard";
 import { useGlobalStore } from "@/store/globalStore";
@@ -78,6 +82,34 @@ const workflowItems = [
     url: "/paes-dashboard",
     icon: TrendingUp,
     phase: "evaluation"
+  }
+];
+
+// NUEVA SECCIÓN: Universe Visualizations
+const universeItems = [
+  {
+    title: "Hub de Universos",
+    url: "/universe-hub",
+    icon: Sparkles,
+    badge: "Épico"
+  },
+  {
+    title: "Universo Educativo",
+    url: "/universe/educational",
+    icon: Globe,
+    badge: "3D"
+  },
+  {
+    title: "Dashboard PAES",
+    url: "/universe/paes-dashboard",
+    icon: Star,
+    badge: "Batalla"
+  },
+  {
+    title: "Universo Aprendizaje",
+    url: "/universe/learning",
+    icon: Brain,
+    badge: "Nodos"
   }
 ];
 
@@ -232,6 +264,49 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* NUEVA SECCIÓN: Universe Explorer */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-medium text-cyan-400 px-2 py-3 flex items-center space-x-2 tracking-wide">
+            <Globe className="w-3 h-3" />
+            <span>Universe Explorer</span>
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {universeItems.map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (workflowItems.length + index) * 0.1 }}
+                >
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
+                            isActive 
+                              ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/20" 
+                              : "text-gray-300 hover:text-white hover:bg-white/5"
+                          }`
+                        }
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{item.title}</span>
+                        {item.badge && (
+                          <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-xs px-1.5 py-0 h-4">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </motion.div>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {/* Evaluación y Análisis */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-orange-400 px-2 py-3 flex items-center space-x-2 tracking-wide">
@@ -245,7 +320,7 @@ export function AppSidebar() {
                   key={item.title}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (workflowItems.length + index) * 0.1 }}
+                  transition={{ delay: (workflowItems.length + universeItems.length + index) * 0.1 }}
                 >
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
@@ -283,7 +358,7 @@ export function AppSidebar() {
                   key={item.title}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (workflowItems.length + assessmentItems.length + index) * 0.1 }}
+                  transition={{ delay: (workflowItems.length + universeItems.length + assessmentItems.length + index) * 0.1 }}
                 >
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
@@ -300,7 +375,7 @@ export function AppSidebar() {
                         <item.icon className="h-4 w-4" />
                         <span className="flex-1">{item.title}</span>
                         {item.badge && (
-                          <Badge variant="destructive" className="text-xs px-1.5 py-0 h-4 font-medium">
+                          <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-1.5 py-0 h-4">
                             {item.badge}
                           </Badge>
                         )}
@@ -312,77 +387,18 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Materias PAES */}
-        <SidebarGroup>
-          <Collapsible open={showPAESSubjects} onOpenChange={setShowPAESSubjects}>
-            <SidebarGroupLabel className="text-xs font-medium text-emerald-premium-400 px-2 py-3">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 h-auto text-emerald-premium-400 hover:text-emerald-premium-300 font-medium tracking-wide">
-                  <div className="flex items-center space-x-2">
-                    <Target className="w-3 h-3" />
-                    <span>Materias PAES</span>
-                  </div>
-                  {showPAESSubjects ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                </Button>
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu className="space-y-1">
-                  {paesSubjects.map((subject, index) => (
-                    <motion.div
-                      key={subject.name}
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                          <NavLink 
-                            to={subject.url}
-                            className="premium-nav-item text-xs"
-                          >
-                            <subject.icon className="h-3 w-3" />
-                            <div className="flex-1">
-                              <div className="text-contrast-high">{subject.name}</div>
-                              <div className="text-xs text-contrast-medium">{subject.nodes} nodos</div>
-                            </div>
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </motion.div>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-premium-violet-500/20 premium-header">
-        <motion.div 
-          className="premium-card p-4"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="text-xs font-medium text-emerald-premium-400 flex items-center space-x-2 mb-2">
-            <Brain className="w-3 h-3" />
-            <span>Sistema Neural PAES</span>
+      <SidebarFooter className="p-4 border-t border-premium-violet-500/20">
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-emerald-premium-400 text-xs">Neural System Active</span>
           </div>
-          <div className="text-2xl font-bold text-contrast-high mb-1">277</div>
-          <div className="text-xs text-contrast-medium">nodos activos</div>
-          
-          <div className="flex gap-1 mt-3">
-            <Badge className="premium-badge text-xs">
-              Sistema Activo
-            </Badge>
-            <Badge className="premium-badge text-xs">
-              IA Conectada
-            </Badge>
+          <div className="text-xs text-gray-400">
+            {universeItems.length} Universe Visualizations Available
           </div>
-        </motion.div>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
