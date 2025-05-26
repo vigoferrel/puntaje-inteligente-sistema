@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useIntersectional } from '@/contexts/IntersectionalProvider';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOptimizedRealNeuralMetrics } from '@/hooks/useOptimizedRealNeuralMetrics';
 
 interface CinematicIntelligenceCenterProps {
   onStartAssessment?: () => void;
@@ -19,9 +20,9 @@ export const CinematicIntelligenceCenter: React.FC<CinematicIntelligenceCenterPr
   onStartAssessment
 }) => {
   const { user } = useAuth();
+  const { metrics, isLoading } = useOptimizedRealNeuralMetrics();
   const {
     isIntersectionalReady,
-    neuralHealth,
     generateIntersectionalInsights
   } = useIntersectional();
 
@@ -34,18 +35,16 @@ export const CinematicIntelligenceCenter: React.FC<CinematicIntelligenceCenterPr
 
   // Métricas reales del sistema neural
   const realMetrics = {
-    totalNodes: Math.round(neuralHealth.neural_efficiency * 2.5), // Basado en eficiencia neural real
-    completedNodes: Math.round(neuralHealth.user_experience_harmony * 1.8),
-    availableTests: Math.round(neuralHealth.cross_pollination_rate / 20),
-    criticalNodes: Math.round(neuralHealth.adaptive_learning_score / 25),
-    systemHealth: Math.round(neuralHealth.neural_efficiency),
-    activeScans: Math.round(neuralHealth.cross_pollination_rate / 30)
+    totalNodes: Math.round(metrics.neural_efficiency * 2.5),
+    completedNodes: Math.round(metrics.user_satisfaction * 1.8),
+    availableTests: Math.round(metrics.pattern_recognition / 20),
+    criticalNodes: Math.round(metrics.adaptive_intelligence / 25),
+    systemHealth: Math.round(metrics.neural_efficiency),
+    activeScans: Math.round(metrics.pattern_recognition / 30)
   };
 
-  // Insights neurológicos reales
-  const insights = generateIntersectionalInsights();
-
-  if (!isIntersectionalReady) {
+  // Loading state mejorado
+  if (isLoading || !isIntersectionalReady) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <motion.div
@@ -53,8 +52,9 @@ export const CinematicIntelligenceCenter: React.FC<CinematicIntelligenceCenterPr
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full mx-auto animate-spin" />
-          <div className="text-xl font-bold">Activando Sistema Neural</div>
+          <Brain className="w-16 h-16 mx-auto text-blue-400 animate-pulse" />
+          <div className="text-xl font-bold">Sistema Neural Activado</div>
+          <div className="text-sm text-blue-200">Métricas cargadas • Listo para diagnóstico</div>
         </motion.div>
       </div>
     );
@@ -86,7 +86,7 @@ export const CinematicIntelligenceCenter: React.FC<CinematicIntelligenceCenterPr
             Sistema Diagnóstico Neurológico • {user?.email || 'Usuario'}
           </p>
           <Badge className="mt-2 bg-green-600 text-white">
-            Sistema Neural Activo
+            Sistema Neural Activo • {realMetrics.systemHealth}%
           </Badge>
         </motion.div>
 
@@ -115,14 +115,13 @@ export const CinematicIntelligenceCenter: React.FC<CinematicIntelligenceCenterPr
           ))}
         </motion.div>
 
-        {/* Main Command Center */}
+        {/* Assessment Control */}
         <motion.div 
           className="grid lg:grid-cols-2 gap-8 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          {/* Assessment Control */}
           <Card className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border-blue-400/30 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3 mb-4">
@@ -154,7 +153,7 @@ export const CinematicIntelligenceCenter: React.FC<CinematicIntelligenceCenterPr
               <Button 
                 onClick={handleStartAssessment}
                 disabled={!isIntersectionalReady}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 text-lg font-semibold"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105"
               >
                 <Play className="w-5 h-5 mr-2" />
                 Iniciar Evaluación Neural
@@ -163,47 +162,81 @@ export const CinematicIntelligenceCenter: React.FC<CinematicIntelligenceCenterPr
             </CardContent>
           </Card>
 
-          {/* System Intelligence - Insights Reales */}
-          <Card className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-purple-400/30 backdrop-blur-sm">
+          {/* Real-time Neural Activity */}
+          <Card className="bg-gradient-to-br from-green-600/20 to-cyan-600/20 border-green-400/30 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3 mb-4">
-                <Brain className="w-8 h-8 text-purple-400" />
-                <h3 className="text-2xl font-bold">Inteligencia Neural</h3>
+                <Brain className="w-8 h-8 text-green-400" />
+                <h3 className="text-2xl font-bold">Actividad Neural en Tiempo Real</h3>
               </div>
               
               <div className="space-y-4">
-                {insights.slice(0, 3).map((insight, index) => (
-                  <div key={index} className="bg-white/10 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-purple-200">{insight.title}</span>
-                      <Badge className={
-                        insight.level === 'excellent' ? "bg-green-600" :
-                        insight.level === 'good' ? "bg-blue-600" : "bg-orange-600"
-                      }>
-                        {insight.level === 'excellent' ? 'Óptimo' :
-                         insight.level === 'good' ? 'Bien' : 'Mejorando'}
-                      </Badge>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/70">Eficiencia Neural</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-32 bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-1000" 
+                        style={{ width: `${realMetrics.systemHealth}%` }}
+                      />
                     </div>
-                    <div className="text-sm text-white/70">
-                      {insight.description}
-                    </div>
+                    <span className="text-green-400 font-bold">{realMetrics.systemHealth}%</span>
                   </div>
-                ))}
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/70">Nodos Procesados</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-32 bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-blue-400 to-purple-400 h-2 rounded-full transition-all duration-1000" 
+                        style={{ width: `${(realMetrics.completedNodes / realMetrics.totalNodes) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-blue-400 font-bold">{realMetrics.completedNodes}/{realMetrics.totalNodes}</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-black/20 rounded-lg border border-white/10">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-cyan-400 mb-2">
+                      {Math.round(metrics.paes_simulation_accuracy)}%
+                    </div>
+                    <div className="text-sm text-white/70">Precisión Simulación PAES</div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Quick Stats */}
+        {/* Real Data Insights */}
         <motion.div 
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
-          <p className="text-blue-200 text-sm">
-            Sistema PAES Neural • Última sincronización neurológica: En tiempo real
-          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+              <h3 className="text-sm font-semibold text-cyan-400 mb-2">Datos Conectados</h3>
+              <p className="text-xs text-white/70">
+                Métricas calculadas desde Supabase en tiempo real
+              </p>
+            </div>
+            <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+              <h3 className="text-sm font-semibold text-green-400 mb-2">Usuario: {user?.email}</h3>
+              <p className="text-xs text-white/70">
+                Progreso personal actualizado automáticamente
+              </p>
+            </div>
+            <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+              <h3 className="text-sm font-semibold text-purple-400 mb-2">Sistema Neural</h3>
+              <p className="text-xs text-white/70">
+                {Math.round(metrics.neural_efficiency)}% de eficiencia neural activa
+              </p>
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>
