@@ -1,7 +1,9 @@
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-// Tipos básicos para el hook
 interface UnifiedDashboardData {
   analytics: {
     totalStudents: number;
@@ -43,156 +45,170 @@ interface UseUnifiedEducationReturn {
   };
 }
 
-/**
- * Hook unificado estable con recuperación automática
- */
 export const useUnifiedEducation = (userId?: string): UseUnifiedEducationReturn => {
-  const [dashboard, setDashboard] = useState<UnifiedDashboardData | null>(null);
+  const { user } = useAuth();
   const [optimalPath, setOptimalPath] = useState<any | null>(null);
-  const [alerts, setAlerts] = useState<PersonalizedAlert[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     lastUpdated: null as Date | null,
     totalRequests: 0
   });
 
-  // Datos mock estables
-  const mockDashboard: UnifiedDashboardData = {
-    analytics: {
-      totalStudents: 150,
-      activeStudents: 120,
-      averageEngagement: 0.85,
-      overallProgress: 0.72
-    },
-    calendar: {
-      nextCriticalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      totalEvents: 5
-    },
-    scholarships: {
-      availableCount: 12,
-      totalAmount: 50000000
-    }
-  };
+  // Cargar datos reales del dashboard
+  const { data: dashboard, isLoading, refetch: refetchDashboard } = useQuery({
+    queryKey: ['unified-dashboard', userId || user?.id],
+    queryFn: async () => {
+      const currentUserId = userId || user?.id;
+      if (!currentUserId) return null;
 
-  const mockAlerts: PersonalizedAlert[] = [
-    {
-      id: '1',
-      title: 'Próxima evaluación PAES',
-      description: 'Simulacro programado para la próxima semana',
-      priority: 'urgent'
+      // Cargar datos reales de progreso
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_node_progress')
+        .select('*')
+        .eq('user_id', currentUserId);
+
+      if (progressError) throw progressError;
+
+      // Cargar eventos del calendario
+      const { data: calendarData } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .gte('start_date', new Date().toISOString())
+        .order('start_date')
+        .limit(5);
+
+      // Cargar becas disponibles
+      const { data: scholarshipsData } = await supabase
+        .from('becas_financiamiento')
+        .select('*')
+        .eq('estado', 'activa')
+        .limit(10);
+
+      const completedNodes = progressData?.filter(p => p.status === 'completed').length || 0;
+      const totalNodes = progressData?.length || 0;
+      const averageEngagement = totalNodes > 0 
+        ? progressData.reduce((sum, p) => sum + (p.success_rate || 0), 0) / totalNodes
+        : 0;
+
+      return {
+        analytics: {
+          totalStudents: 1, // Para usuario individual
+          activeStudents: 1,
+          averageEngagement: Math.round(averageEngagement * 100) / 100,
+          overallProgress: totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0
+        },
+        calendar: {
+          nextCriticalDate: calendarData?.[0]?.start_date || new Date().toISOString(),
+          totalEvents: calendarData?.length || 0
+        },
+        scholarships: {
+          availableCount: scholarshipsData?.length || 0,
+          totalAmount: scholarshipsData?.reduce((sum, s) => sum + (s.monto_maximo || 0), 0) || 0
+        }
+      };
     },
-    {
-      id: '2',
-      title: 'Progreso en Matemáticas',
-      description: 'Has mejorado un 15% en los últimos ejercicios',
-      priority: 'normal'
-    }
-  ];
+    enabled: !!(userId || user?.id),
+    staleTime: 5 * 60 * 1000 // 5 minutos
+  });
+
+  // Cargar alertas reales
+  const { data: alerts = [] } = useQuery({
+    queryKey: ['user-alerts', userId || user?.id],
+    queryFn: async () => {
+      const currentUserId = userId || user?.id;
+      if (!currentUserId) return [];
+
+      const { data, error } = await supabase
+        .from('user_notifications')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .eq('is_read', false)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) return [];
+
+      return data.map(notification => ({
+        id: notification.id,
+        title: notification.title,
+        description: notification.message,
+        priority: notification.priority as 'urgent' | 'normal' | 'low'
+      }));
+    },
+    enabled: !!(userId || user?.id)
+  });
 
   const loadDashboard = async () => {
-    if (!userId) {
-      setDashboard(mockDashboard);
-      return;
-    }
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Simular carga con timeout para evitar bloqueos
-      await new Promise(resolve => setTimeout(resolve, Math.min(500, 2000)));
-      
-      setDashboard(mockDashboard);
-      setStats(prev => ({
-        lastUpdated: new Date(),
-        totalRequests: prev.totalRequests + 1
-      }));
-      
-      console.log('✅ Dashboard cargado correctamente');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error cargando dashboard';
-      setError(errorMessage);
-      console.error('❌ Error cargando dashboard:', err);
-      
-      // Fallback a datos mock
-      setDashboard(mockDashboard);
-    } finally {
-      setIsLoading(false);
-    }
+    setStats(prev => ({
+      lastUpdated: new Date(),
+      totalRequests: prev.totalRequests + 1
+    }));
+    await refetchDashboard();
   };
 
   const calculateOptimalPath = async (preferences: any = {}) => {
-    setIsLoading(true);
+    if (!user?.id) return;
+    
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setOptimalPath({ 
-        generated: true, 
-        preferences,
-        steps: ['Diagnóstico', 'Ejercicios', 'Evaluación', 'Mejora']
-      });
-      console.log('✅ Ruta óptima calculada');
+      // Cargar plan de estudio generado
+      const { data: studyPlan } = await supabase
+        .from('generated_study_plans')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (studyPlan) {
+        setOptimalPath({
+          generated: true,
+          preferences,
+          plan: studyPlan,
+          steps: ['Diagnóstico', 'Ejercicios', 'Evaluación', 'Mejora']
+        });
+      } else {
+        // Crear un nuevo plan si no existe
+        setOptimalPath({
+          generated: true,
+          preferences,
+          steps: ['Diagnóstico Pendiente', 'Plan por Generar']
+        });
+      }
     } catch (err) {
       setError('Error calculando ruta óptima');
       setOptimalPath({ generated: false, error: true });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const refreshAlerts = async () => {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setAlerts(mockAlerts);
-      console.log('✅ Alertas actualizadas');
-    } catch (err) {
-      console.error('❌ Error actualizando alertas:', err);
-      setAlerts(mockAlerts); // Siempre mostrar alertas mock
-    }
+    // Las alertas se actualizan automáticamente con React Query
+    console.log('Alertas actualizadas automáticamente');
   };
 
   const exportReport = async (format: 'pdf' | 'excel' | 'json'): Promise<Blob | null> => {
     try {
-      const data = JSON.stringify({ dashboard, alerts, format, exportedAt: new Date() });
+      const data = JSON.stringify({ 
+        dashboard, 
+        alerts, 
+        optimalPath,
+        format, 
+        exportedAt: new Date(),
+        userId: user?.id 
+      });
       return new Blob([data], { type: 'application/json' });
     } catch (err) {
-      console.error('❌ Error exportando reporte:', err);
+      console.error('Error exportando reporte:', err);
       return null;
     }
   };
 
   const clearCache = () => {
-    setDashboard(null);
     setOptimalPath(null);
-    setAlerts([]);
     setError(null);
-    console.log('🗑️ Cache limpiado');
+    console.log('Cache limpiado');
   };
-
-  // Carga inicial automática con recovery
-  useEffect(() => {
-    let mounted = true;
-    
-    if (userId && !dashboard && mounted) {
-      const loadWithRetry = async (retries = 3) => {
-        try {
-          await loadDashboard();
-          if (mounted) await refreshAlerts();
-        } catch (error) {
-          if (retries > 0 && mounted) {
-            console.log(`🔄 Reintentando carga (${retries} intentos restantes)`);
-            setTimeout(() => loadWithRetry(retries - 1), 1000);
-          }
-        }
-      };
-      
-      loadWithRetry();
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [userId]);
 
   return {
     dashboard,

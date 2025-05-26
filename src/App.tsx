@@ -11,6 +11,7 @@ import { AutoRecoverySystem } from "@/components/recovery/AutoRecoverySystem";
 import { CinematicInterfaceMaster } from "@/components/cinematic/CinematicInterfaceMaster";
 import { useState } from "react";
 import { lazy } from "react";
+import { useCinematicDashboard } from "@/hooks/dashboard/useCinematicDashboard";
 
 // Lazy imports simplificados con error handling
 const Index = lazy(() => import("./pages/Index").catch(() => {
@@ -38,19 +39,32 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => {
+const AppContent = () => {
   const [currentModule, setCurrentModule] = useState('dashboard');
-  const [userProgress] = useState({
-    totalProgress: 75,
-    currentStreak: 15,
-    paesScore: 685,
-    studyHours: 142
-  });
+  const dashboardData = useCinematicDashboard();
 
   const handleModuleChange = (module: string) => {
     setCurrentModule(module);
   };
 
+  return (
+    <CinematicInterfaceMaster
+      currentModule={currentModule}
+      userProgress={dashboardData.progress}
+      onModuleChange={handleModuleChange}
+    >
+      <Suspense fallback={<SimpleLoadingScreen />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/unified" element={<UnifiedPAESMaster />} />
+          <Route path="/paes" element={<PAESDashboard />} />
+        </Routes>
+      </Suspense>
+    </CinematicInterfaceMaster>
+  );
+};
+
+const App = () => {
   return (
     <ErrorBoundary onError={(error) => console.error('Global error:', error)}>
       <AutoRecoverySystem>
@@ -58,19 +72,7 @@ const App = () => {
           <BrowserRouter>
             <AuthProvider>
               <CinematicThemeProvider>
-                <CinematicInterfaceMaster
-                  currentModule={currentModule}
-                  userProgress={userProgress}
-                  onModuleChange={handleModuleChange}
-                >
-                  <Suspense fallback={<SimpleLoadingScreen />}>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/unified" element={<UnifiedPAESMaster />} />
-                      <Route path="/paes" element={<PAESDashboard />} />
-                    </Routes>
-                  </Suspense>
-                </CinematicInterfaceMaster>
+                <AppContent />
               </CinematicThemeProvider>
               <Toaster />
             </AuthProvider>

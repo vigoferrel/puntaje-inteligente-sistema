@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Activity, Zap, Target, Brain, BookOpen } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HolographicDataFlowProps {
   currentModule: string;
@@ -26,17 +29,83 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
   userProgress,
   neuralActivity
 }) => {
+  const { user } = useAuth();
   const [dataNodes, setDataNodes] = useState<DataNode[]>([]);
-  const [flowActive, setFlowActive] = useState(true);
+
+  // Cargar métricas neurales reales
+  const { data: realMetrics } = useQuery({
+    queryKey: ['neural-metrics-flow', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('neural_metrics')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('last_calculated_at', { ascending: false })
+        .limit(10);
+
+      if (error) return null;
+      return data;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000 // Actualizar cada 30 segundos
+  });
+
+  // Cargar progreso real de nodos
+  const { data: nodeProgress } = useQuery({
+    queryKey: ['node-progress-flow', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('user_node_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('last_activity_at', { ascending: false })
+        .limit(20);
+
+      if (error) return [];
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
 
   useEffect(() => {
-    const generateDataNodes = () => {
+    const generateRealDataNodes = () => {
+      if (!realMetrics || !nodeProgress) return;
+
+      // Calcular métricas reales
+      const completedNodes = nodeProgress.filter(np => np.status === 'completed').length;
+      const totalNodes = nodeProgress.length;
+      const averageProgress = totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0;
+      
+      const averageScore = nodeProgress.length > 0 
+        ? nodeProgress.reduce((sum, np) => sum + (np.last_performance_score || 0), 0) / nodeProgress.length
+        : 0;
+
+      const studyEfficiency = nodeProgress.length > 0
+        ? nodeProgress.reduce((sum, np) => sum + (np.success_rate || 0), 0) / nodeProgress.length * 100
+        : 0;
+
+      // Obtener métricas neurales específicas
+      const neuralEfficiency = realMetrics.find(m => m.dimension_id === 'neural_efficiency')?.current_value || neuralActivity;
+      const focusLevel = realMetrics.find(m => m.dimension_id === 'focus_level')?.current_value || 75;
+      
+      // Predicción basada en tendencia real
+      const recentPerformance = nodeProgress.slice(0, 5);
+      const performanceTrend = recentPerformance.length > 1 
+        ? recentPerformance[0]?.last_performance_score - recentPerformance[recentPerformance.length - 1]?.last_performance_score
+        : 0;
+      
+      const prediction = performanceTrend > 0 ? `+${Math.round(performanceTrend * 100)}pts` : 'Estable';
+
       const nodes: DataNode[] = [
         {
           id: 'neural-activity',
           type: 'metric',
-          value: Math.round(neuralActivity),
-          label: 'Actividad Neural',
+          value: Math.round(neuralEfficiency),
+          label: 'Eficiencia Neural',
           color: '#8b5cf6',
           icon: Brain,
           x: 20,
@@ -46,8 +115,8 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
         {
           id: 'learning-progress',
           type: 'progress',
-          value: `${Math.round(65 + Math.sin(Date.now() / 3000) * 10)}%`,
-          label: 'Progreso de Aprendizaje',
+          value: `${averageProgress}%`,
+          label: 'Progreso Real',
           color: '#06b6d4',
           icon: TrendingUp,
           x: 50,
@@ -57,7 +126,7 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
         {
           id: 'focus-level',
           type: 'metric',
-          value: Math.round(75 + Math.cos(Date.now() / 2000) * 15),
+          value: Math.round(focusLevel),
           label: 'Nivel de Enfoque',
           color: '#10b981',
           icon: Target,
@@ -68,8 +137,8 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
         {
           id: 'paes-score',
           type: 'achievement',
-          value: 685,
-          label: 'Puntaje PAES',
+          value: Math.round(150 + (averageScore * 700)),
+          label: 'Puntaje Estimado',
           color: '#f59e0b',
           icon: Activity,
           x: 70,
@@ -79,8 +148,8 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
         {
           id: 'study-efficiency',
           type: 'metric',
-          value: `${Math.round(80 + Math.sin(Date.now() / 4000) * 12)}%`,
-          label: 'Eficiencia de Estudio',
+          value: `${Math.round(studyEfficiency)}%`,
+          label: 'Eficiencia Real',
           color: '#ef4444',
           icon: Zap,
           x: 60,
@@ -90,8 +159,8 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
         {
           id: 'prediction',
           type: 'prediction',
-          value: '+45pts',
-          label: 'Proyección de Mejora',
+          value: prediction,
+          label: 'Proyección Real',
           color: '#8b5cf6',
           icon: BookOpen,
           x: 80,
@@ -103,10 +172,8 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
       setDataNodes(nodes);
     };
 
-    generateDataNodes();
-    const interval = setInterval(generateDataNodes, 2000);
-    return () => clearInterval(interval);
-  }, [neuralActivity]);
+    generateRealDataNodes();
+  }, [realMetrics, nodeProgress, neuralActivity]);
 
   const renderConnections = () => {
     return dataNodes.map(node => 
@@ -141,6 +208,15 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
     ).flat().filter(Boolean);
   };
 
+  // Si no hay datos reales disponibles, mostrar estado de carga
+  if (!realMetrics || !nodeProgress) {
+    return (
+      <div className="holographic-data-flow fixed inset-0 pointer-events-none z-10 flex items-center justify-center">
+        <div className="text-white/60 text-sm">Cargando datos reales...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="holographic-data-flow fixed inset-0 pointer-events-none z-10">
       {/* Data Flow Visualization */}
@@ -161,11 +237,10 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
           </filter>
         </defs>
         
-        {/* Render Connections */}
         {renderConnections()}
       </svg>
 
-      {/* Data Nodes */}
+      {/* Data Nodes con datos reales */}
       <div className="absolute inset-0">
         {dataNodes.map((node, index) => (
           <motion.div
@@ -182,7 +257,6 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
             whileHover={{ scale: 1.2, z: 10 }}
           >
             <div className="data-node relative">
-              {/* Node Background */}
               <motion.div
                 className="absolute inset-0 rounded-full"
                 style={{ backgroundColor: node.color }}
@@ -197,7 +271,6 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
                 }}
               />
               
-              {/* Node Content */}
               <div 
                 className="relative bg-black/80 backdrop-blur-md rounded-xl border border-white/20 p-3 min-w-[120px]"
                 style={{ 
@@ -220,7 +293,6 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
                 
                 <div className="text-white/70 text-xs">{node.label}</div>
                 
-                {/* Holographic Effect */}
                 <motion.div
                   className="absolute inset-0 rounded-xl"
                   style={{
@@ -237,53 +309,21 @@ export const HolographicDataFlow: React.FC<HolographicDataFlowProps> = ({
                 />
               </div>
 
-              {/* Data Particles */}
-              <div className="absolute inset-0">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-1 h-1 rounded-full"
-                    style={{ backgroundColor: node.color }}
-                    animate={{
-                      x: [0, Math.random() * 40 - 20],
-                      y: [0, Math.random() * 40 - 20],
-                      opacity: [0, 1, 0],
-                      scale: [0.5, 1, 0.5]
-                    }}
-                    transition={{
-                      duration: 2 + Math.random() * 2,
-                      repeat: Infinity,
-                      delay: i * 0.5
-                    }}
-                  />
-                ))}
+              {/* Indicador de datos reales */}
+              <div className="absolute -top-1 -right-1">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" title="Datos reales" />
               </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Ambient Data Streams */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-0.5 h-8 bg-gradient-to-b from-cyan-400 to-transparent"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`
-            }}
-            animate={{
-              y: [0, -100],
-              opacity: [0, 0.8, 0]
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 3
-            }}
-          />
-        ))}
+      {/* Información de conexión a datos reales */}
+      <div className="absolute bottom-4 left-4 text-xs text-white/50">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+          <span>Datos en tiempo real desde Supabase</span>
+        </div>
       </div>
     </div>
   );
