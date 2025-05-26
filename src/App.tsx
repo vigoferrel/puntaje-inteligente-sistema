@@ -9,6 +9,8 @@ import { CinematicCalendar } from '@/components/calendar/CinematicCalendar';
 import { SuperPAESMain } from '@/components/super-paes/SuperPAESMain';
 import { BackendExploitationDashboard } from '@/components/backend/BackendExploitationDashboard';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import { NeuralCommandCenter } from '@/components/neural-command/NeuralCommandCenter';
+import { PlanInteligente } from '@/components/plan/modern/PlanInteligente';
 
 const App: React.FC = () => {
   return (
@@ -19,6 +21,12 @@ const App: React.FC = () => {
             {/* Ruta principal - Dashboard */}
             <Route path="/" element={<OptimizedDashboard />} />
             <Route path="/dashboard" element={<OptimizedDashboard />} />
+            
+            {/* Sistema Neural Avanzado */}
+            <Route path="/neural" element={<NeuralCommandCenter />} />
+            
+            {/* Plan Inteligente */}
+            <Route path="/plan" element={<PlanInteligente />} />
             
             {/* Panel de Administración */}
             <Route path="/admin" element={<AdminDashboard />} />

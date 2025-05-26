@@ -14,7 +14,9 @@ import {
   BarChart3,
   Sparkles,
   Users,
-  Settings
+  Settings,
+  Zap,
+  MapPin
 } from 'lucide-react';
 
 export const OptimizedDashboard: React.FC = () => {
@@ -23,10 +25,30 @@ export const OptimizedDashboard: React.FC = () => {
 
   const tools = [
     {
+      id: 'neural',
+      title: 'Sistema Neural',
+      description: 'Centro de comando neural con IA avanzada',
+      icon: Brain,
+      path: '/neural',
+      color: 'from-purple-600 to-indigo-700',
+      badge: 'Neural IA',
+      priority: 'high'
+    },
+    {
+      id: 'plan',
+      title: 'Plan Inteligente',
+      description: 'Planificación personalizada con IA',
+      icon: MapPin,
+      path: '/plan',
+      color: 'from-emerald-600 to-teal-700',
+      badge: 'Personalizado',
+      priority: 'high'
+    },
+    {
       id: 'lectoguia',
       title: 'LectoGuía IA',
       description: 'Sistema de comprensión lectora con IA',
-      icon: Brain,
+      icon: BookOpen,
       path: '/lectoguia',
       color: 'from-blue-600 to-blue-700',
       badge: 'IA Avanzada'
@@ -82,6 +104,10 @@ export const OptimizedDashboard: React.FC = () => {
     navigate(path);
   };
 
+  // Separar herramientas prioritarias
+  const priorityTools = tools.filter(tool => tool.priority === 'high');
+  const regularTools = tools.filter(tool => tool.priority !== 'high');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
       <motion.div
@@ -113,45 +139,95 @@ export const OptimizedDashboard: React.FC = () => {
           </CardHeader>
         </Card>
 
-        {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tools.map((tool, index) => (
-            <motion.div
-              key={tool.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="group"
-            >
-              <Card className="bg-black/40 backdrop-blur-xl border-white/20 hover:border-white/40 transition-all duration-300 h-full">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`p-3 rounded-xl bg-gradient-to-r ${tool.color}`}>
-                      <tool.icon className="w-8 h-8 text-white" />
+        {/* Herramientas Prioritarias */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Zap className="w-6 h-6 text-yellow-400" />
+            Herramientas Principales
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {priorityTools.map((tool, index) => (
+              <motion.div
+                key={tool.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="group"
+              >
+                <Card className="bg-black/40 backdrop-blur-xl border-white/20 hover:border-white/40 transition-all duration-300 h-full">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`p-4 rounded-xl bg-gradient-to-r ${tool.color}`}>
+                        <tool.icon className="w-10 h-10 text-white" />
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {tool.badge}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {tool.badge}
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
-                    {tool.title}
-                  </h3>
-                  <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                    {tool.description}
-                  </p>
-                  
-                  <Button
-                    onClick={() => handleNavigation(tool.path)}
-                    className={`w-full bg-gradient-to-r ${tool.color} hover:opacity-90 transition-all duration-200`}
-                  >
-                    Acceder
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                    
+                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-cyan-300 transition-colors">
+                      {tool.title}
+                    </h3>
+                    <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+                      {tool.description}
+                    </p>
+                    
+                    <Button
+                      onClick={() => handleNavigation(tool.path)}
+                      className={`w-full bg-gradient-to-r ${tool.color} hover:opacity-90 transition-all duration-200 text-lg py-3`}
+                    >
+                      Acceder
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Herramientas Adicionales */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-white">Herramientas Adicionales</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {regularTools.map((tool, index) => (
+              <motion.div
+                key={tool.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (priorityTools.length + index) * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="group"
+              >
+                <Card className="bg-black/40 backdrop-blur-xl border-white/20 hover:border-white/40 transition-all duration-300 h-full">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`p-3 rounded-xl bg-gradient-to-r ${tool.color}`}>
+                        <tool.icon className="w-8 h-8 text-white" />
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {tool.badge}
+                      </Badge>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
+                      {tool.title}
+                    </h3>
+                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+                      {tool.description}
+                    </p>
+                    
+                    <Button
+                      onClick={() => handleNavigation(tool.path)}
+                      className={`w-full bg-gradient-to-r ${tool.color} hover:opacity-90 transition-all duration-200`}
+                    >
+                      Acceder
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -169,7 +245,7 @@ export const OptimizedDashboard: React.FC = () => {
                 <div className="text-sm text-gray-300">Sistema</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">6</div>
+                <div className="text-2xl font-bold text-blue-400">8</div>
                 <div className="text-sm text-gray-300">Herramientas</div>
               </div>
               <div className="text-center">
