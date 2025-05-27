@@ -1,7 +1,7 @@
 
 /**
- * UNIFIED STORAGE SYSTEM v7.0 - CIRCUIT BREAKER ULTRA-AGRESIVO
- * Sistema con tipos corregidos y activación inmediata en primera alerta
+ * UNIFIED STORAGE SYSTEM v8.0 - CIRCUIT BREAKER RELAJADO
+ * Sistema con circuit breaker tolerante y modo graceful degradation
  */
 
 import { CacheDataTypes, CacheKey } from './types';
@@ -21,6 +21,7 @@ interface StorageStatus {
   queueLength: number;
   alertCount: number;
   circuitBreakerActive: boolean;
+  gracefulDegradation: boolean;
 }
 
 class UnifiedStorageSystemCore {
@@ -32,13 +33,13 @@ class UnifiedStorageSystemCore {
   private alertCount = 0;
   private circuitBreakerActive = false;
   private lastAlertTime = 0;
+  private gracefulDegradation = false;
   
-  // Circuit breaker ULTRA-AGRESIVO - activación en primera alerta
-  private readonly MAX_ALERTS = 1; // UNA SOLA alerta activa circuit breaker
-  private readonly ALERT_WINDOW = 1000; // 1 segundo
-  private readonly CIRCUIT_BREAKER_DURATION = 300000; // 5 minutos permanente
-  private readonly EXPONENTIAL_BACKOFF_BASE = 3;
-  private circuitBreakerRetries = 0;
+  // Circuit breaker RELAJADO v8.0 - Mayor tolerancia
+  private readonly MAX_ALERTS = 5; // Aumentado de 1 a 5
+  private readonly ALERT_WINDOW = 10000; // 10 segundos (más tolerante)
+  private readonly CIRCUIT_BREAKER_DURATION = 600000; // 10 minutos (reducido)
+  private readonly GRACEFUL_DEGRADATION_THRESHOLD = 3;
 
   static getInstance(): UnifiedStorageSystemCore {
     if (!UnifiedStorageSystemCore.instance) {
@@ -53,72 +54,121 @@ class UnifiedStorageSystemCore {
 
   private async initialize() {
     try {
-      // Test ÚNICO ultra-silencioso
-      const testKey = '__ultra_silent_test_v6__';
+      // Test TOLERANTE v8.0
+      const testKey = '__graceful_test_v8__';
       localStorage.setItem(testKey, '1');
       localStorage.removeItem(testKey);
       
       this.storageAvailable = true;
       this.trackingBlocked = false;
-      console.log('✅ Storage disponible - modo normal');
+      console.log('✅ Storage v8.0 - modo tolerante');
       
     } catch (error) {
-      // ACTIVAR CIRCUIT BREAKER INMEDIATAMENTE
-      this.activateCircuitBreakerInstant('Primera detección de tracking prevention');
+      // ACTIVAR DEGRADACIÓN GRACEFUL primero
+      this.activateGracefulDegradation('Primera detección - modo graceful');
     }
     
     this.isReady = true;
   }
 
-  private activateCircuitBreakerInstant(reason: string) {
+  private activateGracefulDegradation(reason: string) {
+    this.gracefulDegradation = true;
+    this.storageAvailable = false;
+    this.trackingBlocked = true;
+    
+    console.log(`⚠️ DEGRADACIÓN GRACEFUL: ${reason}`);
+    console.log('📱 Modo memoria con recovery automático');
+    
+    // Auto-recovery después de 10 minutos
+    setTimeout(() => {
+      this.attemptRecovery();
+    }, 600000);
+  }
+
+  private activateCircuitBreakerRelajado(reason: string) {
     this.circuitBreakerActive = true;
     this.storageAvailable = false;
     this.trackingBlocked = true;
-    this.alertCount = 1;
+    this.alertCount = this.MAX_ALERTS;
     
-    console.log(`🚨 CIRCUIT BREAKER ACTIVADO INSTANTÁNEAMENTE: ${reason}`);
-    console.log('📱 Modo memoria permanente activado');
+    console.log(`🔄 CIRCUIT BREAKER RELAJADO: ${reason}`);
+    
+    // Auto-recovery después de 10 minutos
+    setTimeout(() => {
+      this.attemptRecovery();
+    }, this.CIRCUIT_BREAKER_DURATION);
+  }
+
+  private attemptRecovery() {
+    console.log('🔄 Intentando recovery automático...');
+    
+    try {
+      const testKey = '__recovery_test_v8__';
+      localStorage.setItem(testKey, '1');
+      localStorage.removeItem(testKey);
+      
+      // Recovery exitoso
+      this.circuitBreakerActive = false;
+      this.gracefulDegradation = false;
+      this.storageAvailable = true;
+      this.trackingBlocked = false;
+      this.alertCount = 0;
+      this.lastAlertTime = 0;
+      
+      console.log('✅ Recovery automático exitoso');
+    } catch (error) {
+      // Recovery fallido - mantener degradación graceful
+      console.log('⚠️ Recovery fallido - manteniendo modo graceful');
+      this.gracefulDegradation = true;
+    }
   }
 
   private handleStorageError(operation: string) {
     const now = Date.now();
     
-    // Rate limiting ultra-agresivo
-    if (now - this.lastAlertTime < 100) {
-      return; // Ignorar si hubo alerta hace menos de 100ms
+    // Rate limiting tolerante
+    if (now - this.lastAlertTime < 5000) { // 5 segundos
+      return;
     }
     
     this.alertCount++;
     this.lastAlertTime = now;
     
-    // Activar circuit breaker en PRIMERA alerta
-    if (this.alertCount >= this.MAX_ALERTS) {
-      this.activateCircuitBreakerInstant(`Error en ${operation} - alerta #${this.alertCount}`);
+    // Degradación graceful en umbral 3
+    if (this.alertCount >= this.GRACEFUL_DEGRADATION_THRESHOLD && !this.gracefulDegradation) {
+      this.activateGracefulDegradation(`Error en ${operation} - alerta #${this.alertCount}`);
+    }
+    
+    // Circuit breaker solo en máximo (5 alertas)
+    if (this.alertCount >= this.MAX_ALERTS && !this.circuitBreakerActive) {
+      this.activateCircuitBreakerRelajado(`Múltiples errores en ${operation}`);
     }
   }
 
   async waitForReady(): Promise<void> {
-    while (!this.isReady) {
-      await new Promise(resolve => setTimeout(resolve, 5));
+    let attempts = 0;
+    while (!this.isReady && attempts < 50) { // 5 segundos máximo
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
     }
   }
 
   getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
     const keyStr = String(key);
     
-    // SIEMPRE usar cache L1 primero (máxima prioridad)
+    // SIEMPRE usar cache L1 primero
     const cached = this.memoryCache.get(keyStr);
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
       cached.accessCount++;
       return cached.data as CacheDataTypes[K];
     }
 
-    // Si circuit breaker activo, JAMÁS intentar localStorage
-    if (this.circuitBreakerActive) {
+    // Si hay degradación graceful O circuit breaker, solo memoria
+    if (this.gracefulDegradation || this.circuitBreakerActive) {
       return null;
     }
 
-    // Solo si storage está disponible Y no hay circuit breaker
+    // Intentar localStorage solo si está disponible
     if (this.storageAvailable) {
       try {
         const item = localStorage.getItem(keyStr);
@@ -143,15 +193,15 @@ class UnifiedStorageSystemCore {
   ): boolean {
     const keyStr = String(key);
     
-    // SIEMPRE actualizar cache L1 (prioridad máxima)
+    // SIEMPRE actualizar cache L1
     this.setToCache(key, value, options.ttl);
 
-    // Si circuit breaker activo, NO intentar localStorage
-    if (this.circuitBreakerActive) {
+    // Si hay degradación o circuit breaker, solo memoria
+    if (this.gracefulDegradation || this.circuitBreakerActive) {
       return true; // Éxito en memoria
     }
 
-    // Intentar localStorage solo si está disponible
+    // Intentar localStorage
     if (this.storageAvailable) {
       try {
         localStorage.setItem(keyStr, JSON.stringify(value));
@@ -164,7 +214,7 @@ class UnifiedStorageSystemCore {
       }
     }
 
-    return true; // Éxito en memoria aunque no se persista
+    return true;
   }
 
   private setToCache<K extends CacheKey>(
@@ -180,8 +230,8 @@ class UnifiedStorageSystemCore {
       accessCount: 0
     });
 
-    // Limpieza automática más agresiva (máximo 20 items)
-    if (this.memoryCache.size > 20) {
+    // Limpieza tolerante (máximo 50 items)
+    if (this.memoryCache.size > 50) {
       this.cleanupCache();
     }
   }
@@ -190,17 +240,17 @@ class UnifiedStorageSystemCore {
     const entries = Array.from(this.memoryCache.entries());
     const now = Date.now();
     
-    // Remover entradas expiradas y menos usadas
+    // Remover solo entradas muy antiguas
     entries
-      .filter(([, entry]) => now - entry.timestamp > entry.ttl || entry.accessCount < 2)
-      .slice(0, 10) // Remover máximo 10 por vez
+      .filter(([, entry]) => now - entry.timestamp > entry.ttl * 2)
+      .slice(0, 10)
       .forEach(([key]) => this.memoryCache.delete(key));
   }
 
   removeItem(key: string): boolean {
     this.memoryCache.delete(key);
     
-    if (this.storageAvailable && !this.circuitBreakerActive) {
+    if (this.storageAvailable && !this.gracefulDegradation && !this.circuitBreakerActive) {
       try {
         localStorage.removeItem(key);
       } catch (error) {
@@ -218,7 +268,8 @@ class UnifiedStorageSystemCore {
       cacheSize: this.memoryCache.size,
       queueLength: 0,
       alertCount: this.alertCount,
-      circuitBreakerActive: this.circuitBreakerActive
+      circuitBreakerActive: this.circuitBreakerActive,
+      gracefulDegradation: this.gracefulDegradation
     };
   }
 
@@ -229,26 +280,29 @@ class UnifiedStorageSystemCore {
       alertCount: this.alertCount,
       trackingBlocked: this.trackingBlocked,
       circuitBreakerActive: this.circuitBreakerActive,
+      gracefulDegradation: this.gracefulDegradation,
       syncQueueSize: 0,
-      memoryUsage: this.memoryCache.size * 1024
+      memoryUsage: this.memoryCache.size * 1024,
+      recoveryMode: this.gracefulDegradation || this.circuitBreakerActive
     };
   }
 
   // Reset manual para testing
   forceReset(): void {
     this.circuitBreakerActive = false;
+    this.gracefulDegradation = false;
     this.storageAvailable = true;
     this.trackingBlocked = false;
     this.alertCount = 0;
     this.lastAlertTime = 0;
-    console.log('🔄 Circuit breaker reseteado manualmente');
+    console.log('🔄 Storage system reseteado - modo tolerante v8.0');
   }
 
   clear(): void {
     this.memoryCache.clear();
     this.alertCount = 0;
     this.lastAlertTime = 0;
-    this.circuitBreakerRetries = 0;
+    this.gracefulDegradation = false;
   }
 }
 

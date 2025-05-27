@@ -1,16 +1,19 @@
 
 /**
- * Sistema de logging v9.0 - SILENCIOSO POR DEFECTO
- * Solo errores críticos y funcionalidad mínima
+ * Sistema de logging v10.0 - ULTRA SILENCIOSO
+ * Solo errores REALMENTE críticos que afecten funcionalidad
  */
+
 class OptimizedLogger {
   private static instance: OptimizedLogger;
   private isProduction = process.env.NODE_ENV === 'production';
   private logBuffer: Array<{ level: string; module: string; message: string; timestamp: number }> = [];
-  private maxBufferSize = 10; // DRASTICAMENTE REDUCIDO
+  private maxBufferSize = 3; // EXTREMADAMENTE reducido
   private lastFlush = Date.now();
-  private flushInterval = 3600000; // 1 HORA
-  private silentMode = true; // SILENCIOSO POR DEFECTO
+  private flushInterval = 7200000; // 2 HORAS
+  private silentMode = true;
+  private spamFilter = new Set<string>(); // Filtro de spam
+  private logCounts = new Map<string, number>(); // Contador de logs repetidos
 
   static getInstance(): OptimizedLogger {
     if (!OptimizedLogger.instance) {
@@ -20,36 +23,86 @@ class OptimizedLogger {
   }
 
   private constructor() {
-    // Solo capturar errores REALMENTE críticos
+    // Solo capturar errores que REALMENTE rompan funcionalidad
     if (typeof window !== 'undefined') {
       window.addEventListener('error', (event) => {
-        // Solo errores que afecten funcionalidad core
-        if (event.message && event.message.includes('CardiovascularSystem')) {
-          this.critical('Global', `Sistema cardiovascular: ${event.message}`);
+        // Solo errores que afecten UI o carga
+        if (event.message && (
+          event.message.includes('Failed to fetch') ||
+          event.message.includes('Cannot resolve module') ||
+          event.message.includes('ReferenceError') ||
+          event.message.includes('TypeError: Cannot read')
+        )) {
+          this.critical('Global', `Error crítico UI: ${event.message}`);
         }
       });
 
       window.addEventListener('unhandledrejection', (event) => {
-        // Solo rechazos críticos
-        if (event.reason && event.reason.toString().includes('critical')) {
+        // Solo rechazos que afecten funcionalidad core
+        if (event.reason && (
+          event.reason.toString().includes('network') ||
+          event.reason.toString().includes('fetch') ||
+          event.reason.toString().includes('authentication')
+        )) {
           this.critical('Promise', `Rechazo crítico: ${event.reason}`);
         }
       });
     }
+
+    // Limpiar filtros cada 30 minutos
+    setInterval(() => {
+      this.spamFilter.clear();
+      this.logCounts.clear();
+    }, 1800000);
   }
 
-  private shouldLog(level: string): boolean {
-    // SOLO errores críticos
-    if (this.silentMode) {
-      return level === 'critical';
+  private isSpam(message: string): boolean {
+    // Filtros de spam específicos
+    const spamPatterns = [
+      'Tracking Prevention',
+      'storage',
+      'localStorage',
+      'Circuit Breaker',
+      'CardiovascularSystem',
+      'Anti-tracking',
+      'useIntersectionalGuard',
+      'Network request failed'
+    ];
+
+    if (spamPatterns.some(pattern => message.includes(pattern))) {
+      return true;
     }
+
+    // Contar mensajes repetidos
+    const count = this.logCounts.get(message) || 0;
+    this.logCounts.set(message, count + 1);
     
-    // En desarrollo, solo critical y error
-    return level === 'critical' || level === 'error';
+    // Spam si se repite más de 2 veces
+    return count >= 2;
+  }
+
+  private shouldLog(level: string, message: string): boolean {
+    // SOLO críticos
+    if (level !== 'critical') {
+      return false;
+    }
+
+    // Filtrar spam
+    if (this.isSpam(message)) {
+      return false;
+    }
+
+    // Filtrar por unicidad
+    if (this.spamFilter.has(message)) {
+      return false;
+    }
+
+    this.spamFilter.add(message);
+    return true;
   }
 
   private addToBuffer(level: string, module: string, message: string) {
-    if (!this.shouldLog(level)) return;
+    if (!this.shouldLog(level, message)) return;
 
     this.logBuffer.push({
       level,
@@ -58,12 +111,12 @@ class OptimizedLogger {
       timestamp: Date.now()
     });
 
-    // Buffer MUY pequeño
+    // Buffer EXTREMADAMENTE pequeño
     if (this.logBuffer.length > this.maxBufferSize) {
       this.logBuffer = this.logBuffer.slice(-this.maxBufferSize);
     }
 
-    // Flush solo en críticos
+    // Flush inmediato solo para críticos únicos
     if (level === 'critical') {
       this.flushBuffer();
     }
@@ -72,18 +125,18 @@ class OptimizedLogger {
   private flushBuffer() {
     if (this.logBuffer.length === 0) return;
 
-    // Solo mostrar críticos
-    const criticalLogs = this.logBuffer.filter(log => log.level === 'critical');
-
-    criticalLogs.forEach(log => {
-      console.error(`[${log.module}] ${log.message}`);
+    // Solo mostrar críticos únicos
+    this.logBuffer.forEach(log => {
+      if (log.level === 'critical') {
+        console.error(`[${log.module}] ${log.message}`);
+      }
     });
 
     this.logBuffer = [];
     this.lastFlush = Date.now();
   }
 
-  // Métodos públicos - MAYORÍA SILENCIOSOS
+  // Métodos públicos - TODOS ULTRA-SILENCIOSOS
   debug(module: string, message: string) {
     // Completamente silenciado
   }
@@ -97,23 +150,30 @@ class OptimizedLogger {
   }
 
   error(module: string, message: string, data?: any) {
-    // Solo si no es spam de tracking
-    if (!message.includes('Tracking Prevention') && !message.includes('storage')) {
+    // Solo errores que realmente afecten funcionalidad
+    if (message.includes('Failed to initialize') || 
+        message.includes('Component crash') ||
+        message.includes('Authentication failed')) {
       this.addToBuffer('error', module, message);
     }
   }
 
   critical(module: string, message: string, data?: any) {
-    this.addToBuffer('critical', module, message);
+    // Solo si realmente es crítico para funcionalidad
+    if (!this.isSpam(message)) {
+      this.addToBuffer('critical', module, message);
+    }
   }
 
-  // Métodos de configuración
-  enableSilentMode() {
+  // Configuración
+  enableUltraSilentMode() {
     this.silentMode = true;
+    this.maxBufferSize = 1; // Solo 1 log crítico
   }
 
   disableSilentMode() {
     this.silentMode = false;
+    this.maxBufferSize = 5;
   }
 
   getLogs() {
@@ -122,10 +182,20 @@ class OptimizedLogger {
 
   clearLogs() {
     this.logBuffer = [];
+    this.spamFilter.clear();
+    this.logCounts.clear();
+  }
+
+  getSpamStats() {
+    return {
+      filteredMessages: this.spamFilter.size,
+      repeatedMessages: this.logCounts.size,
+      bufferSize: this.logBuffer.length
+    };
   }
 }
 
 export const optimizedLogger = OptimizedLogger.getInstance();
 
-// AUTO-CONFIGURAR MODO SILENCIOSO
-optimizedLogger.enableSilentMode();
+// AUTO-CONFIGURAR ULTRA-SILENCIOSO
+optimizedLogger.enableUltraSilentMode();
