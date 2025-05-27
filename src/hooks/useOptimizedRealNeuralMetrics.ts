@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealProgressData } from '@/hooks/useRealProgressData';
@@ -28,6 +27,9 @@ interface OptimizedNeuralMetrics {
   adaptive_intelligence: number;
   achievement_momentum: number;
   innovation_index: number;
+  // Nuevas propiedades que faltan
+  battle_readiness: number;
+  vocational_alignment: number;
 }
 
 export const useOptimizedRealNeuralMetrics = () => {
@@ -70,6 +72,10 @@ export const useOptimizedRealNeuralMetrics = () => {
     const adaptiveIntelligence = Math.min(100, (strategicThinking + patternRecognition) / 2);
     const achievementMomentum = Math.min(100, gamificationEngagement * 1.1);
     const innovationIndex = Math.min(100, (creativeSynthesis + analyticalPrecision) / 2);
+    
+    // Nuevas métricas que faltaban
+    const battleReadiness = Math.min(100, (gamificationEngagement * 0.7) + (strategicThinking * 0.3));
+    const vocationalAlignment = Math.min(100, (analyticalPrecision * 0.4) + (creativeSynthesis * 0.3) + (patternRecognition * 0.3));
 
     // Calcular puntaje neural general
     const allMetrics = [
@@ -102,7 +108,10 @@ export const useOptimizedRealNeuralMetrics = () => {
       prediction_accuracy: Math.round(predictionAccuracy),
       adaptive_intelligence: Math.round(adaptiveIntelligence),
       achievement_momentum: Math.round(achievementMomentum),
-      innovation_index: Math.round(innovationIndex)
+      innovation_index: Math.round(innovationIndex),
+      // Nuevas propiedades
+      battle_readiness: Math.round(battleReadiness),
+      vocational_alignment: Math.round(vocationalAlignment)
     };
   }, [progressMetrics, diagnosticMetrics, user]);
 
@@ -123,7 +132,9 @@ export const useOptimizedRealNeuralMetrics = () => {
       'metacognitive_awareness': 'metacognitive_awareness',
       'educational_universe': 'universe_exploration_depth',
       'paes_simulation': 'paes_simulation_accuracy',
-      'battle_mode': 'gamification_engagement'
+      'battle_mode': 'battle_readiness',
+      'achievement_system': 'achievement_momentum',
+      'vocational_prediction': 'vocational_alignment'
     };
 
     const metricKey = dimensionMetricMap[dimensionId];
