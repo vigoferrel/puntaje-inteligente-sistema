@@ -26,7 +26,6 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
-      // Optimización: cache más agresivo para reducir re-renders
       refetchOnMount: false,
       refetchOnReconnect: 'always',
     },
@@ -41,7 +40,6 @@ const AppRoutes = memo(() => {
   const location = useLocation();
   const { components } = useAdvancedBundleOptimizer(location.pathname);
   
-  // Hook de preloading optimizado
   useOptimizedPreloading(location.pathname);
 
   return (
@@ -219,7 +217,6 @@ const CinematicAppWrapper: React.FC<{ children: React.ReactNode }> = ({ children
   
   return (
     <div className="relative min-h-screen">
-      {/* Sistema de partículas de fondo */}
       {shouldShow && (
         <CinematicParticleSystem
           variant={optimalVariant}
@@ -228,22 +225,19 @@ const CinematicAppWrapper: React.FC<{ children: React.ReactNode }> = ({ children
         />
       )}
       
-      {/* Transiciones de rutas cinematográficas */}
       <CinematicRouteTransitions>
         {children}
       </CinematicRouteTransitions>
       
-      {/* Sistema de feedback visual contextual */}
       <ContextualVisualFeedback />
     </div>
   );
 };
 
-// Componente principal con sistema neural y cinematografía
+// Componente principal corregido sin dependencias circulares
 const App = memo(() => {
-  const { getAllMetrics, forceGlobalCleanup } = useGlobalMemoryMonitor();
+  const { getAllMetrics } = useGlobalMemoryMonitor();
 
-  // Log de métricas en desarrollo (solo una vez al cargar)
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTimeout(() => {
@@ -268,8 +262,8 @@ const App = memo(() => {
                       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
                         <div className="text-white text-center">
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                          <p>Cargando Ecosistema Neural Cinematográfico v3.0...</p>
-                          <p className="text-sm text-cyan-300 mt-2">Sistema de seguridad empresarial activo</p>
+                          <p>Cargando Ecosistema Neural Cinematográfico v4.0...</p>
+                          <p className="text-sm text-cyan-300 mt-2">Sistema neural optimizado sin dependencias circulares</p>
                         </div>
                       </div>
                     }>
