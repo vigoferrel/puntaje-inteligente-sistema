@@ -1697,6 +1697,51 @@ export type Database = {
           },
         ]
       }
+      index_usage_telemetry: {
+        Row: {
+          created_at: string | null
+          id: string
+          index_name: string
+          is_critical: boolean | null
+          last_used: string | null
+          scans_count: number | null
+          schema_name: string
+          table_name: string
+          tuples_fetched: number | null
+          tuples_read: number | null
+          updated_at: string | null
+          usage_efficiency: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          index_name: string
+          is_critical?: boolean | null
+          last_used?: string | null
+          scans_count?: number | null
+          schema_name?: string
+          table_name: string
+          tuples_fetched?: number | null
+          tuples_read?: number | null
+          updated_at?: string | null
+          usage_efficiency?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          index_name?: string
+          is_critical?: boolean | null
+          last_used?: string | null
+          scans_count?: number | null
+          schema_name?: string
+          table_name?: string
+          tuples_fetched?: number | null
+          tuples_read?: number | null
+          updated_at?: string | null
+          usage_efficiency?: number | null
+        }
+        Relationships: []
+      }
       institution_students: {
         Row: {
           created_at: string
@@ -3561,6 +3606,18 @@ export type Database = {
       }
     }
     Functions: {
+      analyze_index_performance: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          index_name: string
+          index_size: string
+          scans: number
+          tuples_read: number
+          tuples_fetched: number
+          usage_efficiency: number
+        }[]
+      }
       calcular_puntaje_paes_historia: {
         Args: { codigo_examen_param: string; respuestas_usuario: Json }
         Returns: {
@@ -3667,6 +3724,10 @@ export type Database = {
           contexto: string
           opciones: Json
         }[]
+      }
+      update_index_usage_telemetry: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       validate_foreign_key_integrity: {
         Args: Record<PropertyKey, never>

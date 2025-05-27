@@ -2,413 +2,224 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Database, 
-  Zap,
-  Activity,
-  TrendingUp,
-  AlertTriangle
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { CheckCircle, AlertTriangle, RefreshCw, Database, Zap } from 'lucide-react';
 
 interface ValidationResult {
-  test: string;
-  status: 'pass' | 'fail' | 'warning';
-  duration: number;
-  details: string;
-  metrics?: any;
+  issue_type: string;
+  description: string;
+  node_count: number;
 }
 
-interface PerformanceMetrics {
-  indexUsage: number;
-  querySpeed: number;
-  systemHealth: number;
-  neuralEfficiency: number;
+interface IndexPerformance {
+  table_name: string;
+  index_name: string;
+  index_size: string;
+  scans: number;
+  tuples_read: number;
+  tuples_fetched: number;
+  usage_efficiency: number;
 }
 
 export const NeuralSystemValidator: React.FC = () => {
-  const [isRunning, setIsRunning] = useState(false);
-  const [results, setResults] = useState<ValidationResult[]>([]);
-  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
-  const [progress, setProgress] = useState(0);
-
-  const validationTests = [
-    'Verificar Índices Optimizados',
-    'Probar Performance de Consultas',
-    'Validar Funciones de Monitoreo',
-    'Testear Sistema Neural',
-    'Verificar Integridad de Datos',
-    'Medir Mejoras de Velocidad'
-  ];
+  const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
+  const [indexPerformance, setIndexPerformance] = useState<IndexPerformance[]>([]);
+  const [isValidating, setIsValidating] = useState(false);
+  const [lastValidation, setLastValidation] = useState<Date | null>(null);
+  const [systemHealth, setSystemHealth] = useState<'excellent' | 'good' | 'warning' | 'critical'>('good');
 
   const runValidation = async () => {
-    setIsRunning(true);
-    setResults([]);
-    setProgress(0);
+    setIsValidating(true);
+    try {
+      // Ejecutar validación de coherencia de nodos
+      const { data: coherenceData, error: coherenceError } = await supabase
+        .rpc('validate_nodes_coherence');
 
-    for (let i = 0; i < validationTests.length; i++) {
-      const test = validationTests[i];
-      const startTime = performance.now();
-      
-      try {
-        let result: ValidationResult;
-
-        switch (test) {
-          case 'Verificar Índices Optimizados':
-            result = await validateIndexes();
-            break;
-          case 'Probar Performance de Consultas':
-            result = await testQueryPerformance();
-            break;
-          case 'Validar Funciones de Monitoreo':
-            result = await validateMonitoringFunctions();
-            break;
-          case 'Testear Sistema Neural':
-            result = await testNeuralSystem();
-            break;
-          case 'Verificar Integridad de Datos':
-            result = await validateDataIntegrity();
-            break;
-          case 'Medir Mejoras de Velocidad':
-            result = await measureSpeedImprovements();
-            break;
-          default:
-            result = {
-              test,
-              status: 'warning',
-              duration: performance.now() - startTime,
-              details: 'Test no implementado'
-            };
-        }
-
-        setResults(prev => [...prev, result]);
-        setProgress(((i + 1) / validationTests.length) * 100);
-        
-        // Pequeña pausa para la UX
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-      } catch (error) {
-        setResults(prev => [...prev, {
-          test,
-          status: 'fail',
-          duration: performance.now() - startTime,
-          details: `Error: ${error.message}`
-        }]);
+      if (coherenceError) {
+        console.error('Error validating coherence:', coherenceError);
+      } else {
+        setValidationResults(coherenceData || []);
       }
-    }
 
-    // Calcular métricas finales
-    await calculateFinalMetrics();
-    setIsRunning(false);
-  };
+      // Analizar performance de índices
+      const { data: indexData, error: indexError } = await supabase
+        .rpc('analyze_index_performance');
 
-  const validateIndexes = async (): Promise<ValidationResult> => {
-    const { data, error } = await supabase.rpc('analyze_index_performance');
-    
-    if (error) throw error;
-    
-    const activeIndexes = data?.filter(idx => idx.scans > 0) || [];
-    const efficiencyScore = activeIndexes.length > 0 
-      ? activeIndexes.reduce((sum, idx) => sum + (idx.usage_efficiency || 0), 0) / activeIndexes.length
-      : 0;
+      if (indexError) {
+        console.error('Error analyzing indexes:', indexError);
+      } else {
+        setIndexPerformance(indexData || []);
+      }
 
-    return {
-      test: 'Verificar Índices Optimizados',
-      status: efficiencyScore > 70 ? 'pass' : efficiencyScore > 40 ? 'warning' : 'fail',
-      duration: 0,
-      details: `${activeIndexes.length} índices activos, eficiencia promedio: ${efficiencyScore.toFixed(1)}%`,
-      metrics: { activeIndexes: activeIndexes.length, efficiency: efficiencyScore }
-    };
-  };
+      // Calcular health del sistema
+      const totalIssues = coherenceData?.reduce((sum, item) => sum + item.node_count, 0) || 0;
+      const avgEfficiency = indexData?.reduce((sum, item) => sum + item.usage_efficiency, 0) / (indexData?.length || 1) || 0;
 
-  const testQueryPerformance = async (): Promise<ValidationResult> => {
-    const startTime = performance.now();
-    
-    // Test consulta neural events
-    const { data: neuralEvents } = await supabase
-      .from('neural_events')
-      .select('*')
-      .limit(100);
-    
-    const neuralQueryTime = performance.now() - startTime;
-    
-    // Test consulta learning nodes
-    const nodeStartTime = performance.now();
-    const { data: learningNodes } = await supabase
-      .from('learning_nodes')
-      .select('*')
-      .limit(50);
-    
-    const nodeQueryTime = performance.now() - nodeStartTime;
-    
-    const avgQueryTime = (neuralQueryTime + nodeQueryTime) / 2;
+      if (totalIssues === 0 && avgEfficiency > 80) {
+        setSystemHealth('excellent');
+      } else if (totalIssues < 5 && avgEfficiency > 60) {
+        setSystemHealth('good');
+      } else if (totalIssues < 15 && avgEfficiency > 40) {
+        setSystemHealth('warning');
+      } else {
+        setSystemHealth('critical');
+      }
 
-    return {
-      test: 'Probar Performance de Consultas',
-      status: avgQueryTime < 100 ? 'pass' : avgQueryTime < 300 ? 'warning' : 'fail',
-      duration: avgQueryTime,
-      details: `Tiempo promedio: ${avgQueryTime.toFixed(1)}ms (Neural: ${neuralQueryTime.toFixed(1)}ms, Nodes: ${nodeQueryTime.toFixed(1)}ms)`,
-      metrics: { avgQueryTime, neuralQueryTime, nodeQueryTime }
-    };
-  };
-
-  const validateMonitoringFunctions = async (): Promise<ValidationResult> => {
-    try {
-      // Test función neural_performance_stats
-      const { data: neuralStats, error: neuralError } = await supabase.rpc('neural_performance_stats');
-      
-      if (neuralError) throw neuralError;
-      
-      // Test función identify_slow_queries
-      const { data: slowQueries, error: slowError } = await supabase.rpc('identify_slow_queries');
-      
-      if (slowError) throw slowError;
-
-      return {
-        test: 'Validar Funciones de Monitoreo',
-        status: 'pass',
-        duration: 0,
-        details: `Funciones operativas: neural_performance_stats, identify_slow_queries`,
-        metrics: { 
-          neuralEvents: neuralStats?.[0]?.total_events || 0,
-          slowQueriesDetected: slowQueries?.length || 0
-        }
-      };
+      setLastValidation(new Date());
     } catch (error) {
-      return {
-        test: 'Validar Funciones de Monitoreo',
-        status: 'fail',
-        duration: 0,
-        details: `Error en funciones de monitoreo: ${error.message}`
-      };
+      console.error('Validation error:', error);
+    } finally {
+      setIsValidating(false);
     }
   };
 
-  const testNeuralSystem = async (): Promise<ValidationResult> => {
-    // Simular carga del sistema neural
-    const systemTests = [
-      'Métricas en tiempo real',
-      'Cálculo de coherencia neural',
-      'Procesamiento de eventos',
-      'Análisis predictivo'
-    ];
-    
-    const passedTests = systemTests.filter(() => Math.random() > 0.2).length;
-    const efficiency = (passedTests / systemTests.length) * 100;
+  useEffect(() => {
+    runValidation();
+  }, []);
 
-    return {
-      test: 'Testear Sistema Neural',
-      status: efficiency > 80 ? 'pass' : efficiency > 60 ? 'warning' : 'fail',
-      duration: 0,
-      details: `${passedTests}/${systemTests.length} componentes funcionando (${efficiency.toFixed(0)}% eficiencia)`,
-      metrics: { efficiency, passedTests, totalTests: systemTests.length }
-    };
-  };
-
-  const validateDataIntegrity = async (): Promise<ValidationResult> => {
-    try {
-      const { data: fkValidation } = await supabase.rpc('validate_foreign_key_integrity');
-      const { data: nodeCoherence } = await supabase.rpc('validate_nodes_coherence');
-      
-      const issues = [
-        ...(fkValidation?.filter(fk => fk.status === 'INVALID') || []),
-        ...(nodeCoherence?.filter(node => node.node_count > 0) || [])
-      ];
-
-      return {
-        test: 'Verificar Integridad de Datos',
-        status: issues.length === 0 ? 'pass' : issues.length < 3 ? 'warning' : 'fail',
-        duration: 0,
-        details: issues.length === 0 ? 'Sin problemas de integridad detectados' : `${issues.length} problemas detectados`,
-        metrics: { issues: issues.length }
-      };
-    } catch (error) {
-      return {
-        test: 'Verificar Integridad de Datos',
-        status: 'warning',
-        duration: 0,
-        details: 'No se pudieron ejecutar todas las validaciones'
-      };
+  const getHealthColor = () => {
+    switch (systemHealth) {
+      case 'excellent': return 'from-green-500 to-emerald-500';
+      case 'good': return 'from-blue-500 to-cyan-500';
+      case 'warning': return 'from-yellow-500 to-orange-500';
+      case 'critical': return 'from-red-500 to-pink-500';
+      default: return 'from-gray-500 to-gray-600';
     }
   };
 
-  const measureSpeedImprovements = async (): Promise<ValidationResult> => {
-    // Simular medición de mejoras (en producción usaríamos métricas históricas)
-    const baselineQuery = 150; // ms antes de optimización
-    const currentQuery = 45;   // ms después de optimización
-    const improvement = ((baselineQuery - currentQuery) / baselineQuery) * 100;
-
-    return {
-      test: 'Medir Mejoras de Velocidad',
-      status: improvement > 60 ? 'pass' : improvement > 30 ? 'warning' : 'fail',
-      duration: 0,
-      details: `${improvement.toFixed(1)}% mejora en velocidad (${baselineQuery}ms → ${currentQuery}ms)`,
-      metrics: { improvement, baseline: baselineQuery, current: currentQuery }
-    };
-  };
-
-  const calculateFinalMetrics = async () => {
-    const passedTests = results.filter(r => r.status === 'pass').length;
-    const totalTests = results.length;
-    
-    const indexUsage = results.find(r => r.test === 'Verificar Índices Optimizados')?.metrics?.efficiency || 0;
-    const querySpeed = 100 - (results.find(r => r.test === 'Probar Performance de Consultas')?.metrics?.avgQueryTime || 0) / 5;
-    const systemHealth = (passedTests / totalTests) * 100;
-    const neuralEfficiency = results.find(r => r.test === 'Testear Sistema Neural')?.metrics?.efficiency || 0;
-
-    setMetrics({
-      indexUsage: Math.max(0, Math.min(100, indexUsage)),
-      querySpeed: Math.max(0, Math.min(100, querySpeed)),
-      systemHealth: Math.max(0, Math.min(100, systemHealth)),
-      neuralEfficiency: Math.max(0, Math.min(100, neuralEfficiency))
-    });
-  };
-
-  const getStatusIcon = (status: ValidationResult['status']) => {
-    switch (status) {
-      case 'pass': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'fail': return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'warning': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-    }
-  };
-
-  const getStatusColor = (status: ValidationResult['status']) => {
-    switch (status) {
-      case 'pass': return 'bg-green-100 text-green-800';
-      case 'fail': return 'bg-red-100 text-red-800';
-      case 'warning': return 'bg-yellow-100 text-yellow-800';
+  const getHealthIcon = () => {
+    switch (systemHealth) {
+      case 'excellent': return <CheckCircle className="w-5 h-5" />;
+      case 'good': return <Zap className="w-5 h-5" />;
+      case 'warning': return <AlertTriangle className="w-5 h-5" />;
+      case 'critical': return <RefreshCw className="w-5 h-5 animate-spin" />;
+      default: return <Database className="w-5 h-5" />;
     }
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">
-            Validación del Sistema Neural Optimizado
-          </h2>
-          <p className="text-gray-400">
-            Verificación de rendimiento y funcionalidad después de las optimizaciones
-          </p>
+    <div className="space-y-6">
+      {/* Header de Estado General */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r ${getHealthColor()} text-white font-semibold mb-4`}>
+          {getHealthIcon()}
+          <span>Sistema Neural: {systemHealth.toUpperCase()}</span>
         </div>
-        
-        <Button 
+        {lastValidation && (
+          <p className="text-gray-400 text-sm">
+            Última validación: {lastValidation.toLocaleTimeString()}
+          </p>
+        )}
+      </motion.div>
+
+      {/* Botón de Revalidación */}
+      <div className="flex justify-center">
+        <Button
           onClick={runValidation}
-          disabled={isRunning}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+          disabled={isValidating}
+          className="bg-purple-600 hover:bg-purple-700"
         >
-          {isRunning ? (
+          {isValidating ? (
             <>
-              <Activity className="w-4 h-4 mr-2 animate-spin" />
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
               Validando...
             </>
           ) : (
             <>
-              <Zap className="w-4 h-4 mr-2" />
-              Ejecutar Validación
+              <Database className="w-4 h-4 mr-2" />
+              Ejecutar Validación Completa
             </>
           )}
         </Button>
       </div>
 
-      {isRunning && (
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <Activity className="w-5 h-5 text-blue-400 animate-spin" />
-              <span className="text-white font-medium">Ejecutando validaciones...</span>
-            </div>
-            <Progress value={progress} className="w-full" />
-            <p className="text-sm text-gray-400 mt-2">
-              {Math.round(progress)}% completado
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-4 text-center">
-              <Database className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-              <h3 className="font-semibold text-white mb-1">Uso de Índices</h3>
-              <p className="text-2xl font-bold text-blue-400">{metrics.indexUsage.toFixed(0)}%</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-4 text-center">
-              <Zap className="w-8 h-8 text-green-400 mx-auto mb-2" />
-              <h3 className="font-semibold text-white mb-1">Velocidad</h3>
-              <p className="text-2xl font-bold text-green-400">{metrics.querySpeed.toFixed(0)}%</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-4 text-center">
-              <Activity className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-              <h3 className="font-semibold text-white mb-1">Salud Sistema</h3>
-              <p className="text-2xl font-bold text-purple-400">{metrics.systemHealth.toFixed(0)}%</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-              <h3 className="font-semibold text-white mb-1">Neural</h3>
-              <p className="text-2xl font-bold text-cyan-400">{metrics.neuralEfficiency.toFixed(0)}%</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {results.length > 0 && (
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              Resultados de Validación
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {results.map((result, index) => (
+      {/* Resultados de Validación de Coherencia */}
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            Validación de Coherencia de Nodos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {validationResults.length > 0 ? (
+            validationResults.map((result, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg"
               >
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(result.status)}
-                  <div>
-                    <h4 className="font-medium text-white">{result.test}</h4>
-                    <p className="text-sm text-gray-400">{result.details}</p>
-                  </div>
+                <div>
+                  <p className="text-white font-medium">{result.description}</p>
+                  <p className="text-gray-400 text-sm">Tipo: {result.issue_type}</p>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <Badge className={getStatusColor(result.status)}>
-                    {result.status.toUpperCase()}
+                <Badge variant={result.node_count === 0 ? "default" : "destructive"}>
+                  {result.node_count} {result.node_count === 1 ? 'problema' : 'problemas'}
+                </Badge>
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
+              <p className="text-white">No se encontraron problemas de coherencia</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Performance de Índices */}
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Zap className="w-5 h-5 text-yellow-400" />
+            Performance de Índices ({indexPerformance.length} índices analizados)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {indexPerformance.slice(0, 9).map((index, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.05 }}
+                className="p-4 bg-gray-700/30 rounded-lg"
+              >
+                <p className="text-white font-medium text-sm truncate">{index.index_name}</p>
+                <p className="text-gray-400 text-xs truncate">{index.table_name}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-gray-300 text-xs">{index.index_size}</span>
+                  <Badge 
+                    variant={index.usage_efficiency > 70 ? "default" : index.usage_efficiency > 40 ? "secondary" : "destructive"}
+                    className="text-xs"
+                  >
+                    {index.usage_efficiency.toFixed(1)}%
                   </Badge>
-                  {result.duration > 0 && (
-                    <div className="flex items-center gap-1 text-gray-400 text-sm">
-                      <Clock className="w-3 h-3" />
-                      {result.duration.toFixed(0)}ms
-                    </div>
-                  )}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {index.scans} scans • {index.tuples_read} reads
                 </div>
               </motion.div>
             ))}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          
+          {indexPerformance.length > 9 && (
+            <div className="text-center mt-4">
+              <p className="text-gray-400 text-sm">
+                Mostrando los primeros 9 de {indexPerformance.length} índices
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
