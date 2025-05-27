@@ -130,7 +130,7 @@ export class UnifiedAnalyticsService {
    * Calcula distribución de riesgo basada en success_rate
    */
   private static calculateRiskDistribution(nodeProgress: any[]) {
-    const studentRisks = new Map<string, number>();
+    const studentRisks = new Map<string, number[]>();
     
     // Calcular promedio de success_rate por estudiante
     nodeProgress.forEach(np => {
@@ -138,7 +138,10 @@ export class UnifiedAnalyticsService {
         studentRisks.set(np.user_id, []);
       }
       if (np.success_rate !== null) {
-        studentRisks.get(np.user_id)!.push(np.success_rate);
+        const rates = studentRisks.get(np.user_id);
+        if (rates) {
+          rates.push(np.success_rate);
+        }
       }
     });
 
@@ -174,7 +177,10 @@ export class UnifiedAnalyticsService {
         if (!subjectProgress.has(subject)) {
           subjectProgress.set(subject, []);
         }
-        subjectProgress.get(subject)!.push(np.success_rate);
+        const rates = subjectProgress.get(subject);
+        if (rates) {
+          rates.push(np.success_rate);
+        }
       }
     });
 
