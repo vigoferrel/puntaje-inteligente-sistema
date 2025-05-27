@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Servicio de optimización RLS para resolver problemas de performance
- * Implementa cache de autenticación y funciones security definer
+ * Implementa cache de autenticación sin abstracciones genéricas problemáticas
  */
 
 let userIdCache: string | null = null;
@@ -71,7 +71,6 @@ export class OptimizedRLSService {
     if (!userId) return false;
     
     try {
-      // Esta consulta también se puede cachear
       const { data, error } = await supabase
         .from('profiles')
         .select('email')
@@ -86,40 +85,6 @@ export class OptimizedRLSService {
     } catch (error) {
       console.error('Error checking admin status:', error);
       return false;
-    }
-  }
-  
-  /**
-   * Obtener datos de usuario específicos de una tabla usando consulta directa
-   */
-  static async getUserSpecificData(tableName: string, userId?: string) {
-    const currentUserId = userId || await this.getCurrentUserId();
-    
-    if (!currentUserId) {
-      throw new Error('User not authenticated');
-    }
-
-    // Usar consulta directa en lugar de RPC para evitar problemas de tipos
-    switch (tableName) {
-      case 'learning_nodes':
-        return supabase
-          .from('learning_nodes')
-          .select('*');
-      
-      case 'user_node_progress':
-        return supabase
-          .from('user_node_progress')
-          .select('*')
-          .eq('user_id', currentUserId);
-      
-      case 'generated_study_plans':
-        return supabase
-          .from('generated_study_plans')
-          .select('*')
-          .eq('user_id', currentUserId);
-      
-      default:
-        throw new Error(`Table ${tableName} not supported`);
     }
   }
 }

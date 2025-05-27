@@ -24,11 +24,11 @@ export const SystemInitializer: React.FC<SystemInitializerProps> = ({ children }
           component: 'SystemInitializer',
           timestamp: new Date().toISOString(),
           userAgent: navigator.userAgent,
-          optimizations: 'RLS_OPTIMIZED'
+          optimizations: 'RLS_OPTIMIZED_SIMPLIFIED'
         });
 
-        // Inicializar sistema RLS optimizado
-        console.log('🔧 Inicializando sistema RLS optimizado...');
+        // Inicializar sistema RLS optimizado (simplificado)
+        console.log('🔧 Inicializando sistema RLS optimizado simplificado...');
         OptimizedRLSService.initializeAuthListener();
 
         // Validar assets críticos con medición de performance
@@ -61,7 +61,7 @@ export const SystemInitializer: React.FC<SystemInitializerProps> = ({ children }
         robustErrorCapture.forceFlush();
 
         setIsInitialized(true);
-        console.log('✅ Sistema neurológico optimizado inicializado correctamente');
+        console.log('✅ Sistema neurológico optimizado simplificado inicializado correctamente');
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -71,7 +71,7 @@ export const SystemInitializer: React.FC<SystemInitializerProps> = ({ children }
           error instanceof Error ? error : new Error(errorMessage),
           { 
             phase: 'system_initialization',
-            optimization_level: 'rls_optimized'
+            optimization_level: 'rls_optimized_simplified'
           }
         );
         
@@ -88,12 +88,12 @@ export const SystemInitializer: React.FC<SystemInitializerProps> = ({ children }
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p className="text-lg">Inicializando sistema neurológico optimizado...</p>
+          <p className="text-lg">Inicializando sistema neurológico simplificado...</p>
           <p className="text-sm text-cyan-300 mt-2">Optimizando RLS y validando performance</p>
           <div className="mt-4 text-xs text-cyan-200">
-            <div>🔧 Sistema RLS optimizado</div>
+            <div>🔧 Sistema RLS optimizado simplificado</div>
             <div>⚡ Cache de autenticación activo</div>
-            <div>📊 Monitoreo de consultas habilitado</div>
+            <div>📊 Servicios específicos por tabla</div>
           </div>
         </div>
       </div>
