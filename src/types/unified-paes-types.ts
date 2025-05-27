@@ -70,3 +70,11 @@ export interface UnifiedPAESData {
   diagnostico: PAESDiagnostico | null;
   plan: PAESPlan | null;
 }
+
+// Nuevo: Estado cinemático agregado
+export interface CinematicState {
+  currentScene: 'dashboard' | 'diagnostic' | 'neural_command' | 'study_plan' | 'exercises' | 'analytics';
+  transitionActive: boolean;
+  immersionLevel: 'minimal' | 'standard' | 'full';
+  effectsEnabled: boolean;
+}

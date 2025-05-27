@@ -20,6 +20,14 @@ interface OptimizedNeuralMetrics {
   paes_simulation_accuracy: number;
   gamification_engagement: number;
   overall_neural_score: number;
+  // Propiedades adicionales para compatibilidad
+  user_satisfaction: number;
+  adaptive_learning_rate: number;
+  system_coherence: number;
+  prediction_accuracy: number;
+  adaptive_intelligence: number;
+  achievement_momentum: number;
+  innovation_index: number;
 }
 
 export const useOptimizedRealNeuralMetrics = () => {
@@ -54,6 +62,15 @@ export const useOptimizedRealNeuralMetrics = () => {
     const paesSimulationAccuracy = Math.min(100, diagnosticMetrics.readinessLevel * 0.9);
     const gamificationEngagement = Math.min(100, (progressMetrics.streakDays * 5) + (progressMetrics.totalSessions * 2));
 
+    // Métricas adicionales para compatibilidad
+    const userSatisfaction = Math.min(100, (neuralEfficiency + gamificationEngagement) / 2);
+    const adaptiveLearningRate = Math.min(100, learningVelocity * 1.1);
+    const systemCoherence = Math.min(100, (neuralEfficiency + adaptiveCapacity) / 2);
+    const predictionAccuracy = Math.min(100, paesSimulationAccuracy * 1.05);
+    const adaptiveIntelligence = Math.min(100, (strategicThinking + patternRecognition) / 2);
+    const achievementMomentum = Math.min(100, gamificationEngagement * 1.1);
+    const innovationIndex = Math.min(100, (creativeSynthesis + analyticalPrecision) / 2);
+
     // Calcular puntaje neural general
     const allMetrics = [
       neuralEfficiency, cognitiveResonance, learningVelocity, knowledgeDepth,
@@ -77,7 +94,15 @@ export const useOptimizedRealNeuralMetrics = () => {
       universe_exploration_depth: Math.round(universeExplorationDepth),
       paes_simulation_accuracy: Math.round(paesSimulationAccuracy),
       gamification_engagement: Math.round(gamificationEngagement),
-      overall_neural_score: overallNeuralScore
+      overall_neural_score: overallNeuralScore,
+      // Propiedades adicionales
+      user_satisfaction: Math.round(userSatisfaction),
+      adaptive_learning_rate: Math.round(adaptiveLearningRate),
+      system_coherence: Math.round(systemCoherence),
+      prediction_accuracy: Math.round(predictionAccuracy),
+      adaptive_intelligence: Math.round(adaptiveIntelligence),
+      achievement_momentum: Math.round(achievementMomentum),
+      innovation_index: Math.round(innovationIndex)
     };
   }, [progressMetrics, diagnosticMetrics, user]);
 
@@ -105,6 +130,14 @@ export const useOptimizedRealNeuralMetrics = () => {
     return metricKey ? metrics[metricKey] : 0;
   }, [metrics]);
 
+  const refetch = useCallback(() => {
+    // Forzar recálculo de métricas
+    if (progressMetrics && diagnosticMetrics) {
+      const calculatedMetrics = calculateNeuralMetrics();
+      setMetrics(calculatedMetrics);
+    }
+  }, [calculateNeuralMetrics, progressMetrics, diagnosticMetrics]);
+
   useEffect(() => {
     setIsLoading(progressLoading || diagnosticLoading);
     
@@ -123,6 +156,7 @@ export const useOptimizedRealNeuralMetrics = () => {
     metrics,
     isLoading,
     error,
-    getMetricForDimension
+    getMetricForDimension,
+    refetch
   };
 };

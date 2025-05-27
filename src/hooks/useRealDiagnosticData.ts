@@ -12,6 +12,7 @@ interface RealDiagnosticMetrics {
   weakAreas: string[];
   lastDiagnosticDate: string | null;
   nextRecommendedTest: string | null;
+  progressTrend: 'up' | 'down' | 'stable';
 }
 
 export const useRealDiagnosticData = () => {
@@ -63,6 +64,7 @@ export const useRealDiagnosticData = () => {
       let averageScore = 0;
       let strongAreas: string[] = [];
       let weakAreas: string[] = [];
+      let progressTrend: 'up' | 'down' | 'stable' = 'stable';
 
       if (results.length > 0) {
         const latestResult = results[0];
@@ -86,6 +88,24 @@ export const useRealDiagnosticData = () => {
             }
           });
         }
+
+        // Calcular tendencia de progreso comparando últimos resultados
+        if (results.length > 1) {
+          const previousResult = results[1];
+          const previousData = previousResult.results;
+          
+          if (previousData && typeof previousData === 'object') {
+            const previousScores = Object.values(previousData).filter(score => typeof score === 'number') as number[];
+            if (previousScores.length > 0) {
+              const previousAverage = previousScores.reduce((sum, score) => sum + score, 0) / previousScores.length;
+              if (averageScore > previousAverage + 10) {
+                progressTrend = 'up';
+              } else if (averageScore < previousAverage - 10) {
+                progressTrend = 'down';
+              }
+            }
+          }
+        }
       }
 
       const diagnosticMetrics: RealDiagnosticMetrics = {
@@ -96,7 +116,8 @@ export const useRealDiagnosticData = () => {
         strongAreas,
         weakAreas,
         lastDiagnosticDate: results.length > 0 ? results[0].completed_at : null,
-        nextRecommendedTest: weakAreas.length > 0 ? weakAreas[0] : null
+        nextRecommendedTest: weakAreas.length > 0 ? weakAreas[0] : null,
+        progressTrend
       };
 
       setMetrics(diagnosticMetrics);
