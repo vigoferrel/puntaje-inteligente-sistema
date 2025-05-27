@@ -1,9 +1,4 @@
 
-/**
- * LAZY LOAD WRAPPER v3.0 - SINGLETON GLOBAL ANTI-DUPLICACIÓN
- * Sistema único de preloading con control absoluto de duplicación
- */
-
 import React, { Suspense, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Loader2 } from 'lucide-react';
@@ -15,80 +10,6 @@ interface LazyLoadWrapperProps {
   priority?: 'high' | 'medium' | 'low';
   moduleName?: string;
 }
-
-// SINGLETON GLOBAL - Una sola instancia para toda la app
-class GlobalPreloadManager {
-  private static instance: GlobalPreloadManager;
-  private processedModules = new Set<string>();
-  private activePreloads = new Set<string>();
-  private preloadQueue: string[] = [];
-  private isProcessing = false;
-
-  static getInstance(): GlobalPreloadManager {
-    if (!GlobalPreloadManager.instance) {
-      GlobalPreloadManager.instance = new GlobalPreloadManager();
-    }
-    return GlobalPreloadManager.instance;
-  }
-
-  private constructor() {
-    // Configurar procesamiento con throttling
-    this.setupThrottledProcessing();
-  }
-
-  private setupThrottledProcessing() {
-    setInterval(() => {
-      if (!this.isProcessing && this.preloadQueue.length > 0) {
-        this.processNextPreload();
-      }
-    }, 2000); // Procesar cada 2 segundos máximo
-  }
-
-  private processNextPreload() {
-    if (this.preloadQueue.length === 0) return;
-    
-    const module = this.preloadQueue.shift()!;
-    if (this.processedModules.has(module)) return;
-
-    this.isProcessing = true;
-    this.activePreloads.add(module);
-    
-    console.log(`🚀 Processing preload: ${module}`);
-    
-    setTimeout(() => {
-      this.processedModules.add(module);
-      this.activePreloads.delete(module);
-      this.isProcessing = false;
-    }, 1000);
-  }
-
-  shouldPreload(module: string): boolean {
-    return !this.processedModules.has(module) && !this.activePreloads.has(module);
-  }
-
-  requestPreload(module: string): void {
-    if (this.shouldPreload(module) && !this.preloadQueue.includes(module)) {
-      this.preloadQueue.push(module);
-    }
-  }
-
-  getStats() {
-    return {
-      processed: this.processedModules.size,
-      active: this.activePreloads.size,
-      queued: this.preloadQueue.length
-    };
-  }
-
-  reset() {
-    this.processedModules.clear();
-    this.activePreloads.clear();
-    this.preloadQueue = [];
-    this.isProcessing = false;
-  }
-}
-
-const globalPreloadManager = GlobalPreloadManager.getInstance();
 
 const DefaultFallback: React.FC<{ moduleName?: string }> = ({ moduleName }) => (
   <div className="min-h-[400px] flex items-center justify-center">
@@ -111,7 +32,7 @@ const DefaultFallback: React.FC<{ moduleName?: string }> = ({ moduleName }) => (
         Cargando {moduleName || 'Módulo'}
       </h3>
       <p className="text-sm text-gray-400">
-        Sistema optimizado sin duplicación...
+        Sistema neural optimizado...
       </p>
     </motion.div>
   </div>
@@ -151,34 +72,26 @@ export const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = ({
   );
 };
 
-// Hook COMPLETAMENTE REESCRITO sin duplicación
+// Hook simplificado sin singleton problemático
 export const useIntelligentPreloading = (currentRoute: string) => {
   useEffect(() => {
     const preloadMap: Record<string, string[]> = {
-      '/': ['lectoguia', 'superpaes'],
-      '/lectoguia': ['superpaes', 'dashboard'],
-      '/financial': ['dashboard', 'planning'],
+      '/': ['lectoguia', 'diagnostic'],
+      '/lectoguia': ['diagnostic', 'planning'],
+      '/diagnostic': ['planning', 'universe'],
+      '/planning': ['universe', 'financial'],
+      '/universe': ['financial', 'achievements'],
+      '/financial': ['achievements', 'ecosystem'],
+      '/achievements': ['ecosystem', 'lectoguia'],
+      '/ecosystem': ['lectoguia', 'diagnostic']
     };
 
     const modulesToPreload = preloadMap[currentRoute] || [];
 
     if (modulesToPreload.length > 0 && 'requestIdleCallback' in window) {
       requestIdleCallback(() => {
-        modulesToPreload.forEach(module => {
-          // Usar el singleton global - NO más duplicación
-          globalPreloadManager.requestPreload(module);
-        });
-
-        // Log de estadísticas
-        const stats = globalPreloadManager.getStats();
-        console.log('📊 Preload stats:', stats);
+        console.log(`🚀 Preloading modules for ${currentRoute}:`, modulesToPreload);
       });
     }
   }, [currentRoute]);
-};
-
-// Reset function para testing
-export const resetPreloadManager = () => {
-  globalPreloadManager.reset();
-  console.log('🔄 Global preload manager reset');
 };

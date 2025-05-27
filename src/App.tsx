@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { GlobalCinematicProvider } from "@/contexts/GlobalCinematicContext";
 import { UnifiedEducationProvider } from "@/providers/UnifiedEducationProvider";
 import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
 import { LazyLoadWrapper, useIntelligentPreloading } from "@/components/performance/LazyLoadWrapper";
@@ -25,7 +26,7 @@ const EcosystemPage = lazy(() => import("./pages/EcosystemPage"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
+      staleTime: 5 * 60 * 1000,
       retry: 2,
       refetchOnWindowFocus: false,
     },
@@ -38,7 +39,6 @@ const queryClient = new QueryClient({
 const AppRoutes = () => {
   const location = useLocation();
   
-  // Preloading inteligente basado en ruta actual
   useIntelligentPreloading(location.pathname);
 
   return (
@@ -137,26 +137,28 @@ const AppRoutes = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <UnifiedEducationProvider>
-      <IntersectionalProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={
-              <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
-                <div className="text-white text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                  <p>Cargando Ecosistema Educativo...</p>
+    <GlobalCinematicProvider>
+      <UnifiedEducationProvider>
+        <IntersectionalProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={
+                <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+                    <p>Cargando Ecosistema Educativo...</p>
+                  </div>
                 </div>
-              </div>
-            }>
-              <AppRoutes />
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </IntersectionalProvider>
-    </UnifiedEducationProvider>
+              }>
+                <AppRoutes />
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </IntersectionalProvider>
+      </UnifiedEducationProvider>
+    </GlobalCinematicProvider>
   </QueryClientProvider>
 );
 

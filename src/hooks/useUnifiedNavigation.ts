@@ -1,7 +1,7 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCallback } from 'react';
-import { useSimplifiedCinematic } from '@/contexts/SimplifiedCinematicContext';
+import { useGlobalCinematic } from '@/contexts/GlobalCinematicContext';
 
 interface NavigationOptions {
   transition?: 'fade' | 'slide' | 'scale' | 'blur';
@@ -12,19 +12,25 @@ interface NavigationOptions {
 export const useUnifiedNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { startTransition } = useSimplifiedCinematic();
+  const { startTransition } = useGlobalCinematic();
 
   const navigateWithTransition = useCallback(async (
     path: string, 
     options: NavigationOptions = {}
   ) => {
-    const { transition = 'fade', replace = false } = options;
+    const { replace = false } = options;
 
-    // Iniciar transición cinematográfica
-    await startTransition(path, transition);
+    try {
+      // Iniciar transición cinematográfica
+      await startTransition(path);
 
-    // Navegar a la nueva ruta
-    navigate(path, { replace });
+      // Navegar a la nueva ruta
+      navigate(path, { replace });
+    } catch (error) {
+      // Fallback: navegar sin transición
+      console.warn('Navigation transition failed, falling back to direct navigation:', error);
+      navigate(path, { replace });
+    }
   }, [navigate, startTransition]);
 
   const getCurrentModule = useCallback(() => {
@@ -36,27 +42,34 @@ export const useUnifiedNavigation = () => {
     return location.pathname === path;
   }, [location.pathname]);
 
-  // Navegación específica a módulos
+  // Navegación específica a módulos con fallbacks seguros
   const goToLectoGuia = useCallback(() => 
-    navigateWithTransition('/lectoguia', { transition: 'slide' }), [navigateWithTransition]);
+    navigateWithTransition('/lectoguia').catch(() => navigate('/lectoguia')), 
+    [navigateWithTransition, navigate]);
   
   const goToDiagnostic = useCallback(() => 
-    navigateWithTransition('/diagnostic', { transition: 'scale' }), [navigateWithTransition]);
+    navigateWithTransition('/diagnostic').catch(() => navigate('/diagnostic')), 
+    [navigateWithTransition, navigate]);
   
   const goToPlanning = useCallback(() => 
-    navigateWithTransition('/planning', { transition: 'fade' }), [navigateWithTransition]);
+    navigateWithTransition('/planning').catch(() => navigate('/planning')), 
+    [navigateWithTransition, navigate]);
   
   const goToUniverse = useCallback(() => 
-    navigateWithTransition('/universe', { transition: 'blur' }), [navigateWithTransition]);
+    navigateWithTransition('/universe').catch(() => navigate('/universe')), 
+    [navigateWithTransition, navigate]);
   
   const goToFinancial = useCallback(() => 
-    navigateWithTransition('/financial', { transition: 'slide' }), [navigateWithTransition]);
+    navigateWithTransition('/financial').catch(() => navigate('/financial')), 
+    [navigateWithTransition, navigate]);
   
   const goToAchievements = useCallback(() => 
-    navigateWithTransition('/achievements', { transition: 'scale' }), [navigateWithTransition]);
+    navigateWithTransition('/achievements').catch(() => navigate('/achievements')), 
+    [navigateWithTransition, navigate]);
 
   const goToHub = useCallback(() => 
-    navigateWithTransition('/', { transition: 'fade' }), [navigateWithTransition]);
+    navigateWithTransition('/').catch(() => navigate('/')), 
+    [navigateWithTransition, navigate]);
 
   return {
     navigateWithTransition,
