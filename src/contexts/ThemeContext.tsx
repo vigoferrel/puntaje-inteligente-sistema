@@ -16,13 +16,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    // Usar UnifiedStorageSystem en lugar de localStorage directo
+    // Usar ÚNICAMENTE UnifiedStorageSystem
     const savedTheme = unifiedStorageSystem.getItem('theme_preference') as Theme | null;
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.classList.toggle("light", savedTheme === "light");
     } else {
-      // Set default to dark
       document.documentElement.classList.remove("light");
     }
   }, []);

@@ -1,7 +1,7 @@
 
 /**
- * UNIFIED EDUCATION PROVIDER v3.0 - CORRECCIÓN DEFINITIVA
- * Inicialización coordinada sin bucles infinitos
+ * UNIFIED EDUCATION PROVIDER v4.0 - INICIALIZACIÓN DETERMINÍSTICA
+ * Secuencia estricta coordinada con timeouts agresivos
  */
 
 import React, { useEffect, useCallback, useState, useRef } from 'react';
@@ -24,84 +24,108 @@ const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ childre
   const [storageReady, setStorageReady] = useState(false);
   const [initializationComplete, setInitializationComplete] = useState(false);
   const initializationRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
-  // FASE 1: Inicialización de storage (solo una vez)
+  // FASE 1: Inicialización determinística de storage con timeout agresivo
   useEffect(() => {
     if (initializationRef.current) return;
     initializationRef.current = true;
 
-    const initializeStorage = async () => {
+    const initializeStorageWithTimeout = async () => {
+      // Timeout agresivo de 2 segundos
+      const timeoutPromise = new Promise<void>((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject(new Error('Storage initialization timeout'));
+        }, 2000);
+      });
+
+      const initPromise = new Promise<void>(async (resolve) => {
+        try {
+          await unifiedStorageSystem.waitForReady();
+          const status = unifiedStorageSystem.getStatus();
+          
+          console.log('🚀 Storage inicializado v4.0:', {
+            available: status.storageAvailable,
+            trackingBlocked: status.trackingBlocked,
+            circuitBreaker: status.circuitBreakerActive,
+            cacheSize: status.cacheSize
+          });
+          
+          resolve();
+        } catch (error) {
+          console.warn('⚠️ Storage en modo limitado');
+          resolve(); // Continuar de todas formas
+        }
+      });
+
       try {
-        await unifiedStorageSystem.waitForReady();
-        const status = unifiedStorageSystem.getStatus();
-        
-        console.log('🚀 Storage initialized:', {
-          available: status.storageAvailable,
-          trackingBlocked: status.trackingBlocked,
-          circuitBreaker: status.circuitBreakerActive
-        });
-        
-        setStorageReady(true);
-        
+        await Promise.race([initPromise, timeoutPromise]);
       } catch (error) {
-        console.warn('⚠️ Storage en modo limitado');
-        setStorageReady(true); // Continuar de todas formas
+        console.warn('⚠️ Storage timeout - continuando con memoria');
+      } finally {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        setStorageReady(true);
       }
     };
 
-    initializeStorage();
+    initializeStorageWithTimeout();
   }, []);
 
-  // FASE 2: Inicialización del sistema educativo (cuando storage esté listo)
+  // FASE 2: Inicialización del sistema educativo con bloqueo estricto
   useEffect(() => {
     if (!user?.id || !storageReady || system.isInitialized || system.isLoading) {
       return;
     }
 
-    console.log('🚀 Initializing unified education system v3.0...');
+    console.log('🚀 Initializing unified education system v4.0...');
     actions.initialize(user.id);
     
   }, [user?.id, storageReady, system.isInitialized, system.isLoading, actions]);
 
-  // FASE 3: Sync periódico CONTROLADO (sin bucles)
+  // FASE 3: Sync coordinado con circuit breaker awareness
   useEffect(() => {
     if (!system.isInitialized || !storageReady) return;
 
     const syncInterval = setInterval(() => {
       const storageStatus = unifiedStorageSystem.getStatus();
       
-      // Solo sync si storage está realmente disponible
+      // Solo sync si storage está realmente disponible Y circuit breaker no está activo
       if (storageStatus.isReady && storageStatus.storageAvailable && !storageStatus.circuitBreakerActive) {
         actions.syncToStorage();
       }
       
-      // Health check optimizado
+      // Health check optimizado con circuit breaker metrics
       const metrics = unifiedStorageSystem.getPerformanceMetrics();
-      const newHealthScore = Math.max(50, 100 - (metrics.alertCount * 15));
+      const newHealthScore = storageStatus.circuitBreakerActive ? 75 : Math.max(60, 100 - (metrics.alertCount * 10));
       actions.setSystemHealth(newHealthScore);
       
-    }, 30000); // 30 segundos
+    }, 45000); // 45 segundos - menos frecuente
 
     return () => clearInterval(syncInterval);
   }, [system.isInitialized, storageReady, actions]);
 
-  // FASE 4: Notificaciones una sola vez
+  // FASE 4: Notificaciones coordinadas
   useEffect(() => {
     if (!system.isInitialized || initializationComplete) return;
 
-    // Marcar como completado inmediatamente para evitar re-ejecución
     setInitializationComplete(true);
 
-    if (trackingBlocked) {
-      console.log('ℹ️ Tracking prevention detectado - modo memoria activo');
+    const storageStatus = unifiedStorageSystem.getStatus();
+    
+    if (storageStatus.circuitBreakerActive) {
+      console.log('🔒 Circuit breaker activo - modo memoria optimizado');
     }
     
-    // Solo toast si hay problemas graves
-    if (healthScore < 50) {
+    // Solo toast para problemas graves O circuit breaker activo
+    if (healthScore < 60 || storageStatus.circuitBreakerActive) {
       toast({
-        title: "Sistema en Modo Seguro",
-        description: `Performance limitado por protecciones del navegador`,
-        variant: "default"
+        title: storageStatus.circuitBreakerActive ? "Modo Memoria Activo" : "Sistema en Modo Seguro",
+        description: storageStatus.circuitBreakerActive 
+          ? "Funcionando completamente en memoria - sin dependencia de storage" 
+          : `Performance limitado por protecciones del navegador`,
+        variant: storageStatus.circuitBreakerActive ? "default" : "destructive"
       });
     }
   }, [system.isInitialized, trackingBlocked, healthScore, initializationComplete]);
@@ -121,20 +145,23 @@ const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ childre
     };
   }, [actions]);
 
-  // Loading state mejorado
+  // Loading state mejorado con circuit breaker info
   if (!storageReady || system.isLoading) {
+    const storageStatus = unifiedStorageSystem.getStatus();
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p className="text-lg">Inicializando Sistema Neural v3.0...</p>
+          <p className="text-lg">Inicializando Sistema Neural v4.0...</p>
           <p className="text-sm text-cyan-300 mt-2">
-            {!storageReady ? 'Configurando Storage Seguro...' : 'Cargando Datos...'}
+            {!storageReady ? 'Configurando Storage Ultra-Seguro...' : 'Cargando Datos...'}
           </p>
           <div className="mt-4 text-xs text-cyan-200">
-            <div>🛡️ Protección Anti-Tracking Activa</div>
+            <div>🛡️ Circuit Breaker {storageStatus.circuitBreakerActive ? 'ACTIVO' : 'Standby'}</div>
             <div>⚡ Health Score: {healthScore}%</div>
-            <div>🔒 {trackingBlocked ? 'Modo Memoria' : 'Storage Normal'}</div>
+            <div>🔒 {storageStatus.circuitBreakerActive ? 'Modo Memoria Permanente' : 'Storage Normal'}</div>
+            <div>📊 Cache: {storageStatus.cacheSize} items</div>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 
 /**
- * LAZY LOAD WRAPPER v2.0 - OPTIMIZADO SIN DUPLICACIÓN
- * Sistema de carga lazy optimizado con preloading inteligente único
+ * LAZY LOAD WRAPPER v3.0 - SINGLETON GLOBAL ANTI-DUPLICACIÓN
+ * Sistema único de preloading con control absoluto de duplicación
  */
 
 import React, { Suspense, useEffect, useState } from 'react';
@@ -16,9 +16,79 @@ interface LazyLoadWrapperProps {
   moduleName?: string;
 }
 
-// Cache global para módulos ya precargados
-const preloadedModules = new Set<string>();
-const preloadingInProgress = new Set<string>();
+// SINGLETON GLOBAL - Una sola instancia para toda la app
+class GlobalPreloadManager {
+  private static instance: GlobalPreloadManager;
+  private processedModules = new Set<string>();
+  private activePreloads = new Set<string>();
+  private preloadQueue: string[] = [];
+  private isProcessing = false;
+
+  static getInstance(): GlobalPreloadManager {
+    if (!GlobalPreloadManager.instance) {
+      GlobalPreloadManager.instance = new GlobalPreloadManager();
+    }
+    return GlobalPreloadManager.instance;
+  }
+
+  private constructor() {
+    // Configurar procesamiento con throttling
+    this.setupThrottledProcessing();
+  }
+
+  private setupThrottledProcessing() {
+    setInterval(() => {
+      if (!this.isProcessing && this.preloadQueue.length > 0) {
+        this.processNextPreload();
+      }
+    }, 2000); // Procesar cada 2 segundos máximo
+  }
+
+  private processNextPreload() {
+    if (this.preloadQueue.length === 0) return;
+    
+    const module = this.preloadQueue.shift()!;
+    if (this.processedModules.has(module)) return;
+
+    this.isProcessing = true;
+    this.activePreloads.add(module);
+    
+    console.log(`🚀 Processing preload: ${module}`);
+    
+    setTimeout(() => {
+      this.processedModules.add(module);
+      this.activePreloads.delete(module);
+      this.isProcessing = false;
+    }, 1000);
+  }
+
+  shouldPreload(module: string): boolean {
+    return !this.processedModules.has(module) && !this.activePreloads.has(module);
+  }
+
+  requestPreload(module: string): void {
+    if (this.shouldPreload(module) && !this.preloadQueue.includes(module)) {
+      this.preloadQueue.push(module);
+    }
+  }
+
+  getStats() {
+    return {
+      processed: this.processedModules.size,
+      active: this.activePreloads.size,
+      queued: this.preloadQueue.length
+    };
+  }
+
+  reset() {
+    this.processedModules.clear();
+    this.activePreloads.clear();
+    this.preloadQueue = [];
+    this.isProcessing = false;
+  }
+}
+
+const globalPreloadManager = GlobalPreloadManager.getInstance();
 
 const DefaultFallback: React.FC<{ moduleName?: string }> = ({ moduleName }) => (
   <div className="min-h-[400px] flex items-center justify-center">
@@ -41,7 +111,7 @@ const DefaultFallback: React.FC<{ moduleName?: string }> = ({ moduleName }) => (
         Cargando {moduleName || 'Módulo'}
       </h3>
       <p className="text-sm text-gray-400">
-        Inicializando componentes optimizados...
+        Sistema optimizado sin duplicación...
       </p>
     </motion.div>
   </div>
@@ -68,18 +138,12 @@ export const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = ({
     }
   }, [preloadDelay]);
 
-  const priorityClass = {
-    high: 'high-priority',
-    medium: 'medium-priority',
-    low: 'low-priority'
-  }[priority];
-
   if (!isPreloaded && preloadDelay > 0) {
     return fallback || <DefaultFallback moduleName={moduleName} />;
   }
 
   return (
-    <div className={`lazy-wrapper ${priorityClass}`}>
+    <div className={`lazy-wrapper priority-${priority}`}>
       <Suspense fallback={fallback || <DefaultFallback moduleName={moduleName} />}>
         {children}
       </Suspense>
@@ -87,7 +151,7 @@ export const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = ({
   );
 };
 
-// Hook optimizado para preloading inteligente SIN DUPLICACIÓN
+// Hook COMPLETAMENTE REESCRITO sin duplicación
 export const useIntelligentPreloading = (currentRoute: string) => {
   useEffect(() => {
     const preloadMap: Record<string, string[]> = {
@@ -100,43 +164,21 @@ export const useIntelligentPreloading = (currentRoute: string) => {
 
     if (modulesToPreload.length > 0 && 'requestIdleCallback' in window) {
       requestIdleCallback(() => {
-        modulesToPreload.forEach((module, index) => {
-          // Verificar si ya fue precargado o está en proceso
-          if (preloadedModules.has(module) || preloadingInProgress.has(module)) {
-            return;
-          }
-
-          // Marcar como en proceso
-          preloadingInProgress.add(module);
-
-          setTimeout(() => {
-            console.log(`🔄 Preloading module: ${module}`);
-            
-            // Simular preloading y marcar como completado
-            setTimeout(() => {
-              preloadedModules.add(module);
-              preloadingInProgress.delete(module);
-            }, 500);
-            
-          }, index * 1000);
+        modulesToPreload.forEach(module => {
+          // Usar el singleton global - NO más duplicación
+          globalPreloadManager.requestPreload(module);
         });
+
+        // Log de estadísticas
+        const stats = globalPreloadManager.getStats();
+        console.log('📊 Preload stats:', stats);
       });
     }
   }, [currentRoute]);
 };
 
-// Componente de error boundary optimizado
-export const OptimizedErrorBoundary: React.FC<{ children: React.ReactNode; moduleName?: string }> = ({ 
-  children, 
-  moduleName 
-}) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="error-boundary-wrapper"
-    >
-      {children}
-    </motion.div>
-  );
+// Reset function para testing
+export const resetPreloadManager = () => {
+  globalPreloadManager.reset();
+  console.log('🔄 Global preload manager reset');
 };

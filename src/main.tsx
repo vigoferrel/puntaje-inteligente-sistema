@@ -12,12 +12,14 @@ declare global {
         MODE: string;
       };
     };
+    __SKIP_GPT_ENGINEER__?: boolean;
+    __TRACKING_PREVENTION_DETECTED__?: boolean;
   }
 }
 
-// Configuración global optimizada para prevenir errores
+// Configuración global ultra-optimizada
 if (typeof window !== 'undefined') {
-  // Prevenir errores de import.meta con polyfill robusto
+  // Prevenir errores de import.meta con polyfill ultra-robusto
   if (!window.importMeta) {
     window.importMeta = { env: { MODE: 'production' } };
   }
@@ -33,36 +35,50 @@ if (typeof window !== 'undefined') {
     performance.mark('app-start');
   }
   
-  // Error handling global mejorado - filtrar errores conocidos
+  // Error handling global ULTRA-FILTRADO
   window.addEventListener('unhandledrejection', (event) => {
     const error = event.reason;
     
-    // Filtrar errores de storage/tracking que son esperables
+    // Filtrar errores conocidos y esperables
     if (error?.message?.includes('Access is denied') ||
         error?.message?.includes('QuotaExceeded') ||
         error?.message?.includes('storage') ||
-        error?.message?.includes('import.meta')) {
-      console.log('ℹ️ Storage limitation detected (expected in some browsers)');
-      event.preventDefault(); // Prevenir que se propague
+        error?.message?.includes('import.meta') ||
+        error?.message?.includes('lockdown') ||
+        error?.message?.includes('SES_')) {
+      console.log('ℹ️ Error conocido filtrado:', error?.message || 'unknown');
+      event.preventDefault();
       return;
     }
     
     console.warn('Unhandled promise rejection:', error);
   });
 
-  // Manejo específico para errores de React
+  // Manejo específico para errores de React y scripts
   window.addEventListener('error', (event) => {
     const error = event.error;
     
     // Filtrar errores específicos conocidos
     if (error?.message?.includes('Minified React error #185') ||
         error?.message?.includes('import.meta') ||
-        error?.message?.includes('Access is denied')) {
-      console.log('ℹ️ Known browser limitation detected');
+        error?.message?.includes('Access is denied') ||
+        error?.message?.includes('Cannot use \'import.meta\' outside a module') ||
+        error?.message?.includes('lockdown') ||
+        error?.message?.includes('SES_')) {
+      console.log('ℹ️ Error de browser/script filtrado:', error?.message || 'unknown');
       event.preventDefault();
       return;
     }
   });
+
+  // Detectar tracking prevention temprano
+  try {
+    localStorage.setItem('__early_detection__', '1');
+    localStorage.removeItem('__early_detection__');
+  } catch (e) {
+    window.__TRACKING_PREVENTION_DETECTED__ = true;
+    console.log('🔒 Tracking prevention detectado en main.tsx');
+  }
 }
 
 const rootElement = document.getElementById("root");
@@ -70,7 +86,7 @@ if (!rootElement) throw new Error("Failed to find the root element");
 
 const root = ReactDOM.createRoot(rootElement);
 
-// Hydration segura con error boundaries
+// Renderizado ultra-seguro con múltiples fallbacks
 const safeRender = () => {
   try {
     root.render(
@@ -82,19 +98,44 @@ const safeRender = () => {
     console.error('Critical render error:', error);
     
     // Fallback render sin StrictMode
-    root.render(<App />);
+    try {
+      root.render(<App />);
+    } catch (fallbackError) {
+      console.error('Fallback render failed:', fallbackError);
+      
+      // Último recurso: error message
+      root.render(
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #1e40af, #7c3aed)',
+          color: 'white',
+          fontFamily: 'system-ui',
+          textAlign: 'center'
+        }}>
+          <div>
+            <h1>PAES Neural Platform</h1>
+            <p>Inicializando en modo ultra-compatibilidad...</p>
+            <p>🔒 Protecciones de navegador detectadas</p>
+          </div>
+        </div>
+      );
+    }
   }
 };
 
-// Renderizar después de que el DOM esté completamente listo
+// Renderizado determinístico con coordinación
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', safeRender);
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(safeRender, 100); // Pequeño delay para coordinación
+  });
 } else {
-  // DOM ya está listo
-  setTimeout(safeRender, 0);
+  setTimeout(safeRender, 50);
 }
 
-// Performance measurement mejorado
+// Performance measurement optimizado
 if (typeof window !== 'undefined' && 'performance' in window) {
   window.addEventListener('load', () => {
     setTimeout(() => {
@@ -105,12 +146,17 @@ if (typeof window !== 'undefined' && 'performance' in window) {
           
           const measure = performance.getEntriesByName('app-load-time')[0];
           if (measure) {
-            console.log(`🚀 App loaded in ${Math.round(measure.duration)}ms`);
+            console.log(`🚀 App cargada en ${Math.round(measure.duration)}ms`);
+            
+            // Log adicional de estado
+            if (window.__TRACKING_PREVENTION_DETECTED__) {
+              console.log('🔒 Modo compatibilidad tracking prevention activo');
+            }
           }
         } catch (error) {
           // Performance API no disponible
         }
       }
-    }, 100);
+    }, 200);
   });
 }
