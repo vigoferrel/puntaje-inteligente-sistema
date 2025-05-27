@@ -1,19 +1,17 @@
 
 import { useState, useRef, useCallback } from 'react';
-import { storageManager } from '@/core/storage/StorageManager';
+import { dynamicStorageManager } from '@/core/storage/DynamicStorageManager';
 import { toast } from '@/hooks/use-toast';
 import { saveUserPreference } from '@/services/lectoguia-service';
 
-const PREFERENCES_CACHE_KEY = 'user_preferences_cache_v2';
-
-export function useOptimizedPreferences(
+export function useUnifiedPreferences(
   initialPreferences: Record<string, string>,
   userId: string | null
 ) {
   const [preferences, setPreferences] = useState<Record<string, string>>(() => {
-    // Intentar cargar desde cache local primero
+    // Cargar desde cache local usando el nuevo sistema dinámico
     if (userId) {
-      const cached = storageManager.getItem(`${PREFERENCES_CACHE_KEY}_${userId}`);
+      const cached = dynamicStorageManager.getDynamicItem('user_preferences_cache_v2', userId);
       if (cached) {
         return { ...initialPreferences, ...cached };
       }
@@ -39,17 +37,13 @@ export function useOptimizedPreferences(
       const newPreferences = { ...preferences, [key]: value };
       setPreferences(newPreferences);
       
-      // Guardar en cache local con debounce
+      // Guardar en cache local con debounce usando el nuevo sistema
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
       
       saveTimeoutRef.current = setTimeout(() => {
-        storageManager.setItem(
-          `${PREFERENCES_CACHE_KEY}_${userId}`, 
-          newPreferences,
-          { silentErrors: true }
-        );
+        dynamicStorageManager.setDynamicItem('user_preferences_cache_v2', userId, newPreferences);
       }, 2000);
       
       // Guardar en base de datos
