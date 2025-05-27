@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -62,7 +61,7 @@ export const RealTimeMetricsDashboard: React.FC = () => {
         // Calcular métricas
         const totalExercises = progressData?.length || 0;
         const avgScore = evaluationsData?.length 
-          ? evaluationsData.reduce((acc, eval) => acc + (eval.score || 0), 0) / evaluationsData.length
+          ? evaluationsData.reduce((acc, evaluation) => acc + (evaluation.score || 0), 0) / evaluationsData.length
           : 0;
         
         // Calcular racha actual
@@ -89,10 +88,10 @@ export const RealTimeMetricsDashboard: React.FC = () => {
           averageScore: Math.round(avgScore),
           currentStreak: streak,
           level: Math.floor(totalExercises / 10) + 1,
-          recentActivity: evaluationsData?.slice(0, 5).map(eval => ({
-            type: eval.evaluation_type || 'exercise',
-            score: eval.score || 0,
-            timestamp: eval.created_at
+          recentActivity: evaluationsData?.slice(0, 5).map(evaluation => ({
+            type: evaluation.evaluation_type || 'exercise',
+            score: evaluation.score || 0,
+            timestamp: evaluation.created_at
           })) || []
         };
 
