@@ -3,12 +3,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import { getViteBuildConfig } from "./src/core/performance/BundleOptimizerAdvanced";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const buildConfig = getViteBuildConfig();
-  
   return {
     server: {
       host: "::",
@@ -25,23 +22,41 @@ export default defineConfig(({ mode }) => {
       },
     },
     
-    // Aplicar configuración optimizada de build
-    ...buildConfig,
+    // Configuración conservadora para máxima estabilidad
+    build: {
+      target: 'es2015',
+      sourcemap: mode === 'development',
+      minify: mode === 'production',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            motion: ['framer-motion'],
+            ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', 'lucide-react']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000
+    },
     
-    // Optimizaciones de desarrollo
+    // Optimizaciones conservadoras
     optimizeDeps: {
       include: [
         'react',
         'react-dom',
         'framer-motion',
         '@tanstack/react-query',
-        'lucide-react'
+        'lucide-react',
+        '@radix-ui/react-dialog',
+        '@radix-ui/react-select'
       ],
-      exclude: [
-        '@react-three/fiber',
-        '@react-three/drei',
-        'three'
-      ]
+      // Reducir exclusiones para evitar problemas de carga
+      exclude: []
+    },
+
+    // Configuración para mejor manejo de errores
+    define: {
+      __DEV__: mode === 'development'
     }
   };
 });
