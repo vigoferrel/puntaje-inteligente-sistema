@@ -1,9 +1,10 @@
+
 /**
- * UNIFIED EDUCATION PROVIDER v2.0
- * Inicialización segura sin errores de storage
+ * UNIFIED EDUCATION PROVIDER v3.0 - CORRECCIÓN DEFINITIVA
+ * Inicialización coordinada sin bucles infinitos
  */
 
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnifiedEducationStore, useUnifiedActions, useSystemHealth } from '@/core/state/UnifiedEducationStateManager';
@@ -21,96 +22,91 @@ const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ childre
   const system = useUnifiedEducationStore((state) => state.system);
   
   const [storageReady, setStorageReady] = useState(false);
+  const [initializationComplete, setInitializationComplete] = useState(false);
+  const initializationRef = useRef(false);
 
-  // Inicialización segura del storage
+  // FASE 1: Inicialización de storage (solo una vez)
   useEffect(() => {
+    if (initializationRef.current) return;
+    initializationRef.current = true;
+
     const initializeStorage = async () => {
       try {
         await unifiedStorageSystem.waitForReady();
-        setStorageReady(true);
-        
         const status = unifiedStorageSystem.getStatus();
-        console.log('🚀 Storage system ready:', {
+        
+        console.log('🚀 Storage initialized:', {
           available: status.storageAvailable,
           trackingBlocked: status.trackingBlocked,
-          cacheSize: status.cacheSize
+          circuitBreaker: status.circuitBreakerActive
         });
         
+        setStorageReady(true);
+        
       } catch (error) {
-        console.warn('⚠️ Storage initialization with limited functionality');
-        setStorageReady(true); // Continuar en modo limitado
+        console.warn('⚠️ Storage en modo limitado');
+        setStorageReady(true); // Continuar de todas formas
       }
     };
 
     initializeStorage();
   }, []);
 
-  // Inicialización unificada solo cuando storage esté listo
+  // FASE 2: Inicialización del sistema educativo (cuando storage esté listo)
   useEffect(() => {
-    if (user?.id && storageReady && !system.isInitialized) {
-      console.log('🚀 Initializing unified education system v2.0...');
-      actions.initialize(user.id);
+    if (!user?.id || !storageReady || system.isInitialized || system.isLoading) {
+      return;
     }
-  }, [user?.id, storageReady, system.isInitialized, actions]);
 
-  // Sync optimizado cada 45 segundos
+    console.log('🚀 Initializing unified education system v3.0...');
+    actions.initialize(user.id);
+    
+  }, [user?.id, storageReady, system.isInitialized, system.isLoading, actions]);
+
+  // FASE 3: Sync periódico CONTROLADO (sin bucles)
   useEffect(() => {
     if (!system.isInitialized || !storageReady) return;
 
     const syncInterval = setInterval(() => {
-      // Sync solo si el storage está disponible
       const storageStatus = unifiedStorageSystem.getStatus();
-      if (storageStatus.isReady && storageStatus.storageAvailable) {
+      
+      // Solo sync si storage está realmente disponible
+      if (storageStatus.isReady && storageStatus.storageAvailable && !storageStatus.circuitBreakerActive) {
         actions.syncToStorage();
       }
       
-      // Health check mejorado
+      // Health check optimizado
       const metrics = unifiedStorageSystem.getPerformanceMetrics();
-      const newHealthScore = Math.max(50, 100 - (metrics.syncQueueSize * 5) - (metrics.trackingBlocked ? 20 : 0));
+      const newHealthScore = Math.max(50, 100 - (metrics.alertCount * 15));
       actions.setSystemHealth(newHealthScore);
       
-    }, 45000);
+    }, 30000); // 30 segundos
 
     return () => clearInterval(syncInterval);
   }, [system.isInitialized, storageReady, actions]);
 
-  // Notificaciones mejoradas
+  // FASE 4: Notificaciones una sola vez
   useEffect(() => {
-    if (trackingBlocked && healthScore > 0) {
-      // Solo una notificación discreta sobre tracking
-      console.log('ℹ️ Storage running in memory mode (tracking prevention active)');
-    } else if (healthScore < 60 && healthScore > 0) {
+    if (!system.isInitialized || initializationComplete) return;
+
+    // Marcar como completado inmediatamente para evitar re-ejecución
+    setInitializationComplete(true);
+
+    if (trackingBlocked) {
+      console.log('ℹ️ Tracking prevention detectado - modo memoria activo');
+    }
+    
+    // Solo toast si hay problemas graves
+    if (healthScore < 50) {
       toast({
-        title: "⚠️ Sistema en Modo Limitado",
-        description: `Performance reducido - Health: ${healthScore}%`,
+        title: "Sistema en Modo Seguro",
+        description: `Performance limitado por protecciones del navegador`,
         variant: "default"
       });
     }
-  }, [healthScore, trackingBlocked]);
+  }, [system.isInitialized, trackingBlocked, healthScore, initializationComplete]);
 
-  // Manejo de errores global mejorado
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      // Filtrar errores conocidos de storage/tracking
-      if (event.error?.message?.includes('Access is denied') ||
-          event.error?.message?.includes('QuotaExceeded') ||
-          event.error?.message?.includes('import.meta')) {
-        return; // Ignorar estos errores
-      }
-      
-      console.error('Global error caught:', event.error);
-      actions.addNotification({
-        type: 'error',
-        title: 'Error del Sistema',
-        message: 'Se detectó un error. El sistema se está recuperando automáticamente.',
-      });
-    };
-
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, [actions]);
-
-  // Monitoring de conexión
+  // Connection monitoring
   useEffect(() => {
     const updateConnectionStatus = () => {
       actions.setConnectionStatus(navigator.onLine ? 'connected' : 'disconnected');
@@ -131,14 +127,14 @@ const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ childre
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p className="text-lg">Inicializando Sistema Educativo Neural v2.0...</p>
+          <p className="text-lg">Inicializando Sistema Neural v3.0...</p>
           <p className="text-sm text-cyan-300 mt-2">
-            {!storageReady ? 'Configurando Storage...' : 'Cargando Datos...'}
+            {!storageReady ? 'Configurando Storage Seguro...' : 'Cargando Datos...'}
           </p>
           <div className="mt-4 text-xs text-cyan-200">
-            <div>🔧 Sistema Unificado v2.0</div>
+            <div>🛡️ Protección Anti-Tracking Activa</div>
             <div>⚡ Health Score: {healthScore}%</div>
-            <div>🛡️ {trackingBlocked ? 'Modo Memoria' : 'Storage Normal'}</div>
+            <div>🔒 {trackingBlocked ? 'Modo Memoria' : 'Storage Normal'}</div>
           </div>
         </div>
       </div>

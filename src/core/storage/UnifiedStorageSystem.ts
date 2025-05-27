@@ -1,7 +1,7 @@
 
 /**
- * UNIFIED STORAGE SYSTEM v3.0 - DEFINITIVO
- * Sistema de storage con tipos seguros y rate limiting agresivo
+ * UNIFIED STORAGE SYSTEM v4.0 - CIRCUIT BREAKER REAL
+ * Sistema con protección total contra tracking prevention
  */
 
 import { CacheDataTypes, CacheKey } from './types';
@@ -13,12 +13,6 @@ interface StorageEntry<T = any> {
   accessCount: number;
 }
 
-interface BatchOperation {
-  key: string;
-  value: any;
-  timestamp: number;
-}
-
 interface StorageStatus {
   isReady: boolean;
   storageAvailable: boolean;
@@ -26,23 +20,23 @@ interface StorageStatus {
   cacheSize: number;
   queueLength: number;
   alertCount: number;
+  circuitBreakerActive: boolean;
 }
 
 class UnifiedStorageSystemCore {
   private static instance: UnifiedStorageSystemCore;
   private isReady = false;
-  private storageAvailable = true;
+  private storageAvailable = false;
   private trackingBlocked = false;
   private memoryCache = new Map<string, StorageEntry>();
-  private batchQueue: BatchOperation[] = [];
   private alertCount = 0;
-  private lastBatchTime = 0;
   private circuitBreakerActive = false;
+  private lastAlertTime = 0;
   
-  // Rate limiting agresivo
-  private readonly BATCH_INTERVAL = 5000; // 5 segundos
-  private readonly MAX_ALERTS = 10;
-  private readonly CIRCUIT_BREAKER_THRESHOLD = 15;
+  // Circuit breaker configuración AGRESIVA
+  private readonly MAX_ALERTS = 3; // Solo 3 alertas antes de circuit breaker
+  private readonly ALERT_WINDOW = 5000; // 5 segundos
+  private readonly CIRCUIT_BREAKER_DURATION = 60000; // 1 minuto
 
   static getInstance(): UnifiedStorageSystemCore {
     if (!UnifiedStorageSystemCore.instance) {
@@ -57,58 +51,61 @@ class UnifiedStorageSystemCore {
 
   private async initialize() {
     try {
-      // Test silencioso de localStorage
-      const testKey = '__storage_test_silent__';
-      localStorage.setItem(testKey, 'test');
+      // Test ÚNICO y silencioso
+      const testKey = '__silent_test__';
+      localStorage.setItem(testKey, '1');
       localStorage.removeItem(testKey);
+      
       this.storageAvailable = true;
+      this.trackingBlocked = false;
+      console.log('✅ Storage available');
+      
     } catch (error) {
-      this.storageAvailable = false;
-      this.trackingBlocked = true;
-      console.log('🔒 Storage blocked, using memory mode');
+      // ACTIVAR CIRCUIT BREAKER INMEDIATAMENTE
+      this.activateCircuitBreaker('Storage blocked by tracking prevention');
     }
     
     this.isReady = true;
-    this.startBatchProcessor();
   }
 
-  private startBatchProcessor() {
-    setInterval(() => {
-      if (this.batchQueue.length > 0 && !this.circuitBreakerActive) {
-        this.processBatch();
-      }
-    }, this.BATCH_INTERVAL);
-  }
-
-  private processBatch() {
-    if (!this.storageAvailable || this.circuitBreakerActive) return;
-
-    const batch = [...this.batchQueue];
-    this.batchQueue = [];
-
-    try {
-      batch.forEach(({ key, value }) => {
-        localStorage.setItem(key, JSON.stringify(value));
-      });
-    } catch (error) {
-      this.alertCount++;
-      if (this.alertCount >= this.CIRCUIT_BREAKER_THRESHOLD) {
-        this.activateCircuitBreaker();
-      }
-    }
-  }
-
-  private activateCircuitBreaker() {
+  private activateCircuitBreaker(reason: string) {
+    if (this.circuitBreakerActive) return;
+    
     this.circuitBreakerActive = true;
     this.storageAvailable = false;
-    console.log('🚨 Circuit breaker activated - storage disabled');
+    this.trackingBlocked = true;
     
-    // Auto-reset después de 60 segundos
+    console.log(`🚨 CIRCUIT BREAKER ACTIVADO: ${reason}`);
+    console.log('📱 Funcionando solo con memoria cache');
+    
+    // Auto-reset después del tiempo configurado
     setTimeout(() => {
+      this.resetCircuitBreaker();
+    }, this.CIRCUIT_BREAKER_DURATION);
+  }
+
+  private resetCircuitBreaker() {
+    console.log('🔄 Intentando reset de circuit breaker...');
+    
+    try {
+      // Test silencioso para ver si storage está disponible
+      const testKey = '__reset_test__';
+      localStorage.setItem(testKey, '1');
+      localStorage.removeItem(testKey);
+      
+      // Si llegamos aquí, storage funciona
       this.circuitBreakerActive = false;
+      this.storageAvailable = true;
+      this.trackingBlocked = false;
       this.alertCount = 0;
-      console.log('✅ Circuit breaker reset');
-    }, 60000);
+      
+      console.log('✅ Circuit breaker reseteado - storage disponible');
+      
+    } catch (error) {
+      // Sigue bloqueado, extender el circuit breaker
+      console.log('⚠️ Storage aún bloqueado, extendiendo circuit breaker');
+      setTimeout(() => this.resetCircuitBreaker(), this.CIRCUIT_BREAKER_DURATION);
+    }
   }
 
   async waitForReady(): Promise<void> {
@@ -118,28 +115,31 @@ class UnifiedStorageSystemCore {
   }
 
   getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
-    // Siempre usar cache primero
+    // SIEMPRE usar cache primero (L1 cache)
     const cached = this.memoryCache.get(key);
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
       cached.accessCount++;
       return cached.data as CacheDataTypes[K];
     }
 
-    // Si no hay storage o circuit breaker activo, solo memoria
-    if (!this.storageAvailable || this.circuitBreakerActive) {
+    // Si circuit breaker activo, SOLO memoria
+    if (this.circuitBreakerActive) {
       return null;
     }
 
-    try {
-      const item = localStorage.getItem(key);
-      if (item) {
-        const parsed = JSON.parse(item) as CacheDataTypes[K];
-        this.setToCache(key, parsed);
-        return parsed;
+    // Si storage disponible, intentar cargar
+    if (this.storageAvailable) {
+      try {
+        const item = localStorage.getItem(key);
+        if (item) {
+          const parsed = JSON.parse(item) as CacheDataTypes[K];
+          this.setToCache(key, parsed);
+          return parsed;
+        }
+      } catch (error) {
+        this.handleStorageError('getItem');
+        return null;
       }
-    } catch (error) {
-      this.alertCount++;
-      return null;
     }
 
     return null;
@@ -150,22 +150,45 @@ class UnifiedStorageSystemCore {
     value: CacheDataTypes[K],
     options: { silentErrors?: boolean; ttl?: number } = {}
   ): boolean {
-    // Siempre actualizar cache
+    // SIEMPRE actualizar cache L1
     this.setToCache(key, value, options.ttl);
 
-    // Si circuit breaker activo, solo memoria
-    if (this.circuitBreakerActive) return true;
-
-    // Batch write para localStorage
-    if (this.storageAvailable) {
-      this.batchQueue.push({
-        key,
-        value,
-        timestamp: Date.now()
-      });
+    // Si circuit breaker activo, NO intentar localStorage
+    if (this.circuitBreakerActive) {
+      return true; // Éxito en memoria
     }
 
-    return true;
+    // Intentar localStorage solo si está disponible
+    if (this.storageAvailable) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch (error) {
+        if (!options.silentErrors) {
+          this.handleStorageError('setItem');
+        }
+        return false;
+      }
+    }
+
+    return true; // Éxito en memoria aunque no se persista
+  }
+
+  private handleStorageError(operation: string) {
+    const now = Date.now();
+    
+    // Rate limiting de alertas
+    if (now - this.lastAlertTime < 1000) {
+      return; // Ignorar si hubo alerta hace menos de 1 segundo
+    }
+    
+    this.alertCount++;
+    this.lastAlertTime = now;
+    
+    // Activar circuit breaker si muchas alertas
+    if (this.alertCount >= this.MAX_ALERTS) {
+      this.activateCircuitBreaker(`Too many ${operation} errors: ${this.alertCount}`);
+    }
   }
 
   private setToCache<K extends CacheKey>(
@@ -180,8 +203,8 @@ class UnifiedStorageSystemCore {
       accessCount: 0
     });
 
-    // Limpieza automática si cache muy grande
-    if (this.memoryCache.size > 100) {
+    // Limpieza automática (máximo 50 items en cache)
+    if (this.memoryCache.size > 50) {
       this.cleanupCache();
     }
   }
@@ -190,12 +213,10 @@ class UnifiedStorageSystemCore {
     const entries = Array.from(this.memoryCache.entries());
     const now = Date.now();
     
-    // Remover entradas expiradas
-    entries.forEach(([key, entry]) => {
-      if (now - entry.timestamp > entry.ttl) {
-        this.memoryCache.delete(key);
-      }
-    });
+    // Remover entradas expiradas y menos usadas
+    entries
+      .filter(([, entry]) => now - entry.timestamp > entry.ttl || entry.accessCount < 2)
+      .forEach(([key]) => this.memoryCache.delete(key));
   }
 
   removeItem(key: string): boolean {
@@ -205,7 +226,7 @@ class UnifiedStorageSystemCore {
       try {
         localStorage.removeItem(key);
       } catch (error) {
-        this.alertCount++;
+        this.handleStorageError('removeItem');
       }
     }
     return true;
@@ -217,27 +238,28 @@ class UnifiedStorageSystemCore {
       storageAvailable: this.storageAvailable,
       trackingBlocked: this.trackingBlocked,
       cacheSize: this.memoryCache.size,
-      queueLength: this.batchQueue.length,
-      alertCount: this.alertCount
+      queueLength: 0,
+      alertCount: this.alertCount,
+      circuitBreakerActive: this.circuitBreakerActive
     };
   }
 
   getPerformanceMetrics() {
     return {
       cacheSize: this.memoryCache.size,
-      queueLength: this.batchQueue.length,
+      queueLength: 0,
       alertCount: this.alertCount,
       trackingBlocked: this.trackingBlocked,
       circuitBreakerActive: this.circuitBreakerActive,
-      syncQueueSize: this.batchQueue.length,
-      memoryUsage: this.memoryCache.size * 1024 // Estimado
+      syncQueueSize: 0,
+      memoryUsage: this.memoryCache.size * 1024
     };
   }
 
   clear(): void {
     this.memoryCache.clear();
-    this.batchQueue = [];
     this.alertCount = 0;
+    this.lastAlertTime = 0;
   }
 }
 

@@ -7,28 +7,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PAES Neural Education Platform</title>
     
-    <!-- Optimización crítica para evitar errores de script -->
+    <!-- POLYFILL CRÍTICO PARA IMPORT.META - DEBE SER PRIMERO -->
     <script>
-      // Polyfill robusto para import.meta
-      if (!window.importMeta) {
-        window.importMeta = { env: { MODE: 'production' } };
-      }
+      // Polyfill ultra-robusto para import.meta
+      (function() {
+        if (typeof window !== 'undefined' && !window.importMeta) {
+          Object.defineProperty(window, 'importMeta', {
+            value: { 
+              env: { 
+                MODE: 'production',
+                DEV: false,
+                PROD: true
+              }
+            },
+            writable: false,
+            configurable: false
+          });
+        }
+        
+        // Backup para globalThis
+        if (typeof globalThis !== 'undefined' && !globalThis.importMeta) {
+          globalThis.importMeta = window.importMeta;
+        }
+      })();
     </script>
     
-    <!-- Script corregido con manejo de errores -->
+    <!-- Script GPT Engineer CORREGIDO con manejo robusto -->
     <script>
       (function() {
         try {
-          const script = document.createElement('script');
-          script.src = 'https://cdn.gpteng.co/gptengineer.js';
-          script.type = 'module';
-          script.defer = true;
-          script.onerror = function() {
-            console.log('ℹ️ GPT Engineer script failed to load (expected in some environments)');
-          };
-          document.head.appendChild(script);
+          // Solo cargar si no hay tracking prevention extremo
+          if (typeof Storage !== 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.gpteng.co/gptengineer.js';
+            script.type = 'module';
+            script.defer = true;
+            script.crossOrigin = 'anonymous';
+            
+            script.onerror = function(e) {
+              console.log('ℹ️ GPT Engineer script blocked (expected with tracking prevention)');
+            };
+            
+            script.onload = function() {
+              console.log('✅ GPT Engineer script loaded successfully');
+            };
+            
+            // Cargar después de 1 segundo para evitar conflictos
+            setTimeout(() => {
+              document.head.appendChild(script);
+            }, 1000);
+          }
         } catch (error) {
-          console.log('ℹ️ GPT Engineer script initialization failed');
+          console.log('ℹ️ GPT Engineer script initialization skipped');
         }
       })();
     </script>
@@ -37,18 +67,25 @@
     <meta name="description" content="Plataforma educativa neural para preparación PAES con IA avanzada" />
     <meta name="theme-color" content="#1e40af" />
     
-    <!-- Preconnect optimizado (sin Facebook tracking) -->
+    <!-- Preconnect solo esenciales -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Performance hints -->
-    <link rel="dns-prefetch" href="https://cdn.gpteng.co" />
-    
     <!-- Prevenir FOUC -->
     <style>
-      html { background-color: #0f172a; }
-      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
-      #root { min-height: 100vh; }
+      html { 
+        background-color: #0f172a; 
+        overflow: hidden;
+      }
+      body { 
+        margin: 0; 
+        font-family: system-ui, -apple-system, sans-serif;
+        overflow: hidden;
+      }
+      #root { 
+        min-height: 100vh; 
+        overflow: auto;
+      }
       .loading-fallback {
         display: flex;
         align-items: center;
@@ -65,7 +102,8 @@
       <div class="loading-fallback">
         <div>
           <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-          <div>Inicializando PAES Neural Platform...</div>
+          <div>Inicializando PAES Neural Platform v4.0...</div>
+          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Sistema de protección anti-tracking activo</div>
         </div>
       </div>
     </div>

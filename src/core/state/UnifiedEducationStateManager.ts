@@ -1,12 +1,13 @@
+
 /**
- * UNIFIED EDUCATION STATE MANAGER v3.0 - DEFINITIVO
- * Sistema de estado optimizado con memoización y cache
+ * UNIFIED EDUCATION STATE MANAGER v4.0 - CORRECCIÓN DEFINITIVA
+ * Sistema de estado con Zustand corregido y sin bucles infinitos
  */
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 
 interface UnifiedEducationState {
   system: SystemState;
@@ -65,21 +66,30 @@ interface UIState {
   connectionStatus: 'connected' | 'disconnected';
 }
 
-// Cache para métricas de performance
+// Cache estático para métricas (evitar recálculos)
 let metricsCache: any = null;
 let metricsLastUpdate = 0;
-const METRICS_CACHE_TTL = 5000; // 5 segundos
+const METRICS_CACHE_TTL = 10000; // 10 segundos
 
-// Función memoizada para métricas de performance
 const getPerformanceMetricsOptimized = () => {
   const now = Date.now();
   if (metricsCache && (now - metricsLastUpdate) < METRICS_CACHE_TTL) {
     return metricsCache;
   }
   
-  metricsCache = unifiedStorageSystem.getPerformanceMetrics();
-  metricsLastUpdate = now;
-  return metricsCache;
+  try {
+    metricsCache = unifiedStorageSystem.getPerformanceMetrics();
+    metricsLastUpdate = now;
+    return metricsCache;
+  } catch (error) {
+    // Fallback si storage falla
+    return {
+      trackingBlocked: true,
+      circuitBreakerActive: true,
+      cacheSize: 0,
+      memoryUsage: 0
+    };
+  }
 };
 
 export const useUnifiedEducationStore = create<UnifiedEducationState>()(
@@ -90,7 +100,7 @@ export const useUnifiedEducationStore = create<UnifiedEducationState>()(
       healthScore: 100,
       connectionStatus: 'connecting',
       lastSync: null,
-      version: '3.0.0'
+      version: '4.0.0'
     },
     user: {
       id: null,
@@ -129,21 +139,26 @@ export const useUnifiedEducationStore = create<UnifiedEducationState>()(
   }))
 );
 
-// Hook optimizado con memoización
+// CORRECCIÓN CRÍTICA: Acciones implementadas correctamente usando set/get
 export const useUnifiedActions = () => {
-  const store = useUnifiedEducationStore();
-  
   return useMemo(() => ({
-    // System actions
+    // System actions - usando set correctamente
     initialize: (userId: string) => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
-        system: { ...state.system, isLoading: true },
-        user: { ...state.user, id: userId }
+        system: { 
+          ...state.system, 
+          isLoading: true 
+        },
+        user: { 
+          ...state.user, 
+          id: userId 
+        }
       }));
       
+      // Inicialización async segura
       setTimeout(() => {
-        store.setState(state => ({
+        useUnifiedEducationStore.setState((state) => ({
           ...state,
           system: {
             ...state.system,
@@ -156,14 +171,17 @@ export const useUnifiedActions = () => {
     },
     
     setSystemHealth: (score: number) => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
-        system: { ...state.system, healthScore: Math.max(0, Math.min(100, score)) }
+        system: { 
+          ...state.system, 
+          healthScore: Math.max(0, Math.min(100, score)) 
+        }
       }));
     },
     
     setConnectionStatus: (status: 'connected' | 'disconnected') => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
         system: { ...state.system, connectionStatus: status },
         ui: { ...state.ui, connectionStatus: status }
@@ -172,14 +190,14 @@ export const useUnifiedActions = () => {
     
     // LectoGuía actions
     setLectoGuiaSubject: (subject: string) => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
         lectoguia: { ...state.lectoguia, activeSubject: subject }
       }));
     },
     
     addLectoGuiaMessage: (message: any) => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
         lectoguia: {
           ...state.lectoguia,
@@ -189,21 +207,21 @@ export const useUnifiedActions = () => {
     },
     
     setActiveModule: (module: 'lectoguia' | 'superpaes' | 'dashboard') => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
         ui: { ...state.ui, activeModule: module }
       }));
     },
     
     updateLectoGuiaNodes: (nodes: any[]) => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
         lectoguia: { ...state.lectoguia, nodes }
       }));
     },
     
     updateNodeProgress: (nodeId: string, progress: any) => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
         lectoguia: {
           ...state.lectoguia,
@@ -216,14 +234,14 @@ export const useUnifiedActions = () => {
     },
     
     updateUserPreferences: (preferences: Record<string, string>) => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
         user: { ...state.user, preferences }
       }));
     },
     
     addNotification: (notification: any) => {
-      store.setState(state => ({
+      useUnifiedEducationStore.setState((state) => ({
         ...state,
         ui: {
           ...state.ui,
@@ -233,13 +251,17 @@ export const useUnifiedActions = () => {
     },
     
     syncToStorage: () => {
-      const state = store.getState();
-      unifiedStorageSystem.setItem('unified_education_state', state, { silentErrors: true });
+      const state = useUnifiedEducationStore.getState();
+      try {
+        unifiedStorageSystem.setItem('unified_education_state', state, { silentErrors: true });
+      } catch (error) {
+        console.warn('Storage sync failed (expected in tracking prevention mode)');
+      }
     }
-  }), [store]);
+  }), []);
 };
 
-// Hook optimizado para system health con memoización
+// Hook optimizado para system health - MEMOIZADO para evitar bucles
 export const useSystemHealth = () => {
   const healthScore = useUnifiedEducationStore(state => state.system.healthScore);
   const connectionStatus = useUnifiedEducationStore(state => state.system.connectionStatus);
@@ -250,7 +272,7 @@ export const useSystemHealth = () => {
     return {
       healthScore,
       isHealthy: healthScore >= 70,
-      trackingBlocked: metrics.trackingBlocked || false,
+      trackingBlocked: metrics?.trackingBlocked || false,
       connectionStatus,
       metrics
     };
