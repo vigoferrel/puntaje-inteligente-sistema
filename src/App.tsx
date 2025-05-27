@@ -1,4 +1,4 @@
-
+import React, { Suspense, memo } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,7 +13,6 @@ import { useAdvancedBundleOptimizer } from "@/core/performance/AdvancedBundleOpt
 import { useGlobalMemoryMonitor } from "@/hooks/useMemoryOptimization";
 import { ProtectedRoute } from "./components/protected-route";
 import { useLocation } from "react-router-dom";
-import { Suspense, memo } from "react";
 
 // QueryClient optimizado para mejor performance
 const queryClient = new QueryClient({

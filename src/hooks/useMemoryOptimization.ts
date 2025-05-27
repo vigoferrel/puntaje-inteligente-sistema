@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useMemo } from 'react';
 
 interface MemoryOptimizationConfig {
@@ -180,7 +179,7 @@ class ReactMemoryManager {
     };
   }
 
-  private getTotalMemoryUsage() {
+  getTotalMemoryUsage() {
     const memory = (performance as any).memory;
     if (memory) {
       return {

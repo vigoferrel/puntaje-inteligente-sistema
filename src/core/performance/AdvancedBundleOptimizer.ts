@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { lazy } from 'react';
 
 // Sistema avanzado de code splitting con prioridades dinámicas
