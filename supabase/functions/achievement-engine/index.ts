@@ -1,69 +1,17 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-interface AchievementCheckRequest {
+interface AchievementTrigger {
   user_id: string;
   action_type: string;
   action_data: any;
 }
-
-const ACHIEVEMENT_DEFINITIONS = {
-  'first_node_completed': {
-    title: 'Primer Paso Neural',
-    description: 'Has completado tu primer nodo de aprendizaje',
-    category: 'progress',
-    rarity: 'common',
-    points: 10
-  },
-  'streak_7_days': {
-    title: 'Constancia Neural',
-    description: 'Has estudiado durante 7 días consecutivos',
-    category: 'consistency',
-    rarity: 'rare',
-    points: 50
-  },
-  'battle_first_win': {
-    title: 'Guerrero Neural',
-    description: 'Has ganado tu primera batalla académica',
-    category: 'combat',
-    rarity: 'rare',
-    points: 30
-  },
-  'paes_simulation_master': {
-    title: 'Maestro de Simulación',
-    description: 'Has completado 10 simulaciones PAES con más del 80% de precisión',
-    category: 'academic',
-    rarity: 'epic',
-    points: 100
-  },
-  'neural_efficiency_90': {
-    title: 'Eficiencia Neural Superior',
-    description: 'Has alcanzado 90% de eficiencia neural',
-    category: 'neural',
-    rarity: 'epic',
-    points: 150
-  },
-  'universe_explorer': {
-    title: 'Explorador del Universo',
-    description: 'Has explorado todas las dimensiones del universo educativo',
-    category: 'exploration',
-    rarity: 'legendary',
-    points: 200
-  },
-  'cognitive_master': {
-    title: 'Maestro Cognitivo',
-    description: 'Has dominado todos los niveles cognitivos de Bloom',
-    category: 'cognitive',
-    rarity: 'legendary',
-    points: 300
-  }
-};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -73,221 +21,151 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const { user_id, action_type, action_data } = await req.json() as AchievementCheckRequest;
+    const trigger: AchievementTrigger = await req.json();
 
-    console.log(`Checking achievements for user ${user_id}, action: ${action_type}`);
-
-    // Obtener logros actuales del usuario
-    const { data: existingAchievements } = await supabaseClient
-      .from('user_achievements')
-      .select('achievement_id')
-      .eq('user_id', user_id);
-
-    const existingIds = new Set(existingAchievements?.map(a => a.achievement_id) || []);
-
-    // Obtener datos del usuario para verificar logros
-    const { data: userProgress } = await supabaseClient
-      .from('user_node_progress')
+    // Obtener logros disponibles
+    const { data: achievements } = await supabaseClient
+      .from('intelligent_achievements')
       .select('*')
-      .eq('user_id', user_id);
+      .eq('is_active', true);
 
-    const { data: userBattles } = await supabaseClient
-      .from('battle_sessions')
-      .select('*')
-      .or(`creator_id.eq.${user_id},opponent_id.eq.${user_id}`);
+    if (!achievements) {
+      throw new Error('No achievements found');
+    }
 
-    const { data: userMetrics } = await supabaseClient
-      .from('neural_metrics')
-      .select('*')
-      .eq('user_id', user_id);
+    const unlockedAchievements = [];
 
-    const newAchievements = [];
+    // Verificar cada logro
+    for (const achievement of achievements) {
+      const isUnlocked = await checkAchievementConditions(
+        supabaseClient,
+        achievement,
+        trigger
+      );
 
-    // Verificar logros basados en la acción y datos del usuario
-    for (const [achievementId, achievement] of Object.entries(ACHIEVEMENT_DEFINITIONS)) {
-      if (existingIds.has(achievementId)) continue;
-
-      let shouldUnlock = false;
-
-      switch (achievementId) {
-        case 'first_node_completed':
-          shouldUnlock = action_type === 'node_completed' && 
-            userProgress?.filter(p => p.status === 'completed').length === 1;
-          break;
-
-        case 'streak_7_days':
-          shouldUnlock = checkStudyStreak(userProgress, 7);
-          break;
-
-        case 'battle_first_win':
-          shouldUnlock = action_type === 'battle_won' && 
-            userBattles?.filter(b => b.winner_id === user_id).length === 1;
-          break;
-
-        case 'paes_simulation_master':
-          shouldUnlock = checkPAESSimulationMastery(userProgress);
-          break;
-
-        case 'neural_efficiency_90':
-          shouldUnlock = checkNeuralEfficiency(userMetrics, 90);
-          break;
-
-        case 'universe_explorer':
-          shouldUnlock = checkUniverseExploration(userProgress);
-          break;
-
-        case 'cognitive_master':
-          shouldUnlock = checkCognitiveMastery(userProgress);
-          break;
-      }
-
-      if (shouldUnlock) {
-        const newAchievement = {
-          user_id,
-          achievement_id: achievementId,
-          achievement_type: 'auto_unlock',
-          title: achievement.title,
-          description: achievement.description,
-          category: achievement.category,
-          rarity: achievement.rarity,
-          points_awarded: achievement.points,
-          metadata: { unlocked_by: action_type, action_data }
-        };
-
-        // Insertar logro en la base de datos
-        const { data: insertedAchievement } = await supabaseClient
-          .from('user_achievements')
-          .insert(newAchievement)
-          .select()
+      if (isUnlocked) {
+        // Verificar si ya fue desbloqueado
+        const { data: existing } = await supabaseClient
+          .from('user_achievement_unlocks')
+          .select('id')
+          .eq('user_id', trigger.user_id)
+          .eq('achievement_id', achievement.id)
           .single();
 
-        if (insertedAchievement) {
-          newAchievements.push(insertedAchievement);
-
-          // Crear notificación para el logro
+        if (!existing) {
+          // Desbloquear logro
           await supabaseClient
-            .from('user_notifications')
+            .from('user_achievement_unlocks')
             .insert({
-              user_id,
-              notification_type: 'achievement_unlocked',
-              title: `¡Logro Desbloqueado!`,
-              message: `Has desbloqueado: ${achievement.title}`,
-              priority: achievement.rarity === 'legendary' ? 'high' : 'normal',
-              action_data: { achievement_id: achievementId, points: achievement.points }
+              user_id: trigger.user_id,
+              achievement_id: achievement.id,
+              unlock_context: trigger.action_data,
+              neural_metrics_at_unlock: trigger.action_data.neural_metrics || {}
             });
 
-          console.log(`Achievement unlocked: ${achievementId} for user ${user_id}`);
+          unlockedAchievements.push({
+            id: achievement.id,
+            code: achievement.code,
+            title: achievement.title,
+            description: achievement.description,
+            points_reward: achievement.points_reward,
+            rarity: achievement.rarity
+          });
         }
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        achievements_unlocked: newAchievements.length,
-        new_achievements: newAchievements
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    );
+    return new Response(JSON.stringify({
+      achievements_unlocked: unlockedAchievements.length,
+      new_achievements: unlockedAchievements,
+      total_points_earned: unlockedAchievements.reduce((sum, a) => sum + a.points_reward, 0)
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
-    console.error('Error in achievement engine:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    );
+    console.error('Achievement Engine Error:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });
 
-// Helper functions for achievement checking
-function checkStudyStreak(userProgress: any[], days: number): boolean {
-  if (!userProgress || userProgress.length === 0) return false;
-  
-  const recentActivities = userProgress
-    .map(p => new Date(p.last_activity_at))
-    .sort((a, b) => b.getTime() - a.getTime());
+async function checkAchievementConditions(
+  supabase: any,
+  achievement: any,
+  trigger: AchievementTrigger
+): Promise<boolean> {
+  const conditions = achievement.unlock_conditions;
+  const neuralReqs = achievement.neural_requirements;
 
-  let streak = 0;
-  let currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
-
-  for (let i = 0; i < days; i++) {
-    const dayToCheck = new Date(currentDate);
-    dayToCheck.setDate(currentDate.getDate() - i);
-
-    const hasActivityOnDay = recentActivities.some(date => {
-      const activityDate = new Date(date);
-      activityDate.setHours(0, 0, 0, 0);
-      return activityDate.getTime() === dayToCheck.getTime();
-    });
-
-    if (hasActivityOnDay) {
-      streak++;
-    } else {
-      break;
+  // Verificar requisitos neurales
+  if (neuralReqs && Object.keys(neuralReqs).length > 0) {
+    const neuralMetrics = trigger.action_data.neural_metrics || {};
+    
+    for (const [key, minValue] of Object.entries(neuralReqs)) {
+      if (typeof minValue === 'number' && neuralMetrics[key] < minValue) {
+        return false;
+      }
     }
   }
 
-  return streak >= days;
+  // Verificar condiciones específicas por código de logro
+  switch (achievement.code) {
+    case 'NEURAL_PIONEER':
+      return trigger.action_type === 'neural_session_start';
+
+    case 'HIGH_ENGAGEMENT':
+      if (trigger.action_type === 'engagement_milestone') {
+        const engagement = trigger.action_data.engagement;
+        const duration = trigger.action_data.duration_minutes;
+        return engagement >= 80 && duration >= 10;
+      }
+      return false;
+
+    case 'COHERENCE_MASTER':
+      if (trigger.action_type === 'coherence_achievement') {
+        return trigger.action_data.coherence >= 90;
+      }
+      return false;
+
+    case 'INTERACTION_EXPERT':
+      if (trigger.action_type === 'interaction_count') {
+        return trigger.action_data.total_interactions >= 100;
+      }
+      return false;
+
+    case 'CINEMA_ENTHUSIAST':
+      if (trigger.action_type === 'transition_count') {
+        return trigger.action_data.total_transitions >= 25;
+      }
+      return false;
+
+    default:
+      // Verificar condiciones genéricas
+      return checkGenericConditions(supabase, conditions, trigger);
+  }
 }
 
-function checkPAESSimulationMastery(userProgress: any[]): boolean {
-  if (!userProgress) return false;
+async function checkGenericConditions(
+  supabase: any,
+  conditions: any,
+  trigger: AchievementTrigger
+): Promise<boolean> {
+  // Implementar lógica genérica para condiciones más complejas
+  // Por ejemplo, contar eventos, verificar progreso, etc.
   
-  const paesNodes = userProgress.filter(p => 
-    p.node_id.includes('paes') || p.node_id.includes('simulation')
-  );
-  
-  const masteredSimulations = paesNodes.filter(p => 
-    p.status === 'completed' && p.success_rate >= 0.8
-  );
-  
-  return masteredSimulations.length >= 10;
-}
+  if (conditions.min_engagement && trigger.action_data.engagement) {
+    return trigger.action_data.engagement >= conditions.min_engagement;
+  }
 
-function checkNeuralEfficiency(userMetrics: any[], threshold: number): boolean {
-  if (!userMetrics) return false;
-  
-  const efficiencyMetric = userMetrics.find(m => 
-    m.metric_type === 'neural_dimension' && m.dimension_id === 'neural_efficiency'
-  );
-  
-  return efficiencyMetric && efficiencyMetric.current_value >= threshold;
-}
+  if (conditions.min_coherence && trigger.action_data.coherence) {
+    return trigger.action_data.coherence >= conditions.min_coherence;
+  }
 
-function checkUniverseExploration(userProgress: any[]): boolean {
-  if (!userProgress) return false;
-  
-  const universeNodes = userProgress.filter(p => 
-    p.node_id.includes('universe') || p.node_id.includes('3d')
-  );
-  
-  return universeNodes.length >= 20 && 
-    universeNodes.filter(p => p.progress > 0.8).length >= 15;
-}
-
-function checkCognitiveMastery(userProgress: any[]): boolean {
-  if (!userProgress) return false;
-  
-  const bloomLevels = ['recordar', 'comprender', 'aplicar', 'analizar', 'evaluar', 'crear'];
-  const masteredLevels = new Set();
-  
-  // Este sería más complejo en una implementación real
-  // Por ahora, verificamos si tiene progreso diverso
-  const completedNodes = userProgress.filter(p => p.status === 'completed');
-  
-  return completedNodes.length >= 50 && 
-    new Set(completedNodes.map(p => p.node_id.split('-')[1])).size >= 6;
+  return true;
 }

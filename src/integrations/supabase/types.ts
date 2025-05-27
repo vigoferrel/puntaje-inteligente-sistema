@@ -54,6 +54,83 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_conversation_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          model_used: string | null
+          neural_context: Json | null
+          processing_time_ms: number | null
+          role: string
+          session_id: string | null
+          tokens_used: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          model_used?: string | null
+          neural_context?: Json | null
+          processing_time_ms?: number | null
+          role: string
+          session_id?: string | null
+          tokens_used?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          model_used?: string | null
+          neural_context?: Json | null
+          processing_time_ms?: number | null
+          role?: string
+          session_id?: string | null
+          tokens_used?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_conversation_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_conversation_sessions: {
+        Row: {
+          context_data: Json | null
+          ended_at: string | null
+          id: string
+          session_quality: number | null
+          session_type: string
+          started_at: string | null
+          total_messages: number | null
+          user_id: string | null
+        }
+        Insert: {
+          context_data?: Json | null
+          ended_at?: string | null
+          id?: string
+          session_quality?: number | null
+          session_type: string
+          started_at?: string | null
+          total_messages?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          context_data?: Json | null
+          ended_at?: string | null
+          id?: string
+          session_quality?: number | null
+          session_type?: string
+          started_at?: string | null
+          total_messages?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_cost_analytics: {
         Row: {
           avg_quality: number | null
@@ -188,6 +265,42 @@ export type Database = {
           response_time_ms?: number | null
           success?: boolean | null
           token_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_recommendations: {
+        Row: {
+          content: Json
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          neural_basis: Json | null
+          priority: number | null
+          recommendation_type: string
+          user_id: string | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          neural_basis?: Json | null
+          priority?: number | null
+          recommendation_type: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          neural_basis?: Json | null
+          priority?: number | null
+          recommendation_type?: string
           user_id?: string | null
         }
         Relationships: []
@@ -1576,6 +1689,48 @@ export type Database = {
         }
         Relationships: []
       }
+      intelligent_achievements: {
+        Row: {
+          category: string
+          code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          neural_requirements: Json | null
+          points_reward: number | null
+          rarity: string | null
+          title: string
+          unlock_conditions: Json
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          neural_requirements?: Json | null
+          points_reward?: number | null
+          rarity?: string | null
+          title: string
+          unlock_conditions: Json
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          neural_requirements?: Json | null
+          points_reward?: number | null
+          rarity?: string | null
+          title?: string
+          unlock_conditions?: Json
+        }
+        Relationships: []
+      }
       learning_nodes: {
         Row: {
           adaptive_adjustment: number | null
@@ -1750,6 +1905,47 @@ export type Database = {
         }
         Relationships: []
       }
+      neural_events: {
+        Row: {
+          component_source: string | null
+          event_data: Json
+          event_type: string
+          id: string
+          neural_metrics: Json | null
+          session_id: string | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          component_source?: string | null
+          event_data: Json
+          event_type: string
+          id?: string
+          neural_metrics?: Json | null
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          component_source?: string | null
+          event_data?: Json
+          event_type?: string
+          id?: string
+          neural_metrics?: Json | null
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neural_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "neural_telemetry_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       neural_metrics: {
         Row: {
           change_rate: number | null
@@ -1786,6 +1982,45 @@ export type Database = {
           previous_value?: number | null
           trend?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      neural_telemetry_sessions: {
+        Row: {
+          avg_coherence: number | null
+          avg_engagement: number | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          session_end: string | null
+          session_quality: number | null
+          session_start: string | null
+          total_events: number | null
+          user_id: string | null
+        }
+        Insert: {
+          avg_coherence?: number | null
+          avg_engagement?: number | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          session_end?: string | null
+          session_quality?: number | null
+          session_start?: string | null
+          total_events?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          avg_coherence?: number | null
+          avg_engagement?: number | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          session_end?: string | null
+          session_quality?: number | null
+          session_start?: string | null
+          total_events?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2595,6 +2830,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievement_unlocks: {
+        Row: {
+          achievement_id: string | null
+          id: string
+          neural_metrics_at_unlock: Json | null
+          unlock_context: Json | null
+          unlocked_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_id?: string | null
+          id?: string
+          neural_metrics_at_unlock?: Json | null
+          unlock_context?: Json | null
+          unlocked_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_id?: string | null
+          id?: string
+          neural_metrics_at_unlock?: Json | null
+          unlock_context?: Json | null
+          unlocked_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievement_unlocks_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "intelligent_achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -3163,6 +3433,10 @@ export type Database = {
       calculate_gemini_cost: {
         Args: { tokens: number }
         Returns: number
+      }
+      calculate_neural_metrics_summary: {
+        Args: { user_id_param: string; days_back?: number }
+        Returns: Json
       }
       calculate_weighted_score_ciencias: {
         Args: { exam_code_param: string; user_responses: Json }

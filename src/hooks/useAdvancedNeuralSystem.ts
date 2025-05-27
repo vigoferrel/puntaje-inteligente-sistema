@@ -1,3 +1,4 @@
+
 /**
  * ADVANCED NEURAL SYSTEM HOOK v2.0
  * Hook principal para acceder a toda la funcionalidad neural
@@ -8,6 +9,7 @@ import { neuralTelemetryService, TelemetryMetrics } from '@/core/neural/NeuralTe
 import { predictiveAnalyticsEngine, UserIntentPrediction, AdaptiveRecommendation } from '@/core/neural/PredictiveAnalyticsEngine';
 import { autoHealingSystem, SystemHealth } from '@/core/neural/AutoHealingSystem';
 import { neuralInsightsEngine, LearningPattern, NeuralInsight } from '@/core/neural/NeuralInsightsEngine';
+import { NeuralBackendService } from '@/services/neural/neural-backend-service';
 
 interface AdvancedNeuralState {
   // Telemetría
@@ -82,10 +84,12 @@ export const useAdvancedNeuralSystem = (componentName?: string) => {
     optimizationLevel: 0
   });
 
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
   // Inicialización del sistema neural
   useEffect(() => {
     const initializeNeuralSystem = async () => {
-      console.log('🧠 Initializing Advanced Neural System...');
+      console.log('🧠 Initializing Advanced Neural System v2.0...');
       
       try {
         // Registrar componente en auto-healing si se proporciona nombre
@@ -113,7 +117,7 @@ export const useAdvancedNeuralSystem = (componentName?: string) => {
           isMetricsLoading: false
         }));
         
-        console.log('✅ Advanced Neural System ready');
+        console.log('✅ Advanced Neural System v2.0 ready with backend integration');
       } catch (error) {
         console.error('❌ Failed to initialize Neural System:', error);
         setState(prev => ({ 
@@ -173,14 +177,34 @@ export const useAdvancedNeuralSystem = (componentName?: string) => {
     return () => clearInterval(updateInterval);
   }, [state.neuralSystemReady]);
 
-  // Capturar evento neural
-  const captureEvent = useCallback((
+  // Capturar evento neural con integración backend
+  const captureEvent = useCallback(async (
     type: string, 
     data: Record<string, any>, 
     context?: any
   ) => {
+    // Captura local
     neuralTelemetryService.captureNeuralEvent(type as any, data, context);
-  }, []);
+    
+    // Enviar al backend si el sistema está listo
+    if (state.neuralSystemReady) {
+      try {
+        const newSessionId = await NeuralBackendService.trackNeuralEvent({
+          event_type: type,
+          event_data: data,
+          neural_metrics: state.realTimeMetrics,
+          component_source: componentName,
+          session_id: sessionId || undefined
+        });
+        
+        if (newSessionId && !sessionId) {
+          setSessionId(newSessionId);
+        }
+      } catch (error) {
+        console.error('Error sending neural event to backend:', error);
+      }
+    }
+  }, [state.neuralSystemReady, state.realTimeMetrics, componentName, sessionId]);
 
   // Trigger análisis de predicciones
   const triggerPredictionAnalysis = useCallback(() => {
@@ -283,6 +307,7 @@ export const useAdvancedNeuralSystem = (componentName?: string) => {
     ...state,
     actions,
     reportComponentError, // Método adicional para reportar errores
+    sessionId, // ID de sesión del backend
     
     // Métricas de conveniencia
     isHighEngagement: state.realTimeMetrics.real_time_engagement > 70,
