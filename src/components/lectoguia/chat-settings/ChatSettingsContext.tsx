@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
 import { ChatSettings, ChatSettingsContextType } from './types';
 
 const defaultSettings: ChatSettings = {
@@ -10,6 +11,8 @@ const defaultSettings: ChatSettings = {
   autoExpandImages: true,
   notificationSound: true,
 };
+
+const SETTINGS_KEY = 'lectoguia_chat_settings_unified';
 
 // Create context with default values
 const ChatSettingsContext = createContext<ChatSettingsContextType>({
@@ -22,14 +25,14 @@ export const useChatSettings = () => useContext(ChatSettingsContext);
 
 export const ChatSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<ChatSettings>(() => {
-    // Load settings from localStorage if available
-    const savedSettings = localStorage.getItem('lectoguia-chat-settings');
-    return savedSettings ? JSON.parse(savedSettings) : defaultSettings;
+    // Load settings from UnifiedStorageSystem
+    const savedSettings = unifiedStorageSystem.getItem(SETTINGS_KEY);
+    return savedSettings || defaultSettings;
   });
 
-  // Save settings to localStorage when they change
+  // Save settings to UnifiedStorageSystem when they change
   useEffect(() => {
-    localStorage.setItem('lectoguia-chat-settings', JSON.stringify(settings));
+    unifiedStorageSystem.setItem(SETTINGS_KEY, settings, { silentErrors: true });
   }, [settings]);
 
   const updateSettings = <K extends keyof ChatSettings>(key: K, value: ChatSettings[K]) => {
@@ -38,7 +41,7 @@ export const ChatSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const resetSettings = () => {
     setSettings(defaultSettings);
-    localStorage.removeItem('lectoguia-chat-settings');
+    unifiedStorageSystem.removeItem(SETTINGS_KEY);
   };
 
   return (

@@ -1,7 +1,7 @@
 
 /**
- * LAZY LOAD WRAPPER v1.0
- * Sistema de carga lazy optimizado con preloading inteligente
+ * LAZY LOAD WRAPPER v2.0 - OPTIMIZADO SIN DUPLICACIÓN
+ * Sistema de carga lazy optimizado con preloading inteligente único
  */
 
 import React, { Suspense, useEffect, useState } from 'react';
@@ -15,6 +15,10 @@ interface LazyLoadWrapperProps {
   priority?: 'high' | 'medium' | 'low';
   moduleName?: string;
 }
+
+// Cache global para módulos ya precargados
+const preloadedModules = new Set<string>();
+const preloadingInProgress = new Set<string>();
 
 const DefaultFallback: React.FC<{ moduleName?: string }> = ({ moduleName }) => (
   <div className="min-h-[400px] flex items-center justify-center">
@@ -83,7 +87,7 @@ export const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = ({
   );
 };
 
-// Hook para preloading inteligente
+// Hook optimizado para preloading inteligente SIN DUPLICACIÓN
 export const useIntelligentPreloading = (currentRoute: string) => {
   useEffect(() => {
     const preloadMap: Record<string, string[]> = {
@@ -97,9 +101,23 @@ export const useIntelligentPreloading = (currentRoute: string) => {
     if (modulesToPreload.length > 0 && 'requestIdleCallback' in window) {
       requestIdleCallback(() => {
         modulesToPreload.forEach((module, index) => {
+          // Verificar si ya fue precargado o está en proceso
+          if (preloadedModules.has(module) || preloadingInProgress.has(module)) {
+            return;
+          }
+
+          // Marcar como en proceso
+          preloadingInProgress.add(module);
+
           setTimeout(() => {
             console.log(`🔄 Preloading module: ${module}`);
-            // Aquí se implementaría la lógica de preloading real
+            
+            // Simular preloading y marcar como completado
+            setTimeout(() => {
+              preloadedModules.add(module);
+              preloadingInProgress.delete(module);
+            }, 500);
+            
           }, index * 1000);
         });
       });

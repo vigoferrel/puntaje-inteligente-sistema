@@ -1,9 +1,18 @@
 
 import { LearningPlan, PlanProgress } from "@/types/learning-plan";
-import { CACHE_KEYS, CACHE_EXPIRY_TIME } from "./types";
+import { unifiedStorageSystem } from "@/core/storage/UnifiedStorageSystem";
+
+const CACHE_KEYS = {
+  PLANS: 'learning_plans_unified',
+  CURRENT_PLAN: 'current_plan_unified',
+  PLAN_PROGRESS: 'plan_progress_unified',
+  CACHE_TIMESTAMP: 'cache_timestamp_unified'
+};
+
+const CACHE_EXPIRY_TIME = 1800000; // 30 minutos
 
 /**
- * Loads learning plans data from cache if available and not expired
+ * Loads learning plans data from UnifiedStorageSystem cache
  */
 export const loadFromCache = (): {
   plans: LearningPlan[];
@@ -12,58 +21,59 @@ export const loadFromCache = (): {
 } | null => {
   try {
     // Check if the cache is still valid
-    const timestamp = sessionStorage.getItem(CACHE_KEYS.CACHE_TIMESTAMP);
+    const timestamp = unifiedStorageSystem.getItem(CACHE_KEYS.CACHE_TIMESTAMP);
     if (!timestamp || Date.now() - Number(timestamp) > CACHE_EXPIRY_TIME) {
       return null;
     }
     
     // Load plans
-    const cachedPlans = sessionStorage.getItem(CACHE_KEYS.PLANS);
-    const cachedCurrentPlan = sessionStorage.getItem(CACHE_KEYS.CURRENT_PLAN);
-    const cachedProgress = sessionStorage.getItem(CACHE_KEYS.PLAN_PROGRESS);
+    const cachedPlans = unifiedStorageSystem.getItem(CACHE_KEYS.PLANS);
+    const cachedCurrentPlan = unifiedStorageSystem.getItem(CACHE_KEYS.CURRENT_PLAN);
+    const cachedProgress = unifiedStorageSystem.getItem(CACHE_KEYS.PLAN_PROGRESS);
     
     if (!cachedPlans) {
       return null;
     }
     
     return {
-      plans: JSON.parse(cachedPlans) as LearningPlan[],
-      currentPlan: cachedCurrentPlan ? JSON.parse(cachedCurrentPlan) : null,
-      planProgress: cachedProgress ? JSON.parse(cachedProgress) : {},
+      plans: cachedPlans,
+      currentPlan: cachedCurrentPlan,
+      planProgress: cachedProgress || {},
     };
   } catch (error) {
-    console.error('Error loading data from cache:', error);
+    console.warn('Error loading data from unified cache:', error);
     return null;
   }
 };
 
 /**
- * Updates the cache with current plans data
+ * Updates the cache using UnifiedStorageSystem
  */
 export const updateCache = (
   plans: LearningPlan[], 
   currentPlan: LearningPlan | null, 
   planProgress: Record<string, PlanProgress>
 ): void => {
+  if (plans.length === 0) return;
+
   try {
-    if (plans.length > 0) {
-      sessionStorage.setItem(CACHE_KEYS.PLANS, JSON.stringify(plans));
-      
-      if (currentPlan) {
-        sessionStorage.setItem(CACHE_KEYS.CURRENT_PLAN, JSON.stringify(currentPlan));
-      }
-      
-      sessionStorage.setItem(CACHE_KEYS.PLAN_PROGRESS, JSON.stringify(planProgress));
-      sessionStorage.setItem(CACHE_KEYS.CACHE_TIMESTAMP, Date.now().toString());
+    unifiedStorageSystem.setItem(CACHE_KEYS.PLANS, plans, { silentErrors: true });
+    unifiedStorageSystem.setItem(CACHE_KEYS.PLAN_PROGRESS, planProgress, { silentErrors: true });
+    unifiedStorageSystem.setItem(CACHE_KEYS.CACHE_TIMESTAMP, Date.now(), { silentErrors: true });
+    
+    if (currentPlan) {
+      unifiedStorageSystem.setItem(CACHE_KEYS.CURRENT_PLAN, currentPlan, { silentErrors: true });
     }
   } catch (error) {
-    console.error('Error updating cache:', error);
+    console.warn('Error updating unified cache:', error);
   }
 };
 
 /**
- * Clears all cache data
+ * Clears all cache data using UnifiedStorageSystem
  */
 export const clearCache = (): void => {
-  Object.values(CACHE_KEYS).forEach(key => sessionStorage.removeItem(key));
+  Object.values(CACHE_KEYS).forEach(key => {
+    unifiedStorageSystem.removeItem(key);
+  });
 };

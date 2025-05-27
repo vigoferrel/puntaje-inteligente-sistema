@@ -1,7 +1,6 @@
-
 /**
- * UNIFIED STORAGE SYSTEM v4.0 - CIRCUIT BREAKER REAL
- * Sistema con protección total contra tracking prevention
+ * UNIFIED STORAGE SYSTEM v5.0 - CIRCUIT BREAKER ULTRA-AGRESIVO
+ * Sistema con protección máxima contra tracking prevention
  */
 
 import { CacheDataTypes, CacheKey } from './types';
@@ -33,10 +32,12 @@ class UnifiedStorageSystemCore {
   private circuitBreakerActive = false;
   private lastAlertTime = 0;
   
-  // Circuit breaker configuración AGRESIVA
-  private readonly MAX_ALERTS = 3; // Solo 3 alertas antes de circuit breaker
-  private readonly ALERT_WINDOW = 5000; // 5 segundos
-  private readonly CIRCUIT_BREAKER_DURATION = 60000; // 1 minuto
+  // Circuit breaker configuración ULTRA-AGRESIVA
+  private readonly MAX_ALERTS = 2; // Solo 2 alertas antes de circuit breaker
+  private readonly ALERT_WINDOW = 3000; // 3 segundos
+  private readonly CIRCUIT_BREAKER_DURATION = 120000; // 2 minutos
+  private readonly EXPONENTIAL_BACKOFF_BASE = 2;
+  private circuitBreakerRetries = 0;
 
   static getInstance(): UnifiedStorageSystemCore {
     if (!UnifiedStorageSystemCore.instance) {
@@ -51,8 +52,8 @@ class UnifiedStorageSystemCore {
 
   private async initialize() {
     try {
-      // Test ÚNICO y silencioso
-      const testKey = '__silent_test__';
+      // Test ÚNICO y completamente silencioso
+      const testKey = '__ultra_silent_test__';
       localStorage.setItem(testKey, '1');
       localStorage.removeItem(testKey);
       
@@ -61,7 +62,7 @@ class UnifiedStorageSystemCore {
       console.log('✅ Storage available');
       
     } catch (error) {
-      // ACTIVAR CIRCUIT BREAKER INMEDIATAMENTE
+      // ACTIVAR CIRCUIT BREAKER INMEDIATAMENTE sin logs adicionales
       this.activateCircuitBreaker('Storage blocked by tracking prevention');
     }
     
@@ -76,20 +77,23 @@ class UnifiedStorageSystemCore {
     this.trackingBlocked = true;
     
     console.log(`🚨 CIRCUIT BREAKER ACTIVADO: ${reason}`);
-    console.log('📱 Funcionando solo con memoria cache');
+    console.log('📱 Solo memoria cache activa');
     
-    // Auto-reset después del tiempo configurado
+    // Exponential backoff para reintentos
+    const backoffDelay = this.CIRCUIT_BREAKER_DURATION * Math.pow(this.EXPONENTIAL_BACKOFF_BASE, this.circuitBreakerRetries);
+    this.circuitBreakerRetries++;
+    
     setTimeout(() => {
       this.resetCircuitBreaker();
-    }, this.CIRCUIT_BREAKER_DURATION);
+    }, Math.min(backoffDelay, 300000)); // Máximo 5 minutos
   }
 
   private resetCircuitBreaker() {
     console.log('🔄 Intentando reset de circuit breaker...');
     
     try {
-      // Test silencioso para ver si storage está disponible
-      const testKey = '__reset_test__';
+      // Test ultra-silencioso
+      const testKey = '__reset_test_silent__';
       localStorage.setItem(testKey, '1');
       localStorage.removeItem(testKey);
       
@@ -98,13 +102,15 @@ class UnifiedStorageSystemCore {
       this.storageAvailable = true;
       this.trackingBlocked = false;
       this.alertCount = 0;
+      this.circuitBreakerRetries = 0;
       
       console.log('✅ Circuit breaker reseteado - storage disponible');
       
     } catch (error) {
-      // Sigue bloqueado, extender el circuit breaker
-      console.log('⚠️ Storage aún bloqueado, extendiendo circuit breaker');
-      setTimeout(() => this.resetCircuitBreaker(), this.CIRCUIT_BREAKER_DURATION);
+      // Sigue bloqueado, extender con exponential backoff
+      console.log('⚠️ Storage aún bloqueado, reintentando con backoff');
+      const nextBackoff = this.CIRCUIT_BREAKER_DURATION * Math.pow(this.EXPONENTIAL_BACKOFF_BASE, this.circuitBreakerRetries);
+      setTimeout(() => this.resetCircuitBreaker(), Math.min(nextBackoff, 300000));
     }
   }
 
@@ -115,19 +121,19 @@ class UnifiedStorageSystemCore {
   }
 
   getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
-    // SIEMPRE usar cache primero (L1 cache)
+    // SIEMPRE usar cache L1 primero (máxima prioridad)
     const cached = this.memoryCache.get(key);
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
       cached.accessCount++;
       return cached.data as CacheDataTypes[K];
     }
 
-    // Si circuit breaker activo, SOLO memoria
+    // Si circuit breaker activo, JAMÁS intentar localStorage
     if (this.circuitBreakerActive) {
       return null;
     }
 
-    // Si storage disponible, intentar cargar
+    // Solo si storage está disponible Y no hay circuit breaker
     if (this.storageAvailable) {
       try {
         const item = localStorage.getItem(key);
@@ -150,10 +156,10 @@ class UnifiedStorageSystemCore {
     value: CacheDataTypes[K],
     options: { silentErrors?: boolean; ttl?: number } = {}
   ): boolean {
-    // SIEMPRE actualizar cache L1
+    // SIEMPRE actualizar cache L1 (prioridad máxima)
     this.setToCache(key, value, options.ttl);
 
-    // Si circuit breaker activo, NO intentar localStorage
+    // Si circuit breaker activo, NO intentar localStorage bajo ninguna circunstancia
     if (this.circuitBreakerActive) {
       return true; // Éxito en memoria
     }
@@ -177,15 +183,15 @@ class UnifiedStorageSystemCore {
   private handleStorageError(operation: string) {
     const now = Date.now();
     
-    // Rate limiting de alertas
-    if (now - this.lastAlertTime < 1000) {
-      return; // Ignorar si hubo alerta hace menos de 1 segundo
+    // Rate limiting ultra-agresivo
+    if (now - this.lastAlertTime < 500) {
+      return; // Ignorar si hubo alerta hace menos de 500ms
     }
     
     this.alertCount++;
     this.lastAlertTime = now;
     
-    // Activar circuit breaker si muchas alertas
+    // Activar circuit breaker con umbral muy bajo
     if (this.alertCount >= this.MAX_ALERTS) {
       this.activateCircuitBreaker(`Too many ${operation} errors: ${this.alertCount}`);
     }
@@ -194,7 +200,7 @@ class UnifiedStorageSystemCore {
   private setToCache<K extends CacheKey>(
     key: K,
     data: CacheDataTypes[K],
-    ttl = 300000
+    ttl = 600000 // 10 minutos por defecto
   ) {
     this.memoryCache.set(key, {
       data,
@@ -203,8 +209,8 @@ class UnifiedStorageSystemCore {
       accessCount: 0
     });
 
-    // Limpieza automática (máximo 50 items en cache)
-    if (this.memoryCache.size > 50) {
+    // Limpieza automática más agresiva (máximo 30 items)
+    if (this.memoryCache.size > 30) {
       this.cleanupCache();
     }
   }
@@ -216,6 +222,7 @@ class UnifiedStorageSystemCore {
     // Remover entradas expiradas y menos usadas
     entries
       .filter(([, entry]) => now - entry.timestamp > entry.ttl || entry.accessCount < 2)
+      .slice(0, 10) // Remover máximo 10 por vez
       .forEach(([key]) => this.memoryCache.delete(key));
   }
 
@@ -260,6 +267,7 @@ class UnifiedStorageSystemCore {
     this.memoryCache.clear();
     this.alertCount = 0;
     this.lastAlertTime = 0;
+    this.circuitBreakerRetries = 0;
   }
 }
 

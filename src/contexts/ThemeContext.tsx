@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { unifiedStorageSystem } from "@/core/storage/UnifiedStorageSystem";
 
 type Theme = "dark" | "light";
 
@@ -15,7 +16,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
+    // Usar UnifiedStorageSystem en lugar de localStorage directo
+    const savedTheme = unifiedStorageSystem.getItem('theme_preference') as Theme | null;
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.classList.toggle("light", savedTheme === "light");
@@ -28,14 +30,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
+    unifiedStorageSystem.setItem('theme_preference', newTheme, { silentErrors: true });
     document.documentElement.classList.toggle("light", newTheme === "light");
   };
 
   const value = {
     theme,
     toggleTheme,
-    setTheme,
+    setTheme: (newTheme: Theme) => {
+      setTheme(newTheme);
+      unifiedStorageSystem.setItem('theme_preference', newTheme, { silentErrors: true });
+      document.documentElement.classList.toggle("light", newTheme === "light");
+    },
   };
 
   return (
