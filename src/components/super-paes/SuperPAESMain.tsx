@@ -1,320 +1,266 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { useUnifiedCinematic } from '@/components/cinematic/UnifiedCinematicProvider';
 import { 
-  Brain, Target, BookOpen, TrendingUp, 
-  Zap, Crown, Award, Star, Calendar,
-  Calculator, DollarSign, Users, Activity
+  Brain, 
+  Target, 
+  Zap, 
+  BookOpen, 
+  Users, 
+  Award,
+  TrendingUp,
+  Clock,
+  Star
 } from 'lucide-react';
-import { useCinematic } from '@/components/cinematic/CinematicTransitionSystem';
-import { useAuth } from '@/contexts/AuthContext';
-import { useGlobalCinematic } from '@/contexts/GlobalCinematicContext';
-import { RealTimeMetricsDashboard } from '@/components/cinematic/RealTimeMetricsDashboard';
 
 export const SuperPAESMain: React.FC = () => {
-  const { startTransition } = useCinematic();
-  const { profile } = useAuth();
-  const { state: cinematicState } = useGlobalCinematic();
+  const { state } = useUnifiedCinematic();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleNavigateToUniverse = () => {
-    startTransition('dashboard');
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleNavigateToUnified = () => {
-    window.location.href = '/';
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center text-white"
+        >
+          <div className="w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
+          <div className="text-xl font-bold">SuperPAES Neural Activado</div>
+          <div className="text-sm text-purple-200 mt-2">Coordinación vocacional en línea...</div>
+        </motion.div>
+      </div>
+    );
+  }
 
-  const handleNavigateToTool = (tool: string) => {
-    console.log(`Navegando a herramienta: ${tool}`);
-    window.location.href = `/?tool=${tool}`;
-  };
+  const superpaesModules = [
+    {
+      id: 'overview',
+      name: 'Vista General',
+      icon: Brain,
+      description: 'Panel principal del sistema SuperPAES'
+    },
+    {
+      id: 'diagnostic',
+      name: 'Diagnóstico',
+      icon: Target,
+      description: 'Evaluación adaptativa neural'
+    },
+    {
+      id: 'preparation',
+      name: 'Preparación',
+      icon: BookOpen,
+      description: 'Entrenamiento personalizado'
+    },
+    {
+      id: 'progress',
+      name: 'Progreso',
+      icon: TrendingUp,
+      description: 'Métricas de rendimiento'
+    }
+  ];
 
-  const handleNavigateToCalendar = () => {
-    window.location.href = '/calendario';
-  };
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-yellow-400" />
+                  Energía Neural
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Progress value={85} className="h-3" />
+                  <div className="text-yellow-400 text-2xl font-bold">85%</div>
+                  <div className="text-white/70 text-sm">Sistema operativo</div>
+                </div>
+              </CardContent>
+            </Card>
 
-  const handleNavigateToFinancial = () => {
-    window.location.href = '/financial';
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Target className="w-5 h-5 text-green-400" />
+                  Precisión
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Progress value={92} className="h-3" />
+                  <div className="text-green-400 text-2xl font-bold">92%</div>
+                  <div className="text-white/70 text-sm">Tasa de acierto</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-cyan-400" />
+                  Tiempo Activo
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="text-cyan-400 text-2xl font-bold">2h 45m</div>
+                  <div className="text-white/70 text-sm">Sesión actual</div>
+                  <Badge className="bg-cyan-600">En línea</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'diagnostic':
+        return (
+          <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white">Sistema de Diagnóstico Neural</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <Brain className="w-16 h-16 mx-auto mb-4 text-purple-400 animate-pulse" />
+                <div className="text-white text-lg mb-2">Diagnóstico Adaptativo</div>
+                <div className="text-white/60 mb-6">Evaluación personalizada basada en IA</div>
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  Iniciar Diagnóstico
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'preparation':
+        return (
+          <div className="space-y-6">
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white">Plan de Preparación Personalizado</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="w-4 h-4 text-blue-400" />
+                      <span className="text-white font-medium">Matemáticas</span>
+                    </div>
+                    <Progress value={75} className="h-2 mb-2" />
+                    <div className="text-blue-400 text-sm">75% completado</div>
+                  </div>
+                  
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="w-4 h-4 text-green-400" />
+                      <span className="text-white font-medium">Lenguaje</span>
+                    </div>
+                    <Progress value={88} className="h-2 mb-2" />
+                    <div className="text-green-400 text-sm">88% completado</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'progress':
+        return (
+          <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Award className="w-5 h-5 text-yellow-400" />
+                Métricas de Progreso
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-400 mb-1">127</div>
+                  <div className="text-white/70 text-sm">Ejercicios Completados</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-400 mb-1">89%</div>
+                  <div className="text-white/70 text-sm">Promedio General</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-400 mb-1">12</div>
+                  <div className="text-white/70 text-sm">Días de Racha</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto space-y-6"
+        className="max-w-7xl mx-auto"
       >
-        {/* Header SuperPAES con estado cinematográfico */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center"
-            >
-              <Crown className="w-8 h-8 text-white" />
-            </motion.div>
-            <div>
-              <h1 className="text-4xl font-bold text-white">SuperPAES Neural</h1>
-              <p className="text-cyan-400">Sistema Inteligente de Preparación PAES</p>
-              {profile && (
-                <p className="text-purple-300 text-sm">
-                  Bienvenido, {profile.name}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex justify-center space-x-2">
-            <Badge className="bg-gradient-to-r from-green-600 to-emerald-600">
-              <Brain className="w-4 h-4 mr-2" />
-              IA Avanzada Activa
-            </Badge>
-            <Badge className="bg-gradient-to-r from-blue-600 to-cyan-600">
-              Modo: {cinematicState.preferences.visualMode.toUpperCase()}
-            </Badge>
-            <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
-              Salud: {cinematicState.systemHealth}%
-            </Badge>
-          </div>
-        </motion.div>
-
-        {/* Dashboard de métricas reales */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <RealTimeMetricsDashboard />
-        </motion.div>
-
-        {/* Herramientas Principales del Ecosistema */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            {
-              title: 'Dashboard Unificado',
-              description: 'Centro de control principal con datos reales',
-              icon: Activity,
-              color: 'from-blue-500 to-indigo-500',
-              action: () => handleNavigateToUnified(),
-              priority: 'high',
-              status: 'active'
-            },
-            {
-              title: 'LectoGuía IA',
-              description: 'Asistente de comprensión lectora inteligente',
-              icon: BookOpen,
-              color: 'from-orange-500 to-red-500',
-              action: () => handleNavigateToTool('lectoguia'),
-              priority: 'high',
-              status: 'active'
-            },
-            {
-              title: 'Diagnóstico Inteligente',
-              description: 'Evaluación adaptativa personalizada',
-              icon: Brain,
-              color: 'from-purple-500 to-pink-500',
-              action: () => handleNavigateToTool('diagnostic'),
-              priority: 'high',
-              status: 'active'
-            },
-            {
-              title: 'Ejercicios Adaptativos',
-              description: 'Práctica inteligente personalizada',
-              icon: Zap,
-              color: 'from-yellow-500 to-orange-500',
-              action: () => handleNavigateToTool('exercises'),
-              priority: 'medium'
-            },
-            {
-              title: 'Plan de Estudio IA',
-              description: 'Planificación optimizada por IA',
-              icon: TrendingUp,
-              color: 'from-green-500 to-teal-500',
-              action: () => handleNavigateToTool('plan'),
-              priority: 'medium'
-            },
-            {
-              title: 'Calendario Inteligente',
-              description: 'Planificación de estudio y fechas PAES',
-              icon: Calendar,
-              color: 'from-indigo-500 to-purple-500',
-              action: () => handleNavigateToCalendar(),
-              priority: 'medium'
-            },
-            {
-              title: 'Centro Financiero',
-              description: 'Calculadora de becas y beneficios',
-              icon: DollarSign,
-              color: 'from-emerald-500 to-green-500',
-              action: () => handleNavigateToFinancial(),
-              priority: 'medium'
-            },
-            {
-              title: 'Calculadora PAES',
-              description: 'Simulador de puntajes y carreras',
-              icon: Calculator,
-              color: 'from-cyan-500 to-blue-500',
-              action: () => handleNavigateToTool('calculator'),
-              priority: 'low'
-            },
-            {
-              title: 'PAES Universe',
-              description: 'Exploración 3D del conocimiento',
-              icon: Target,
-              color: 'from-pink-500 to-purple-500',
-              action: () => handleNavigateToUniverse(),
-              priority: 'low'
-            }
-          ].map((module, index) => {
-            const Icon = module.icon;
-            return (
-              <motion.div
-                key={module.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <Card className={`bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-white/10 hover:border-cyan-500/50 transition-all cursor-pointer h-full ${
-                  module.priority === 'high' ? 'ring-2 ring-cyan-500/30' : ''
-                }`}>
-                  <CardContent className="p-6 flex flex-col h-full">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-12 h-12 bg-gradient-to-r ${module.color} rounded-xl flex items-center justify-center`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex flex-col space-y-1">
-                        {module.priority === 'high' && (
-                          <Badge variant="default" className="bg-cyan-600">
-                            Esencial
-                          </Badge>
-                        )}
-                        {module.status === 'active' && (
-                          <Badge variant="default" className="bg-green-600">
-                            ✓ Activo
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <h3 className="text-lg font-bold text-white mb-2">{module.title}</h3>
-                    <p className="text-gray-300 text-sm mb-4 flex-1">{module.description}</p>
-                    
-                    <Button 
-                      onClick={module.action}
-                      className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-                    >
-                      {module.priority === 'high' ? 'Acceder Ahora' : 'Explorar'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+            <Brain className="w-8 h-8 text-purple-400" />
+            SuperPAES Neural
+          </h1>
+          <p className="text-white/70 text-lg">Sistema de Preparación Avanzada con IA</p>
         </div>
 
-        {/* Flujo de Aprendizaje Recomendado */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mt-8"
-        >
-          <Card className="bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-white/10">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-                <Star className="w-5 h-5 mr-2 text-yellow-400" />
-                Flujo de Aprendizaje Recomendado
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {[
-                  { 
-                    step: '1', 
-                    title: 'Diagnóstico', 
-                    description: 'Evalúa tu nivel actual',
-                    action: () => handleNavigateToTool('diagnostic')
-                  },
-                  { 
-                    step: '2', 
-                    title: 'Plan IA', 
-                    description: 'Genera tu plan personalizado',
-                    action: () => handleNavigateToTool('plan')
-                  },
-                  { 
-                    step: '3', 
-                    title: 'Práctica', 
-                    description: 'Ejercicios adaptativos diarios',
-                    action: () => handleNavigateToTool('exercises')
-                  },
-                  { 
-                    step: '4', 
-                    title: 'Seguimiento', 
-                    description: 'Monitorea tu progreso',
-                    action: () => handleNavigateToUnified()
-                  }
-                ].map((step) => (
-                  <Card 
-                    key={step.step}
-                    className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-                    onClick={step.action}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <span className="text-white font-bold text-sm">{step.step}</span>
-                      </div>
-                      <h4 className="font-semibold text-white text-sm">{step.title}</h4>
-                      <p className="text-gray-300 text-xs mt-1">{step.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 bg-black/40 backdrop-blur-xl">
+            {superpaesModules.map((module) => {
+              const Icon = module.icon;
+              return (
+                <TabsTrigger
+                  key={module.id}
+                  value={module.id}
+                  className="flex items-center gap-2 text-white/70 data-[state=active]:text-white data-[state=active]:bg-purple-600"
+                >
+                  <Icon className="w-4 h-4" />
+                  {module.name}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-        {/* Estado del Sistema */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="mt-8"
-        >
-          <Card className="bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-xl border-white/10">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-                <Users className="w-5 h-5 mr-2 text-green-400" />
-                Estado del Ecosistema SuperPAES
-              </h3>
-              
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {[
-                  { label: 'Herramientas Activas', value: '9/9', status: 'success' },
-                  { label: 'IA Operativa', value: '100%', status: 'success' },
-                  { label: 'Datos Sincronizados', value: 'OK', status: 'success' },
-                  { label: 'Rendimiento', value: 'Óptimo', status: 'success' },
-                  { label: 'Usuario Conectado', value: profile ? 'Sí' : 'No', status: profile ? 'success' : 'warning' }
-                ].map((metric) => (
-                  <div key={metric.label} className="text-center">
-                    <div className={`text-lg font-bold ${
-                      metric.status === 'success' ? 'text-green-400' : 'text-yellow-400'
-                    }`}>
-                      {metric.value}
-                    </div>
-                    <div className="text-sm text-gray-300">{metric.label}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+          {/* Content */}
+          <div className="mt-8">
+            <AnimatePresence mode="wait">
+              <TabsContent key={activeTab} value={activeTab} className="mt-0">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {renderTabContent()}
+                </motion.div>
+              </TabsContent>
+            </AnimatePresence>
+          </div>
+        </Tabs>
       </motion.div>
     </div>
   );
