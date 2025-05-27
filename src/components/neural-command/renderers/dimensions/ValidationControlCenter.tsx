@@ -75,15 +75,17 @@ export const ValidationControlCenter: React.FC = () => {
   };
 
   const getCertificationBadge = (level: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       'PLATINUM': 'from-purple-400 to-purple-600',
       'GOLD': 'from-yellow-400 to-yellow-600',
       'SILVER': 'from-gray-300 to-gray-500',
       'BRONZE': 'from-orange-400 to-orange-600'
     };
 
+    const gradientClass = colors[level] || 'from-gray-400 to-gray-600';
+
     return (
-      <Badge className={`bg-gradient-to-r ${colors[level as keyof typeof colors]} text-white font-bold`}>
+      <Badge className={`bg-gradient-to-r ${gradientClass} text-white font-bold`}>
         <Award className="w-3 h-3 mr-1" />
         {level}
       </Badge>
@@ -177,12 +179,12 @@ export const ValidationControlCenter: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               {Object.entries(validationReport.systemHealth).map(([metric, score]) => (
                 <div key={metric} className="bg-white/5 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-white mb-2">{score}%</div>
+                  <div className="text-2xl font-bold text-white mb-2">{score as number}%</div>
                   <div className="text-white/70 text-sm capitalize">{metric.replace('_', ' ')}</div>
                   <div className="w-full bg-white/20 rounded-full h-1 mt-2">
                     <div 
                       className="bg-purple-400 h-1 rounded-full transition-all duration-1000"
-                      style={{ width: `${score}%` }}
+                      style={{ width: `${score as number}%` }}
                     />
                   </div>
                 </div>
