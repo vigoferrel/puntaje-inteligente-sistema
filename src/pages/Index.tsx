@@ -18,7 +18,7 @@ const Index = () => {
   const { profile } = useAuth();
 
   const handleNavigateToTool = (tool: string) => {
-    console.log(`🎬 Navegación cinematográfica: ${tool}`);
+    console.log(`🎬 Navegación cinematográfica avanzada: ${tool}`);
     
     const toolRoutes: Record<string, string> = {
       'lectoguia': '/lectoguia',
@@ -44,9 +44,9 @@ const Index = () => {
   return (
     <OptimizedCinematicProvider>
       <CinematicAudioProvider>
-        <CinematicSystemWrapper cinematicMode={true}>
+        <CinematicSystemWrapper cinematicMode={true} variant="neural">
           <div className="min-h-screen relative">
-            {/* Header Cinematográfico Principal */}
+            {/* Header Cinematográfico Principal Mejorado */}
             <motion.div
               initial={{ opacity: 0, y: -50 }}
               animate={{ opacity: 1, y: 0 }}
@@ -56,21 +56,32 @@ const Index = () => {
                 <motion.div
                   animate={{ 
                     rotate: [0, 360],
-                    scale: [1, 1.1, 1]
+                    scale: [1, 1.2, 1]
                   }}
                   transition={{ 
-                    rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-                    scale: { duration: 2, repeat: Infinity }
+                    rotate: { duration: 25, repeat: Infinity, ease: "linear" },
+                    scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
                   }}
-                  className="w-24 h-24 mx-auto mb-4 bg-gradient-to-r from-purple-500 via-cyan-500 to-pink-500 rounded-full flex items-center justify-center"
+                  className="w-28 h-28 mx-auto mb-6 bg-gradient-to-r from-purple-500 via-cyan-500 to-pink-500 rounded-full flex items-center justify-center relative overflow-hidden"
                 >
-                  <Crown className="w-12 h-12 text-white" />
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 opacity-30"
+                    animate={{
+                      rotate: [0, -360],
+                      scale: [1, 1.5, 1]
+                    }}
+                    transition={{
+                      rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                  />
+                  <Crown className="w-14 h-14 text-white relative z-10" />
                 </motion.div>
                 
                 <motion.h1
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="text-6xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2"
+                  className="text-7xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4"
                 >
                   SuperPAES Neural
                 </motion.h1>
@@ -79,9 +90,9 @@ const Index = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-2xl text-white/80"
+                  className="text-3xl text-white/90 mb-2"
                 >
-                  Experiencia Educativa Cinematográfica
+                  Experiencia Educativa Cinematográfica Avanzada
                 </motion.p>
                 
                 {profile && (
@@ -89,15 +100,21 @@ const Index = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
-                    className="text-lg text-cyan-300 mt-2"
+                    className="text-xl text-cyan-300 mt-4 flex items-center justify-center gap-2"
                   >
-                    Bienvenido al futuro, {profile.name} 🚀
+                    <motion.span
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      🚀
+                    </motion.span>
+                    Bienvenido al futuro, {profile.name}
                   </motion.p>
                 )}
               </div>
             </motion.div>
 
-            {/* Tabs Cinematográficos Principales */}
+            {/* Tabs Cinematográficos Principales Mejorados */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
@@ -105,31 +122,31 @@ const Index = () => {
               className="relative z-40 px-6"
             >
               <Tabs defaultValue="superpaes" className="w-full max-w-7xl mx-auto">
-                <TabsList className="grid w-full grid-cols-4 bg-black/40 backdrop-blur-xl border border-white/20 mb-8">
+                <TabsList className="grid w-full grid-cols-4 bg-black/60 backdrop-blur-xl border border-white/30 mb-8 p-2 rounded-2xl">
                   <TabsTrigger 
                     value="superpaes" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-cyan-600 text-white"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-cyan-600 text-white rounded-xl transition-all duration-300"
                   >
                     <Crown className="w-4 h-4 mr-2" />
                     SuperPAES
                   </TabsTrigger>
                   <TabsTrigger 
                     value="universe" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 text-white"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 text-white rounded-xl transition-all duration-300"
                   >
                     <Globe className="w-4 h-4 mr-2" />
                     Universo 3D
                   </TabsTrigger>
                   <TabsTrigger 
                     value="neural" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-blue-600 text-white"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-blue-600 text-white rounded-xl transition-all duration-300"
                   >
                     <Brain className="w-4 h-4 mr-2" />
                     Neural Center
                   </TabsTrigger>
                   <TabsTrigger 
                     value="hub" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-red-600 text-white"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-red-600 text-white rounded-xl transition-all duration-300"
                   >
                     <Rocket className="w-4 h-4 mr-2" />
                     Hub Clásico
