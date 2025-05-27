@@ -1,13 +1,28 @@
-
 /**
  * NEURAL TELEMETRY HOOK v3.0
  * Módulo especializado para telemetría y métricas neurales
  */
 
 import { useCallback, useRef, useEffect } from 'react';
-import { useNeuralSystem } from '@/contexts/NeuralSystemProvider';
-import { NeuralEvent, NeuralMetrics } from '@/types/neural-system-types';
+import { useNeuralSystem } from '@/components/neural/NeuralSystemProvider';
 import { NeuralBackendService } from '@/services/neural/neural-backend-service';
+
+// Interfaces actualizadas
+interface NeuralEvent {
+  type: string;
+  data: Record<string, any>;
+  component_source?: string;
+  neural_metrics?: any;
+}
+
+interface NeuralMetrics {
+  real_time_engagement: number;
+  session_quality: number;
+  learning_effectiveness: number;
+  neural_coherence: number;
+  user_satisfaction_index: number;
+  adaptive_intelligence_score: number;
+}
 
 interface TelemetryConfig {
   batchSize: number;
@@ -34,10 +49,11 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
 
   // Batch processing for events
   const queueEvent = useCallback((event: NeuralEvent) => {
-    eventQueue.current.push({
+    const eventWithTimestamp = {
       ...event,
       timestamp: Date.now()
-    });
+    };
+    eventQueue.current.push(eventWithTimestamp);
 
     if (eventQueue.current.length >= telemetryConfig.batchSize) {
       flushEvents();

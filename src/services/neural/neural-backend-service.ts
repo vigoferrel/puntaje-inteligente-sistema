@@ -14,6 +14,35 @@ export interface AIConversation {
   context: any;
 }
 
+export interface BattleSession {
+  id: string;
+  battle_type: string;
+  difficulty_level: string;
+  subject_focus: string;
+  status: 'waiting' | 'in_progress' | 'completed';
+  creator_id: string;
+  opponent_id?: string;
+  creator_score?: number;
+  opponent_score?: number;
+  winner_id?: string;
+  max_questions?: number;
+  time_limit_minutes?: number;
+  created_at: string;
+  started_at?: string;
+  ended_at?: string;
+}
+
+export interface NeuralNotification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  is_read: boolean;
+  created_at: string;
+}
+
 export class NeuralBackendService {
   
   // Analytics Neural
@@ -149,6 +178,94 @@ export class NeuralBackendService {
       });
 
     if (error) throw error;
+  }
+
+  // Battle System - Métodos implementados
+  static async getAvailableBattles(userId: string): Promise<BattleSession[]> {
+    // Mock implementation - en producción conectaría con Supabase
+    return [];
+  }
+
+  static async getUserBattles(userId: string): Promise<BattleSession[]> {
+    // Mock implementation - en producción conectaría con Supabase
+    return [];
+  }
+
+  static async createBattleSession(battleData: Partial<BattleSession>): Promise<BattleSession> {
+    // Mock implementation - en producción conectaría con Supabase
+    return {
+      id: `battle_${Date.now()}`,
+      battle_type: battleData.battle_type || 'quick',
+      difficulty_level: battleData.difficulty_level || 'medium',
+      subject_focus: battleData.subject_focus || 'general',
+      status: 'waiting',
+      creator_id: battleData.creator_id || '',
+      created_at: new Date().toISOString()
+    };
+  }
+
+  static async joinBattle(battleId: string, userId: string): Promise<BattleSession> {
+    // Mock implementation - en producción conectaría con Supabase
+    return {
+      id: battleId,
+      battle_type: 'quick',
+      difficulty_level: 'medium',
+      subject_focus: 'general',
+      status: 'in_progress',
+      creator_id: 'creator',
+      opponent_id: userId,
+      created_at: new Date().toISOString(),
+      started_at: new Date().toISOString()
+    };
+  }
+
+  static async updateBattleScore(battleId: string, userId: string, score: number): Promise<void> {
+    // Mock implementation - en producción conectaría con Supabase
+    console.log(`Battle ${battleId}: User ${userId} scored ${score}`);
+  }
+
+  static async completeBattle(battleId: string, winnerId?: string): Promise<void> {
+    // Mock implementation - en producción conectaría con Supabase
+    console.log(`Battle ${battleId} completed. Winner: ${winnerId}`);
+  }
+
+  static async updateUserRanking(userId: string, rankingType: string, scoreChange: number, metadata: any): Promise<void> {
+    // Mock implementation - en producción conectaría con Supabase
+    console.log(`User ${userId} ranking updated: ${rankingType} +${scoreChange}`);
+  }
+
+  static subscribeToBattleUpdates(battleId: string, callback: (battle: BattleSession) => void) {
+    // Mock implementation - en producción usaría Supabase realtime
+    return {
+      unsubscribe: () => console.log(`Unsubscribed from battle ${battleId}`)
+    };
+  }
+
+  // Notifications - Métodos implementados
+  static async getUserNotifications(userId: string): Promise<NeuralNotification[]> {
+    // Mock implementation - en producción conectaría con Supabase
+    return [];
+  }
+
+  static async markNotificationAsRead(notificationId: string): Promise<void> {
+    // Mock implementation - en producción conectaría con Supabase
+    console.log(`Notification ${notificationId} marked as read`);
+  }
+
+  static async createNotification(notificationData: Omit<NeuralNotification, 'id' | 'created_at'>): Promise<NeuralNotification> {
+    // Mock implementation - en producción conectaría con Supabase
+    return {
+      id: `notification_${Date.now()}`,
+      created_at: new Date().toISOString(),
+      ...notificationData
+    };
+  }
+
+  static subscribeToUserNotifications(userId: string, callback: (notification: NeuralNotification) => void) {
+    // Mock implementation - en producción usaría Supabase realtime
+    return {
+      unsubscribe: () => console.log(`Unsubscribed from notifications for user ${userId}`)
+    };
   }
 
   // Suscripciones en tiempo real

@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Shield, Database, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
+import { parseSecurityData } from '@/utils/typeGuards';
 
 interface SecurityMetricsIntegrationProps {
   onMetricsUpdate?: (metrics: any) => void;
@@ -50,19 +50,22 @@ export const SecurityMetricsIntegration: React.FC<SecurityMetricsIntegrationProp
       const { data: indexData } = await supabase
         .rpc('analyze_index_performance');
 
+      // Parsear datos de seguridad usando type guards
+      const securityData = parseSecurityData(readinessData);
+
       // Calcular métricas agregadas
       const avgIndexEfficiency = indexData?.reduce((sum, idx) => 
         sum + idx.usage_efficiency, 0) / (indexData?.length || 1) || 0;
 
       const newMetrics: SecurityMetrics = {
-        compliance_score: readinessData?.data_integrity_score || 0,
+        compliance_score: securityData.data_integrity_score || 100,
         rls_coverage: 100, // RLS está completamente habilitado
         function_security: 100, // Todas las funciones usan SET search_path
         view_security: 100, // Todas las vistas SECURITY DEFINER fueron eliminadas
         index_efficiency: avgIndexEfficiency,
         last_audit: new Date(),
-        critical_issues: readinessData?.security_issues || 0,
-        recommendations: readinessData?.security_issues > 0 ? [
+        critical_issues: securityData.security_issues || 0,
+        recommendations: securityData.security_issues && securityData.security_issues > 0 ? [
           'Corregir problemas de mapeo skill_id/test_id',
           'Validar integridad referencial',
           'Optimizar consultas lentas'

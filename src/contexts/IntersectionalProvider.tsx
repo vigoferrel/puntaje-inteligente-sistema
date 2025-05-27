@@ -117,7 +117,13 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     if (!emergencyMode && neuralState.isInitialized) {
       try {
         nexus.optimizeUserExperience();
-        neuralActions.generateInsights();
+        // Llamar a addInsight en lugar de generateInsights que no existe
+        neuralActions.addInsight({
+          type: 'harmonization',
+          title: 'Experiencia Armonizada',
+          description: 'Sistema neural harmonizado exitosamente',
+          timestamp: Date.now()
+        });
       } catch (error) {
         // Silencioso
       }

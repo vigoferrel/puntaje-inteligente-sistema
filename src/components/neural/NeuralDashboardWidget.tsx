@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Brain, Minimize2, Maximize2, Activity, Database, Zap, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { parseSecurityData } from '@/utils/typeGuards';
 
 interface NeuralMetrics {
   neural_efficiency: number;
@@ -45,7 +45,8 @@ export const NeuralDashboardWidget: React.FC<NeuralDashboardWidgetProps> = ({
       try {
         const { data: readinessData } = await supabase.rpc('production_readiness_check');
         if (readinessData) {
-          securityScore = readinessData.data_integrity_score || 100;
+          const securityData = parseSecurityData(readinessData);
+          securityScore = securityData.data_integrity_score || 100;
         }
       } catch (error) {
         console.log('No se pudieron obtener métricas de seguridad');

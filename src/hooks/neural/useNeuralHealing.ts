@@ -1,11 +1,10 @@
-
 /**
  * NEURAL HEALING HOOK v3.0
  * Módulo especializado para auto-healing y recuperación del sistema
  */
 
 import { useCallback, useRef } from 'react';
-import { useNeuralSystem } from '@/contexts/NeuralSystemProvider';
+import { useNeuralSystem } from '@/components/neural/NeuralSystemProvider';
 import { ComponentHealth, SystemHealth } from '@/types/neural-system-types';
 
 interface HealingConfig {

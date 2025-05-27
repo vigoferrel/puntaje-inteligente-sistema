@@ -1,12 +1,43 @@
-
 /**
  * NEURAL PREDICTION HOOK v3.0
  * Módulo especializado para predicciones y recomendaciones neurales
  */
 
 import { useCallback, useRef, useEffect } from 'react';
-import { useNeuralSystem } from '@/contexts/NeuralSystemProvider';
-import { NeuralPrediction, NeuralRecommendation, NeuralMetrics } from '@/types/neural-system-types';
+import { useNeuralSystem } from '@/components/neural/NeuralSystemProvider';
+
+// Interfaces actualizadas
+interface NeuralPrediction {
+  id: string;
+  type: string;
+  confidence: number;
+  data: any;
+  timestamp: number;
+  expires_at?: number;
+}
+
+interface NeuralRecommendation {
+  id: string;
+  type: string;
+  content: {
+    title: string;
+    description: string;
+    actions: string[];
+    impact: string;
+  };
+  priority: number;
+  neural_basis: any;
+  is_active: boolean;
+}
+
+interface NeuralMetrics {
+  real_time_engagement: number;
+  session_quality: number;
+  learning_effectiveness: number;
+  neural_coherence: number;
+  user_satisfaction_index: number;
+  adaptive_intelligence_score: number;
+}
 
 interface PredictionModel {
   name: string;

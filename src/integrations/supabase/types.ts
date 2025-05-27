@@ -3512,20 +3512,6 @@ export type Database = {
       }
     }
     Views: {
-      admin_dashboard_metrics: {
-        Row: {
-          avg_quality: number | null
-          avg_response_time: number | null
-          date: string | null
-          module_source: string | null
-          success_rate: number | null
-          total_cost: number | null
-          total_requests: number | null
-          total_tokens: number | null
-          unique_users: number | null
-        }
-        Relationships: []
-      }
       cognitive_distribution_m2_2024: {
         Row: {
           cognitive_demand: string | null
@@ -3564,48 +3550,30 @@ export type Database = {
           dificultad_promedio: number | null
           node_id: string | null
           node_name: string | null
-          preguntas: number[] | null
+          preguntas: string[] | null
           tier_priority: Database["public"]["Enums"]["tier_priority"] | null
           total_preguntas: number | null
-        }
-        Insert: {
-          cognitive_level?: Database["public"]["Enums"]["bloom_level"] | null
-          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
-          dificultad_promedio?: never
-          node_id?: string | null
-          node_name?: string | null
-          preguntas?: never
-          tier_priority?: Database["public"]["Enums"]["tier_priority"] | null
-          total_preguntas?: number | null
-        }
-        Update: {
-          cognitive_level?: Database["public"]["Enums"]["bloom_level"] | null
-          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
-          dificultad_promedio?: never
-          node_id?: string | null
-          node_name?: string | null
-          preguntas?: never
-          tier_priority?: Database["public"]["Enums"]["tier_priority"] | null
-          total_preguntas?: number | null
         }
         Relationships: []
       }
       nodes_summary_by_subject: {
         Row: {
           avg_time_minutes: number | null
-          node_count: number | null
+          complementary_nodes: number | null
+          critical_nodes: number | null
+          important_nodes: number | null
           subject_area: string | null
-          tier_priority: Database["public"]["Enums"]["tier_priority"] | null
-          unique_skills: number | null
-          unique_tests: number | null
+          total_nodes: number | null
         }
         Relationships: []
       }
       skill_distribution_ciencias_2024: {
         Row: {
-          avg_difficulty_score: number | null
-          node_count: number | null
+          avg_difficulty: number | null
+          cognitive_level: Database["public"]["Enums"]["bloom_level"] | null
+          questions: string[] | null
           skill_id: number | null
+          total_questions: number | null
         }
         Relationships: [
           {

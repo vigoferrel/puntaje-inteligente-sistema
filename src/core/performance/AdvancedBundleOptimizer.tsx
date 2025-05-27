@@ -1,4 +1,3 @@
-
 import React, { lazy } from 'react';
 
 // Lazy loading optimizado para todos los componentes
@@ -11,7 +10,7 @@ const PlanningPage = lazy(() => import('@/pages/PlanningPage').then(module => ({
 const UniverseVisualizationPage = lazy(() => import('@/pages/UniverseVisualizationPage').then(module => ({ default: module.default })));
 const AchievementsPage = lazy(() => import('@/pages/AchievementsPage').then(module => ({ default: module.default })));
 const EcosystemPage = lazy(() => import('@/pages/EcosystemPage').then(module => ({ default: module.default })));
-const ValidationDashboard = lazy(() => import('@/pages/ValidationDashboard').then(module => ({ default: module.ValidationDashboard })));
+const ValidationDashboard = lazy(() => import('@/pages/ValidationDashboard').then(module => ({ default: module.default })));
 const SecurityDashboard = lazy(() => import('@/pages/SecurityDashboard').then(module => ({ default: module.SecurityDashboard })));
 
 interface ComponentMap {
