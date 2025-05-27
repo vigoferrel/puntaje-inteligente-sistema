@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { storageManager } from '@/core/storage/StorageManager';
+import { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
 
 interface StorageHealthStatus {
   isHealthy: boolean;
@@ -20,13 +20,14 @@ export const useStorageHealth = () => {
 
   useEffect(() => {
     const checkHealth = () => {
-      const managerStatus = storageManager.getStatus();
+      const systemStatus = unifiedStorageSystem.getStatus();
+      const metrics = unifiedStorageSystem.getPerformanceMetrics();
       
       setStatus({
-        isHealthy: managerStatus.storageAvailable && managerStatus.queueLength < 10,
-        storageAvailable: managerStatus.storageAvailable,
-        cacheSize: managerStatus.cacheSize,
-        queueLength: managerStatus.queueLength
+        isHealthy: systemStatus.storageAvailable && systemStatus.queueLength < 10,
+        storageAvailable: systemStatus.storageAvailable,
+        cacheSize: systemStatus.cacheSize,
+        queueLength: systemStatus.queueLength
       });
     };
 

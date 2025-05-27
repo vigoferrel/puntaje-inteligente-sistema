@@ -1,4 +1,3 @@
-
 /**
  * UNIFIED EDUCATION STATE MANAGER v1.0
  * Sistema centralizado que consolida todo el estado educativo
@@ -7,7 +6,7 @@
 import { create } from 'zustand';
 import { devtools, persist, subscribeWithSelector } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { StorageManager } from '@/core/storage/StorageManager';
+import { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
 
 // Tipos consolidados para todo el sistema educativo
 interface UnifiedEducationState {
@@ -164,8 +163,8 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
             });
             
             try {
-              // Cargar datos desde storage optimizado
-              const cachedData = StorageManager.getInstance().batchGet([
+              // Cargar datos desde storage unificado optimizado
+              const cachedData = unifiedStorageSystem.batchGet([
                 'user_preferences_cache_v2',
                 'lectoguia_chat_settings_v2',
                 'learning_plans_v2'
@@ -213,7 +212,7 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
               state.user.preferences = { ...state.user.preferences, ...preferences };
             });
             
-            // Sync automático a storage
+            // Sync automático a storage unificado
             get().syncToStorage();
           },
           
@@ -298,9 +297,8 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
           
           syncToStorage: () => {
             const state = get();
-            const storageManager = StorageManager.getInstance();
             
-            storageManager.batchSet([
+            unifiedStorageSystem.batchSet([
               { key: 'user_preferences_cache_v2', value: state.user.preferences },
               { key: 'lectoguia_state_v2', value: state.lectoguia },
               { key: 'unified_metrics_v2', value: state.metrics }
@@ -308,8 +306,7 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
           },
           
           loadFromStorage: () => {
-            const storageManager = StorageManager.getInstance();
-            const cached = storageManager.batchGet([
+            const cached = unifiedStorageSystem.batchGet([
               'user_preferences_cache_v2',
               'lectoguia_state_v2',
               'unified_metrics_v2'

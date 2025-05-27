@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { storageManager } from '@/core/storage/StorageManager';
+import { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
 import { ChatSettings, ChatSettingsContextType } from './types';
 
 const defaultSettings: ChatSettings = {
@@ -24,22 +24,22 @@ export const useChatSettings = () => useContext(ChatSettingsContext);
 
 export const OptimizedChatSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<ChatSettings>(() => {
-    // Cargar desde el StorageManager optimizado
-    const savedSettings = storageManager.getItem(SETTINGS_KEY);
+    // Cargar desde el sistema unificado
+    const savedSettings = unifiedStorageSystem.getItem(SETTINGS_KEY as any);
     return savedSettings || defaultSettings;
   });
 
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Guardar con debounce para evitar accesos excesivos
+  // Guardar con debounce usando el sistema unificado
   useEffect(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
     saveTimeoutRef.current = setTimeout(() => {
-      storageManager.setItem(SETTINGS_KEY, settings, { silentErrors: true });
-    }, 1000); // Debounce de 1 segundo
+      unifiedStorageSystem.setItem(SETTINGS_KEY as any, settings, { silentErrors: true });
+    }, 1000);
 
     return () => {
       if (saveTimeoutRef.current) {
@@ -54,7 +54,7 @@ export const OptimizedChatSettingsProvider: React.FC<{ children: React.ReactNode
 
   const resetSettings = () => {
     setSettings(defaultSettings);
-    storageManager.removeItem(SETTINGS_KEY);
+    unifiedStorageSystem.removeItem(SETTINGS_KEY);
   };
 
   return (

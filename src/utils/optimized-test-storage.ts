@@ -1,5 +1,5 @@
 
-import { storageManager } from '@/core/storage/StorageManager';
+import { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
 import { DiagnosticTest } from "@/types/diagnostic";
 
 export interface StoredTestProgress {
@@ -13,7 +13,7 @@ export interface StoredTestProgress {
 const TEST_PROGRESS_KEY = 'diagnostic_test_progress_v2';
 
 /**
- * Sistema optimizado de storage para tests que respeta las políticas del navegador
+ * Sistema optimizado de storage para tests usando el sistema unificado
  */
 export const optimizedTestStorage = {
   saveTestProgress(
@@ -30,15 +30,15 @@ export const optimizedTestStorage = {
       lastPausedAt: new Date().toISOString()
     };
     
-    storageManager.setItem(TEST_PROGRESS_KEY, progressData, { silentErrors: true });
+    unifiedStorageSystem.setItem(TEST_PROGRESS_KEY as any, progressData, { silentErrors: true });
   },
 
   getTestProgress(): StoredTestProgress | null {
-    return storageManager.getItem(TEST_PROGRESS_KEY) || null;
+    return unifiedStorageSystem.getItem(TEST_PROGRESS_KEY as any) || null;
   },
 
   clearTestProgress(): void {
-    storageManager.removeItem(TEST_PROGRESS_KEY);
+    unifiedStorageSystem.removeItem(TEST_PROGRESS_KEY);
   },
 
   hasSavedProgress(testId: string): boolean {

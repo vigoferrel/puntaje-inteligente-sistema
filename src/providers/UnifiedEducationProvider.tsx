@@ -8,7 +8,7 @@ import React, { useEffect, useCallback, useMemo } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnifiedEducationStore, useUnifiedActions, useSystemHealth } from '@/core/state/UnifiedEducationStateManager';
-import { optimizedStorageManager } from '@/core/storage/OptimizedStorageManager';
+import { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
 import { toast } from '@/hooks/use-toast';
 
 interface UnifiedEducationProviderProps {
@@ -36,8 +36,8 @@ const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ childre
     const syncInterval = setInterval(() => {
       actions.syncToStorage();
       
-      // Health check
-      const metrics = optimizedStorageManager.getPerformanceMetrics();
+      // Health check usando el sistema unificado
+      const metrics = unifiedStorageSystem.getPerformanceMetrics();
       const newHealthScore = Math.max(50, 100 - (metrics.syncQueueSize * 10));
       actions.setSystemHealth(newHealthScore);
       
