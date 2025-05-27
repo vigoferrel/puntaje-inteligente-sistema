@@ -1,4 +1,3 @@
-
 project_id = "settifboilityelprvjd"
 
 [api]
@@ -42,8 +41,8 @@ file_size_limit = "50MiB"
 site_url = "http://localhost:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = ["https://localhost:3000"]
-# How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
-jwt_expiry = 3600
+# OPTIMIZADO: Reducido de 3600 a 1800 (30 minutos) como recomienda Supabase
+jwt_expiry = 1800
 # If disabled, the refresh token will never expire.
 enable_refresh_token_rotation = true
 # Allows refresh tokens to be reused after expiry, up to the specified interval in seconds.
@@ -51,6 +50,8 @@ enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
 enable_signup = true
+# OPTIMIZADO: Habilitar protección contra passwords filtrados
+enable_password_leak_detection = true
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.
@@ -60,6 +61,8 @@ enable_signup = true
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = false
+# OPTIMIZADO: OTP expiry reducido a 30 minutos (1800 segundos)
+otp_expiry = 1800
 
 # Configure one of the supported auth providers.
 [auth.external.apple]
