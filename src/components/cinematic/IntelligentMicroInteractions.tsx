@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAdvancedNeuralSystem } from '@/hooks/useAdvancedNeuralSystem';
@@ -131,13 +130,14 @@ export const IntelligentMicroInteraction: React.FC<MicroInteractionProps> = ({
         setIsHovered(false);
         handleInteraction('hover_end');
       }}
-      onTapStart={() => {
+      onTap={() => {
         setIsPressed(true);
         handleInteraction('tap_start');
-      }}
-      onTapEnd={() => {
-        setIsPressed(false);
-        handleInteraction('tap_end');
+        // Simular tap end después de un breve delay
+        setTimeout(() => {
+          setIsPressed(false);
+          handleInteraction('tap_end');
+        }, 100);
       }}
       className={`transform-gpu will-change-transform ${className}`}
       style={{ perspective: '1000px' }}

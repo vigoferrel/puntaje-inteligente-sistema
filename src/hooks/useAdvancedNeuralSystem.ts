@@ -1,4 +1,3 @@
-
 /**
  * ADVANCED NEURAL SYSTEM HOOK v2.0
  * Hook principal para acceder a toda la funcionalidad neural
@@ -290,6 +289,9 @@ export const useAdvancedNeuralSystem = (componentName?: string) => {
     isLearningEffective: state.realTimeMetrics.learning_effectiveness > 60,
     needsOptimization: state.optimizationLevel < 5,
     hasActiveInsights: state.personalizedInsights.length > 0,
+    
+    // AGREGADO: shouldReduceMotion basado en métricas neurales
+    shouldReduceMotion: state.realTimeMetrics.neural_coherence < 30 || state.realTimeMetrics.real_time_engagement < 20,
     
     // Estado resumido
     neuralSystemStatus: {
