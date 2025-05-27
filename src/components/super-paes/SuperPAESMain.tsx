@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,10 +10,13 @@ import {
 } from 'lucide-react';
 import { useCinematic } from '@/components/cinematic/CinematicTransitionSystem';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGlobalCinematic } from '@/contexts/GlobalCinematicContext';
+import { RealTimeMetricsDashboard } from '@/components/cinematic/RealTimeMetricsDashboard';
 
 export const SuperPAESMain: React.FC = () => {
   const { startTransition } = useCinematic();
   const { profile } = useAuth();
+  const { state: cinematicState } = useGlobalCinematic();
 
   const handleNavigateToUniverse = () => {
     startTransition('dashboard');
@@ -44,7 +46,7 @@ export const SuperPAESMain: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-7xl mx-auto space-y-6"
       >
-        {/* Header SuperPAES */}
+        {/* Header SuperPAES con estado cinematográfico */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -59,7 +61,7 @@ export const SuperPAESMain: React.FC = () => {
               <Crown className="w-8 h-8 text-white" />
             </motion.div>
             <div>
-              <h1 className="text-4xl font-bold text-white">SuperPAES</h1>
+              <h1 className="text-4xl font-bold text-white">SuperPAES Neural</h1>
               <p className="text-cyan-400">Sistema Inteligente de Preparación PAES</p>
               {profile && (
                 <p className="text-purple-300 text-sm">
@@ -69,10 +71,27 @@ export const SuperPAESMain: React.FC = () => {
             </div>
           </div>
 
-          <Badge className="bg-gradient-to-r from-green-600 to-emerald-600">
-            <Brain className="w-4 h-4 mr-2" />
-            IA Avanzada Activa
-          </Badge>
+          <div className="flex justify-center space-x-2">
+            <Badge className="bg-gradient-to-r from-green-600 to-emerald-600">
+              <Brain className="w-4 h-4 mr-2" />
+              IA Avanzada Activa
+            </Badge>
+            <Badge className="bg-gradient-to-r from-blue-600 to-cyan-600">
+              Modo: {cinematicState.preferences.visualMode.toUpperCase()}
+            </Badge>
+            <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
+              Salud: {cinematicState.systemHealth}%
+            </Badge>
+          </div>
+        </motion.div>
+
+        {/* Dashboard de métricas reales */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <RealTimeMetricsDashboard />
         </motion.div>
 
         {/* Herramientas Principales del Ecosistema */}
@@ -84,7 +103,8 @@ export const SuperPAESMain: React.FC = () => {
               icon: Activity,
               color: 'from-blue-500 to-indigo-500',
               action: () => handleNavigateToUnified(),
-              priority: 'high'
+              priority: 'high',
+              status: 'active'
             },
             {
               title: 'LectoGuía IA',
@@ -92,7 +112,8 @@ export const SuperPAESMain: React.FC = () => {
               icon: BookOpen,
               color: 'from-orange-500 to-red-500',
               action: () => handleNavigateToTool('lectoguia'),
-              priority: 'high'
+              priority: 'high',
+              status: 'active'
             },
             {
               title: 'Diagnóstico Inteligente',
@@ -100,7 +121,8 @@ export const SuperPAESMain: React.FC = () => {
               icon: Brain,
               color: 'from-purple-500 to-pink-500',
               action: () => handleNavigateToTool('diagnostic'),
-              priority: 'high'
+              priority: 'high',
+              status: 'active'
             },
             {
               title: 'Ejercicios Adaptativos',
@@ -168,11 +190,18 @@ export const SuperPAESMain: React.FC = () => {
                       <div className={`w-12 h-12 bg-gradient-to-r ${module.color} rounded-xl flex items-center justify-center`}>
                         <Icon className="w-6 h-6 text-white" />
                       </div>
-                      {module.priority === 'high' && (
-                        <Badge variant="default" className="bg-cyan-600">
-                          Esencial
-                        </Badge>
-                      )}
+                      <div className="flex flex-col space-y-1">
+                        {module.priority === 'high' && (
+                          <Badge variant="default" className="bg-cyan-600">
+                            Esencial
+                          </Badge>
+                        )}
+                        {module.status === 'active' && (
+                          <Badge variant="default" className="bg-green-600">
+                            ✓ Activo
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     
                     <h3 className="text-lg font-bold text-white mb-2">{module.title}</h3>

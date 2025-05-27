@@ -1,10 +1,11 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CinematicSystemWrapper } from '@/components/cinematic/CinematicSystemWrapper';
 import { SuperPAESMain } from '@/components/super-paes/SuperPAESMain';
 import { OptimizedCinematicProvider } from '@/components/cinematic/OptimizedCinematicSystem';
 import { CinematicAudioProvider } from '@/components/cinematic/UniversalCinematicSystem';
+import { GlobalCinematicProvider } from '@/contexts/GlobalCinematicContext';
+import { CinematicRouter } from '@/components/cinematic/CinematicRouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -42,199 +43,203 @@ const Index = () => {
   };
 
   return (
-    <OptimizedCinematicProvider>
-      <CinematicAudioProvider>
-        <CinematicSystemWrapper cinematicMode={true} variant="neural">
-          <div className="min-h-screen relative">
-            {/* Header Cinematográfico Principal Mejorado */}
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative z-50 p-6"
-            >
-              <div className="text-center mb-8">
+    <GlobalCinematicProvider>
+      <OptimizedCinematicProvider>
+        <CinematicAudioProvider>
+          <CinematicRouter>
+            <CinematicSystemWrapper cinematicMode={true} variant="neural">
+              <div className="min-h-screen relative">
+                {/* Header Cinematográfico Principal Mejorado */}
                 <motion.div
-                  animate={{ 
-                    rotate: [0, 360],
-                    scale: [1, 1.2, 1]
-                  }}
-                  transition={{ 
-                    rotate: { duration: 25, repeat: Infinity, ease: "linear" },
-                    scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-                  }}
-                  className="w-28 h-28 mx-auto mb-6 bg-gradient-to-r from-purple-500 via-cyan-500 to-pink-500 rounded-full flex items-center justify-center relative overflow-hidden"
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 opacity-30"
-                    animate={{
-                      rotate: [0, -360],
-                      scale: [1, 1.5, 1]
-                    }}
-                    transition={{
-                      rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-                      scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-                    }}
-                  />
-                  <Crown className="w-14 h-14 text-white relative z-10" />
-                </motion.div>
-                
-                <motion.h1
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-7xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4"
-                >
-                  SuperPAES Neural
-                </motion.h1>
-                
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: -50 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-3xl text-white/90 mb-2"
+                  className="relative z-50 p-6"
                 >
-                  Experiencia Educativa Cinematográfica Avanzada
-                </motion.p>
-                
-                {profile && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-xl text-cyan-300 mt-4 flex items-center justify-center gap-2"
-                  >
-                    <motion.span
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                  <div className="text-center mb-8">
+                    <motion.div
+                      animate={{ 
+                        rotate: [0, 360],
+                        scale: [1, 1.2, 1]
+                      }}
+                      transition={{ 
+                        rotate: { duration: 25, repeat: Infinity, ease: "linear" },
+                        scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                      className="w-28 h-28 mx-auto mb-6 bg-gradient-to-r from-purple-500 via-cyan-500 to-pink-500 rounded-full flex items-center justify-center relative overflow-hidden"
                     >
-                      🚀
-                    </motion.span>
-                    Bienvenido al futuro, {profile.name}
-                  </motion.p>
-                )}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 opacity-30"
+                        animate={{
+                          rotate: [0, -360],
+                          scale: [1, 1.5, 1]
+                        }}
+                        transition={{
+                          rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                          scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                        }}
+                      />
+                      <Crown className="w-14 h-14 text-white relative z-10" />
+                    </motion.div>
+                    
+                    <motion.h1
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-7xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4"
+                    >
+                      SuperPAES Neural
+                    </motion.h1>
+                    
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-3xl text-white/90 mb-2"
+                    >
+                      Experiencia Educativa Cinematográfica Avanzada
+                    </motion.p>
+                    
+                    {profile && (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="text-xl text-cyan-300 mt-4 flex items-center justify-center gap-2"
+                      >
+                        <motion.span
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          🚀
+                        </motion.span>
+                        Bienvenido al futuro, {profile.name}
+                      </motion.p>
+                    )}
+                  </div>
+                </motion.div>
+
+                {/* Tabs Cinematográficos con estado global */}
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="relative z-40 px-6"
+                >
+                  <Tabs defaultValue="superpaes" className="w-full max-w-7xl mx-auto">
+                    <TabsList className="grid w-full grid-cols-4 bg-black/60 backdrop-blur-xl border border-white/30 mb-8 p-2 rounded-2xl">
+                      <TabsTrigger 
+                        value="superpaes" 
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-cyan-600 text-white rounded-xl transition-all duration-300"
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        SuperPAES
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="universe" 
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 text-white rounded-xl transition-all duration-300"
+                      >
+                        <Globe className="w-4 h-4 mr-2" />
+                        Universo 3D
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="neural" 
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-blue-600 text-white rounded-xl transition-all duration-300"
+                      >
+                        <Brain className="w-4 h-4 mr-2" />
+                        Neural Center
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="hub" 
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-red-600 text-white rounded-xl transition-all duration-300"
+                      >
+                        <Rocket className="w-4 h-4 mr-2" />
+                        Hub Clásico
+                      </TabsTrigger>
+                    </TabsList>
+
+                    {/* SuperPAES Dashboard Principal con métricas reales */}
+                    <TabsContent value="superpaes" className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                      >
+                        <SuperPAESMain />
+                      </motion.div>
+                    </TabsContent>
+
+                    {/* Universo Educativo 3D */}
+                    <TabsContent value="universe" className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, rotateY: -20 }}
+                        animate={{ opacity: 1, rotateY: 0 }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="min-h-screen"
+                      >
+                        <EducationalUniverse />
+                      </motion.div>
+                    </TabsContent>
+
+                    {/* Neural Command Center */}
+                    <TabsContent value="neural" className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <EnhancedNeuralCommandCenter />
+                      </motion.div>
+                    </TabsContent>
+
+                    {/* Hub Clásico */}
+                    <TabsContent value="hub" className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <UnifiedEducationalHub onNavigateToTool={handleNavigateToTool} />
+                      </motion.div>
+                    </TabsContent>
+                  </Tabs>
+                </motion.div>
+
+                {/* Efectos de Fondo Cinematográficos Adicionales */}
+                <div className="fixed inset-0 pointer-events-none z-0">
+                  {/* Gradiente dinámico de fondo */}
+                  <motion.div
+                    className="absolute inset-0"
+                    animate={{
+                      background: [
+                        'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)',
+                        'radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%), radial-gradient(circle at 60% 60%, rgba(255, 119, 255, 0.3) 0%, transparent 50%)',
+                        'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)'
+                      ]
+                    }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                  />
+
+                  {/* Líneas de circuito neuronal */}
+                  <svg className="absolute inset-0 w-full h-full opacity-20">
+                    <defs>
+                      <pattern id="circuit" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                        <path d="M0,50 Q25,25 50,50 T100,50" stroke="url(#gradient)" strokeWidth="1" fill="none" />
+                        <path d="M50,0 Q75,25 50,50 T50,100" stroke="url(#gradient)" strokeWidth="1" fill="none" />
+                      </pattern>
+                      <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.5" />
+                        <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8" />
+                        <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.5" />
+                      </linearGradient>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#circuit)" />
+                  </svg>
+                </div>
               </div>
-            </motion.div>
-
-            {/* Tabs Cinematográficos Principales Mejorados */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="relative z-40 px-6"
-            >
-              <Tabs defaultValue="superpaes" className="w-full max-w-7xl mx-auto">
-                <TabsList className="grid w-full grid-cols-4 bg-black/60 backdrop-blur-xl border border-white/30 mb-8 p-2 rounded-2xl">
-                  <TabsTrigger 
-                    value="superpaes" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-cyan-600 text-white rounded-xl transition-all duration-300"
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    SuperPAES
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="universe" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 text-white rounded-xl transition-all duration-300"
-                  >
-                    <Globe className="w-4 h-4 mr-2" />
-                    Universo 3D
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="neural" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-blue-600 text-white rounded-xl transition-all duration-300"
-                  >
-                    <Brain className="w-4 h-4 mr-2" />
-                    Neural Center
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="hub" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-red-600 text-white rounded-xl transition-all duration-300"
-                  >
-                    <Rocket className="w-4 h-4 mr-2" />
-                    Hub Clásico
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* SuperPAES Dashboard Principal */}
-                <TabsContent value="superpaes" className="space-y-6">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  >
-                    <SuperPAESMain />
-                  </motion.div>
-                </TabsContent>
-
-                {/* Universo Educativo 3D */}
-                <TabsContent value="universe" className="space-y-6">
-                  <motion.div
-                    initial={{ opacity: 0, rotateY: -20 }}
-                    animate={{ opacity: 1, rotateY: 0 }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="min-h-screen"
-                  >
-                    <EducationalUniverse />
-                  </motion.div>
-                </TabsContent>
-
-                {/* Neural Command Center */}
-                <TabsContent value="neural" className="space-y-6">
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    <EnhancedNeuralCommandCenter />
-                  </motion.div>
-                </TabsContent>
-
-                {/* Hub Clásico */}
-                <TabsContent value="hub" className="space-y-6">
-                  <motion.div
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <UnifiedEducationalHub onNavigateToTool={handleNavigateToTool} />
-                  </motion.div>
-                </TabsContent>
-              </Tabs>
-            </motion.div>
-
-            {/* Efectos de Fondo Cinematográficos Adicionales */}
-            <div className="fixed inset-0 pointer-events-none z-0">
-              {/* Gradiente dinámico de fondo */}
-              <motion.div
-                className="absolute inset-0"
-                animate={{
-                  background: [
-                    'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)',
-                    'radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%), radial-gradient(circle at 60% 60%, rgba(255, 119, 255, 0.3) 0%, transparent 50%)',
-                    'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)'
-                  ]
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              />
-
-              {/* Líneas de circuito neuronal */}
-              <svg className="absolute inset-0 w-full h-full opacity-20">
-                <defs>
-                  <pattern id="circuit" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-                    <path d="M0,50 Q25,25 50,50 T100,50" stroke="url(#gradient)" strokeWidth="1" fill="none" />
-                    <path d="M50,0 Q75,25 50,50 T50,100" stroke="url(#gradient)" strokeWidth="1" fill="none" />
-                  </pattern>
-                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.5" />
-                    <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8" />
-                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.5" />
-                  </linearGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#circuit)" />
-              </svg>
-            </div>
-          </div>
-        </CinematicSystemWrapper>
-      </CinematicAudioProvider>
-    </OptimizedCinematicProvider>
+            </CinematicSystemWrapper>
+          </CinematicRouter>
+        </CinematicAudioProvider>
+      </OptimizedCinematicProvider>
+    </GlobalCinematicProvider>
   );
 };
 
