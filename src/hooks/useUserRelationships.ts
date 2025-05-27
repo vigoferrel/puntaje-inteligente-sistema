@@ -44,22 +44,39 @@ export const useUserRelationships = (): UseUserRelationshipsReturn => {
       setIsLoading(true);
       setError(null);
 
-      // Verificar si es padre (tiene hijos)
-      const { data: childrenData, error: childrenError } = await supabase
+      // Verificar si es padre (tiene hijos) - consulta separada
+      const { data: relationshipsData, error: relationshipsError } = await supabase
         .from('user_relationships')
-        .select(`
-          *,
-          child_profile:profiles!user_relationships_child_user_id_fkey(
-            name,
-            email,
-            target_career,
-            learning_phase
-          )
-        `)
+        .select('*')
         .eq('parent_user_id', user.id)
         .eq('is_active', true);
 
-      if (childrenError) throw childrenError;
+      if (relationshipsError) throw relationshipsError;
+
+      // Si hay relaciones, obtener los perfiles de los hijos
+      let childrenWithProfiles: UserRelationship[] = [];
+      
+      if (relationshipsData && relationshipsData.length > 0) {
+        const childUserIds = relationshipsData.map(rel => rel.child_user_id);
+        
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, email, target_career, learning_phase')
+          .in('id', childUserIds);
+
+        if (profilesError) {
+          console.warn('Error fetching child profiles:', profilesError);
+        }
+
+        // Combinar datos manualmente
+        childrenWithProfiles = relationshipsData.map(relationship => ({
+          ...relationship,
+          child_profile: profilesData?.find(profile => profile.id === relationship.child_user_id) || {
+            name: 'Estudiante',
+            email: 'No disponible'
+          }
+        }));
+      }
 
       // Verificar si es hijo (tiene padre)
       const { data: parentData, error: parentError } = await supabase
@@ -71,11 +88,7 @@ export const useUserRelationships = (): UseUserRelationshipsReturn => {
 
       if (parentError) throw parentError;
 
-      setChildren(childrenData?.map(child => ({
-        ...child,
-        child_profile: child.child_profile
-      })) || []);
-      
+      setChildren(childrenWithProfiles);
       setParentId(parentData?.parent_user_id || null);
 
     } catch (err) {
