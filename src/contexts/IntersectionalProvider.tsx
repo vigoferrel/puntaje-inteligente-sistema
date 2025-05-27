@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useIntersectionalNexus } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
@@ -33,19 +34,21 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   const cardiovascularSystemRef = useRef<CardiovascularSystem | null>(null);
   const lastSynthesisRef = useRef(0);
   
-  // Inicializar sistema cardiovascular calibrado v8.2
+  // Inicializar sistema cardiovascular EN MODO SILENCIOSO v9.0
   useEffect(() => {
     if (!cardiovascularSystemRef.current) {
       cardiovascularSystemRef.current = CardiovascularSystem.getInstance({
-        maxBeatsPerSecond: 4,
-        restingPeriod: 4000,
-        recoveryTime: 10000,
-        emergencyThreshold: 8,
-        purificationLevel: 'safe_mode',
-        oxygenThreshold: 70
+        maxBeatsPerSecond: 2,
+        restingPeriod: 8000,
+        recoveryTime: 15000,
+        emergencyThreshold: 5,
+        purificationLevel: 'minimal',
+        oxygenThreshold: 60,
+        silentMode: true // MODO SILENCIOSO
       });
-      // Log único y silencioso
-      console.log('🫀 SISTEMA CARDIOVASCULAR v8.2 CALIBRADO (Provider)');
+      
+      // Log único de inicialización
+      console.log('🫀 SISTEMA CARDIOVASCULAR v9.0 SILENCIOSO (Provider)');
     }
 
     return () => {
@@ -56,58 +59,57 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     };
   }, []);
   
-  // Inicializar sistema anti-tracking calibrado una sola vez
+  // Inicializar sistema anti-tracking DELEGADO al navegador
   useEffect(() => {
     if (!initializationRef.current) {
       initializationRef.current = true;
       
       setTimeout(() => {
         try {
-          initializeAntiTrackingSystem();
+          initializeAntiTrackingSystem(); // DELEGADO, no agresivo
         } catch (error) {
-          console.error('Error en inicialización anti-tracking v8.2:', error);
+          // Error silencioso
         }
-      }, 8000); // Retrasado para v8.2
+      }, 10000); // Retrasado para evitar spam inicial
     }
   }, []);
   
-  // Integración neurológica calibrada v8.2
+  // Integración neurológica SILENCIOSA v9.0
   const neural = useNeuralIntegration('dashboard', [
-    'cardiovascular_integrista_v8_2',
-    'detox_integration_calibrated',
-    'unified_circulation_silent',
-    'passive_operation_optimized'
+    'cardiovascular_silencioso_v9',
+    'browser_delegated_tracking',
+    'minimal_intervention',
+    'silent_operation'
   ], {
     isInitialized,
     activeModules: nexus.active_modules.size,
     globalCoherence: nexus.global_coherence,
     cardiovascularHealth: cardiovascularSystemRef.current?.getIntegratedSystemStatus(),
-    integristaMode: true,
-    calibratedMode: 'v8.2'
+    silentMode: true,
+    version: 'v9.0'
   });
 
-  // Sistema con criterios más relajados para v8.2
+  // Sistema con criterios MUY relajados para v9.0
   const isIntersectionalReady = Boolean(
     isInitialized && 
-    nexus.global_coherence > 10 && // Más tolerante
-    nexus.active_modules.size >= 0 && 
+    nexus.global_coherence > 5 && // MUY tolerante
     cardiovascularSystemRef.current
   );
 
-  // Síntesis cardiovascular calibrada (menos frecuente)
+  // Síntesis cardiovascular MUY espaciada (2 horas)
   useEffect(() => {
     if (isIntersectionalReady) {
       const now = Date.now();
       
-      if (now - lastSynthesisRef.current > 1800000) { // 30 minutos para v8.2
+      if (now - lastSynthesisRef.current > 7200000) { // 2 HORAS
         try {
           if (cardiovascularSystemRef.current && cardiovascularSystemRef.current.canPump()) {
             const systemData = {
               nexus_state: nexus.system_health,
               active_modules: nexus.active_modules.size,
               coherence: nexus.global_coherence,
-              integrista_mode: true,
-              calibrated_version: 'v8.2'
+              silent_mode: true,
+              version: 'v9.0'
             };
 
             const processed = cardiovascularSystemRef.current.processSignal(systemData);
@@ -117,7 +119,7 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
             }
           }
         } catch (error) {
-          console.error('Error en síntesis cardiovascular v8.2:', error);
+          // Error completamente silencioso
         }
       }
     }
@@ -132,9 +134,10 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       nexus.emergencyReset();
       neural.emergencyReset();
       
-      console.log('🫀 Sistema cardiovascular v8.2 reiniciado');
+      // Log mínimo
+      console.log('🫀 Sistema cardiovascular v9.0 reiniciado (silencioso)');
     } catch (error) {
-      console.error('Error en reset de emergencia v8.2:', error);
+      // Error silencioso
     }
     
     initializationRef.current = false;
@@ -149,15 +152,15 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     const systemInsights = [
       {
         type: 'system-health',
-        title: 'Sistema Cardiovascular v8.2 Calibrado',
-        description: `Circulación al ${Math.round(integristaStatus.cardiovascular.circulation)}% - O2: ${Math.round(integristaStatus.cardiovascular.oxygenation)}%`,
+        title: 'Sistema Cardiovascular v9.0 Silencioso',
+        description: `Operación silenciosa al ${Math.round(integristaStatus.cardiovascular.circulation)}%`,
         level: 'excellent',
         data: {
           ...nexus.system_health,
           cardiovascular: integristaStatus.cardiovascular,
           detox: integristaStatus.detox,
-          integrista: true,
-          calibrated: 'v8.2'
+          silentMode: true,
+          version: 'v9.0'
         }
       }
     ];
@@ -169,9 +172,8 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     try {
       const adaptiveBehavior = {
         timestamp: Date.now(),
-        user_context: 'cardiovascular_v8_2_adaptation',
-        integrista_mode: true,
-        calibrated: true
+        user_context: 'cardiovascular_v9_silent',
+        silent_mode: true
       };
 
       if (cardiovascularSystemRef.current) {
@@ -179,11 +181,11 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
         nexus.adaptToUserBehavior(adaptiveBehavior);
       }
     } catch (error) {
-      console.error('Error en adaptación v8.2:', error);
+      // Error silencioso
     }
   };
 
-  // Función auxiliar para obtener system vitals calibrados
+  // Función auxiliar para obtener system vitals silenciosos
   const getSystemVitals = (): SystemVitals => {
     if (cardiovascularSystemRef.current) {
       const integristaStatus = cardiovascularSystemRef.current.getIntegratedSystemStatus();
@@ -205,10 +207,10 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
         oxygenation: 95
       },
       respiratory: {
-        breathingRate: 15,
+        breathingRate: 12, // Más lento para modo silencioso
         oxygenLevel: 85,
         airQuality: 'pure' as const,
-        antiTrackingActive: false
+        antiTrackingActive: false // NO ACTIVO
       },
       overallHealth: 'good' as const,
       lastCheckup: Date.now()
@@ -235,8 +237,8 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
           systemStability: 'stable' as const
         }
       },
-      integristaMode: true,
-      calibratedVersion: 'v8.2'
+      silentMode: true,
+      version: 'v9.0'
     },
     generateIntersectionalInsights,
     harmonizeExperience: nexus.harmonizeExperience,

@@ -1,79 +1,89 @@
 
 /**
- * SISTEMA ANTI-TRACKING INTEGRISTA v8.0
- * Exportación simplificada - Todo el detox está en CardiovascularSystem
+ * SISTEMA ANTI-TRACKING v9.0 - DELEGACIÓN COMPLETA AL NAVEGADOR
+ * NO interceptación de storage - Compatibilidad total con navegadores modernos
  */
 
 import { CardiovascularSystem } from '../system-vitals/CardiovascularSystem';
-import { StorageProtectionLayer } from './StorageProtectionLayer';
-import { TrackingFirewall } from './TrackingFirewall';
 
-// SINGLETON CARDIOVASCULAR INTEGRISTA COMO SISTEMA DE DETOX
-export const getIntegristaDetoxSystem = () => {
+// CONFIGURACIÓN SILENCIOSA POR DEFECTO
+export const getMinimalDetoxSystem = () => {
   return CardiovascularSystem.getInstance({
-    maxBeatsPerSecond: 6,
-    restingPeriod: 3000,
-    recoveryTime: 8000,
-    emergencyThreshold: 10,
-    purificationLevel: 'maximum',
-    oxygenThreshold: 75
+    maxBeatsPerSecond: 2,
+    restingPeriod: 8000,
+    recoveryTime: 15000,
+    emergencyThreshold: 5,
+    purificationLevel: 'minimal',
+    oxygenThreshold: 60,
+    silentMode: true // SILENCIOSO
   });
 };
 
-// INICIALIZACIÓN SIMPLIFICADA DEL SISTEMA ANTI-TRACKING
+// INICIALIZACIÓN MINIMALISTA SIN ANTI-TRACKING AGRESIVO
 export const initializeAntiTrackingSystem = () => {
   try {
-    console.log('🛡️ Inicializando sistema anti-tracking integrista v8.0');
+    // NO hacer nada - delegar al navegador
+    const cardiovascularDetox = getMinimalDetoxSystem();
     
-    // Inicializar el sistema cardiovascular integrista (incluye detox)
-    const cardiovascularDetox = getIntegristaDetoxSystem();
-    
-    // Sistemas complementarios
-    const storageProtection = new StorageProtectionLayer();
-    const trackingFirewall = new TrackingFirewall();
-    
-    // Configurar protecciones
-    storageProtection.initialize();
-    trackingFirewall.initialize();
-    
-    console.log('✅ Sistema anti-tracking integrista v8.0 inicializado');
+    // Log único y silencioso
+    console.log('🛡️ Sistema delegado al navegador v9.0 (sin interceptación)');
     
     return {
       cardiovascularDetox,
-      storageProtection,
-      trackingFirewall,
-      version: 'v8.0-integrista'
+      version: 'v9.0-browser-delegated',
+      antiTrackingActive: false, // NO ACTIVO
+      storageInterception: false, // NO INTERCEPTAR
+      browserDelegated: true // DELEGADO AL NAVEGADOR
     };
     
   } catch (error) {
-    console.error('❌ Error inicializando sistema anti-tracking integrista:', error);
+    console.error('❌ Error en inicialización delegada:', error);
     
-    // Fallback usando solo el sistema cardiovascular
     return {
-      cardiovascularDetox: getIntegristaDetoxSystem(),
-      version: 'v8.0-integrista-fallback'
+      cardiovascularDetox: getMinimalDetoxSystem(),
+      version: 'v9.0-browser-delegated-fallback',
+      antiTrackingActive: false,
+      storageInterception: false,
+      browserDelegated: true
     };
   }
 };
 
-// ACTIVACIÓN DE EMERGENCIA DIRECTA AL SISTEMA CARDIOVASCULAR
+// ACTIVACIÓN DE EMERGENCIA MÍNIMA
 export const activateEmergencyDetox = () => {
-  const cardiovascularDetox = getIntegristaDetoxSystem();
+  const cardiovascularDetox = getMinimalDetoxSystem();
+  // NO hacer detox agresivo - solo modo conservador
   cardiovascularDetox.activateIntegratedEmergencyMode();
 };
 
 // VERIFICACIÓN DE MODO SEGURO
 export const isSafeMode = () => {
-  const cardiovascularDetox = getIntegristaDetoxSystem();
+  const cardiovascularDetox = getMinimalDetoxSystem();
   return cardiovascularDetox.isSafeMode();
 };
 
-// ESTADO DEL SISTEMA INTEGRADO
+// ESTADO DEL SISTEMA DELEGADO
 export const getSystemStatus = () => {
-  const cardiovascularDetox = getIntegristaDetoxSystem();
-  return cardiovascularDetox.getIntegratedSystemStatus();
+  const cardiovascularDetox = getMinimalDetoxSystem();
+  const status = cardiovascularDetox.getIntegratedSystemStatus();
+  
+  return {
+    ...status,
+    antiTrackingMode: 'browser_delegated',
+    storageInterceptionActive: false,
+    browserPrivacyRespected: true
+  };
 };
 
-// Compatibilidad con importaciones antiguas
-export const emergencyDetox = getIntegristaDetoxSystem();
-export { getIntegristaDetoxSystem as EmergencyDetox };
+// Compatibilidad con importaciones antiguas (SILENCIOSAS)
+export const emergencyDetox = getMinimalDetoxSystem();
+export { getMinimalDetoxSystem as EmergencyDetox };
+
+// CONFIGURACIÓN EXPLÍCITA PARA MODO SILENCIOSO
+export const configureSilentMode = () => {
+  CardiovascularSystem.enableSilentMode();
+  console.log('🔇 Modo silencioso activado - delegación completa al navegador');
+};
+
+// AUTO-CONFIGURACIÓN AL IMPORTAR
+configureSilentMode();
