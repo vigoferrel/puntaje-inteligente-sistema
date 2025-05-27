@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UnifiedEducationProvider } from "@/providers/UnifiedEducationProvider";
+import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
 import { LazyLoadWrapper, useIntelligentPreloading } from "@/components/performance/LazyLoadWrapper";
 import { ProtectedRoute } from "./components/protected-route";
 import { useLocation } from "react-router-dom";
@@ -104,22 +105,24 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <UnifiedEducationProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={
-            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
-              <div className="text-white text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                <p>Cargando Aplicación...</p>
+      <IntersectionalProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={
+              <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+                <div className="text-white text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+                  <p>Cargando Aplicación...</p>
+                </div>
               </div>
-            </div>
-          }>
-            <AppRoutes />
-          </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
+            }>
+              <AppRoutes />
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </IntersectionalProvider>
     </UnifiedEducationProvider>
   </QueryClientProvider>
 );
