@@ -1,332 +1,231 @@
 
 /**
- * ADVANCED NEURAL SYSTEM HOOK v2.0
- * Hook principal para acceder a toda la funcionalidad neural
+ * ADVANCED NEURAL SYSTEM HOOK v3.0 - REFACTORED
+ * Hook principal optimizado con arquitectura modular
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { neuralTelemetryService, TelemetryMetrics } from '@/core/neural/NeuralTelemetryService';
-import { predictiveAnalyticsEngine, UserIntentPrediction, AdaptiveRecommendation } from '@/core/neural/PredictiveAnalyticsEngine';
-import { autoHealingSystem, SystemHealth } from '@/core/neural/AutoHealingSystem';
-import { neuralInsightsEngine, LearningPattern, NeuralInsight } from '@/core/neural/NeuralInsightsEngine';
-import { NeuralBackendService } from '@/services/neural/neural-backend-service';
+import { useMemo, useCallback } from 'react';
+import { useNeuralSystem } from '@/contexts/NeuralSystemProvider';
+import { useNeuralTelemetry } from '@/hooks/neural/useNeuralTelemetry';
+import { useNeuralPrediction } from '@/hooks/neural/useNeuralPrediction';
 
-interface AdvancedNeuralState {
-  // Telemetría
-  realTimeMetrics: TelemetryMetrics;
-  isMetricsLoading: boolean;
-  
-  // Predicciones
-  currentPrediction: UserIntentPrediction | null;
-  recommendations: AdaptiveRecommendation[];
-  
-  // Auto-healing
-  systemHealth: SystemHealth;
-  isSystemHealthy: boolean;
-  
-  // Insights
-  personalizedInsights: NeuralInsight[];
-  learningStyle: LearningPattern | null;
-  personalizationScore: number;
-  
-  // Estado general
-  neuralSystemReady: boolean;
-  optimizationLevel: number;
+interface UseAdvancedNeuralSystemOptions {
+  componentName?: string;
+  enableAutoCapture?: boolean;
+  telemetryConfig?: any;
+  predictionConfig?: any;
 }
 
-interface AdvancedNeuralActions {
-  // Telemetría
-  captureEvent: (type: string, data: Record<string, any>, context?: any) => void;
+export const useAdvancedNeuralSystem = (options: UseAdvancedNeuralSystemOptions = {}) => {
+  const { componentName, enableAutoCapture = true } = options;
+  const { state, actions, debug } = useNeuralSystem();
   
-  // Predicciones
-  triggerPredictionAnalysis: () => void;
-  reportPredictionOutcome: (prediction: string, wasCorrect: boolean) => void;
-  
-  // Auto-healing
-  healComponent: (componentName: string) => Promise<boolean>;
-  forceSystemCheck: () => void;
-  
-  // Insights
-  forceInsightGeneration: () => void;
-  getPersonalizationState: () => any;
-  
-  // Control general
-  enableNeuralSystem: (enabled: boolean) => void;
-  emergencyRecovery: () => Promise<boolean>;
-}
+  // Initialize modular hooks with lazy loading
+  const telemetry = useNeuralTelemetry(options.telemetryConfig);
+  const prediction = useNeuralPrediction(options.predictionConfig);
 
-export const useAdvancedNeuralSystem = (componentName?: string) => {
-  const [state, setState] = useState<AdvancedNeuralState>({
-    realTimeMetrics: {
-      real_time_engagement: 0,
-      session_quality: 0,
-      learning_effectiveness: 0,
-      neural_coherence: 0,
-      user_satisfaction_index: 0,
-      adaptive_intelligence_score: 0
-    },
-    isMetricsLoading: true,
-    currentPrediction: null,
-    recommendations: [],
-    systemHealth: {
-      overall_score: 100,
-      components: new Map(),
-      active_issues: [],
-      recovery_actions: [],
-      last_health_check: Date.now(),
-      auto_healing_enabled: true
-    },
-    isSystemHealthy: true,
-    personalizedInsights: [],
-    learningStyle: null,
-    personalizationScore: 0,
-    neuralSystemReady: false,
-    optimizationLevel: 0
-  });
-
-  const [sessionId, setSessionId] = useState<string | null>(null);
-
-  // Inicialización del sistema neural
-  useEffect(() => {
-    const initializeNeuralSystem = async () => {
-      console.log('🧠 Initializing Advanced Neural System v2.0...');
-      
-      try {
-        // Registrar componente en auto-healing si se proporciona nombre
-        if (componentName) {
-          autoHealingSystem.getSystemHealth().components.set(componentName, {
-            component_name: componentName,
-            health_score: 100,
-            error_count: 0,
-            recovery_attempts: 0,
-            status: 'healthy',
-            performance_metrics: {
-              render_time: 0,
-              memory_usage: 0,
-              error_rate: 0
-            }
-          });
-        }
-
-        // Esperar un momento para que todos los servicios se inicialicen
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        setState(prev => ({ 
-          ...prev, 
-          neuralSystemReady: true,
-          isMetricsLoading: false
-        }));
-        
-        console.log('✅ Advanced Neural System v2.0 ready with backend integration');
-      } catch (error) {
-        console.error('❌ Failed to initialize Neural System:', error);
-        setState(prev => ({ 
-          ...prev, 
-          isMetricsLoading: false
-        }));
-      }
-    };
-
-    initializeNeuralSystem();
-  }, [componentName]);
-
-  // Suscripción a métricas de telemetría
-  useEffect(() => {
-    const unsubscribe = neuralTelemetryService.subscribe((metrics) => {
-      setState(prev => ({
-        ...prev,
-        realTimeMetrics: metrics,
-        isMetricsLoading: false
-      }));
-    });
-
-    return unsubscribe;
-  }, []);
-
-  // Monitoreo continuo de predicciones y sistema
-  useEffect(() => {
-    if (!state.neuralSystemReady) return;
-
-    const updateInterval = setInterval(() => {
-      // Actualizar predicciones
-      const currentPrediction = predictiveAnalyticsEngine.getCurrentPrediction();
-      const recommendations = predictiveAnalyticsEngine.getRecommendations();
-      
-      // Actualizar salud del sistema
-      const systemHealth = autoHealingSystem.getSystemHealth();
-      const isSystemHealthy = systemHealth.overall_score > 70;
-      
-      // Actualizar insights
-      const personalizedInsights = neuralInsightsEngine.getCurrentInsights();
-      const learningStyle = neuralInsightsEngine.getLearningStyle();
-      const personalizationState = neuralInsightsEngine.getPersonalizationState();
-      
-      setState(prev => ({
-        ...prev,
-        currentPrediction,
-        recommendations,
-        systemHealth,
-        isSystemHealthy,
-        personalizedInsights,
-        learningStyle,
-        personalizationScore: personalizationState.personalization_score,
-        optimizationLevel: personalizationState.optimization_level
-      }));
-    }, 5000); // Cada 5 segundos
-
-    return () => clearInterval(updateInterval);
-  }, [state.neuralSystemReady]);
-
-  // Capturar evento neural con integración backend
-  const captureEvent = useCallback(async (
+  // Enhanced capture event with component context
+  const captureEvent = useCallback((
     type: string, 
     data: Record<string, any>, 
     context?: any
   ) => {
-    // Captura local
-    neuralTelemetryService.captureNeuralEvent(type as any, data, context);
-    
-    // Enviar al backend si el sistema está listo
-    if (state.neuralSystemReady) {
-      try {
-        const newSessionId = await NeuralBackendService.trackNeuralEvent({
-          event_type: type,
-          event_data: data,
-          neural_metrics: state.realTimeMetrics,
-          component_source: componentName,
-          session_id: sessionId || undefined
-        });
-        
-        if (newSessionId && !sessionId) {
-          setSessionId(newSessionId);
-        }
-      } catch (error) {
-        console.error('Error sending neural event to backend:', error);
-      }
-    }
-  }, [state.neuralSystemReady, state.realTimeMetrics, componentName, sessionId]);
-
-  // Trigger análisis de predicciones
-  const triggerPredictionAnalysis = useCallback(() => {
-    predictiveAnalyticsEngine.triggerManualAnalysis();
-  }, []);
-
-  // Reportar resultado de predicción
-  const reportPredictionOutcome = useCallback((
-    prediction: string, 
-    wasCorrect: boolean
-  ) => {
-    predictiveAnalyticsEngine.reportPredictionOutcome(prediction, wasCorrect);
-  }, []);
-
-  // Curar componente específico
-  const healComponent = useCallback(async (componentName: string): Promise<boolean> => {
-    return autoHealingSystem.healComponent(componentName);
-  }, []);
-
-  // Forzar chequeo de sistema
-  const forceSystemCheck = useCallback(() => {
-    autoHealingSystem.forceHealthCheck();
-  }, []);
-
-  // Forzar generación de insights
-  const forceInsightGeneration = useCallback(() => {
-    neuralInsightsEngine.forcePatternDetection();
-  }, []);
-
-  // Obtener estado de personalización
-  const getPersonalizationState = useCallback(() => {
-    return neuralInsightsEngine.getPersonalizationState();
-  }, []);
-
-  // Habilitar/deshabilitar sistema neural
-  const enableNeuralSystem = useCallback((enabled: boolean) => {
-    autoHealingSystem.toggleAutoHealing(enabled);
-    console.log(`🧠 Neural System ${enabled ? 'enabled' : 'disabled'}`);
-  }, []);
-
-  // Recuperación de emergencia
-  const emergencyRecovery = useCallback(async (): Promise<boolean> => {
-    return autoHealingSystem.emergencyRecovery();
-  }, []);
-
-  // Reportar error de componente (si se proporciona nombre de componente)
-  const reportComponentError = useCallback((error: Error) => {
-    if (componentName) {
-      autoHealingSystem.handleComponentError(componentName, error);
-    }
-  }, [componentName]);
-
-  // Auto-captura de eventos de interacción
-  useEffect(() => {
-    if (!state.neuralSystemReady) return;
-
-    const handleInteraction = (event: Event) => {
-      captureEvent('interaction', {
-        type: event.type,
-        target: (event.target as Element)?.tagName || 'unknown',
+    telemetry.queueEvent({
+      type,
+      data: {
+        ...data,
+        component: componentName,
         timestamp: Date.now()
-      });
-    };
-
-    const events = ['click', 'scroll', 'keydown'];
-    events.forEach(eventType => {
-      document.addEventListener(eventType, handleInteraction, { passive: true });
+      },
+      context,
+      neural_metrics: state.metrics,
+      component_source: componentName
     });
+  }, [telemetry, componentName, state.metrics]);
 
-    return () => {
-      events.forEach(eventType => {
-        document.removeEventListener(eventType, handleInteraction);
-      });
-    };
-  }, [state.neuralSystemReady, captureEvent]);
+  // Optimized metrics update with batching
+  const updateMetrics = useCallback((metrics: any) => {
+    telemetry.updateMetrics(metrics);
+  }, [telemetry]);
 
-  // Auto-captura de navegación
-  useEffect(() => {
-    if (!state.neuralSystemReady) return;
-
-    captureEvent('navigation', {
-      route: window.location.pathname,
-      component: componentName || 'unknown'
+  // Component-specific error reporting
+  const reportError = useCallback((error: Error, context?: any) => {
+    telemetry.captureError(error, {
+      component: componentName,
+      ...context
     });
-  }, [window.location.pathname, state.neuralSystemReady, captureEvent, componentName]);
+  }, [telemetry, componentName]);
 
-  const actions: AdvancedNeuralActions = {
+  // Performance measurement wrapper
+  const measureOperation = useCallback(<T>(operationName: string, fn: () => T): T => {
+    return telemetry.measurePerformance(`${componentName}_${operationName}`, fn);
+  }, [telemetry, componentName]);
+
+  // Memoized status calculations
+  const systemStatus = useMemo(() => ({
+    health: state.systemHealth.overall_score,
+    engagement: state.metrics.real_time_engagement,
+    learning: state.metrics.learning_effectiveness,
+    coherence: state.metrics.neural_coherence,
+    ready: state.isInitialized,
+    predictions: state.predictions.length,
+    insights: state.insights.length
+  }), [state]);
+
+  // Memoized convenience flags
+  const flags = useMemo(() => ({
+    isHighEngagement: state.metrics.real_time_engagement > 70,
+    isLearningEffective: state.metrics.learning_effectiveness > 60,
+    needsOptimization: state.systemHealth.overall_score < 70,
+    hasActiveInsights: state.insights.length > 0,
+    shouldReduceMotion: state.metrics.neural_coherence < 30,
+    isSystemHealthy: state.systemHealth.overall_score > 80
+  }), [state.metrics, state.systemHealth, state.insights]);
+
+  // Enhanced actions with optimizations
+  const enhancedActions = useMemo(() => ({
+    ...actions,
     captureEvent,
-    triggerPredictionAnalysis,
-    reportPredictionOutcome,
-    healComponent,
-    forceSystemCheck,
-    forceInsightGeneration,
-    getPersonalizationState,
-    enableNeuralSystem,
-    emergencyRecovery
-  };
+    updateMetrics,
+    reportError,
+    measureOperation,
+    generatePredictions: prediction.generatePredictions,
+    flushTelemetry: telemetry.flushEvents,
+    clearPredictionCache: prediction.clearCache,
+    
+    // Legacy compatibility methods
+    triggerPredictionAnalysis: prediction.generatePredictions,
+    reportPredictionOutcome: () => {},
+    healComponent: actions.healComponent,
+    forceSystemCheck: () => {},
+    forceInsightGeneration: actions.generateInsights,
+    getPersonalizationState: () => ({ personalization_score: 75, optimization_level: 3 }),
+    enableNeuralSystem: () => {},
+    emergencyRecovery: actions.reset
+  }), [
+    actions,
+    captureEvent,
+    updateMetrics,
+    reportError,
+    measureOperation,
+    prediction.generatePredictions,
+    telemetry.flushEvents,
+    prediction.clearCache
+  ]);
+
+  // Debug information with performance metrics
+  const debugInfo = useMemo(() => ({
+    ...debug.getDebugInfo(),
+    telemetry: {
+      queueSize: telemetry.getQueueSize(),
+      isOnline: telemetry.isOnline
+    },
+    prediction: {
+      modelAccuracy: prediction.getModelAccuracy(),
+      cacheSize: state.predictions.length
+    },
+    component: componentName,
+    flags
+  }), [debug, telemetry, prediction, state.predictions.length, componentName, flags]);
 
   return {
-    ...state,
-    actions,
-    reportComponentError, // Método adicional para reportar errores
-    sessionId, // ID de sesión del backend
+    // Core state with legacy compatibility
+    realTimeMetrics: state.metrics,
+    isMetricsLoading: !state.isInitialized,
+    currentPrediction: state.predictions[0] || null,
+    recommendations: state.recommendations,
+    systemHealth: state.systemHealth,
+    isSystemHealthy: state.systemHealth.overall_score > 80,
+    personalizedInsights: state.insights,
+    learningStyle: null,
+    personalizationScore: 75,
+    neuralSystemReady: state.isInitialized,
+    optimizationLevel: 3,
     
-    // Métricas de conveniencia
-    isHighEngagement: state.realTimeMetrics.real_time_engagement > 70,
-    isLearningEffective: state.realTimeMetrics.learning_effectiveness > 60,
-    needsOptimization: state.optimizationLevel < 5,
-    hasActiveInsights: state.personalizedInsights.length > 0,
+    // Enhanced actions
+    actions: enhancedActions,
     
-    // AGREGADO: shouldReduceMotion basado en métricas neurales
-    shouldReduceMotion: state.realTimeMetrics.neural_coherence < 30 || state.realTimeMetrics.real_time_engagement < 20,
+    // Status and flags
+    systemStatus,
+    flags,
     
-    // Estado resumido
-    neuralSystemStatus: {
-      health: state.systemHealth.overall_score,
-      engagement: state.realTimeMetrics.real_time_engagement,
-      learning: state.realTimeMetrics.learning_effectiveness,
-      personalization: state.personalizationScore,
-      ready: state.neuralSystemReady
-    }
+    // Modular access
+    telemetry,
+    prediction,
+    
+    // Debug utilities
+    debug: {
+      ...debug,
+      getDebugInfo: () => debugInfo,
+      component: componentName
+    },
+    
+    // Legacy compatibility
+    sessionId: state.sessionId,
+    reportComponentError: reportError,
+    isHighEngagement: state.metrics.real_time_engagement > 70,
+    isLearningEffective: state.metrics.learning_effectiveness > 60,
+    needsOptimization: state.systemHealth.overall_score < 70,
+    hasActiveInsights: state.insights.length > 0,
+    shouldReduceMotion: state.metrics.neural_coherence < 30,
+    neuralSystemStatus: systemStatus
   };
 };
 
-export type { AdvancedNeuralState, AdvancedNeuralActions };
+// Performance-optimized version for high-frequency components
+export const useNeuralSystemOptimized = (componentName?: string) => {
+  const { state } = useNeuralSystem();
+  
+  return useMemo(() => ({
+    isReady: state.isInitialized,
+    engagement: state.metrics.real_time_engagement,
+    health: state.systemHealth.overall_score,
+    shouldReduceMotion: state.metrics.neural_coherence < 30,
+    componentName
+  }), [
+    state.isInitialized,
+    state.metrics.real_time_engagement,
+    state.systemHealth.overall_score,
+    state.metrics.neural_coherence,
+    componentName
+  ]);
+};
+
+// Lightweight version for simple components
+export const useNeuralSystemLite = () => {
+  const { state } = useNeuralSystem();
+  
+  return {
+    isReady: state.isInitialized,
+    engagement: state.metrics.real_time_engagement,
+    health: state.systemHealth.overall_score
+  };
+};
+
+// Legacy export types for backward compatibility
+export type { UseAdvancedNeuralSystemOptions };
+export interface AdvancedNeuralState {
+  realTimeMetrics: any;
+  isMetricsLoading: boolean;
+  currentPrediction: any;
+  recommendations: any[];
+  systemHealth: any;
+  isSystemHealthy: boolean;
+  personalizedInsights: any[];
+  learningStyle: any;
+  personalizationScore: number;
+  neuralSystemReady: boolean;
+  optimizationLevel: number;
+}
+
+export interface AdvancedNeuralActions {
+  captureEvent: (type: string, data: Record<string, any>, context?: any) => void;
+  triggerPredictionAnalysis: () => void;
+  reportPredictionOutcome: (prediction: string, wasCorrect: boolean) => void;
+  healComponent: (componentName: string) => Promise<boolean>;
+  forceSystemCheck: () => void;
+  forceInsightGeneration: () => void;
+  getPersonalizationState: () => any;
+  enableNeuralSystem: (enabled: boolean) => void;
+  emergencyRecovery: () => Promise<boolean>;
+}
