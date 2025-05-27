@@ -1,17 +1,17 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RealDiagnosticMetrics {
-  availableTests: number;
-  completedDiagnostics: number;
-  averageScore: number;
-  lastDiagnosticDate: string | null;
-  totalAttempts: number;
-  skillDistribution: Record<string, number>;
-  progressTrend: 'improving' | 'stable' | 'declining';
   readinessLevel: number;
+  completedDiagnostics: number;
+  availableTests: number;
+  averageScore: number;
+  strongAreas: string[];
+  weakAreas: string[];
+  lastDiagnosticDate: string | null;
+  nextRecommendedTest: string | null;
 }
 
 export const useRealDiagnosticData = () => {
@@ -20,115 +20,98 @@ export const useRealDiagnosticData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchRealData = async () => {
-      if (!user?.id) return;
+  const fetchDiagnosticData = useCallback(async () => {
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        setIsLoading(true);
-        
-        // Fetch available diagnostic tests
-        const { data: availableTests, error: testsError } = await supabase
-          .from('diagnostic_tests')
-          .select('id');
-        
-        if (testsError) throw testsError;
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        // Fetch user's diagnostic results
-        const { data: userResults, error: resultsError } = await supabase
-          .from('user_diagnostic_results')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('completed_at', { ascending: false });
-        
-        if (resultsError) throw resultsError;
+      // Obtener resultados diagnósticos del usuario
+      const { data: diagnosticResults, error: diagnosticError } = await supabase
+        .from('user_diagnostic_results')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('completed_at', { ascending: false });
 
-        // Fetch user exercise attempts for skill analysis
-        const { data: attempts, error: attemptsError } = await supabase
-          .from('user_exercise_attempts')
-          .select('skill_demonstrated, is_correct, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(100);
-        
-        if (attemptsError) throw attemptsError;
+      if (diagnosticError) {
+        console.error('Error fetching diagnostic results:', diagnosticError);
+        throw diagnosticError;
+      }
 
-        // Calculate real metrics
-        const completedDiagnostics = userResults?.length || 0;
-        const totalAttempts = attempts?.length || 0;
-        
-        // Calculate average score from real results
-        const averageScore = userResults && userResults.length > 0
-          ? userResults.reduce((sum, result) => {
-              const scores = Object.values(result.results as Record<string, number>);
-              const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-              return sum + avgScore;
-            }, 0) / userResults.length
-          : 0;
+      // Obtener tests diagnósticos disponibles
+      const { data: availableTests, error: testsError } = await supabase
+        .from('diagnostic_tests')
+        .select('*');
 
-        // Analyze skill distribution from real attempts
-        const skillDistribution: Record<string, number> = {};
-        if (attempts) {
-          attempts.forEach(attempt => {
-            const skill = attempt.skill_demonstrated;
-            if (skill) {
-              skillDistribution[skill] = (skillDistribution[skill] || 0) + 1;
+      if (testsError) {
+        console.error('Error fetching available tests:', testsError);
+      }
+
+      const results = diagnosticResults || [];
+      const tests = availableTests || [];
+
+      // Calcular métricas
+      const completedDiagnostics = results.length;
+      const availableTestsCount = tests.length;
+
+      // Calcular nivel de preparación basado en resultados
+      let readinessLevel = 0;
+      let averageScore = 0;
+      let strongAreas: string[] = [];
+      let weakAreas: string[] = [];
+
+      if (results.length > 0) {
+        const latestResult = results[0];
+        const resultData = latestResult.results;
+
+        if (resultData && typeof resultData === 'object') {
+          const scores = Object.values(resultData).filter(score => typeof score === 'number') as number[];
+          if (scores.length > 0) {
+            averageScore = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+            readinessLevel = Math.min(100, Math.max(0, (averageScore - 150) / 7)); // Escala PAES a porcentaje
+          }
+
+          // Identificar áreas fuertes y débiles
+          Object.entries(resultData).forEach(([area, score]) => {
+            if (typeof score === 'number') {
+              if (score > 600) {
+                strongAreas.push(area);
+              } else if (score < 450) {
+                weakAreas.push(area);
+              }
             }
           });
         }
-
-        // Calculate progress trend from real data
-        let progressTrend: 'improving' | 'stable' | 'declining' = 'stable';
-        if (userResults && userResults.length >= 2) {
-          const recent = averageScore;
-          const older = Object.values(userResults[userResults.length - 1].results as Record<string, number>)
-            .reduce((a, b) => a + b, 0) / Object.values(userResults[userResults.length - 1].results as Record<string, number>).length;
-          
-          if (recent > older + 5) progressTrend = 'improving';
-          else if (recent < older - 5) progressTrend = 'declining';
-        }
-
-        // Calculate readiness level based on real performance
-        const readinessLevel = Math.min(100, Math.max(0, 
-          (averageScore * 0.6) + 
-          (completedDiagnostics * 10) + 
-          ((attempts?.filter(a => a.is_correct).length || 0) / Math.max(totalAttempts, 1) * 30)
-        ));
-
-        const realMetrics: RealDiagnosticMetrics = {
-          availableTests: availableTests?.length || 0,
-          completedDiagnostics,
-          averageScore: Math.round(averageScore),
-          lastDiagnosticDate: userResults?.[0]?.completed_at || null,
-          totalAttempts,
-          skillDistribution,
-          progressTrend,
-          readinessLevel: Math.round(readinessLevel)
-        };
-
-        setMetrics(realMetrics);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching real diagnostic data:', err);
-        setError('No se pudieron cargar los datos reales');
-        // Fallback to minimal real data
-        setMetrics({
-          availableTests: 0,
-          completedDiagnostics: 0,
-          averageScore: 0,
-          lastDiagnosticDate: null,
-          totalAttempts: 0,
-          skillDistribution: {},
-          progressTrend: 'stable',
-          readinessLevel: 0
-        });
-      } finally {
-        setIsLoading(false);
       }
-    };
 
-    fetchRealData();
+      const diagnosticMetrics: RealDiagnosticMetrics = {
+        readinessLevel: Math.round(readinessLevel),
+        completedDiagnostics,
+        availableTests: availableTestsCount,
+        averageScore,
+        strongAreas,
+        weakAreas,
+        lastDiagnosticDate: results.length > 0 ? results[0].completed_at : null,
+        nextRecommendedTest: weakAreas.length > 0 ? weakAreas[0] : null
+      };
+
+      setMetrics(diagnosticMetrics);
+    } catch (error) {
+      console.error('Error in fetchDiagnosticData:', error);
+      setError('Error cargando datos diagnósticos');
+      setMetrics(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, [user?.id]);
 
-  return { metrics, isLoading, error, refetch: () => {} };
+  useEffect(() => {
+    fetchDiagnosticData();
+  }, [fetchDiagnosticData]);
+
+  return { metrics, isLoading, error, refetch: fetchDiagnosticData };
 };

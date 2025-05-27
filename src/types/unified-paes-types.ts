@@ -1,48 +1,13 @@
 
-export interface CinematicState {
-  currentScene: 'dashboard' | 'subject' | 'help' | 'loading' | 'universe' | 'superpaes';
-  transitionActive: boolean;
-  immersionLevel: 'minimal' | 'standard' | 'full';
-  effectsEnabled: boolean;
-}
-
-export interface NavigationItem {
-  id: string;
-  label: string;
-  path: string;
-  color: string;
-  description: string;
-}
-
-export interface SubjectProgress {
-  subject: string;
-  progress: number;
-  color: string;
-  topics: Array<{
-    name: string;
-    progress: number;
-    exercises: number;
-  }>;
-}
-
-export interface UserMetrics {
-  overallProgress: number;
-  projectedScore: number;
-  studyStreak: number;
-  exercisesCompleted: number;
-  neuralLevel: string;
-}
-
-// Nuevos tipos unificados para PAES
 export interface PAESUser {
   id: string;
   email: string;
   profile: {
-    studyPhase: 'diagnostic' | 'learning' | 'practice' | 'exam';
+    studyPhase: 'diagnostic' | 'preparation' | 'intensive' | 'review';
     preferences: {
-      studyTime: 'morning' | 'afternoon' | 'evening';
-      difficulty: 'basic' | 'intermediate' | 'advanced' | 'adaptive';
-      visualMode: 'simple' | 'standard' | 'cinematic';
+      studyTime: 'morning' | 'afternoon' | 'evening' | 'night';
+      difficulty: 'easy' | 'medium' | 'hard' | 'adaptive';
+      visualMode: 'standard' | 'cinematic' | 'minimal';
     };
   };
 }
@@ -59,57 +24,42 @@ export interface PAESProgress {
 export interface PAESCompetencia {
   id: string;
   nombre: string;
-  descripcion: string;
-  categoria: string;
+  area: string;
   nivel: number;
   progreso: {
     actual: number;
     objetivo: number;
-    fechaActualizacion: string;
+    tendencia: 'up' | 'down' | 'stable';
   };
-  habilidades: string[];
 }
 
 export interface PAESRecomendacion {
   id: string;
-  tipo: 'ejercicio' | 'tema' | 'estrategia' | 'recurso';
+  tipo: 'ejercicio' | 'teoria' | 'practica' | 'estrategia';
   titulo: string;
   descripcion: string;
+  prioridad: number;
   compatibilidadGlobal: number;
   razonamiento: string[];
   accionSugerida: string;
-  prioridad: number;
   metadata: Record<string, any>;
 }
 
 export interface PAESDiagnostico {
   id: string;
-  fechaCreacion: string;
-  estado: 'pendiente' | 'en_progreso' | 'completado';
-  resultados: {
-    puntajeGeneral: number;
-    fortalezas: string[];
-    areasAMejorar: string[];
-    recomendaciones: PAESRecomendacion[];
-  };
+  fecha: string;
+  resultados: Record<string, number>;
+  recomendaciones: string[];
+  nivelGeneral: number;
 }
 
 export interface PAESPlan {
   id: string;
-  titulo: string;
-  descripcion: string;
-  fechaCreacion: string;
-  estado: 'activo' | 'pausado' | 'completado';
-  objetivos: {
-    puntajeObjetivo: number;
-    fechaExamen: string;
-    materiasPrioritarias: string[];
-  };
-  progreso: {
-    porcentajeCompletado: number;
-    nodosCompletados: number;
-    tiempoInvertido: number;
-  };
+  nombre: string;
+  duracionSemanas: number;
+  objetivos: string[];
+  cronograma: Record<string, any>;
+  progreso: number;
 }
 
 export interface UnifiedPAESData {
