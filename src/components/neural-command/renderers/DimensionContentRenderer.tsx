@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { NeuralDimension, NeuralDimensionConfig } from '../config/neuralTypes';
@@ -103,9 +102,16 @@ export const DimensionContentRenderer: React.FC<DimensionContentRendererProps> =
       case 'progress_analysis':
         return (
           <Suspense fallback={<CinematicSkeletonOptimized variant="diagnostic" />}>
-            <DiagnosticControllerCinematic
-              onNavigateToTool={() => {}}
-            />
+            <DiagnosticControllerCinematic>
+              {(props) => (
+                <div className="p-6">
+                  <h2 className="text-2xl font-bold text-white mb-4">Análisis de Progreso</h2>
+                  <p className="text-white/70">
+                    Sistema de diagnóstico neural activado para análisis completo.
+                  </p>
+                </div>
+              )}
+            </DiagnosticControllerCinematic>
           </Suspense>
         );
 
