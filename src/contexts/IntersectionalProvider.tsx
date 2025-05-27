@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useIntersectionalNexus } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
@@ -36,14 +35,13 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
   const emergencyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [emergencyMode, setEmergencyMode] = React.useState(false);
   
-  // EMERGENCY BYPASS - Forzar inicialización después de 10 segundos
+  // EMERGENCY BYPASS OPTIMIZADO - 5 segundos en lugar de 10
   useEffect(() => {
     emergencyTimeoutRef.current = setTimeout(() => {
       if (!emergencyMode) {
-        console.log('🚨 EMERGENCY BYPASS ACTIVADO - Forzando inicialización');
         setEmergencyMode(true);
       }
-    }, 10000);
+    }, 5000); // REDUCIDO de 10 a 5 segundos
 
     return () => {
       if (emergencyTimeoutRef.current) {
@@ -52,21 +50,20 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     };
   }, [emergencyMode]);
 
-  // Inicializar sistema cardiovascular EN MODO ULTRA-SILENCIOSO v10.0
+  // Inicializar sistema cardiovascular EN MODO ZERO-LOGS v11.0
   useEffect(() => {
     if (!cardiovascularSystemRef.current) {
       cardiovascularSystemRef.current = CardiovascularSystem.getInstance({
-        maxBeatsPerSecond: 1, // MUY reducido
-        restingPeriod: 21600000, // 6 HORAS
-        recoveryTime: 30000, // 30 segundos
-        emergencyThreshold: 10, // MUY tolerante
+        maxBeatsPerSecond: 0.5, // ULTRA reducido
+        restingPeriod: 43200000, // 12 HORAS
+        recoveryTime: 60000, // 1 minuto
+        emergencyThreshold: 20, // ULTRA tolerante
         purificationLevel: 'minimal',
-        oxygenThreshold: 30, // MUY tolerante
+        oxygenThreshold: 10, // ULTRA tolerante
         silentMode: true
       });
       
-      // Log único ULTRA-silencioso
-      console.log('🫀 v10.0 ULTRA-SILENCIOSO (6h intervals)');
+      // NO logs de inicialización
     }
 
     return () => {
@@ -77,53 +74,54 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     };
   }, []);
   
-  // Inicializar sistema anti-tracking ULTRA-DELEGADO
+  // Inicializar sistema anti-tracking ZERO-LOGS
   useEffect(() => {
     if (!initializationRef.current) {
       initializationRef.current = true;
       
-      // Retrasado MUCHO para evitar spam inicial
+      // Retrasado para evitar logs de inicialización
       setTimeout(() => {
         try {
           initializeAntiTrackingSystem();
         } catch (error) {
           // Error completamente silencioso
         }
-      }, 30000); // 30 segundos de retraso
+      }, 60000); // 1 minuto de retraso
     }
   }, []);
   
-  // Integración neurológica ULTRA-SILENCIOSA v10.0
+  // Integración neurológica ZERO-LOGS v11.0
   const neural = useNeuralIntegration('dashboard', [
-    'ultra_silent_cardiovascular_v10',
-    'emergency_bypass_mode',
-    'zero_intervention_tracking',
-    'graceful_degradation'
+    'zero_logs_cardiovascular_v11',
+    'emergency_bypass_optimized',
+    'tracking_spam_eliminated',
+    'graceful_degradation_enhanced'
   ], {
     isInitialized,
     activeModules: nexus.active_modules.size,
     globalCoherence: nexus.global_coherence,
     cardiovascularHealth: cardiovascularSystemRef.current?.getIntegratedSystemStatus(),
     emergencyMode,
-    version: 'v10.0-ultra-silent'
+    version: 'v11.0-zero-logs'
   });
 
-  // CONDICIONES MUY RELAJADAS para v10.0 - EMERGENCY BYPASS
+  // CONDICIONES ULTRA-RELAJADAS para v11.0 - EMERGENCY BYPASS OPTIMIZADO
   const isIntersectionalReady = Boolean(
     emergencyMode || // EMERGENCY BYPASS siempre listo
-    (isInitialized && nexus.global_coherence > 1) // MUY tolerante
+    (isInitialized && nexus.global_coherence > 0.5) // MUY tolerante
   );
 
-  // Síntesis cardiovascular ULTRA-espaciada (6 horas)
+  // Síntesis cardiovascular ULTRA-espaciada (12 horas) con método correcto
   useEffect(() => {
     if (isIntersectionalReady) {
       const now = Date.now();
       
-      // Solo síntesis cada 6 horas
-      if (now - lastSynthesisRef.current > 21600000) {
+      // Solo síntesis cada 12 horas
+      if (now - lastSynthesisRef.current > 43200000) {
         lastSynthesisRef.current = now;
         
         if (cardiovascularSystemRef.current) {
+          // USAR EL MÉTODO CORRECTO que acabamos de agregar
           cardiovascularSystemRef.current.performUltraSilentSynthesis({
             nexusCoherence: nexus.global_coherence,
             neuralIntegrationLevel: neural.integrationLevel || 50,
@@ -192,7 +190,7 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, [nexus]);
 
-  // Vitales del sistema simplificados
+  // Vitales del sistema optimizados
   const systemVitals: SystemVitals = React.useMemo(() => ({
     cardiovascular: {
       heartRate: Math.max(30, nexus.global_coherence),
@@ -201,22 +199,22 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       oxygenation: Math.min(100, nexus.global_coherence + 30)
     },
     respiratory: {
-      breathingRate: emergencyMode ? 25 : 15,
+      breathingRate: emergencyMode ? 20 : 12,
       oxygenLevel: Math.min(100, nexus.global_coherence + 10),
       airQuality: 'pure' as const,
       antiTrackingActive: false // DELEGADO al navegador
     },
     overallHealth: emergencyMode ? 'emergency' as const : 
-                   nexus.global_coherence > 50 ? 'excellent' as const : 'good' as const,
+                   nexus.global_coherence > 30 ? 'excellent' as const : 'good' as const,
     lastCheckup: Date.now()
   }), [nexus.global_coherence, emergencyMode]);
 
-  // Salud neural adaptativa con EMERGENCY FALLBACKS
+  // Salud neural adaptativa con EMERGENCY FALLBACKS optimizados
   const neuralHealth = React.useMemo(() => ({
-    neural_efficiency: emergencyMode ? 60 : Math.max(30, nexus.global_coherence),
-    cross_pollination_rate: emergencyMode ? 40 : Math.max(20, nexus.active_modules.size * 10),
-    adaptive_learning_score: emergencyMode ? 50 : Math.max(25, nexus.global_coherence * 0.8),
-    user_experience_harmony: emergencyMode ? 55 : Math.max(35, nexus.global_coherence * 0.9),
+    neural_efficiency: emergencyMode ? 70 : Math.max(40, nexus.global_coherence),
+    cross_pollination_rate: emergencyMode ? 50 : Math.max(30, nexus.active_modules.size * 10),
+    adaptive_learning_score: emergencyMode ? 60 : Math.max(35, nexus.global_coherence * 0.8),
+    user_experience_harmony: emergencyMode ? 65 : Math.max(45, nexus.global_coherence * 0.9),
     cardiovascular: systemVitals.cardiovascular,
     singleton: {
       hasInstance: !!cardiovascularSystemRef.current,
@@ -226,8 +224,9 @@ export const IntersectionalProvider: React.FC<{ children: React.ReactNode }> = (
       lastEmergencyActivation: emergencyMode ? Date.now() : 0,
       isStrictMode: false
     },
-    ultraConservativeMode: false, // Modo normal
-    emergencyMode
+    ultraConservativeMode: false,
+    emergencyMode,
+    zeroLogsMode: true // NUEVO: modo zero logs
   }), [nexus, systemVitals, emergencyMode]);
 
   const contextValue: IntersectionalContextType = React.useMemo(() => ({

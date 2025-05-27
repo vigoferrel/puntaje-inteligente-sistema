@@ -1,8 +1,6 @@
-
 /**
- * SISTEMA CARDIOVASCULAR v9.0 - MODO SILENCIOSO DEFINITIVO
- * Configuración mínima sin anti-tracking agresivo
- * Compatibilidad total con navegadores modernos
+ * SISTEMA CARDIOVASCULAR v9.1 - CORRECCIÓN INTEGRAL DEFINITIVA
+ * Solución a la raíz del problema: método faltante + optimización completa
  */
 
 interface CardiovascularConfig {
@@ -38,6 +36,13 @@ interface IntegratedSystemStatus {
   silentMode: boolean;
 }
 
+interface SynthesisParams {
+  nexusCoherence: number;
+  neuralIntegrationLevel: number;
+  systemLoad: number;
+  emergencyMode: boolean;
+}
+
 export class CardiovascularSystem {
   private static instance: CardiovascularSystem | null = null;
   private static isInitializing = false;
@@ -59,13 +64,13 @@ export class CardiovascularSystem {
   private silentMode = true; // ACTIVADO POR DEFECTO
   
   private config: Required<CardiovascularConfig> = {
-    maxBeatsPerSecond: 2, // MUY CONSERVADOR
-    restingPeriod: 8000, // 8 segundos de descanso
-    recoveryTime: 15000, // 15 segundos de recovery
-    emergencyThreshold: 5, // Más tolerante
-    purificationLevel: 'minimal', // NIVEL MÍNIMO
-    oxygenThreshold: 60, // Más tolerante
-    silentMode: true // SILENCIOSO POR DEFECTO
+    maxBeatsPerSecond: 1, // ULTRA conservador
+    restingPeriod: 12000, // 12 segundos
+    recoveryTime: 20000, // 20 segundos
+    emergencyThreshold: 3, // Muy tolerante
+    purificationLevel: 'minimal',
+    oxygenThreshold: 70,
+    silentMode: true // MODO SILENCIOSO TOTAL
   };
 
   private constructor(config?: CardiovascularConfig) {
@@ -74,19 +79,14 @@ export class CardiovascularSystem {
       this.silentMode = this.config.silentMode;
     }
     
-    // NO INTERCEPTAR STORAGE - Delegar al navegador
-    this.initializeMinimalMode();
+    // Inicialización ULTRA-silenciosa
+    this.initializeZeroLogMode();
   }
 
-  private initializeMinimalMode(): void {
-    // Log único de inicialización
-    if (!this.silentMode) {
-      console.log('🫀 Sistema Cardiovascular v9.0 - Modo Silencioso Activo');
-    }
-    
-    // NO implementar anti-tracking personalizado
-    // NO interceptar storage APIs
-    // Delegar completamente al navegador
+  private initializeZeroLogMode(): void {
+    // ZERO LOGS - Solo inicialización silenciosa
+    // NO interceptar storage - delegación completa al navegador
+    // NO logs de inicialización
   }
 
   static getInstance(config?: CardiovascularConfig): CardiovascularSystem {
@@ -95,7 +95,7 @@ export class CardiovascularSystem {
     }
 
     if (CardiovascularSystem.isInitializing) {
-      // Espera simple sin recursión
+      // Evitar recursión - retornar instancia temporal
       return new CardiovascularSystem(config);
     }
 
@@ -104,6 +104,29 @@ export class CardiovascularSystem {
     CardiovascularSystem.isInitializing = false;
 
     return CardiovascularSystem.instance;
+  }
+
+  // MÉTODO CRÍTICO FALTANTE - RAÍZ DEL PROBLEMA
+  performUltraSilentSynthesis(params: SynthesisParams): void {
+    if (!this.canPump()) {
+      return;
+    }
+
+    // Síntesis ULTRA-silenciosa sin logs
+    try {
+      const synthesisResult = this.pump();
+      if (synthesisResult) {
+        // Actualizar métricas internas sin logs
+        this.oxygenLevel = Math.min(100, this.oxygenLevel + Math.floor(params.nexusCoherence / 10));
+        this.heartRate = Math.max(50, Math.min(80, 60 + Math.floor(params.neuralIntegrationLevel / 20)));
+        
+        // Solo guardar timestamp de última síntesis
+        this.lastDetoxTime = Date.now();
+      }
+    } catch (error) {
+      // Error completamente silencioso
+      this.activateIntegratedEmergencyMode();
+    }
   }
 
   canPump(): boolean {
@@ -133,7 +156,7 @@ export class CardiovascularSystem {
       this.secondStart = now;
     }
 
-    // Control de frecuencia MUY conservador
+    // Control de frecuencia ULTRA conservador
     if (this.beatsInSecond >= this.config.maxBeatsPerSecond) {
       this.restingUntil = now + this.config.restingPeriod;
       return false;
@@ -141,20 +164,18 @@ export class CardiovascularSystem {
 
     this.beatsInSecond++;
     this.lastBeat = now;
-    this.heartRate = Math.min(100, 60 + this.beatsInSecond * 5);
+    this.heartRate = Math.min(80, 60 + this.beatsInSecond * 2);
 
-    // Log extremadamente reducido (1 vez por hora)
-    if (!this.silentMode && (now - this.lastLogTime) > 3600000) {
-      console.log('🫀 Cardiovascular v9.0 funcionando silenciosamente');
-      this.lastLogTime = now;
+    // ZERO LOGS - Sin logging
+    
+    // Notificación ULTRA-reducida
+    if (this.listeners.length > 0) {
+      this.notifyListeners({
+        type: 'heartbeat',
+        timestamp: now,
+        silent: true
+      });
     }
-
-    this.notifyListeners({
-      type: 'heartbeat',
-      source: 'heart',
-      data: { heartRate: this.heartRate, silentMode: this.silentMode },
-      timestamp: now
-    });
 
     return true;
   }
@@ -208,14 +229,35 @@ export class CardiovascularSystem {
     return this.detoxLevel !== 'minimal' || this.isEmergencyMode;
   }
 
+  adaptToUserBehavior(behavior: any): void {
+    if (!this.canPump()) {
+      return;
+    }
+
+    // Adaptación silenciosa sin side effects
+    if (behavior && typeof behavior === 'object') {
+      // Ajustar oxigenación basado en comportamiento
+      if (behavior.interaction_frequency === 'high') {
+        this.oxygenLevel = Math.min(100, this.oxygenLevel + 1);
+      }
+      
+      // Ajustar frecuencia cardíaca basado en engagement
+      if (behavior.completion_rate > 0.8) {
+        this.heartRate = Math.max(50, this.heartRate - 2);
+      }
+    }
+  }
+
   activateIntegratedEmergencyMode(): void {
     this.isEmergencyMode = true;
     this.emergencyActivations++;
-    this.detoxLevel = 'moderate'; // NO agresivo
+    this.detoxLevel = 'moderate';
     this.restingUntil = Date.now() + this.config.recoveryTime;
     
-    // Log solo en emergencias reales
-    console.warn('🫀 Modo de emergencia cardiovascular activado (silencioso)');
+    // Solo log en emergencias CRÍTICAS
+    if (this.emergencyActivations >= this.config.emergencyThreshold) {
+      console.warn('🫀 Emergencia cardiovascular crítica (v9.1)');
+    }
   }
 
   emergencyReset(): void {
@@ -228,8 +270,9 @@ export class CardiovascularSystem {
     this.systemStability = 'stable';
     this.lastLogTime = 0;
     
+    // Log de reset solo si no está en modo silencioso
     if (!this.silentMode) {
-      console.log('🫀 Sistema cardiovascular reiniciado en modo silencioso');
+      console.log('🫀 Sistema cardiovascular v9.1 reiniciado');
     }
   }
 
@@ -238,7 +281,7 @@ export class CardiovascularSystem {
       cardiovascular: {
         heartRate: this.heartRate,
         bloodPressure: this.isEmergencyMode ? 'emergency' : 'optimal',
-        circulation: Math.max(60, 100 - this.beatsInSecond * 10),
+        circulation: Math.max(70, 100 - this.beatsInSecond * 5),
         oxygenation: this.oxygenLevel
       },
       detox: {
@@ -267,10 +310,10 @@ export class CardiovascularSystem {
 
   getRespiratoryHealth() {
     return {
-      breathingRate: this.silentMode ? 12 : 15, // Más lento en modo silencioso
+      breathingRate: this.silentMode ? 10 : 15,
       oxygenLevel: this.oxygenLevel,
       airQuality: 'pure' as const,
-      antiTrackingActive: false // NO ACTIVO - delegar al navegador
+      antiTrackingActive: false // DELEGADO al navegador
     };
   }
 
@@ -298,11 +341,11 @@ export class CardiovascularSystem {
     // NO destruir el singleton
     this.listeners = [];
     if (!this.silentMode) {
-      console.log('🫀 Sistema cardiovascular v9.0 limpiado (singleton preservado)');
+      console.log('🫀 Sistema cardiovascular v9.1 limpiado (singleton preservado)');
     }
   }
 
-  // Métodos de compatibilidad
+  // Métodos de compatibilidad estática
   static enableSilentMode(): void {
     if (CardiovascularSystem.instance) {
       CardiovascularSystem.instance.silentMode = true;
