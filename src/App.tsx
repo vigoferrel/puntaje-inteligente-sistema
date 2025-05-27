@@ -1,4 +1,3 @@
-
 import React, { Suspense, memo } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -193,6 +192,21 @@ const AppRoutes = memo(() => {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/security-dashboard" 
+        element={
+          <ProtectedRoute>
+            <OptimizedLazyLoadWrapper 
+              moduleName="Dashboard de Seguridad Empresarial" 
+              priority="high" 
+              preloadDelay={150}
+              enableMemoryCleanup={true}
+            >
+              <components.SecurityDashboard />
+            </OptimizedLazyLoadWrapper>
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   );
 });
@@ -255,7 +269,7 @@ const App = memo(() => {
                         <div className="text-white text-center">
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
                           <p>Cargando Ecosistema Neural Cinematográfico v3.0...</p>
-                          <p className="text-sm text-cyan-300 mt-2">Sistema de validación avanzada activo</p>
+                          <p className="text-sm text-cyan-300 mt-2">Sistema de seguridad empresarial activo</p>
                         </div>
                       </div>
                     }>

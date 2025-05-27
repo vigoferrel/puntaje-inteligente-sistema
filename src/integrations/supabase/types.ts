@@ -3529,13 +3529,22 @@ export type Database = {
       cognitive_distribution_m2_2024: {
         Row: {
           cognitive_demand: string | null
+          cognitive_level: Database["public"]["Enums"]["bloom_level"] | null
           dificultad_promedio: number | null
           porcentaje: number | null
           preguntas_por_habilidad: number | null
-          skill_type: string | null
+          skill_id: number | null
           total_preguntas: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "learning_nodes_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "paes_skills"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_distribution_m2_2024: {
         Row: {
@@ -3556,53 +3565,57 @@ export type Database = {
           node_id: string | null
           node_name: string | null
           preguntas: number[] | null
+          tier_priority: Database["public"]["Enums"]["tier_priority"] | null
           total_preguntas: number | null
+        }
+        Insert: {
+          cognitive_level?: Database["public"]["Enums"]["bloom_level"] | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
+          dificultad_promedio?: never
+          node_id?: string | null
+          node_name?: string | null
+          preguntas?: never
+          tier_priority?: Database["public"]["Enums"]["tier_priority"] | null
+          total_preguntas?: number | null
+        }
+        Update: {
+          cognitive_level?: Database["public"]["Enums"]["bloom_level"] | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
+          dificultad_promedio?: never
+          node_id?: string | null
+          node_name?: string | null
+          preguntas?: never
+          tier_priority?: Database["public"]["Enums"]["tier_priority"] | null
+          total_preguntas?: number | null
         }
         Relationships: []
       }
       nodes_summary_by_subject: {
         Row: {
           avg_time_minutes: number | null
-          avg_weight: number | null
-          bloom_levels: string | null
           node_count: number | null
           subject_area: string | null
           tier_priority: Database["public"]["Enums"]["tier_priority"] | null
+          unique_skills: number | null
+          unique_tests: number | null
         }
         Relationships: []
       }
       skill_distribution_ciencias_2024: {
         Row: {
-          content_area: string | null
-          count_por_area: number | null
-          dificultad_promedio: number | null
-          porcentaje: number | null
-          skill_type: string | null
-          total_preguntas: number | null
+          avg_difficulty_score: number | null
+          node_count: number | null
+          skill_id: number | null
         }
-        Relationships: []
-      }
-      skill_distribution_ciencias_tp_2024: {
-        Row: {
-          area_cientifica: string | null
-          modulo: string | null
-          porcentaje: number | null
-          preguntas_validas: number | null
-          total_preguntas: number | null
-        }
-        Relationships: []
-      }
-      skill_distribution_matematica_m2_2024: {
-        Row: {
-          areas_contenido: string | null
-          dificultad_promedio: number | null
-          porcentaje_total: number | null
-          porcentaje_valido: number | null
-          preguntas: number[] | null
-          skill_type: string | null
-          total_preguntas: number | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "learning_nodes_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "paes_skills"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -3715,6 +3728,10 @@ export type Database = {
           numero_pregunta: number
           respuesta_correcta: string
         }[]
+      }
+      production_readiness_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       simular_examen_historia: {
         Args: { codigo_examen_param?: string; numero_preguntas?: number }

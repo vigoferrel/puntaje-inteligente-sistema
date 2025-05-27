@@ -12,6 +12,7 @@ const UniverseVisualizationPage = lazy(() => import('@/pages/UniverseVisualizati
 const AchievementsPage = lazy(() => import('@/pages/AchievementsPage').then(module => ({ default: module.default })));
 const EcosystemPage = lazy(() => import('@/pages/EcosystemPage').then(module => ({ default: module.default })));
 const ValidationDashboard = lazy(() => import('@/pages/ValidationDashboard').then(module => ({ default: module.ValidationDashboard })));
+const SecurityDashboard = lazy(() => import('@/pages/SecurityDashboard').then(module => ({ default: module.SecurityDashboard })));
 
 interface ComponentMap {
   [key: string]: React.LazyExoticComponent<React.ComponentType<any>>;
@@ -28,7 +29,8 @@ const componentMap: ComponentMap = {
   UniverseVisualizationPage,
   AchievementsPage,
   EcosystemPage,
-  ValidationDashboard
+  ValidationDashboard,
+  SecurityDashboard
 };
 
 export const useAdvancedBundleOptimizer = (currentPath: string) => {
@@ -36,13 +38,15 @@ export const useAdvancedBundleOptimizer = (currentPath: string) => {
   const getPreloadComponents = (path: string): string[] => {
     switch (path) {
       case '/':
-        return ['LectoGuiaPage', 'DiagnosticPage', 'ValidationDashboard'];
+        return ['LectoGuiaPage', 'DiagnosticPage', 'ValidationDashboard', 'SecurityDashboard'];
       case '/lectoguia':
         return ['DiagnosticPage', 'PlanningPage'];
       case '/diagnostic':
         return ['PlanningPage', 'LectoGuiaPage'];
       case '/validation-dashboard':
-        return ['Index', 'DiagnosticPage'];
+        return ['SecurityDashboard', 'Index', 'DiagnosticPage'];
+      case '/security-dashboard':
+        return ['ValidationDashboard', 'Index', 'DiagnosticPage'];
       default:
         return ['Index'];
     }
