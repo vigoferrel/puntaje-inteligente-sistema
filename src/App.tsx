@@ -18,6 +18,9 @@ const LectoGuiaPage = lazy(() => import("./pages/LectoGuiaPage"));
 const FinancialPage = lazy(() => import("./pages/FinancialPage"));
 const DiagnosticPage = lazy(() => import("./pages/DiagnosticPage"));
 const PlanningPage = lazy(() => import("./pages/PlanningPage"));
+const UniverseVisualizationPage = lazy(() => import("./pages/UniverseVisualizationPage"));
+const AchievementsPage = lazy(() => import("./pages/AchievementsPage"));
+const EcosystemPage = lazy(() => import("./pages/EcosystemPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,7 +55,7 @@ const AppRoutes = () => {
         path="/" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Dashboard Principal" priority="high">
+            <LazyLoadWrapper moduleName="Hub Educativo Principal" priority="high">
               <Index />
             </LazyLoadWrapper>
           </ProtectedRoute>
@@ -98,6 +101,36 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/universe" 
+        element={
+          <ProtectedRoute>
+            <LazyLoadWrapper moduleName="Universo Educativo 3D" priority="medium" preloadDelay={300}>
+              <UniverseVisualizationPage />
+            </LazyLoadWrapper>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/achievements" 
+        element={
+          <ProtectedRoute>
+            <LazyLoadWrapper moduleName="Sistema de Logros" priority="medium" preloadDelay={400}>
+              <AchievementsPage />
+            </LazyLoadWrapper>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/ecosystem" 
+        element={
+          <ProtectedRoute>
+            <LazyLoadWrapper moduleName="Ecosistema Integrado" priority="medium" preloadDelay={400}>
+              <EcosystemPage />
+            </LazyLoadWrapper>
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   );
 };
@@ -114,7 +147,7 @@ const App = () => (
               <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
                 <div className="text-white text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                  <p>Cargando Aplicación...</p>
+                  <p>Cargando Ecosistema Educativo...</p>
                 </div>
               </div>
             }>
