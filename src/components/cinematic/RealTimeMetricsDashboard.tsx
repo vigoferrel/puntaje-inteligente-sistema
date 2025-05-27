@@ -1,126 +1,31 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalCinematic } from '@/contexts/GlobalCinematicContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useRealUserMetrics } from '@/hooks/useRealUserMetrics';
 import { 
   Brain, TrendingUp, Clock, Target, Zap, 
   Award, BookOpen, Calculator, BarChart3 
 } from 'lucide-react';
 
-interface UserMetrics {
-  totalStudyTime: number;
-  exercisesCompleted: number;
-  averageScore: number;
-  currentStreak: number;
-  level: number;
-  recentActivity: Array<{
-    type: string;
-    score: number;
-    timestamp: string;
-  }>;
-}
-
 export const RealTimeMetricsDashboard: React.FC = () => {
-  const { user } = useAuth();
   const { state, addAchievement } = useGlobalCinematic();
-  const [metrics, setMetrics] = useState<UserMetrics>({
-    totalStudyTime: 0,
-    exercisesCompleted: 0,
-    averageScore: 0,
-    currentStreak: 0,
-    level: 1,
-    recentActivity: []
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const { metrics, isLoading, error } = useRealUserMetrics();
 
-  // Cargar métricas reales del usuario
-  useEffect(() => {
-    const loadUserMetrics = async () => {
-      if (!user?.id) return;
-
-      try {
-        // Obtener datos de progreso del usuario
-        const { data: progressData } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(10);
-
-        // Obtener evaluaciones completadas
-        const { data: evaluationsData } = await supabase
-          .from('evaluation_results')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        // Calcular métricas
-        const totalExercises = progressData?.length || 0;
-        const avgScore = evaluationsData?.length 
-          ? evaluationsData.reduce((acc, evaluation) => acc + (evaluation.score || 0), 0) / evaluationsData.length
-          : 0;
-        
-        // Calcular racha actual
-        let streak = 0;
-        const today = new Date();
-        const sortedActivity = [...(progressData || [])].sort((a, b) => 
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        );
-
-        for (const activity of sortedActivity) {
-          const activityDate = new Date(activity.updated_at);
-          const daysDiff = Math.floor((today.getTime() - activityDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysDiff <= streak + 1) {
-            streak++;
-          } else {
-            break;
-          }
-        }
-
-        const newMetrics: UserMetrics = {
-          totalStudyTime: progressData?.reduce((acc, p) => acc + (p.time_spent || 0), 0) || 0,
-          exercisesCompleted: totalExercises,
-          averageScore: Math.round(avgScore),
-          currentStreak: streak,
-          level: Math.floor(totalExercises / 10) + 1,
-          recentActivity: evaluationsData?.slice(0, 5).map(evaluation => ({
-            type: evaluation.evaluation_type || 'exercise',
-            score: evaluation.score || 0,
-            timestamp: evaluation.created_at
-          })) || []
-        };
-
-        setMetrics(newMetrics);
-
-        // Verificar logros
-        if (newMetrics.currentStreak >= 7) {
-          addAchievement('weekly_streak');
-        }
-        if (newMetrics.exercisesCompleted >= 100) {
-          addAchievement('hundred_exercises');
-        }
-        if (newMetrics.averageScore >= 85) {
-          addAchievement('high_performer');
-        }
-
-      } catch (error) {
-        console.error('Error loading user metrics:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadUserMetrics();
-    
-    // Actualizar cada 30 segundos
-    const interval = setInterval(loadUserMetrics, 30000);
-    return () => clearInterval(interval);
-  }, [user?.id, addAchievement]);
+  // Verificar logros basados en métricas reales
+  React.useEffect(() => {
+    if (metrics.currentStreak >= 7) {
+      addAchievement('weekly_streak');
+    }
+    if (metrics.exercisesCompleted >= 100) {
+      addAchievement('hundred_exercises');
+    }
+    if (metrics.averageScore >= 85) {
+      addAchievement('high_performer');
+    }
+  }, [metrics, addAchievement]);
 
   const metricCards = [
     {
@@ -131,22 +36,22 @@ export const RealTimeMetricsDashboard: React.FC = () => {
       trend: '+12%'
     },
     {
-      title: 'Ejercicios Completados',
+      title: 'Nodos Completados',
       value: metrics.exercisesCompleted.toString(),
       icon: BookOpen,
       color: 'from-green-500 to-emerald-500',
       trend: '+5'
     },
     {
-      title: 'Promedio de Puntuación',
+      title: 'Promedio de Habilidad',
       value: `${metrics.averageScore}%`,
       icon: Target,
       color: 'from-purple-500 to-pink-500',
       trend: '+3%'
     },
     {
-      title: 'Racha Actual',
-      value: `${metrics.currentStreak} días`,
+      title: 'Progreso Actual',
+      value: `${metrics.currentStreak} nodos`,
       icon: Zap,
       color: 'from-orange-500 to-red-500',
       trend: metrics.currentStreak > 0 ? '🔥' : '💪'
@@ -159,6 +64,17 @@ export const RealTimeMetricsDashboard: React.FC = () => {
       trend: 'LVL'
     }
   ];
+
+  if (error) {
+    return (
+      <Card className="bg-black/40 backdrop-blur-xl border-red-500/30">
+        <CardContent className="p-6 text-center">
+          <div className="text-red-400 mb-2">⚠️ Error de conexión</div>
+          <div className="text-white/60 text-sm">{error}</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -236,10 +152,7 @@ export const RealTimeMetricsDashboard: React.FC = () => {
                     <Calculator className="w-4 h-4 text-cyan-400" />
                     <div>
                       <div className="text-white text-sm font-medium">
-                        {activity.type === 'COMPETENCIA_LECTORA' ? 'Comprensión Lectora' :
-                         activity.type === 'MATEMATICA_M1' ? 'Matemática M1' :
-                         activity.type === 'MATEMATICA_M2' ? 'Matemática M2' :
-                         'Ejercicio'}
+                        {activity.type === 'diagnostic' ? 'Análisis Diagnóstico' : 'Evaluación'}
                       </div>
                       <div className="text-gray-400 text-xs">
                         {new Date(activity.timestamp).toLocaleDateString()}
@@ -260,7 +173,7 @@ export const RealTimeMetricsDashboard: React.FC = () => {
             ) : (
               <div className="text-center text-gray-400 py-8">
                 <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Comienza a practicar para ver tu actividad aquí</p>
+                <p>Comienza a estudiar para ver tu actividad aquí</p>
               </div>
             )}
           </div>

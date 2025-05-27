@@ -16,13 +16,10 @@ export const CinematicRouter: React.FC<CinematicRouterProps> = ({ children }) =>
   // Mapeo de rutas a escenas cinematográficas
   const routeSceneMap: Record<string, string> = {
     '/': 'dashboard',
-    '/superpaes': 'superpaes',
     '/lectoguia': 'lectoguia',
     '/diagnostic': 'diagnostic',
-    '/financial': 'financial',
-    '/planning': 'planning',
-    '/universe': 'universe',
-    '/achievements': 'achievements'
+    '/plans': 'plans',
+    '/paes_universe': 'paes_universe'
   };
 
   // Sincronizar ruta actual con escena cinematográfica

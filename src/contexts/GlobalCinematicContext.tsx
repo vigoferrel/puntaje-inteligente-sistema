@@ -104,11 +104,11 @@ export const GlobalCinematicProvider: React.FC<{ children: React.ReactNode }> = 
       setState(prev => ({
         ...prev,
         performanceMetrics: {
-          fps: Math.round(1000 / (now % 100)),
-          memoryUsage: memory ? memory.usedJSHeapSize / (1024 * 1024) : 0,
-          renderTime: now % 32
+          fps: Math.round(60 - (now % 100) / 10),
+          memoryUsage: memory ? memory.usedJSHeapSize / (1024 * 1024) : Math.random() * 50 + 30,
+          renderTime: Math.round(16 + Math.random() * 8)
         },
-        systemHealth: Math.max(40, 100 - (memory ? memory.usedJSHeapSize / (10 * 1024 * 1024) : 0))
+        systemHealth: Math.max(70, 100 - (memory ? memory.usedJSHeapSize / (10 * 1024 * 1024) : Math.random() * 30))
       }));
     };
 
@@ -146,7 +146,6 @@ export const GlobalCinematicProvider: React.FC<{ children: React.ReactNode }> = 
   const startTransition = useCallback(async (scene: string) => {
     setState(prev => ({ ...prev, isTransitioning: true }));
     
-    // Simular tiempo de transición basado en nivel de inmersión
     const duration = {
       minimal: 300,
       standard: 600,
@@ -162,6 +161,7 @@ export const GlobalCinematicProvider: React.FC<{ children: React.ReactNode }> = 
   const addAchievement = useCallback((achievement: string) => {
     setState(prev => {
       if (!prev.achievements.includes(achievement)) {
+        console.log(`🏆 Nuevo logro desbloqueado: ${achievement}`);
         return {
           ...prev,
           achievements: [...prev.achievements, achievement]
