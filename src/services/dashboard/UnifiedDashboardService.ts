@@ -35,7 +35,7 @@ export class UnifiedDashboardService {
         .select('*')
         .eq('user_id', userId);
 
-      // Obtener intentos de ejercicios para calcular tiempo de estudio
+      // Obtener intentos de ejercicios para calcular tiempo de estudio - CORREGIDO: usar created_at
       const { data: exerciseAttempts } = await supabase
         .from('user_exercise_attempts')
         .select('*')
@@ -60,11 +60,11 @@ export class UnifiedDashboardService {
       const correctExercises = exerciseAttempts?.filter(e => e.is_correct).length || 0;
       const totalStudyTime = exerciseAttempts?.reduce((sum, e) => sum + (e.time_taken_seconds || 0), 0) || 0;
       
-      // Calcular progreso semanal (actividad en los últimos 7 días)
+      // Calcular progreso semanal (actividad en los últimos 7 días) - CORREGIDO: usar created_at
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       const weeklyActivity = exerciseAttempts?.filter(e => 
-        new Date(e.attempted_at) > oneWeekAgo
+        new Date(e.created_at) > oneWeekAgo
       ).length || 0;
 
       // Calcular racha actual
@@ -79,7 +79,7 @@ export class UnifiedDashboardService {
       const recentActivity = [
         ...exerciseAttempts?.slice(-5).map(e => ({
           type: 'exercise',
-          timestamp: e.attempted_at,
+          timestamp: e.created_at, // CORREGIDO: usar created_at
           success: e.is_correct
         })) || [],
         ...conversations?.slice(-3).map(c => ({
@@ -174,11 +174,12 @@ export class UnifiedDashboardService {
 
   private static async calculateCurrentStreak(userId: string): Promise<number> {
     try {
+      // CORREGIDO: usar created_at en lugar de attempted_at
       const { data: attempts } = await supabase
         .from('user_exercise_attempts')
-        .select('attempted_at')
+        .select('created_at')
         .eq('user_id', userId)
-        .order('attempted_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(30);
 
       if (!attempts || attempts.length === 0) return 0;
@@ -188,7 +189,7 @@ export class UnifiedDashboardService {
       currentDate.setHours(0, 0, 0, 0);
 
       for (let i = 0; i < attempts.length; i++) {
-        const attemptDate = new Date(attempts[i].attempted_at);
+        const attemptDate = new Date(attempts[i].created_at); // CORREGIDO: usar created_at
         attemptDate.setHours(0, 0, 0, 0);
 
         const diffDays = Math.floor((currentDate.getTime() - attemptDate.getTime()) / (1000 * 60 * 60 * 24));
