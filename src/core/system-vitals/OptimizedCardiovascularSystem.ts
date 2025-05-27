@@ -1,5 +1,5 @@
 /**
- * SISTEMA CARDIOVASCULAR v10.0 - COMPATIBLE CON TRACKING PREVENTION
+ * SISTEMA CARDIOVASCULAR v11.0 - COMPATIBLE CON TRACKING PREVENTION Y TYPE-SAFE
  * Acceso mínimo a storage, máxima compatibilidad con navegadores
  */
 
@@ -88,8 +88,8 @@ export class OptimizedCardiovascularSystem {
   }
 
   private loadCriticalState(): void {
-    // Solo cargar estado de emergencia si existe
-    const emergencyState = storageManager.getItem('cv_emergency_state');
+    // Solo cargar estado de emergencia si existe - usando método genérico
+    const emergencyState = storageManager.getItem('cv_emergency_state' as any);
     if (emergencyState) {
       this.isEmergencyMode = emergencyState.isEmergencyMode || false;
       this.emergencyActivations = emergencyState.activations || 0;
@@ -100,7 +100,7 @@ export class OptimizedCardiovascularSystem {
     const now = Date.now();
     // Solo guardar si han pasado 5 minutos Y hay una emergencia activa
     if (now - this.lastStorageWrite > this.storageWriteInterval && this.isEmergencyMode) {
-      storageManager.setItem('cv_emergency_state', {
+      storageManager.setItem('cv_emergency_state' as any, {
         isEmergencyMode: this.isEmergencyMode,
         activations: this.emergencyActivations,
         timestamp: now
@@ -148,7 +148,7 @@ export class OptimizedCardiovascularSystem {
 
     // Log ULTRA reducido (1 vez cada 2 horas)
     if (!this.silentMode && (now - this.lastLogTime) > 7200000) {
-      console.log('🫀 Sistema cardiovascular v10.0 optimizado');
+      console.log('🫀 Sistema cardiovascular v11.0 optimizado');
       this.lastLogTime = now;
     }
 
@@ -187,7 +187,7 @@ export class OptimizedCardiovascularSystem {
     // Solo guardar en emergencias críticas
     this.saveCriticalState();
     
-    console.warn('🫀 Emergencia cardiovascular v10.0 (almacenamiento mínimo)');
+    console.warn('🫀 Emergencia cardiovascular v11.0 (almacenamiento mínimo)');
   }
 
   emergencyReset(): void {
@@ -204,7 +204,7 @@ export class OptimizedCardiovascularSystem {
     storageManager.removeItem('cv_emergency_state');
     
     if (!this.silentMode) {
-      console.log('🫀 Sistema cardiovascular v10.0 reiniciado (sin storage)');
+      console.log('🫀 Sistema cardiovascular v11.0 reiniciado (type-safe)');
     }
   }
 
@@ -289,7 +289,7 @@ export class OptimizedCardiovascularSystem {
     this.listeners = [];
     // NO destruir singleton, solo limpiar
     if (!this.silentMode) {
-      console.log('🫀 Sistema cardiovascular v10.0 limpiado (singleton preservado)');
+      console.log('🫀 Sistema cardiovascular v11.0 limpiado (singleton preservado)');
     }
   }
 

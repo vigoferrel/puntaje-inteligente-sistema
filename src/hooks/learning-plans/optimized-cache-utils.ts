@@ -1,19 +1,20 @@
 
 import { storageManager } from '@/core/storage/StorageManager';
 import { LearningPlan, PlanProgress } from "@/types/learning-plan";
+import { TypeSafeBatchItem } from '@/core/storage/types';
 
-// Constantes optimizadas
+// Constantes optimizadas - sin 'as const' problemático
 const CACHE_KEYS = {
-  PLANS: 'learning_plans_v2',
-  CURRENT_PLAN: 'current_plan_v2',
-  PLAN_PROGRESS: 'plan_progress_v2',
-  CACHE_TIMESTAMP: 'cache_timestamp_v2'
-} as const;
+  PLANS: 'learning_plans_v2' as const,
+  CURRENT_PLAN: 'current_plan_v2' as const,
+  PLAN_PROGRESS: 'plan_progress_v2' as const,
+  CACHE_TIMESTAMP: 'cache_timestamp_v2' as const
+};
 
 const CACHE_EXPIRY_TIME = 1800000; // 30 minutos
 
 /**
- * Sistema de cache optimizado que usa el StorageManager inteligente
+ * Sistema de cache optimizado que usa el StorageManager inteligente con tipos seguros
  */
 export const optimizedCacheUtils = {
   loadFromCache(): {
@@ -38,8 +39,8 @@ export const optimizedCacheUtils = {
       }
       
       return {
-        plans: cachedPlans as LearningPlan[],
-        currentPlan: cachedCurrentPlan || null,
+        plans: cachedPlans,
+        currentPlan: cachedCurrentPlan,
         planProgress: cachedProgress || {},
       };
     } catch (error) {
@@ -54,8 +55,8 @@ export const optimizedCacheUtils = {
   ): void {
     if (plans.length === 0) return;
 
-    // Usar operación batch para reducir accesos al storage
-    const batchItems = [
+    // Usar operación batch type-safe
+    const batchItems: TypeSafeBatchItem[] = [
       { key: CACHE_KEYS.PLANS, value: plans },
       { key: CACHE_KEYS.PLAN_PROGRESS, value: planProgress },
       { key: CACHE_KEYS.CACHE_TIMESTAMP, value: Date.now() }
@@ -79,3 +80,4 @@ export const optimizedCacheUtils = {
     return timestamp && (Date.now() - Number(timestamp)) < CACHE_EXPIRY_TIME;
   }
 };
+

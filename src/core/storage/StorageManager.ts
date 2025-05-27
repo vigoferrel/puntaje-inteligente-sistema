@@ -1,8 +1,10 @@
 
 /**
- * STORAGE MANAGER v10.0 - COMPATIBLE CON TRACKING PREVENTION
- * Sistema inteligente que respeta las políticas del navegador
+ * STORAGE MANAGER v11.0 - TYPE-SAFE & COMPATIBLE CON TRACKING PREVENTION
+ * Sistema inteligente que respeta las políticas del navegador con tipos seguros
  */
+
+import { CacheDataTypes, CacheKey, TypeSafeBatchItem } from './types';
 
 interface StorageOptions {
   fallbackToMemory?: boolean;
@@ -24,7 +26,7 @@ class IntelligentStorageManager {
   private accessQueue: Array<() => void> = [];
   private isProcessingQueue = false;
   private storageAvailable = true;
-  private rateLimitMs = 100; // Mínimo 100ms entre accesos
+  private rateLimitMs = 100;
   private silentMode = true;
 
   static getInstance(): IntelligentStorageManager {
@@ -87,7 +89,8 @@ class IntelligentStorageManager {
     this.isProcessingQueue = false;
   }
 
-  getItem(key: string, options: StorageOptions = {}): any {
+  // Métodos type-safe
+  getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
     // Siempre intentar cache primero
     if (this.memoryCache.has(key)) {
       return this.memoryCache.get(key);
@@ -115,14 +118,18 @@ class IntelligentStorageManager {
       
       return parsed;
     } catch (error) {
-      if (!options.silentErrors && !this.silentMode) {
+      if (!this.silentMode) {
         console.warn(`Storage get error for ${key}:`, error);
       }
       return this.memoryCache.get(key) || null;
     }
   }
 
-  setItem(key: string, value: any, options: StorageOptions = {}): boolean {
+  setItem<K extends CacheKey>(
+    key: K, 
+    value: CacheDataTypes[K], 
+    options: StorageOptions = {}
+  ): boolean {
     // Siempre actualizar cache
     this.memoryCache.set(key, value);
 
@@ -183,8 +190,8 @@ class IntelligentStorageManager {
     }
   }
 
-  // Operaciones batch para reducir accesos
-  batchSet(items: Array<{ key: string; value: any }>): void {
+  // Operaciones batch type-safe
+  batchSet(items: TypeSafeBatchItem[]): void {
     items.forEach(({ key, value }) => {
       this.memoryCache.set(key, value);
     });
@@ -204,7 +211,6 @@ class IntelligentStorageManager {
 
   // Limpieza periódica
   cleanup(): void {
-    // Limpiar cache viejo (más de 1 hora)
     const oneHourAgo = Date.now() - 3600000;
     for (const [key, timestamp] of this.lastAccessTime.entries()) {
       if (timestamp < oneHourAgo) {
@@ -250,3 +256,4 @@ storageManager.configure({
 setInterval(() => {
   storageManager.cleanup();
 }, 1800000);
+
