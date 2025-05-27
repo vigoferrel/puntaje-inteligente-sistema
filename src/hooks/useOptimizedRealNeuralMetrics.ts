@@ -32,8 +32,8 @@ interface OptimizedNeuralMetrics {
 
 export const useOptimizedRealNeuralMetrics = () => {
   const { user } = useAuth();
-  const { metrics: progressMetrics, isLoading: progressLoading } = useRealProgressData();
-  const { metrics: diagnosticMetrics, isLoading: diagnosticLoading } = useRealDiagnosticData();
+  const { metrics: progressMetrics, isLoading: progressLoading, refetch: refetchProgress } = useRealProgressData();
+  const { metrics: diagnosticMetrics, isLoading: diagnosticLoading, refetch: refetchDiagnostic } = useRealDiagnosticData();
   
   const [metrics, setMetrics] = useState<OptimizedNeuralMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,13 +130,19 @@ export const useOptimizedRealNeuralMetrics = () => {
     return metricKey ? metrics[metricKey] : 0;
   }, [metrics]);
 
-  const refetch = useCallback(() => {
+  const refetch = useCallback(async () => {
+    // Refrescar datos de dependencias
+    await Promise.all([
+      refetchProgress(),
+      refetchDiagnostic()
+    ]);
+    
     // Forzar recálculo de métricas
     if (progressMetrics && diagnosticMetrics) {
       const calculatedMetrics = calculateNeuralMetrics();
       setMetrics(calculatedMetrics);
     }
-  }, [calculateNeuralMetrics, progressMetrics, diagnosticMetrics]);
+  }, [calculateNeuralMetrics, progressMetrics, diagnosticMetrics, refetchProgress, refetchDiagnostic]);
 
   useEffect(() => {
     setIsLoading(progressLoading || diagnosticLoading);

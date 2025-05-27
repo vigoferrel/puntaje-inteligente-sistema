@@ -71,10 +71,15 @@ export interface UnifiedPAESData {
   plan: PAESPlan | null;
 }
 
-// Nuevo: Estado cinemático agregado
+// Estado cinemático completo con todas las propiedades necesarias
 export interface CinematicState {
   currentScene: 'dashboard' | 'diagnostic' | 'neural_command' | 'study_plan' | 'exercises' | 'analytics';
   transitionActive: boolean;
   immersionLevel: 'minimal' | 'standard' | 'full';
   effectsEnabled: boolean;
+  previousScene?: 'dashboard' | 'diagnostic' | 'neural_command' | 'study_plan' | 'exercises' | 'analytics';
+  navigationHistory: string[];
+  animationDuration: number;
+  particleSystemEnabled: boolean;
+  holographicMode: boolean;
 }
