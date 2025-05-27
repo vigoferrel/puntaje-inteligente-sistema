@@ -1,16 +1,15 @@
 
 import React from 'react';
-import { GlobalCinematicProvider } from '@/contexts/GlobalCinematicContext';
-import { UnifiedCinematicProvider } from '@/components/cinematic/UnifiedCinematicProvider';
-import { SuperPAESMain } from '@/components/super-paes/SuperPAESMain';
+import { SimplifiedCinematicProvider, CinematicTransition } from '@/contexts/SimplifiedCinematicContext';
+import { SuperPAESUnifiedHub } from '@/components/super-paes/SuperPAESUnifiedHub';
 
 const Index: React.FC = () => {
   return (
-    <GlobalCinematicProvider>
-      <UnifiedCinematicProvider>
-        <SuperPAESMain />
-      </UnifiedCinematicProvider>
-    </GlobalCinematicProvider>
+    <SimplifiedCinematicProvider>
+      <CinematicTransition scene="unified-hub">
+        <SuperPAESUnifiedHub />
+      </CinematicTransition>
+    </SimplifiedCinematicProvider>
   );
 };
 

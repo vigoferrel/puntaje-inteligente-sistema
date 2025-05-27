@@ -55,7 +55,7 @@ const AppRoutes = () => {
         path="/" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Hub Educativo Principal" priority="high">
+            <LazyLoadWrapper moduleName="Hub Neural SuperPAES" priority="high">
               <Index />
             </LazyLoadWrapper>
           </ProtectedRoute>
