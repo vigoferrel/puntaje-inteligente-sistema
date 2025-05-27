@@ -24,7 +24,11 @@ export const CinematicProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     currentScene: 'dashboard',
     transitionActive: false,
     immersionLevel: 'standard',
-    effectsEnabled: true
+    effectsEnabled: true,
+    navigationHistory: ['dashboard'],
+    animationDuration: 800,
+    particleSystemEnabled: true,
+    holographicMode: false
   });
 
   const startTransition = useCallback(async (
@@ -33,7 +37,12 @@ export const CinematicProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   ) => {
     const { duration = 800, preloadTarget = true } = options;
 
-    setState(prev => ({ ...prev, transitionActive: true }));
+    setState(prev => ({ 
+      ...prev, 
+      transitionActive: true,
+      previousScene: prev.currentScene,
+      animationDuration: duration
+    }));
 
     // Preload target if needed
     if (preloadTarget) {
@@ -47,7 +56,8 @@ export const CinematicProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setState(prev => ({
       ...prev,
       currentScene: targetScene,
-      transitionActive: false
+      transitionActive: false,
+      navigationHistory: [...prev.navigationHistory.slice(-9), targetScene]
     }));
 
     console.log(`✨ Transición completada a: ${targetScene}`);
@@ -95,21 +105,21 @@ export const CinematicTransition: React.FC<{
           initial: { opacity: 0, scale: 0.8, rotateY: -45 },
           animate: { opacity: 1, scale: 1, rotateY: 0 },
           exit: { opacity: 0, scale: 1.2, rotateY: 45 },
-          transition: { duration: 1.2, ease: "easeInOut" }
+          transition: { duration: state.animationDuration / 1000, ease: "easeInOut" }
         };
       case 'standard':
         return {
           initial: { opacity: 0, y: 20 },
           animate: { opacity: 1, y: 0 },
           exit: { opacity: 0, y: -20 },
-          transition: { duration: 0.6, ease: "easeOut" }
+          transition: { duration: state.animationDuration / 1000 * 0.75, ease: "easeOut" }
         };
       case 'minimal':
         return {
           initial: { opacity: 0 },
           animate: { opacity: 1 },
           exit: { opacity: 0 },
-          transition: { duration: 0.3 }
+          transition: { duration: state.animationDuration / 1000 * 0.375 }
         };
     }
   };
