@@ -84,6 +84,62 @@ class IntersectionalNexusCore {
     return null;
   }
 
+  // AGREGADO: Método faltante generateAdvancedInsights
+  generateAdvancedInsights() {
+    try {
+      const baseInsights = [
+        {
+          title: "Sistema Neural Activo",
+          description: `${this.active_modules.size} módulos en funcionamiento`,
+          level: this.global_coherence > 70 ? "excellent" : this.global_coherence > 50 ? "good" : "warning",
+          priority: "medium",
+          actionable: true
+        },
+        {
+          title: "Coherencia Global",
+          description: `Nivel de sincronización: ${this.global_coherence}%`,
+          level: this.global_coherence > 80 ? "excellent" : "good",
+          priority: "low",
+          actionable: false
+        }
+      ];
+
+      if (this.cardiovascularSystem) {
+        const cardiovascularStatus = this.cardiovascularSystem.getIntegratedSystemStatus();
+        baseInsights.push({
+          title: "Sistema Cardiovascular",
+          description: `Ritmo cardíaco: ${cardiovascularStatus.cardiovascular.heartRate} BPM`,
+          level: cardiovascularStatus.cardiovascular.heartRate < 100 ? "excellent" : "warning",
+          priority: "high",
+          actionable: cardiovascularStatus.cardiovascular.heartRate > 100
+        });
+      }
+
+      return baseInsights;
+    } catch (error) {
+      return [];
+    }
+  }
+
+  // AGREGADO: Método faltante optimizeUserExperience
+  optimizeUserExperience() {
+    try {
+      // Optimización silenciosa de la experiencia
+      this.updateGlobalCoherence();
+      
+      if (this.cardiovascularSystem && this.cardiovascularSystem.canPump()) {
+        // Procesar señal de optimización
+        this.cardiovascularSystem.processSignal({
+          type: 'EXPERIENCE_OPTIMIZATION',
+          timestamp: Date.now(),
+          coherence: this.global_coherence
+        });
+      }
+    } catch (error) {
+      // Error silencioso
+    }
+  }
+
   harmonizeExperience() {
     // Harmonización silenciosa
     this.updateGlobalCoherence();

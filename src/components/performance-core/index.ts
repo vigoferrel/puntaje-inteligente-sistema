@@ -22,12 +22,11 @@ export {
 // Storage unificado
 export { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
 
-// Tipos de performance
+// Tipos de performance (sin AnalyticsEvent para evitar conflicto)
 export type {
   SystemPerformanceMetrics,
   OptimizationConfig,
   CircuitBreakerState,
   StorageMetrics,
-  AdaptiveSystemConfig,
-  AnalyticsEvent
+  AdaptiveSystemConfig
 } from '@/types/performance-systems';

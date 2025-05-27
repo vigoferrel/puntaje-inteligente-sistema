@@ -200,6 +200,9 @@ export const useNeuralIntegration = (
       silent_status: 'v9_ultra_silencioso'
     },
     
+    // AGREGADO: integrationLevel calculado dinámicamente
+    integrationLevel: Math.min(100, (neural.systemHealth.neural_efficiency + neural.systemHealth.cross_pollination_rate) / 2),
+    
     // Helpers cardiovasculares ULTRA-ESPACIADOS (delays MASIVOS)
     notifyProgress: useCallback((progress: any) => {
       if (isDestroyedRef.current) return;

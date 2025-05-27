@@ -44,11 +44,11 @@ export interface RespiratoryHealth {
   antiTrackingActive: boolean;
 }
 
-// Comunicación entre sistemas
+// Comunicación entre sistemas - CORREGIDO para incluir "emergency"
 export interface SystemVitals {
   cardiovascular: CardiovascularHealth;
   respiratory: RespiratoryHealth;
-  overallHealth: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
+  overallHealth: 'excellent' | 'good' | 'fair' | 'poor' | 'critical' | 'emergency';
   lastCheckup: number;
 }
 
