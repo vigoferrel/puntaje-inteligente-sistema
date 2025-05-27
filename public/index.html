@@ -8,15 +8,30 @@
     <title>PAES Neural Education Platform</title>
     
     <!-- Optimización crítica para evitar errores de script -->
-    <script type="module" crossorigin>
-      // Prevenir errores de import.meta fuera de módulos
+    <script>
+      // Polyfill robusto para import.meta
       if (!window.importMeta) {
         window.importMeta = { env: { MODE: 'production' } };
       }
     </script>
     
-    <!-- Script corregido con type="module" -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module" defer></script>
+    <!-- Script corregido con manejo de errores -->
+    <script>
+      (function() {
+        try {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.gpteng.co/gptengineer.js';
+          script.type = 'module';
+          script.defer = true;
+          script.onerror = function() {
+            console.log('ℹ️ GPT Engineer script failed to load (expected in some environments)');
+          };
+          document.head.appendChild(script);
+        } catch (error) {
+          console.log('ℹ️ GPT Engineer script initialization failed');
+        }
+      })();
+    </script>
     
     <!-- Metadatos optimizados -->
     <meta name="description" content="Plataforma educativa neural para preparación PAES con IA avanzada" />

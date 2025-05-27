@@ -4,9 +4,20 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+// Declaración global segura para importMeta
+declare global {
+  interface Window {
+    importMeta?: {
+      env: {
+        MODE: string;
+      };
+    };
+  }
+}
+
 // Configuración global optimizada para prevenir errores
 if (typeof window !== 'undefined') {
-  // Prevenir errores de import.meta
+  // Prevenir errores de import.meta con polyfill robusto
   if (!window.importMeta) {
     window.importMeta = { env: { MODE: 'production' } };
   }
@@ -37,7 +48,6 @@ if (typeof window !== 'undefined') {
     }
     
     console.warn('Unhandled promise rejection:', error);
-    // Permitir que otros errores se manejen normalmente
   });
 
   // Manejo específico para errores de React

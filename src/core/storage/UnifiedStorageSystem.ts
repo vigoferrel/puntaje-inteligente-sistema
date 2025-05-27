@@ -1,569 +1,244 @@
 
 /**
- * UNIFIED STORAGE SYSTEM v2.0 - SOLUCIÓN INTEGRAL
- * Elimina todos los conflictos de storage y "Tracking Prevention" alerts
+ * UNIFIED STORAGE SYSTEM v3.0 - DEFINITIVO
+ * Sistema de storage con tipos seguros y rate limiting agresivo
  */
 
-interface StorageOptions {
-  fallbackToMemory?: boolean;
-  rateLimitMs?: number;
-  batchOperations?: boolean;
-  silentErrors?: boolean;
-  ttl?: number;
+import { CacheDataTypes, CacheKey } from './types';
+
+interface StorageEntry<T = any> {
+  data: T;
+  timestamp: number;
+  ttl: number;
+  accessCount: number;
 }
 
 interface BatchOperation {
   key: string;
   value: any;
   timestamp: number;
-  retries: number;
 }
 
-interface CacheLayer {
-  l1: Map<string, { data: any; timestamp: number; ttl: number }>;
-  l2: Map<string, any>;
-}
-
-interface PerformanceMetrics {
-  l1CacheSize: number;
-  l2CacheSize: number;
-  batchQueueSize: number;
-  syncQueueSize: number;
-  isOnline: boolean;
+interface StorageStatus {
+  isReady: boolean;
   storageAvailable: boolean;
+  trackingBlocked: boolean;
   cacheSize: number;
   queueLength: number;
-  trackingBlocked: boolean;
+  alertCount: number;
 }
 
-export class UnifiedStorageSystem {
-  private static instance: UnifiedStorageSystem;
-  
-  // Cache layers optimizados
-  private cache: CacheLayer;
-  private batchQueue: BatchOperation[] = [];
-  private batchTimer: NodeJS.Timeout | null = null;
-  private syncQueue: Array<() => void> = [];
-  
-  // Memory fallback
-  private memoryCache = new Map<string, any>();
-  private lastAccessTime = new Map<string, number>();
-  private accessQueue: Array<() => void> = [];
-  private isProcessingQueue = false;
-  
-  // Estado del sistema
-  private isOnline = true;
-  private storageAvailable = false;
-  private trackingBlocked = false;
-  private rateLimitMs = 200;
-  private silentMode = true;
+class UnifiedStorageSystemCore {
+  private static instance: UnifiedStorageSystemCore;
   private isReady = false;
+  private storageAvailable = true;
+  private trackingBlocked = false;
+  private memoryCache = new Map<string, StorageEntry>();
+  private batchQueue: BatchOperation[] = [];
+  private alertCount = 0;
+  private lastBatchTime = 0;
+  private circuitBreakerActive = false;
+  
+  // Rate limiting agresivo
+  private readonly BATCH_INTERVAL = 5000; // 5 segundos
+  private readonly MAX_ALERTS = 10;
+  private readonly CIRCUIT_BREAKER_THRESHOLD = 15;
 
-  static getInstance(): UnifiedStorageSystem {
-    if (!UnifiedStorageSystem.instance) {
-      UnifiedStorageSystem.instance = new UnifiedStorageSystem();
+  static getInstance(): UnifiedStorageSystemCore {
+    if (!UnifiedStorageSystemCore.instance) {
+      UnifiedStorageSystemCore.instance = new UnifiedStorageSystemCore();
     }
-    return UnifiedStorageSystem.instance;
+    return UnifiedStorageSystemCore.instance;
   }
 
   private constructor() {
-    this.cache = {
-      l1: new Map(),
-      l2: new Map(),
-    };
-    
-    this.initializeSystem();
+    this.initialize();
   }
 
-  private async initializeSystem(): Promise<void> {
+  private async initialize() {
     try {
-      // Esperar a que el DOM esté completamente cargado
-      if (typeof window === 'undefined') {
-        this.isReady = true;
-        return;
-      }
-
-      // Verificar disponibilidad de storage de forma segura
-      await this.safeStorageCheck();
-      
-      // Configurar monitoreo
-      this.setupNetworkMonitoring();
-      this.setupPeriodicSync();
-      
-      this.isReady = true;
-      
-      if (!this.silentMode) {
-        console.log('🚀 UnifiedStorageSystem v2.0 inicializado:', {
-          storageAvailable: this.storageAvailable,
-          trackingBlocked: this.trackingBlocked
-        });
-      }
-      
-    } catch (error) {
-      this.isReady = true;
-      this.storageAvailable = false;
-      if (!this.silentMode) {
-        console.warn('⚠️ Storage initialization failed, using memory only');
-      }
-    }
-  }
-
-  private async safeStorageCheck(): Promise<void> {
-    try {
-      const testKey = `__storage_test_${Date.now()}__`;
-      
-      // Test con timeout para evitar bloqueos
-      const testPromise = new Promise<void>((resolve, reject) => {
-        try {
-          localStorage.setItem(testKey, 'test');
-          const retrieved = localStorage.getItem(testKey);
-          localStorage.removeItem(testKey);
-          
-          if (retrieved === 'test') {
-            this.storageAvailable = true;
-            this.trackingBlocked = false;
-            resolve();
-          } else {
-            throw new Error('Storage test failed');
-          }
-        } catch (error: any) {
-          if (error.message?.includes('Access is denied') || 
-              error.message?.includes('QuotaExceededError') ||
-              error.name === 'SecurityError') {
-            this.trackingBlocked = true;
-          }
-          this.storageAvailable = false;
-          reject(error);
-        }
-      });
-
-      const timeoutPromise = new Promise<void>((_, reject) => {
-        setTimeout(() => reject(new Error('Storage test timeout')), 1000);
-      });
-
-      await Promise.race([testPromise, timeoutPromise]);
-      
+      // Test silencioso de localStorage
+      const testKey = '__storage_test_silent__';
+      localStorage.setItem(testKey, 'test');
+      localStorage.removeItem(testKey);
+      this.storageAvailable = true;
     } catch (error) {
       this.storageAvailable = false;
       this.trackingBlocked = true;
+      console.log('🔒 Storage blocked, using memory mode');
     }
+    
+    this.isReady = true;
+    this.startBatchProcessor();
   }
 
-  private setupNetworkMonitoring(): void {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => {
-        this.isOnline = true;
-        this.processSyncQueue();
-      });
-      
-      window.addEventListener('offline', () => {
-        this.isOnline = false;
-      });
-
-      // Detectar cambios en storage availability
-      window.addEventListener('storage', () => {
-        this.safeStorageCheck();
-      });
-    }
-  }
-
-  private setupPeriodicSync(): void {
+  private startBatchProcessor() {
     setInterval(() => {
-      if (this.isReady) {
-        this.flushBatchQueue();
-        this.cleanupCache();
+      if (this.batchQueue.length > 0 && !this.circuitBreakerActive) {
+        this.processBatch();
       }
-    }, 5000);
+    }, this.BATCH_INTERVAL);
   }
 
-  // Métodos principales con verificación de readiness
+  private processBatch() {
+    if (!this.storageAvailable || this.circuitBreakerActive) return;
+
+    const batch = [...this.batchQueue];
+    this.batchQueue = [];
+
+    try {
+      batch.forEach(({ key, value }) => {
+        localStorage.setItem(key, JSON.stringify(value));
+      });
+    } catch (error) {
+      this.alertCount++;
+      if (this.alertCount >= this.CIRCUIT_BREAKER_THRESHOLD) {
+        this.activateCircuitBreaker();
+      }
+    }
+  }
+
+  private activateCircuitBreaker() {
+    this.circuitBreakerActive = true;
+    this.storageAvailable = false;
+    console.log('🚨 Circuit breaker activated - storage disabled');
+    
+    // Auto-reset después de 60 segundos
+    setTimeout(() => {
+      this.circuitBreakerActive = false;
+      this.alertCount = 0;
+      console.log('✅ Circuit breaker reset');
+    }, 60000);
+  }
+
   async waitForReady(): Promise<void> {
-    if (this.isReady) return;
-    
-    return new Promise(resolve => {
-      const checkReady = () => {
-        if (this.isReady) {
-          resolve();
-        } else {
-          setTimeout(checkReady, 50);
-        }
-      };
-      checkReady();
-    });
+    while (!this.isReady) {
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
   }
 
-  getItem<T = any>(key: string): T | null {
-    // L1 Cache first (siempre disponible)
-    const l1Result = this.getFromL1Cache(key);
-    if (l1Result !== null) return l1Result;
-    
-    // Memory cache
-    if (this.memoryCache.has(key)) {
-      const data = this.memoryCache.get(key);
-      this.setToL1Cache(key, data);
-      return data;
+  getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
+    // Siempre usar cache primero
+    const cached = this.memoryCache.get(key);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      cached.accessCount++;
+      return cached.data as CacheDataTypes[K];
     }
-    
-    // L2 Cache
-    if (this.cache.l2.has(key)) {
-      const data = this.cache.l2.get(key);
-      this.setToL1Cache(key, data);
-      this.memoryCache.set(key, data);
-      return data;
-    }
-    
-    // LocalStorage solo si está disponible
-    if (!this.storageAvailable || this.trackingBlocked) {
+
+    // Si no hay storage o circuit breaker activo, solo memoria
+    if (!this.storageAvailable || this.circuitBreakerActive) {
       return null;
-    }
-    
-    // Rate limiting check
-    if (this.shouldRateLimit(key)) {
-      return this.memoryCache.get(key) || null;
     }
 
     try {
-      this.updateAccessTime(key);
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        this.setToL1Cache(key, parsed);
-        this.cache.l2.set(key, parsed);
-        this.memoryCache.set(key, parsed);
+      const item = localStorage.getItem(key);
+      if (item) {
+        const parsed = JSON.parse(item) as CacheDataTypes[K];
+        this.setToCache(key, parsed);
         return parsed;
       }
     } catch (error) {
-      // Marcar tracking bloqueado si falla
-      if (error instanceof Error && error.message.includes('Access is denied')) {
-        this.trackingBlocked = true;
-      }
+      this.alertCount++;
+      return null;
     }
-    
+
     return null;
   }
 
-  setItem<T = any>(key: string, value: T, options: StorageOptions = {}): boolean {
-    // Actualizar todos los caches inmediatamente
-    this.setToL1Cache(key, value, options.ttl);
-    this.cache.l2.set(key, value);
-    this.memoryCache.set(key, value);
-    
-    // Si storage no está disponible, solo memoria
-    if (!this.storageAvailable || this.trackingBlocked) {
-      return true;
-    }
+  setItem<K extends CacheKey>(
+    key: K,
+    value: CacheDataTypes[K],
+    options: { silentErrors?: boolean; ttl?: number } = {}
+  ): boolean {
+    // Siempre actualizar cache
+    this.setToCache(key, value, options.ttl);
 
-    // Rate limiting para escrituras
-    if (this.shouldRateLimit(key)) {
-      this.addToBatchQueue(key, value);
-      return true;
-    }
+    // Si circuit breaker activo, solo memoria
+    if (this.circuitBreakerActive) return true;
 
-    try {
-      this.updateAccessTime(key);
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('Access is denied')) {
-        this.trackingBlocked = true;
-      }
-      
-      // Fallback to batch queue
-      this.addToBatchQueue(key, value);
-      return false;
-    }
-  }
-
-  removeItem(key: string): boolean {
-    this.cache.l1.delete(key);
-    this.cache.l2.delete(key);
-    this.memoryCache.delete(key);
-    
-    if (!this.storageAvailable || this.trackingBlocked) {
-      return true;
-    }
-
-    if (this.shouldRateLimit(key)) {
-      this.queueOperation(() => {
-        try {
-          localStorage.removeItem(key);
-        } catch (error) {
-          // Error silencioso
-        }
-      });
-      return true;
-    }
-
-    try {
-      this.updateAccessTime(key);
-      localStorage.removeItem(key);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  // Cache operations optimizadas
-  private getFromL1Cache<T>(key: string): T | null {
-    const cached = this.cache.l1.get(key);
-    if (!cached) return null;
-    
-    if (Date.now() - cached.timestamp > cached.ttl) {
-      this.cache.l1.delete(key);
-      return null;
-    }
-    
-    return cached.data;
-  }
-
-  private setToL1Cache<T>(key: string, data: T, ttl = 300000): void {
-    this.cache.l1.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl,
-    });
-  }
-
-  // Rate limiting mejorado
-  private shouldRateLimit(key: string): boolean {
-    const lastAccess = this.lastAccessTime.get(key) || 0;
-    const now = Date.now();
-    return (now - lastAccess) < this.rateLimitMs;
-  }
-
-  private updateAccessTime(key: string): void {
-    this.lastAccessTime.set(key, Date.now());
-  }
-
-  // Batch operations mejoradas
-  private addToBatchQueue(key: string, value: any): void {
-    // Verificar si ya existe en queue
-    const existingIndex = this.batchQueue.findIndex(op => op.key === key);
-    if (existingIndex >= 0) {
-      this.batchQueue[existingIndex] = {
-        key,
-        value,
-        timestamp: Date.now(),
-        retries: this.batchQueue[existingIndex].retries
-      };
-    } else {
+    // Batch write para localStorage
+    if (this.storageAvailable) {
       this.batchQueue.push({
         key,
         value,
-        timestamp: Date.now(),
-        retries: 0
+        timestamp: Date.now()
       });
     }
-    
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-    }
-    
-    this.batchTimer = setTimeout(() => {
-      this.flushBatchQueue();
-    }, 1000);
+
+    return true;
   }
 
-  private flushBatchQueue(): void {
-    if (this.batchQueue.length === 0) return;
-    
-    const operations = [...this.batchQueue];
-    this.batchQueue = [];
-    
-    if (!this.isOnline || !this.storageAvailable || this.trackingBlocked) {
-      // Solo guardar operaciones con pocas retries
-      const retryableOps = operations.filter(op => op.retries < 3);
-      if (retryableOps.length > 0) {
-        this.syncQueue.push(() => this.executeBatchOperations(retryableOps));
-      }
-      return;
-    }
-    
-    this.executeBatchOperations(operations);
-  }
-
-  private executeBatchOperations(operations: BatchOperation[]): void {
-    const successfulOps: string[] = [];
-    const failedOps: BatchOperation[] = [];
-
-    operations.forEach(({ key, value, retries }) => {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-        successfulOps.push(key);
-      } catch (error) {
-        if (retries < 3) {
-          failedOps.push({ key, value, timestamp: Date.now(), retries: retries + 1 });
-        }
-      }
+  private setToCache<K extends CacheKey>(
+    key: K,
+    data: CacheDataTypes[K],
+    ttl = 300000
+  ) {
+    this.memoryCache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl,
+      accessCount: 0
     });
 
-    // Re-queue failed operations
-    if (failedOps.length > 0) {
-      this.batchQueue.unshift(...failedOps);
+    // Limpieza automática si cache muy grande
+    if (this.memoryCache.size > 100) {
+      this.cleanupCache();
     }
   }
 
-  // Queue operations
-  private queueOperation(operation: () => void): void {
-    this.accessQueue.push(operation);
-    if (!this.isProcessingQueue) {
-      this.processQueue();
-    }
-  }
-
-  private async processQueue(): Promise<void> {
-    this.isProcessingQueue = true;
-    
-    while (this.accessQueue.length > 0) {
-      const operation = this.accessQueue.shift();
-      if (operation) {
-        try {
-          operation();
-          await new Promise(resolve => setTimeout(resolve, this.rateLimitMs));
-        } catch (error) {
-          // Error silencioso
-        }
-      }
-    }
-    
-    this.isProcessingQueue = false;
-  }
-
-  private processSyncQueue(): void {
-    while (this.syncQueue.length > 0) {
-      const operation = this.syncQueue.shift();
-      if (operation) {
-        try {
-          operation();
-        } catch (error) {
-          // Error silencioso
-        }
-      }
-    }
-  }
-
-  // Batch operations type-safe
-  batchGet(keys: string[]): Record<string, any> {
-    const result: Record<string, any> = {};
-    
-    keys.forEach(key => {
-      const value = this.getItem(key);
-      if (value !== null) {
-        result[key] = value;
-      }
-    });
-    
-    return result;
-  }
-
-  batchSet(items: Array<{key: string; value: any}>): void {
-    items.forEach(({ key, value }) => {
-      this.setItem(key, value);
-    });
-  }
-
-  // Cleanup y mantenimiento
-  private cleanupCache(): void {
+  private cleanupCache() {
+    const entries = Array.from(this.memoryCache.entries());
     const now = Date.now();
-    const oneHourAgo = now - 3600000;
     
-    // Limpiar L1 cache expirado
-    for (const [key, entry] of this.cache.l1.entries()) {
+    // Remover entradas expiradas
+    entries.forEach(([key, entry]) => {
       if (now - entry.timestamp > entry.ttl) {
-        this.cache.l1.delete(key);
-      }
-    }
-    
-    // Limpiar L2 cache y memory cache antiguos
-    for (const [key, timestamp] of this.lastAccessTime.entries()) {
-      if (timestamp < oneHourAgo) {
-        this.lastAccessTime.delete(key);
         this.memoryCache.delete(key);
-        this.cache.l2.delete(key);
       }
-    }
+    });
   }
 
-  // Performance metrics
-  getPerformanceMetrics(): PerformanceMetrics {
-    return {
-      l1CacheSize: this.cache.l1.size,
-      l2CacheSize: this.cache.l2.size,
-      batchQueueSize: this.batchQueue.length,
-      syncQueueSize: this.syncQueue.length,
-      isOnline: this.isOnline,
-      storageAvailable: this.storageAvailable,
-      cacheSize: this.memoryCache.size,
-      queueLength: this.accessQueue.length,
-      trackingBlocked: this.trackingBlocked,
-    };
-  }
-
-  // Configuration
-  configure(options: {
-    rateLimitMs?: number;
-    silentMode?: boolean;
-  }): void {
-    if (options.rateLimitMs !== undefined) {
-      this.rateLimitMs = Math.max(50, options.rateLimitMs);
-    }
-    if (options.silentMode !== undefined) {
-      this.silentMode = options.silentMode;
-    }
-  }
-
-  // Clear all
-  clear(): void {
-    this.cache.l1.clear();
-    this.cache.l2.clear();
-    this.memoryCache.clear();
-    this.batchQueue = [];
-    this.lastAccessTime.clear();
+  removeItem(key: string): boolean {
+    this.memoryCache.delete(key);
     
-    if (this.storageAvailable && !this.trackingBlocked) {
+    if (this.storageAvailable && !this.circuitBreakerActive) {
       try {
-        const keys = Object.keys(localStorage);
-        keys.forEach(key => {
-          if (key.includes('learning_') || 
-              key.includes('user_') || 
-              key.includes('paes_') ||
-              key.includes('lectoguia_') ||
-              key.includes('diagnostic_')) {
-            localStorage.removeItem(key);
-          }
-        });
+        localStorage.removeItem(key);
       } catch (error) {
-        // Error silencioso
+        this.alertCount++;
       }
     }
+    return true;
   }
 
-  // Status
-  getStatus() {
+  getStatus(): StorageStatus {
     return {
       isReady: this.isReady,
       storageAvailable: this.storageAvailable,
       trackingBlocked: this.trackingBlocked,
       cacheSize: this.memoryCache.size,
-      queueLength: this.accessQueue.length,
-      isProcessing: this.isProcessingQueue,
-      isOnline: this.isOnline,
-      l1Size: this.cache.l1.size,
-      l2Size: this.cache.l2.size,
+      queueLength: this.batchQueue.length,
+      alertCount: this.alertCount
     };
+  }
+
+  getPerformanceMetrics() {
+    return {
+      cacheSize: this.memoryCache.size,
+      queueLength: this.batchQueue.length,
+      alertCount: this.alertCount,
+      trackingBlocked: this.trackingBlocked,
+      circuitBreakerActive: this.circuitBreakerActive,
+      syncQueueSize: this.batchQueue.length,
+      memoryUsage: this.memoryCache.size * 1024 // Estimado
+    };
+  }
+
+  clear(): void {
+    this.memoryCache.clear();
+    this.batchQueue = [];
+    this.alertCount = 0;
   }
 }
 
-// Export singleton instance
-export const unifiedStorageSystem = UnifiedStorageSystem.getInstance();
-
-// Compatibilidad con imports existentes
-export const storageManager = unifiedStorageSystem;
-export const optimizedStorageManager = unifiedStorageSystem;
-export { UnifiedStorageSystem as StorageManager };
-
-// Auto-configuración optimizada
-unifiedStorageSystem.configure({
-  rateLimitMs: 300,
-  silentMode: true
-});
+export const unifiedStorageSystem = UnifiedStorageSystemCore.getInstance();
