@@ -4,6 +4,12 @@
  * Experiencias educativas inmersivas y 3D
  */
 
+// Componente principal del universo optimizado
+export { OptimizedEducationalUniverse } from './OptimizedEducationalUniverse';
+
+// Re-exportar componente principal con alias
+export { EducationalUniverse } from './EducationalUniverse';
+
 // Re-exportar componentes de LectoGuía relacionados con el universo
 export { LearningMaterialGenerator } from '@/components/learning-material-generator';
 

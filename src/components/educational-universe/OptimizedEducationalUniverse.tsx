@@ -1,323 +1,277 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Brain, Zap, Target, Sparkles, Globe, Network, 
-  Award, BookOpen, TrendingUp, Users, Settings,
-  Play, Pause, RotateCcw, Maximize2
-} from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalCinematic } from '@/contexts/GlobalCinematicContext';
-import { useRealUserMetrics } from '@/hooks/useRealUserMetrics';
-import { useBattleSystem } from '@/hooks/useBattleSystem';
-import { EcosystemIntegrationEngine } from './EcosystemIntegrationEngine';
-import { AchievementTracker } from '../achievement-system/AchievementTracker';
+import { EcosystemIntegrationEngine } from '@/components/educational-ecosystem/EcosystemIntegrationEngine';
+import { RealTimeMetricsDashboard } from '@/components/cinematic/RealTimeMetricsDashboard';
+import { AchievementTracker } from '@/components/achievement-system/AchievementTracker';
+import { CinematicParticleSystem } from '@/components/cinematic/CinematicParticleSystem';
+import { 
+  Atom, 
+  Brain, 
+  Zap, 
+  Target, 
+  Sparkles,
+  Globe,
+  Network,
+  Settings
+} from 'lucide-react';
 
-export const OptimizedEducationalUniverse: React.FC = () => {
-  const { user } = useAuth();
-  const { state, updatePreferences, resetToOptimal } = useGlobalCinematic();
-  const { metrics, isLoading } = useRealUserMetrics();
-  const { availableBattles, userBattles, activeBattle } = useBattleSystem();
-  
-  const [battleMode, setBattleMode] = useState(false);
-  const [selectedDimension, setSelectedDimension] = useState<string>('overview');
-  const [isExpanded, setIsExpanded] = useState(false);
+interface OptimizedEducationalUniverseProps {
+  className?: string;
+}
 
-  // Métricas del universo calculadas
-  const universeMetrics = useMemo(() => {
-    const totalExercises = metrics.exercisesCompleted;
-    const avgScore = metrics.averageScore;
-    const projectedPAES = Math.round(400 + (avgScore / 100) * 450);
-    const neuralPower = Math.round(avgScore * 1.2);
-    
-    return {
-      totalExercises,
-      avgScore,
-      projectedPAES,
-      neuralPower,
-      activeBattles: availableBattles.length,
-      userLevel: metrics.level
-    };
-  }, [metrics, availableBattles.length]);
+export const OptimizedEducationalUniverse: React.FC<OptimizedEducationalUniverseProps> = ({ 
+  className = "" 
+}) => {
+  const { state, updatePreferences } = useGlobalCinematic();
+  const [activeModule, setActiveModule] = useState<string>('overview');
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Configuración de dimensiones del universo
-  const universeDimensions = [
+  useEffect(() => {
+    // Inicialización del universo educativo
+    const timer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const universeModules = [
+    {
+      id: 'overview',
+      name: 'Vista General',
+      icon: Globe,
+      color: 'from-blue-500 to-cyan-500',
+      description: 'Panorama completo del universo educativo'
+    },
     {
       id: 'neural',
       name: 'Red Neural',
-      description: 'Análisis de patrones cognitivos',
-      color: 'from-cyan-500 to-blue-600',
       icon: Brain,
-      progress: universeMetrics.neuralPower
-    },
-    {
-      id: 'battle',
-      name: 'Arena de Combate',
-      description: 'Duelos académicos en tiempo real',
-      color: 'from-red-500 to-pink-600',
-      icon: Target,
-      progress: userBattles.length * 10
+      color: 'from-purple-500 to-pink-500',
+      description: 'Conexiones neuronales de aprendizaje'
     },
     {
       id: 'ecosystem',
-      name: 'Ecosistema Integrado',
-      description: 'Sincronización de módulos educativos',
-      color: 'from-green-500 to-emerald-600',
+      name: 'Ecosistema',
       icon: Network,
-      progress: 85
+      color: 'from-green-500 to-emerald-500',
+      description: 'Integración de todos los módulos'
     },
     {
       id: 'achievements',
-      name: 'Sistema de Logros',
-      description: 'Reconocimientos y milestones',
-      color: 'from-yellow-500 to-orange-600',
-      icon: Award,
-      progress: state.achievements.length * 20
+      name: 'Logros',
+      icon: Target,
+      color: 'from-yellow-500 to-orange-500',
+      description: 'Sistema de logros y progreso'
     }
   ];
 
-  // Efectos de optimización automática
-  useEffect(() => {
-    if (state.preferences.adaptivePerformance && state.performanceMetrics.memoryUsage > 150) {
-      updatePreferences({
-        particleIntensity: 'low',
-        immersionLevel: 'minimal'
-      });
-    }
-  }, [state.performanceMetrics.memoryUsage, state.preferences.adaptivePerformance, updatePreferences]);
+  const renderModuleContent = () => {
+    switch (activeModule) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            <RealTimeMetricsDashboard />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Atom className="w-5 h-5 text-cyan-400" />
+                    Núcleo Cuántico
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-32 bg-gradient-to-br from-cyan-900/20 to-blue-900/20 rounded-lg flex items-center justify-center">
+                    <div className="text-cyan-400 text-center">
+                      <Atom className="w-12 h-12 mx-auto mb-2 animate-pulse" />
+                      <div className="text-sm">Sistema Activo</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-  if (isLoading) {
+              <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                    Energía Neural
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-32 bg-gradient-to-br from-yellow-900/20 to-orange-900/20 rounded-lg flex items-center justify-center">
+                    <div className="text-yellow-400 text-center">
+                      <Zap className="w-12 h-12 mx-auto mb-2 animate-bounce" />
+                      <div className="text-sm">Energía: {state.systemHealth}%</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case 'neural':
+        return (
+          <div className="space-y-6">
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-purple-400" />
+                  Red Neural Educativa
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="relative">
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto">
+                        <Brain className="w-8 h-8 text-white" />
+                      </div>
+                      <div className="text-center mt-2">
+                        <div className="text-white text-xs">Nodo {i + 1}</div>
+                        <Badge variant="secondary" className="text-xs mt-1">
+                          {Math.floor(Math.random() * 100)}%
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'ecosystem':
+        return (
+          <div className="space-y-6">
+            <EcosystemIntegrationEngine />
+          </div>
+        );
+
+      case 'achievements':
+        return (
+          <div className="space-y-6">
+            <AchievementTracker />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
-        <motion.div
-          className="text-center text-white space-y-6"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <motion.div
-            className="w-24 h-24 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
-          <div className="text-3xl font-bold">Inicializando Universo Neural</div>
-          <div className="text-cyan-300">Cargando métricas en tiempo real...</div>
-        </motion.div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-lg font-medium">Inicializando Universo Educativo...</div>
+          <div className="text-sm text-white/60 mt-2">Conectando módulos neurales</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
-      {/* Partículas de fondo */}
-      <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: state.preferences.particleIntensity === 'high' ? 50 : 20 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-cyan-400 rounded-full opacity-60"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`
-            }}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.3, 1, 0.3]
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2
-            }}
-          />
-        ))}
-      </div>
+    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 ${className}`}>
+      {/* Sistema de partículas cinematográfico */}
+      <CinematicParticleSystem
+        intensity={state.preferences.particleIntensity === 'high' ? 80 : state.preferences.particleIntensity === 'medium' ? 50 : 20}
+        isActive={state.preferences.particleIntensity !== 'low'}
+        variant={state.preferences.visualMode === 'cosmic' ? 'cosmic' : state.preferences.visualMode === 'energy' ? 'energy' : 'neural'}
+      />
 
-      {/* Panel de Control Principal */}
-      <motion.div 
-        className="absolute top-4 left-4 right-4 z-50"
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <Card className="bg-black/30 backdrop-blur-xl border-cyan-500/30">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <Globe className="w-6 h-6 text-cyan-400" />
-                Universo Educativo Neural
-                <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600">
-                  v2.0 Optimizado
-                </Badge>
-              </CardTitle>
-              
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setBattleMode(!battleMode)}
-                  className={`border-red-500/50 ${battleMode ? 'bg-red-600 text-white' : 'text-red-400'}`}
-                >
-                  <Target className="w-4 h-4 mr-1" />
-                  {battleMode ? 'Salir Arena' : 'Modo Batalla'}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="border-purple-500/50 text-purple-400"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetToOptimal}
-                  className="border-green-500/50 text-green-400"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            {/* Métricas Principales */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-cyan-400">{universeMetrics.projectedPAES}</div>
-                <div className="text-xs text-gray-400">Proyección PAES</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-400">{universeMetrics.neuralPower}%</div>
-                <div className="text-xs text-gray-400">Poder Neural</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400">{universeMetrics.totalExercises}</div>
-                <div className="text-xs text-gray-400">Ejercicios</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-400">{universeMetrics.userLevel}</div>
-                <div className="text-xs text-gray-400">Nivel</div>
-              </div>
-            </div>
+      <div className="relative z-10 p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-7xl mx-auto"
+        >
+          {/* Header del universo */}
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+              <Sparkles className="w-8 h-8 text-cyan-400" />
+              Universo Educativo Optimizado
+            </h1>
+            <p className="text-white/70 text-lg">Exploración inmersiva del conocimiento PAES</p>
+          </div>
 
-            {/* Dimensiones del Universo */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {universeDimensions.map((dimension) => {
-                const Icon = dimension.icon;
+          {/* Navegación de módulos */}
+          <div className="mb-8">
+            <div className="flex flex-wrap justify-center gap-4">
+              {universeModules.map((module) => {
+                const Icon = module.icon;
+                const isActive = activeModule === module.id;
+                
                 return (
-                  <motion.div
-                    key={dimension.id}
-                    className={`p-4 rounded-lg bg-gradient-to-r ${dimension.color} bg-opacity-20 border border-white/10 cursor-pointer hover:bg-opacity-30 transition-all`}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => setSelectedDimension(dimension.id)}
+                  <Button
+                    key={module.id}
+                    onClick={() => setActiveModule(module.id)}
+                    className={`relative overflow-hidden transition-all duration-300 ${
+                      isActive 
+                        ? `bg-gradient-to-r ${module.color} text-white shadow-lg scale-105` 
+                        : 'bg-black/40 text-white/70 hover:bg-black/60 hover:text-white'
+                    }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Icon className="w-5 h-5 text-white" />
-                        <span className="text-white font-medium">{dimension.name}</span>
-                      </div>
-                      <span className="text-cyan-400 text-sm">{dimension.progress}%</span>
-                    </div>
-                    <Progress value={dimension.progress} className="h-2 mb-1" />
-                    <p className="text-gray-300 text-xs">{dimension.description}</p>
-                  </motion.div>
+                    <Icon className="w-4 h-4 mr-2" />
+                    {module.name}
+                    {isActive && (
+                      <motion.div
+                        className="absolute inset-0 bg-white/10"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+                  </Button>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+          </div>
 
-      {/* Contenido Principal Expandible */}
-      <AnimatePresence>
-        {isExpanded && (
+          {/* Contenido del módulo activo */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeModule}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-white/60">Cargando módulo...</div>
+                </div>
+              }>
+                {renderModuleContent()}
+              </Suspense>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Panel de configuración */}
           <motion.div
-            className="absolute top-48 left-4 right-4 bottom-4 z-40"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-              {/* Motor de Integración del Ecosistema */}
-              <EcosystemIntegrationEngine />
-              
-              {/* Sistema de Logros */}
-              <AchievementTracker />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Indicadores de Estado del Sistema */}
-      <motion.div 
-        className="absolute bottom-4 left-4 right-4 z-50"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <Card className="bg-black/20 backdrop-blur-lg border-white/10">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-4 text-white">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span>Sistema Activo</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Brain className="w-4 h-4 text-cyan-400" />
-                  <span>IA Neural: {state.systemHealth}%</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                  <span>Rendimiento: {state.performanceMetrics.fps} FPS</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Badge className={`${battleMode ? 'bg-red-600' : 'bg-blue-600'}`}>
-                  {battleMode ? 'MODO BATALLA' : 'MODO ESTUDIO'}
-                </Badge>
-                <Badge className="bg-purple-600">
-                  {state.preferences.immersionLevel.toUpperCase()}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Efectos de Transición Cinematográfica */}
-      <AnimatePresence>
-        {state.isTransitioning && (
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-sm z-30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            transition={{ delay: 0.5 }}
+            className="fixed bottom-6 right-6"
           >
-            <div className="flex items-center justify-center h-full">
-              <motion.div
-                className="text-6xl text-white"
-                animate={{ 
-                  rotateY: [0, 360],
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <Sparkles />
-              </motion.div>
-            </div>
+            <Button
+              onClick={() => updatePreferences({ 
+                particleIntensity: state.preferences.particleIntensity === 'high' ? 'low' : 'high' 
+              })}
+              className="bg-black/40 backdrop-blur-xl border border-white/10 text-white hover:bg-black/60"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Configurar
+            </Button>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      </div>
     </div>
   );
 };
