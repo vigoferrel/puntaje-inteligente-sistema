@@ -1,6 +1,7 @@
 
 /**
- * TIPOS PARA UNIFIED STORAGE SYSTEM v5.0
+ * TIPOS PARA UNIFIED STORAGE SYSTEM v6.0
+ * Tipos simplificados para evitar conflictos de TypeScript
  */
 
 export interface CacheDataTypes {
@@ -23,9 +24,15 @@ export interface CacheDataTypes {
   [key: string]: any;
 }
 
-export type CacheKey = keyof CacheDataTypes | string;
+// Simplificado: solo string para evitar conflictos de tipos
+export type CacheKey = string;
 
 export interface TypeSafeBatchItem {
   key: CacheKey;
   value: any;
+}
+
+// Helper para convertir keys tipados automáticamente
+export function createCacheKey<K extends keyof CacheDataTypes>(key: K): CacheKey {
+  return key as string;
 }

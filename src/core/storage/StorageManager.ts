@@ -1,7 +1,7 @@
 
 /**
- * STORAGE MANAGER v11.0 - TYPE-SAFE & COMPATIBLE CON TRACKING PREVENTION
- * Sistema inteligente que respeta las políticas del navegador con tipos seguros
+ * STORAGE MANAGER v12.0 - TYPE-SAFE & COMPATIBLE CON TRACKING PREVENTION
+ * Sistema inteligente que respeta las políticas del navegador con tipos seguros corregidos
  */
 
 import { CacheDataTypes, CacheKey, TypeSafeBatchItem } from './types';
@@ -89,11 +89,13 @@ class IntelligentStorageManager {
     this.isProcessingQueue = false;
   }
 
-  // Métodos type-safe
+  // Métodos type-safe corregidos
   getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
+    const keyStr = String(key);
+    
     // Siempre intentar cache primero
-    if (this.memoryCache.has(key)) {
-      return this.memoryCache.get(key);
+    if (this.memoryCache.has(keyStr)) {
+      return this.memoryCache.get(keyStr);
     }
 
     // Si no hay storage disponible, solo memoria
@@ -102,26 +104,26 @@ class IntelligentStorageManager {
     }
 
     // Rate limiting
-    if (this.shouldRateLimit(key)) {
-      return this.memoryCache.get(key) || null;
+    if (this.shouldRateLimit(keyStr)) {
+      return this.memoryCache.get(keyStr) || null;
     }
 
     try {
-      this.updateAccessTime(key);
-      const item = localStorage.getItem(key);
+      this.updateAccessTime(keyStr);
+      const item = localStorage.getItem(keyStr);
       const parsed = item ? JSON.parse(item) : null;
       
       // Actualizar cache
       if (parsed) {
-        this.memoryCache.set(key, parsed);
+        this.memoryCache.set(keyStr, parsed);
       }
       
       return parsed;
     } catch (error) {
       if (!this.silentMode) {
-        console.warn(`Storage get error for ${key}:`, error);
+        console.warn(`Storage get error for ${keyStr}:`, error);
       }
-      return this.memoryCache.get(key) || null;
+      return this.memoryCache.get(keyStr) || null;
     }
   }
 
@@ -130,8 +132,10 @@ class IntelligentStorageManager {
     value: CacheDataTypes[K], 
     options: StorageOptions = {}
   ): boolean {
+    const keyStr = String(key);
+    
     // Siempre actualizar cache
-    this.memoryCache.set(key, value);
+    this.memoryCache.set(keyStr, value);
 
     // Si no hay storage, solo memoria
     if (!this.storageAvailable) {
@@ -139,11 +143,11 @@ class IntelligentStorageManager {
     }
 
     // Rate limiting para escrituras
-    if (this.shouldRateLimit(key)) {
+    if (this.shouldRateLimit(keyStr)) {
       // Encolar la operación para más tarde
       this.queueOperation(() => {
         try {
-          localStorage.setItem(key, JSON.stringify(value));
+          localStorage.setItem(keyStr, JSON.stringify(value));
         } catch (error) {
           // Error silencioso
         }
@@ -152,12 +156,12 @@ class IntelligentStorageManager {
     }
 
     try {
-      this.updateAccessTime(key);
-      localStorage.setItem(key, JSON.stringify(value));
+      this.updateAccessTime(keyStr);
+      localStorage.setItem(keyStr, JSON.stringify(value));
       return true;
     } catch (error) {
       if (!options.silentErrors && !this.silentMode) {
-        console.warn(`Storage set error for ${key}:`, error);
+        console.warn(`Storage set error for ${keyStr}:`, error);
       }
       return false;
     }
@@ -193,7 +197,8 @@ class IntelligentStorageManager {
   // Operaciones batch type-safe
   batchSet(items: TypeSafeBatchItem[]): void {
     items.forEach(({ key, value }) => {
-      this.memoryCache.set(key, value);
+      const keyStr = String(key);
+      this.memoryCache.set(keyStr, value);
     });
 
     if (!this.storageAvailable) return;
@@ -201,7 +206,8 @@ class IntelligentStorageManager {
     this.queueOperation(() => {
       items.forEach(({ key, value }) => {
         try {
-          localStorage.setItem(key, JSON.stringify(value));
+          const keyStr = String(key);
+          localStorage.setItem(keyStr, JSON.stringify(value));
         } catch (error) {
           // Error silencioso
         }
@@ -256,4 +262,3 @@ storageManager.configure({
 setInterval(() => {
   storageManager.cleanup();
 }, 1800000);
-

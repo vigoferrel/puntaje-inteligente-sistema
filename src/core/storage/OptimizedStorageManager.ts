@@ -1,7 +1,7 @@
 
 /**
- * OPTIMIZED STORAGE MANAGER v2.0
- * Sistema de storage inteligente con batching y cache layers
+ * OPTIMIZED STORAGE MANAGER v3.0
+ * Sistema de storage inteligente con tipos corregidos
  */
 
 import { CacheDataTypes, CacheKey, TypeSafeBatchItem } from './types';
@@ -64,11 +64,12 @@ class OptimizedStorageManager {
 
   // Cache L1 (memoria rápida con TTL)
   private getFromL1Cache<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
-    const cached = this.cache.l1.get(key);
+    const keyStr = String(key);
+    const cached = this.cache.l1.get(keyStr);
     if (!cached) return null;
     
     if (Date.now() - cached.timestamp > cached.ttl) {
-      this.cache.l1.delete(key);
+      this.cache.l1.delete(keyStr);
       return null;
     }
     
@@ -76,7 +77,8 @@ class OptimizedStorageManager {
   }
 
   private setToL1Cache<K extends CacheKey>(key: K, data: CacheDataTypes[K], ttl = 300000) {
-    this.cache.l1.set(key, {
+    const keyStr = String(key);
+    this.cache.l1.set(keyStr, {
       data,
       timestamp: Date.now(),
       ttl,
@@ -85,40 +87,44 @@ class OptimizedStorageManager {
 
   // Método principal optimizado
   getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
+    const keyStr = String(key);
+    
     // L1 Cache first
     const l1Result = this.getFromL1Cache(key);
     if (l1Result !== null) return l1Result;
     
     // L2 Cache
-    if (this.cache.l2.has(key)) {
-      const data = this.cache.l2.get(key);
+    if (this.cache.l2.has(keyStr)) {
+      const data = this.cache.l2.get(keyStr);
       this.setToL1Cache(key, data);
       return data;
     }
     
     // LocalStorage como último recurso
     try {
-      const stored = localStorage.getItem(key);
+      const stored = localStorage.getItem(keyStr);
       if (stored) {
         const parsed = JSON.parse(stored);
         this.setToL1Cache(key, parsed);
-        this.cache.l2.set(key, parsed);
+        this.cache.l2.set(keyStr, parsed);
         return parsed;
       }
     } catch (error) {
-      console.warn(`Storage get error for ${key}:`, error);
+      console.warn(`Storage get error for ${keyStr}:`, error);
     }
     
     return null;
   }
 
   setItem<K extends CacheKey>(key: K, value: CacheDataTypes[K]): boolean {
+    const keyStr = String(key);
+    
     // Actualizar caches inmediatamente
     this.setToL1Cache(key, value);
-    this.cache.l2.set(key, value);
+    this.cache.l2.set(keyStr, value);
     
     // Batch write para localStorage
-    this.addToBatchQueue(key, value);
+    this.addToBatchQueue(keyStr, value);
     
     return true;
   }

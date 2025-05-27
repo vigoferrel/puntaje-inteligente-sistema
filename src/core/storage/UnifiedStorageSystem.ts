@@ -1,7 +1,7 @@
 
 /**
- * UNIFIED STORAGE SYSTEM v6.0 - CIRCUIT BREAKER ULTRA-AGRESIVO
- * Sistema con activación inmediata en primera alerta de tracking prevention
+ * UNIFIED STORAGE SYSTEM v7.0 - CIRCUIT BREAKER ULTRA-AGRESIVO
+ * Sistema con tipos corregidos y activación inmediata en primera alerta
  */
 
 import { CacheDataTypes, CacheKey } from './types';
@@ -78,9 +78,6 @@ class UnifiedStorageSystemCore {
     
     console.log(`🚨 CIRCUIT BREAKER ACTIVADO INSTANTÁNEAMENTE: ${reason}`);
     console.log('📱 Modo memoria permanente activado');
-    
-    // NO reintentos automáticos - permanece en modo memoria
-    // Solo se puede resetear manualmente
   }
 
   private handleStorageError(operation: string) {
@@ -107,8 +104,10 @@ class UnifiedStorageSystemCore {
   }
 
   getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
+    const keyStr = String(key);
+    
     // SIEMPRE usar cache L1 primero (máxima prioridad)
-    const cached = this.memoryCache.get(key);
+    const cached = this.memoryCache.get(keyStr);
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
       cached.accessCount++;
       return cached.data as CacheDataTypes[K];
@@ -122,7 +121,7 @@ class UnifiedStorageSystemCore {
     // Solo si storage está disponible Y no hay circuit breaker
     if (this.storageAvailable) {
       try {
-        const item = localStorage.getItem(key);
+        const item = localStorage.getItem(keyStr);
         if (item) {
           const parsed = JSON.parse(item) as CacheDataTypes[K];
           this.setToCache(key, parsed);
@@ -142,6 +141,8 @@ class UnifiedStorageSystemCore {
     value: CacheDataTypes[K],
     options: { silentErrors?: boolean; ttl?: number } = {}
   ): boolean {
+    const keyStr = String(key);
+    
     // SIEMPRE actualizar cache L1 (prioridad máxima)
     this.setToCache(key, value, options.ttl);
 
@@ -153,7 +154,7 @@ class UnifiedStorageSystemCore {
     // Intentar localStorage solo si está disponible
     if (this.storageAvailable) {
       try {
-        localStorage.setItem(key, JSON.stringify(value));
+        localStorage.setItem(keyStr, JSON.stringify(value));
         return true;
       } catch (error) {
         if (!options.silentErrors) {
@@ -171,7 +172,8 @@ class UnifiedStorageSystemCore {
     data: CacheDataTypes[K],
     ttl = 1800000 // 30 minutos
   ) {
-    this.memoryCache.set(key, {
+    const keyStr = String(key);
+    this.memoryCache.set(keyStr, {
       data,
       timestamp: Date.now(),
       ttl,

@@ -4,14 +4,14 @@
  * Sistema unificado de dashboards adaptativos
  */
 
-// Dashboards principales
-export { UnifiedDashboard } from './UnifiedDashboard';
-export { PAESSpecializedDashboard } from './PAESSpecializedDashboard';
-export { AdminConsolidatedDashboard } from './AdminConsolidatedDashboard';
+// Dashboards principales - importar desde dashboard (no dashboards)
+export { UnifiedDashboard } from '../dashboard/UnifiedDashboard';
+export { PAESSpecializedDashboard } from '../dashboard/PAESSpecializedDashboard';
+export { AdminConsolidatedDashboard } from '../dashboard/AdminConsolidatedDashboard';
 
 // Core del dashboard
-export { NeuralDashboardCore } from './NeuralDashboardCore';
-export { RealMetricsDashboard } from './RealMetricsDashboard';
+export { NeuralDashboardCore } from '../dashboard/NeuralDashboardCore';
+export { RealMetricsDashboard } from '../dashboard/RealMetricsDashboard';
 
 // Dashboard cinematográfico unificado
 export { CinematicDashboard } from '@/components/unified-dashboard/CinematicDashboard';

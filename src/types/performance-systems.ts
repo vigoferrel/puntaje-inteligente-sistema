@@ -54,12 +54,4 @@ export interface AdaptiveSystemConfig {
   personalizeExperience: boolean;
 }
 
-// Analytics y telemetría
-export interface AnalyticsEvent {
-  eventType: string;
-  timestamp: Date;
-  userId?: string;
-  sessionId: string;
-  properties: Record<string, any>;
-  metrics: Record<string, number>;
-}
+// AnalyticsEvent movido a ui-components.ts

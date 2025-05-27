@@ -37,6 +37,16 @@ export interface NavigationConfig {
   defaultRoute: string;
 }
 
+// Analytics y telemetría - MOVIDO AQUÍ desde performance-systems
+export interface AnalyticsEvent {
+  eventType: string;
+  timestamp: Date;
+  userId?: string;
+  sessionId: string;
+  properties: Record<string, any>;
+  metrics: Record<string, number>;
+}
+
 // Props base para componentes educativos
 export interface BaseEducationalComponentProps {
   className?: string;
