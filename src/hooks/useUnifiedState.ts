@@ -8,12 +8,28 @@ interface UnifiedState {
   notifications: string[];
 }
 
+interface SystemMetrics {
+  todayStudyTime: number;
+  totalExercises: number;
+  averageScore: number;
+  streakDays: number;
+  level: number;
+}
+
 export const useUnifiedState = () => {
   const [state, setState] = useState<UnifiedState>({
     systemReady: true,
     currentModule: 'dashboard',
     userProgress: {},
     notifications: []
+  });
+
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics>({
+    todayStudyTime: 45,
+    totalExercises: 127,
+    averageScore: 78,
+    streakDays: 5,
+    level: 3
   });
 
   const setCurrentModule = useCallback((module: string) => {
@@ -34,10 +50,21 @@ export const useUnifiedState = () => {
     }));
   }, []);
 
+  const updateUserProgress = useCallback((module: string, progress: number) => {
+    updateProgress(module, progress);
+  }, [updateProgress]);
+
+  const updateSystemMetrics = useCallback((metrics: Partial<SystemMetrics>) => {
+    setSystemMetrics(prev => ({ ...prev, ...metrics }));
+  }, []);
+
   return {
     ...state,
+    systemMetrics,
     setCurrentModule,
     updateProgress,
-    addNotification
+    addNotification,
+    updateUserProgress,
+    updateSystemMetrics
   };
 };
