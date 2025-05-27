@@ -8,12 +8,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { GlobalCinematicProvider } from "@/contexts/GlobalCinematicContext";
 import { UnifiedEducationProvider } from "@/providers/UnifiedEducationProvider";
 import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
-import { LazyLoadWrapper, useIntelligentPreloading } from "@/components/performance/LazyLoadWrapper";
+import { OptimizedLazyLoadWrapper, useOptimizedPreloading } from "@/components/performance/OptimizedLazyLoadWrapper";
 import { ProtectedRoute } from "./components/protected-route";
 import { useLocation } from "react-router-dom";
 import { Suspense, lazy } from "react";
 
-// Lazy loading optimizado de páginas
+// Lazy loading optimizado de páginas con prioridades
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const LectoGuiaPage = lazy(() => import("./pages/LectoGuiaPage"));
@@ -28,7 +28,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
-      retry: 2,
+      retry: 1, // Reducido de 2 a 1 para mejor performance
       refetchOnWindowFocus: false,
     },
     mutations: {
@@ -40,25 +40,25 @@ const queryClient = new QueryClient({
 const AppRoutes = () => {
   const location = useLocation();
   
-  useIntelligentPreloading(location.pathname);
+  useOptimizedPreloading(location.pathname);
 
   return (
     <Routes>
       <Route 
         path="/auth" 
         element={
-          <LazyLoadWrapper moduleName="Autenticación" priority="high">
+          <OptimizedLazyLoadWrapper moduleName="Autenticación" priority="critical">
             <Auth />
-          </LazyLoadWrapper>
+          </OptimizedLazyLoadWrapper>
         } 
       />
       <Route 
         path="/" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Hub Neural SuperPAES" priority="high">
+            <OptimizedLazyLoadWrapper moduleName="Hub Neural SuperPAES" priority="critical">
               <Index />
-            </LazyLoadWrapper>
+            </OptimizedLazyLoadWrapper>
           </ProtectedRoute>
         } 
       />
@@ -66,9 +66,9 @@ const AppRoutes = () => {
         path="/lectoguia" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="LectoGuía IA" priority="high" preloadDelay={200}>
+            <OptimizedLazyLoadWrapper moduleName="LectoGuía IA" priority="high" preloadDelay={100}>
               <LectoGuiaPage />
-            </LazyLoadWrapper>
+            </OptimizedLazyLoadWrapper>
           </ProtectedRoute>
         } 
       />
@@ -76,9 +76,9 @@ const AppRoutes = () => {
         path="/financial" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Centro Financiero" priority="medium" preloadDelay={500}>
+            <OptimizedLazyLoadWrapper moduleName="Centro Financiero" priority="medium" preloadDelay={200}>
               <FinancialPage />
-            </LazyLoadWrapper>
+            </OptimizedLazyLoadWrapper>
           </ProtectedRoute>
         } 
       />
@@ -86,9 +86,9 @@ const AppRoutes = () => {
         path="/diagnostic" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Diagnóstico PAES" priority="medium" preloadDelay={500}>
+            <OptimizedLazyLoadWrapper moduleName="Diagnóstico PAES" priority="high" preloadDelay={150}>
               <DiagnosticPage />
-            </LazyLoadWrapper>
+            </OptimizedLazyLoadWrapper>
           </ProtectedRoute>
         } 
       />
@@ -96,9 +96,9 @@ const AppRoutes = () => {
         path="/planning" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Planificador" priority="medium" preloadDelay={500}>
+            <OptimizedLazyLoadWrapper moduleName="Planificador" priority="medium" preloadDelay={200}>
               <PlanningPage />
-            </LazyLoadWrapper>
+            </OptimizedLazyLoadWrapper>
           </ProtectedRoute>
         } 
       />
@@ -106,9 +106,9 @@ const AppRoutes = () => {
         path="/universe" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Universo Educativo 3D" priority="medium" preloadDelay={300}>
+            <OptimizedLazyLoadWrapper moduleName="Universo Educativo 3D" priority="medium" preloadDelay={250}>
               <UniverseVisualizationPage />
-            </LazyLoadWrapper>
+            </OptimizedLazyLoadWrapper>
           </ProtectedRoute>
         } 
       />
@@ -116,9 +116,9 @@ const AppRoutes = () => {
         path="/achievements" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Sistema de Logros" priority="medium" preloadDelay={400}>
+            <OptimizedLazyLoadWrapper moduleName="Sistema de Logros" priority="medium" preloadDelay={300}>
               <AchievementsPage />
-            </LazyLoadWrapper>
+            </OptimizedLazyLoadWrapper>
           </ProtectedRoute>
         } 
       />
@@ -126,9 +126,9 @@ const AppRoutes = () => {
         path="/ecosystem" 
         element={
           <ProtectedRoute>
-            <LazyLoadWrapper moduleName="Ecosistema Integrado" priority="medium" preloadDelay={400}>
+            <OptimizedLazyLoadWrapper moduleName="Ecosistema Integrado" priority="medium" preloadDelay={300}>
               <EcosystemPage />
-            </LazyLoadWrapper>
+            </OptimizedLazyLoadWrapper>
           </ProtectedRoute>
         } 
       />
@@ -150,7 +150,7 @@ const App = () => (
                   <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
                     <div className="text-white text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                      <p>Cargando Ecosistema Educativo...</p>
+                      <p>Cargando Ecosistema Neural Optimizado...</p>
                     </div>
                   </div>
                 }>
