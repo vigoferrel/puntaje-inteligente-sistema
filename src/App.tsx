@@ -13,6 +13,11 @@ import { useAdvancedBundleOptimizer } from "@/core/performance/AdvancedBundleOpt
 import { useGlobalMemoryMonitor } from "@/hooks/useMemoryOptimization";
 import { ProtectedRoute } from "./components/protected-route";
 import { useLocation } from "react-router-dom";
+import { NeuralSystemProvider } from "@/components/neural/NeuralSystemProvider";
+import { CinematicRouteTransitions } from "@/components/cinematic/CinematicRouteTransitions";
+import { ContextualVisualFeedback } from "@/components/cinematic/ContextualVisualFeedback";
+import { CinematicParticleSystem } from "@/components/cinematic/CinematicParticleSystem";
+import { useParticleSystem } from "@/components/cinematic/CinematicParticleSystem";
 
 // QueryClient optimizado para mejor performance
 const queryClient = new QueryClient({
@@ -178,9 +183,34 @@ const AppRoutes = memo(() => {
 
 AppRoutes.displayName = 'AppRoutes';
 
-// Componente principal optimizado
+// Wrapper cinematográfico mejorado
+const CinematicAppWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { optimalVariant, optimalIntensity, shouldShow } = useParticleSystem();
+  
+  return (
+    <div className="relative min-h-screen">
+      {/* Sistema de partículas de fondo */}
+      {shouldShow && (
+        <CinematicParticleSystem
+          variant={optimalVariant}
+          intensity={optimalIntensity}
+          isActive={true}
+        />
+      )}
+      
+      {/* Transiciones de rutas cinematográficas */}
+      <CinematicRouteTransitions>
+        {children}
+      </CinematicRouteTransitions>
+      
+      {/* Sistema de feedback visual contextual */}
+      <ContextualVisualFeedback />
+    </div>
+  );
+};
+
+// Componente principal con sistema neural y cinematografía
 const App = memo(() => {
-  // Monitoreo global de memoria
   const { getAllMetrics, forceGlobalCleanup } = useGlobalMemoryMonitor();
 
   // Log de métricas en desarrollo (solo una vez al cargar)
@@ -196,29 +226,33 @@ const App = memo(() => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <GlobalCinematicProvider>
-          <UnifiedEducationProvider>
-            <IntersectionalProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Suspense fallback={
-                    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
-                      <div className="text-white text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                        <p>Cargando Ecosistema Neural Optimizado v2.0...</p>
-                        <p className="text-sm text-cyan-300 mt-2">Sistema de memoria inteligente activo</p>
+        <NeuralSystemProvider showDashboard={true} enableAutoCapture={true}>
+          <GlobalCinematicProvider>
+            <UnifiedEducationProvider>
+              <IntersectionalProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <Suspense fallback={
+                      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+                          <p>Cargando Ecosistema Neural Cinematográfico v3.0...</p>
+                          <p className="text-sm text-cyan-300 mt-2">Sistema de experiencia inmersiva activo</p>
+                        </div>
                       </div>
-                    </div>
-                  }>
-                    <AppRoutes />
-                  </Suspense>
-                </BrowserRouter>
-              </TooltipProvider>
-            </IntersectionalProvider>
-          </UnifiedEducationProvider>
-        </GlobalCinematicProvider>
+                    }>
+                      <CinematicAppWrapper>
+                        <AppRoutes />
+                      </CinematicAppWrapper>
+                    </Suspense>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </IntersectionalProvider>
+            </UnifiedEducationProvider>
+          </GlobalCinematicProvider>
+        </NeuralSystemProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
