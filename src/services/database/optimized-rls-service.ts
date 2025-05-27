@@ -90,16 +90,21 @@ export class OptimizedRLSService {
   }
   
   /**
-   * Crea consultas optimizadas con filtros de usuario pre-aplicados
+   * Crea consultas optimizadas para tablas específicas de usuario
    */
-  static createUserScopedQuery(tableName: string, userId?: string) {
-    const query = supabase.from(tableName).select('*');
+  static async queryUserData(tableName: string, columns = '*', userId?: string) {
+    const currentUserId = userId || await this.getCurrentUserId();
     
-    if (userId) {
-      return query.eq('user_id', userId);
+    if (!currentUserId) {
+      throw new Error('User not authenticated');
     }
-    
-    return query;
+
+    // Usar supabase.rpc para consultas dinámicas seguras
+    return supabase.rpc('query_user_table', {
+      table_name: tableName,
+      user_id: currentUserId,
+      columns_to_select: columns
+    });
   }
 }
 
