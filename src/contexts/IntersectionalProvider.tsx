@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useIntersectionalNexus } from '@/core/intersectional-nexus/IntersectionalNexus';
 import { useUnifiedPAES } from '@/core/unified-data-hub/UnifiedPAESHub';
-import { useNeuralSystem } from '@/contexts/NeuralSystemProvider';
+import { useNeuralSystem } from '@/components/neural/NeuralSystemProvider';
 import { CardiovascularSystem } from '@/core/system-vitals/CardiovascularSystem';
 import { SystemVitals } from '@/core/system-vitals/types';
 import { initializeAntiTrackingSystem } from '@/core/anti-tracking';
