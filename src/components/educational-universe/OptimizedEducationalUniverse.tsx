@@ -1,386 +1,323 @@
 
-import React, { Suspense, useState, useCallback, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { 
-  Globe, 
-  Rocket, 
-  Brain, 
-  Target, 
-  BookOpen, 
-  Calculator,
-  Atom,
-  Zap,
-  Star,
-  Sparkles,
-  AlertTriangle,
-  RefreshCw
+  Brain, Zap, Target, Sparkles, Globe, Network, 
+  Award, BookOpen, TrendingUp, Users, Settings,
+  Play, Pause, RotateCcw, Maximize2
 } from 'lucide-react';
-import { SafeThreeProvider } from '@/core/three/SafeThreeProvider';
-import { NeuralErrorBoundary } from '@/components/neural/NeuralErrorBoundary';
-
-// Lazy loading para componentes pesados
-const PAESUniverseDashboard = React.lazy(() => 
-  import('@/components/paes-universe/PAESUniverseDashboard').then(module => ({
-    default: module.PAESUniverseDashboard
-  }))
-);
-
-const OptimizedLoadingSpinner = () => (
-  <div className="h-96 flex items-center justify-center bg-black/20 rounded-2xl border border-white/20">
-    <div className="text-center space-y-4">
-      <motion.div
-        animate={{ 
-          rotate: 360,
-          scale: [1, 1.2, 1]
-        }}
-        transition={{ 
-          rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-          scale: { duration: 1.5, repeat: Infinity }
-        }}
-        className="w-16 h-16 mx-auto bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center"
-      >
-        <Brain className="w-8 h-8 text-white" />
-      </motion.div>
-      <div className="text-white/80">Inicializando Sistema Neural...</div>
-      <div className="text-cyan-400 text-sm">Cargando Universo 3D</div>
-    </div>
-  </div>
-);
-
-const SystemHealthIndicator = ({ systemHealth }: { systemHealth: 'stable' | 'recovering' | 'critical' }) => {
-  const getHealthColor = () => {
-    switch (systemHealth) {
-      case 'stable': return 'from-green-500 to-emerald-500';
-      case 'recovering': return 'from-yellow-500 to-orange-500';
-      case 'critical': return 'from-red-500 to-pink-500';
-      default: return 'from-gray-500 to-slate-500';
-    }
-  };
-
-  const getHealthIcon = () => {
-    switch (systemHealth) {
-      case 'stable': return <Zap className="w-4 h-4" />;
-      case 'recovering': return <RefreshCw className="w-4 h-4 animate-spin" />;
-      case 'critical': return <AlertTriangle className="w-4 h-4" />;
-      default: return <Brain className="w-4 h-4" />;
-    }
-  };
-
-  return (
-    <Badge className={`bg-gradient-to-r ${getHealthColor()}`}>
-      {getHealthIcon()}
-      <span className="ml-2">
-        {systemHealth === 'stable' && 'IA Neural Activa'}
-        {systemHealth === 'recovering' && 'Sistema Estabilizando'}
-        {systemHealth === 'critical' && 'Modo Seguro'}
-      </span>
-    </Badge>
-  );
-};
+import { useAuth } from '@/contexts/AuthContext';
+import { useGlobalCinematic } from '@/contexts/GlobalCinematicContext';
+import { useRealUserMetrics } from '@/hooks/useRealUserMetrics';
+import { useBattleSystem } from '@/hooks/useBattleSystem';
+import { EcosystemIntegrationEngine } from './EcosystemIntegrationEngine';
+import { AchievementTracker } from '../achievement-system/AchievementTracker';
 
 export const OptimizedEducationalUniverse: React.FC = () => {
-  const [selectedGalaxy, setSelectedGalaxy] = useState<string | null>(null);
-  const [battleModeActive, setBattleModeActive] = useState(false);
-  const [systemHealth, setSystemHealth] = useState<'stable' | 'recovering' | 'critical'>('stable');
-  const [neuralRetryCount, setNeuralRetryCount] = useState(0);
+  const { user } = useAuth();
+  const { state, updatePreferences, resetToOptimal } = useGlobalCinematic();
+  const { metrics, isLoading } = useRealUserMetrics();
+  const { availableBattles, userBattles, activeBattle } = useBattleSystem();
+  
+  const [battleMode, setBattleMode] = useState(false);
+  const [selectedDimension, setSelectedDimension] = useState<string>('overview');
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Monitor de salud del sistema
-  useEffect(() => {
-    const healthMonitor = setInterval(() => {
-      // Simular verificación de salud basada en rendimiento
-      const now = performance.now();
-      const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
-      
-      if (memoryUsage > 100 * 1024 * 1024) { // 100MB
-        setSystemHealth('recovering');
-      } else if (neuralRetryCount > 3) {
-        setSystemHealth('critical');
-      } else {
-        setSystemHealth('stable');
-      }
-    }, 5000);
+  // Métricas del universo calculadas
+  const universeMetrics = useMemo(() => {
+    const totalExercises = metrics.exercisesCompleted;
+    const avgScore = metrics.averageScore;
+    const projectedPAES = Math.round(400 + (avgScore / 100) * 450);
+    const neuralPower = Math.round(avgScore * 1.2);
+    
+    return {
+      totalExercises,
+      avgScore,
+      projectedPAES,
+      neuralPower,
+      activeBattles: availableBattles.length,
+      userLevel: metrics.level
+    };
+  }, [metrics, availableBattles.length]);
 
-    return () => clearInterval(healthMonitor);
-  }, [neuralRetryCount]);
-
-  const galaxies = [
+  // Configuración de dimensiones del universo
+  const universeDimensions = [
     {
-      id: 'matematicas',
-      name: 'Galaxia Matemática',
-      description: 'Explora los misterios de números y ecuaciones',
-      icon: Calculator,
-      color: 'from-blue-500 to-cyan-500',
-      planets: ['Álgebra', 'Geometría', 'Cálculo', 'Estadística'],
-      progress: 76
+      id: 'neural',
+      name: 'Red Neural',
+      description: 'Análisis de patrones cognitivos',
+      color: 'from-cyan-500 to-blue-600',
+      icon: Brain,
+      progress: universeMetrics.neuralPower
     },
     {
-      id: 'lenguaje',
-      name: 'Constelación Lingüística',
-      description: 'Navega por el universo de las palabras',
-      icon: BookOpen,
-      color: 'from-purple-500 to-pink-500',
-      planets: ['Comprensión Lectora', 'Vocabulario', 'Gramática', 'Literatura'],
-      progress: 68
+      id: 'battle',
+      name: 'Arena de Combate',
+      description: 'Duelos académicos en tiempo real',
+      color: 'from-red-500 to-pink-600',
+      icon: Target,
+      progress: userBattles.length * 10
     },
     {
-      id: 'ciencias',
-      name: 'Nebulosa Científica',
-      description: 'Descubre las leyes que rigen el cosmos',
-      icon: Atom,
-      color: 'from-green-500 to-emerald-500',
-      planets: ['Física', 'Química', 'Biología', 'Astronomía'],
-      progress: 82
+      id: 'ecosystem',
+      name: 'Ecosistema Integrado',
+      description: 'Sincronización de módulos educativos',
+      color: 'from-green-500 to-emerald-600',
+      icon: Network,
+      progress: 85
     },
     {
-      id: 'historia',
-      name: 'Dimensión Temporal',
-      description: 'Viaja a través del tiempo y la historia',
-      icon: Globe,
-      color: 'from-orange-500 to-red-500',
-      planets: ['Historia Universal', 'Chile', 'Arte', 'Filosofía'],
-      progress: 59
+      id: 'achievements',
+      name: 'Sistema de Logros',
+      description: 'Reconocimientos y milestones',
+      color: 'from-yellow-500 to-orange-600',
+      icon: Award,
+      progress: state.achievements.length * 20
     }
   ];
 
-  const handleGalaxySelect = useCallback((galaxyId: string) => {
-    setSelectedGalaxy(galaxyId);
-    console.log(`🌌 Navegando a galaxia: ${galaxyId}`);
-  }, []);
+  // Efectos de optimización automática
+  useEffect(() => {
+    if (state.preferences.adaptivePerformance && state.performanceMetrics.memoryUsage > 150) {
+      updatePreferences({
+        particleIntensity: 'low',
+        immersionLevel: 'minimal'
+      });
+    }
+  }, [state.performanceMetrics.memoryUsage, state.preferences.adaptivePerformance, updatePreferences]);
 
-  const handleBattleMode = useCallback(() => {
-    setBattleModeActive(prev => !prev);
-    console.log(`⚔️ Battle Mode: ${!battleModeActive ? 'ACTIVADO' : 'DESACTIVADO'}`);
-  }, [battleModeActive]);
-
-  const handleNeuralError = useCallback((error: Error) => {
-    console.error('🧠 Error Neural:', error.message);
-    setNeuralRetryCount(prev => prev + 1);
-    setSystemHealth('recovering');
-    
-    // Auto-recovery después de 5 segundos
-    setTimeout(() => {
-      setSystemHealth('stable');
-    }, 5000);
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
+        <motion.div
+          className="text-center text-white space-y-6"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          <motion.div
+            className="w-24 h-24 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          />
+          <div className="text-3xl font-bold">Inicializando Universo Neural</div>
+          <div className="text-cyan-300">Cargando métricas en tiempo real...</div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Header del Universo Optimizado */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
-        >
-          <div className="flex items-center justify-center gap-4">
-            <motion.div
-              animate={{ 
-                rotate: [0, 360],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{ 
-                rotate: { duration: 10, repeat: Infinity, ease: "linear" },
-                scale: { duration: 2, repeat: Infinity }
-              }}
-              className="w-16 h-16 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center"
-            >
-              <Sparkles className="w-8 h-8 text-white" />
-            </motion.div>
-            
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                PAES Universe
-              </h1>
-              <p className="text-white/80 text-lg">Exploración Educativa Optimizada</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
+      {/* Partículas de fondo */}
+      <div className="absolute inset-0 pointer-events-none">
+        {Array.from({ length: state.preferences.particleIntensity === 'high' ? 50 : 20 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-cyan-400 rounded-full opacity-60"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.3, 1, 0.3]
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Panel de Control Principal */}
+      <motion.div 
+        className="absolute top-4 left-4 right-4 z-50"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <Card className="bg-black/30 backdrop-blur-xl border-cyan-500/30">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Globe className="w-6 h-6 text-cyan-400" />
+                Universo Educativo Neural
+                <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600">
+                  v2.0 Optimizado
+                </Badge>
+              </CardTitle>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBattleMode(!battleMode)}
+                  className={`border-red-500/50 ${battleMode ? 'bg-red-600 text-white' : 'text-red-400'}`}
+                >
+                  <Target className="w-4 h-4 mr-1" />
+                  {battleMode ? 'Salir Arena' : 'Modo Batalla'}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="border-purple-500/50 text-purple-400"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetToOptimal}
+                  className="border-green-500/50 text-green-400"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {/* Métricas Principales */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-cyan-400">{universeMetrics.projectedPAES}</div>
+                <div className="text-xs text-gray-400">Proyección PAES</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400">{universeMetrics.neuralPower}%</div>
+                <div className="text-xs text-gray-400">Poder Neural</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400">{universeMetrics.totalExercises}</div>
+                <div className="text-xs text-gray-400">Ejercicios</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-400">{universeMetrics.userLevel}</div>
+                <div className="text-xs text-gray-400">Nivel</div>
+              </div>
+            </div>
 
-          <div className="flex justify-center gap-4">
-            <SystemHealthIndicator systemHealth={systemHealth} />
-            
-            <Button
-              onClick={handleBattleMode}
-              className={`${
-                battleModeActive 
-                  ? 'bg-gradient-to-r from-red-500 to-orange-500' 
-                  : 'bg-gradient-to-r from-gray-600 to-gray-700'
-              } hover:opacity-90`}
-            >
-              <Target className="w-4 h-4 mr-2" />
-              {battleModeActive ? 'Battle Mode ON' : 'Battle Mode OFF'}
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* Tabs del Universo con Error Boundaries */}
-        <Tabs defaultValue="explorer" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-black/40 backdrop-blur-xl border border-white/20">
-            <TabsTrigger 
-              value="explorer" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-cyan-600 text-white"
-            >
-              <Rocket className="w-4 h-4 mr-2" />
-              Explorador 3D
-            </TabsTrigger>
-            <TabsTrigger 
-              value="galaxies" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 text-white"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Galaxias
-            </TabsTrigger>
-            <TabsTrigger 
-              value="dashboard" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-blue-600 text-white"
-            >
-              <Brain className="w-4 h-4 mr-2" />
-              Dashboard
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Explorador 3D Optimizado */}
-          <TabsContent value="explorer" className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/20 p-6"
-            >
-              <NeuralErrorBoundary onError={handleNeuralError}>
-                <SafeThreeProvider>
-                  <Suspense fallback={<OptimizedLoadingSpinner />}>
-                    <PAESUniverseDashboard battleMode={battleModeActive} />
-                  </Suspense>
-                </SafeThreeProvider>
-              </NeuralErrorBoundary>
-            </motion.div>
-          </TabsContent>
-
-          {/* Galaxias Educativas - Sin cambios mayores */}
-          <TabsContent value="galaxies" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {galaxies.map((galaxy, index) => {
-                const Icon = galaxy.icon;
+            {/* Dimensiones del Universo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {universeDimensions.map((dimension) => {
+                const Icon = dimension.icon;
                 return (
                   <motion.div
-                    key={galaxy.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    key={dimension.id}
+                    className={`p-4 rounded-lg bg-gradient-to-r ${dimension.color} bg-opacity-20 border border-white/10 cursor-pointer hover:bg-opacity-30 transition-all`}
                     whileHover={{ scale: 1.02 }}
-                    className="cursor-pointer"
-                    onClick={() => handleGalaxySelect(galaxy.id)}
+                    onClick={() => setSelectedDimension(dimension.id)}
                   >
-                    <Card className={`bg-gradient-to-br from-black/60 to-slate-900/60 backdrop-blur-xl border-white/20 hover:border-white/40 transition-all ${
-                      selectedGalaxy === galaxy.id ? 'ring-2 ring-cyan-400' : ''
-                    }`}>
-                      <CardHeader>
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 bg-gradient-to-r ${galaxy.color} rounded-xl flex items-center justify-center`}>
-                            <Icon className="w-6 h-6 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <CardTitle className="text-white">{galaxy.name}</CardTitle>
-                            <p className="text-gray-300 text-sm">{galaxy.description}</p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      
-                      <CardContent className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/80">Progreso</span>
-                          <span className="text-cyan-400 font-semibold">{galaxy.progress}%</span>
-                        </div>
-                        
-                        <div className="w-full bg-white/10 rounded-full h-2">
-                          <motion.div
-                            className={`h-full bg-gradient-to-r ${galaxy.color} rounded-full`}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${galaxy.progress}%` }}
-                            transition={{ delay: index * 0.2, duration: 1 }}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          {galaxy.planets.map((planet) => (
-                            <Badge 
-                              key={planet}
-                              variant="outline" 
-                              className="text-white/80 border-white/20 text-xs"
-                            >
-                              <Star className="w-3 h-3 mr-1" />
-                              {planet}
-                            </Badge>
-                          ))}
-                        </div>
-
-                        <Button
-                          className={`w-full bg-gradient-to-r ${galaxy.color} hover:opacity-90`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleGalaxySelect(galaxy.id);
-                          }}
-                        >
-                          <Rocket className="w-4 h-4 mr-2" />
-                          Explorar Galaxia
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Icon className="w-5 h-5 text-white" />
+                        <span className="text-white font-medium">{dimension.name}</span>
+                      </div>
+                      <span className="text-cyan-400 text-sm">{dimension.progress}%</span>
+                    </div>
+                    <Progress value={dimension.progress} className="h-2 mb-1" />
+                    <p className="text-gray-300 text-xs">{dimension.description}</p>
                   </motion.div>
                 );
               })}
             </div>
-          </TabsContent>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-          {/* Dashboard Universo Optimizado */}
-          <TabsContent value="dashboard" className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <NeuralErrorBoundary onError={handleNeuralError}>
-                <Suspense fallback={<OptimizedLoadingSpinner />}>
-                  <PAESUniverseDashboard battleMode={battleModeActive} />
-                </Suspense>
-              </NeuralErrorBoundary>
-            </motion.div>
-          </TabsContent>
-        </Tabs>
+      {/* Contenido Principal Expandible */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            className="absolute top-48 left-4 right-4 bottom-4 z-40"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+              {/* Motor de Integración del Ecosistema */}
+              <EcosystemIntegrationEngine />
+              
+              {/* Sistema de Logros */}
+              <AchievementTracker />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Footer del Universo con Métricas */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-center"
-        >
-          <Card className="bg-black/40 backdrop-blur-xl border-white/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center gap-8 text-sm text-white/60">
-                <div className="flex items-center gap-2">
-                  <SystemHealthIndicator systemHealth={systemHealth} />
+      {/* Indicadores de Estado del Sistema */}
+      <motion.div 
+        className="absolute bottom-4 left-4 right-4 z-50"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <Card className="bg-black/20 backdrop-blur-lg border-white/10">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center space-x-4 text-white">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span>Sistema Activo</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-red-400" />
-                  <span>Battle Mode: {battleModeActive ? 'ON' : 'OFF'}</span>
+                <div className="flex items-center space-x-1">
+                  <Brain className="w-4 h-4 text-cyan-400" />
+                  <span>IA Neural: {state.systemHealth}%</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-purple-400" />
-                  <span>Galaxias Exploradas: {selectedGalaxy ? '1' : '0'}/4</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 text-green-400" />
-                  <span>Recovery: {neuralRetryCount}/5</span>
+                <div className="flex items-center space-x-1">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  <span>Rendimiento: {state.performanceMetrics.fps} FPS</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+              
+              <div className="flex items-center space-x-2">
+                <Badge className={`${battleMode ? 'bg-red-600' : 'bg-blue-600'}`}>
+                  {battleMode ? 'MODO BATALLA' : 'MODO ESTUDIO'}
+                </Badge>
+                <Badge className="bg-purple-600">
+                  {state.preferences.immersionLevel.toUpperCase()}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Efectos de Transición Cinematográfica */}
+      <AnimatePresence>
+        {state.isTransitioning && (
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-sm z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="flex items-center justify-center h-full">
+              <motion.div
+                className="text-6xl text-white"
+                animate={{ 
+                  rotateY: [0, 360],
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <Sparkles />
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
