@@ -5,7 +5,6 @@
  */
 
 import React, { useEffect, useCallback, useState, useRef } from 'react';
-import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnifiedEducationStore, useUnifiedActions, useSystemHealth } from '@/core/state/UnifiedEducationStateManager';
 import { unifiedStorageSystem } from '@/core/storage/UnifiedStorageSystem';
@@ -15,7 +14,7 @@ interface UnifiedEducationProviderProps {
   children: React.ReactNode;
 }
 
-const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ children }) => {
+export const UnifiedEducationProvider: React.FC<UnifiedEducationProviderProps> = ({ children }) => {
   const { user } = useAuth();
   const actions = useUnifiedActions();
   const { healthScore, isHealthy, trackingBlocked } = useSystemHealth();
@@ -169,16 +168,6 @@ const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ childre
   }
 
   return <>{children}</>;
-};
-
-export const UnifiedEducationProvider: React.FC<UnifiedEducationProviderProps> = ({ children }) => {
-  return (
-    <AuthProvider>
-      <UnifiedEducationCore>
-        {children}
-      </UnifiedEducationCore>
-    </AuthProvider>
-  );
 };
 
 // Hook simplificado para acceso al sistema unificado
