@@ -13,6 +13,7 @@ interface RealProgressMetrics {
   streakDays: number;
   completedNodes: number;
   totalNodes: number;
+  totalStudyTime: number;
   subjectProgress: Record<string, number>;
 }
 
@@ -30,70 +31,76 @@ export const useRealProgressData = () => {
     try {
       setIsLoading(true);
 
-      // Fetch progress data in parallel
-      const [nodeProgressData, exerciseAttemptsData, diagnosticData] = await Promise.all([
-        supabase
-          .from('user_node_progress')
-          .select(`
-            *,
-            learning_nodes!inner(subject_area, test_id)
-          `)
-          .eq('user_id', user.id),
-        
-        supabase
-          .from('user_exercise_attempts')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(100),
-        
-        supabase
-          .from('user_diagnostic_results')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('completed_at', { ascending: false })
-      ]);
+      // Obtener progreso de nodos
+      const { data: nodeProgressData } = await supabase
+        .from('user_node_progress')
+        .select(`
+          *,
+          learning_nodes!inner(subject_area, test_id)
+        `)
+        .eq('user_id', user.id);
 
-      if (nodeProgressData.error) throw nodeProgressData.error;
-      if (exerciseAttemptsData.error) throw exerciseAttemptsData.error;
-      if (diagnosticData.error) throw diagnosticData.error;
+      // Obtener intentos de ejercicios
+      const { data: exerciseAttemptsData } = await supabase
+        .from('user_exercise_attempts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
 
-      const nodeProgress = nodeProgressData.data || [];
-      const exerciseAttempts = exerciseAttemptsData.data || [];
-      const diagnostics = diagnosticData.data || [];
+      // Obtener resultados diagnósticos
+      const { data: diagnosticData } = await supabase
+        .from('user_diagnostic_results')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('completed_at', { ascending: false });
 
-      // Calculate metrics
+      const nodeProgress = nodeProgressData || [];
+      const exerciseAttempts = exerciseAttemptsData || [];
+      const diagnostics = diagnosticData || [];
+
+      // Calcular métricas
       const totalNodes = nodeProgress.length || 1;
       const completedNodes = nodeProgress.filter(np => np.status === 'completed').length;
       const overallProgress = Math.round((completedNodes / totalNodes) * 100);
 
-      // Calculate learning velocity based on recent activity
+      // Calcular velocidad de aprendizaje basada en actividad reciente
       const recentAttempts = exerciseAttempts.slice(0, 20);
       const correctRecent = recentAttempts.filter(ea => ea.is_correct).length;
       const learningVelocity = recentAttempts.length > 0 
         ? Math.round((correctRecent / recentAttempts.length) * 100)
         : 0;
 
-      // Calculate retention rate from node mastery
+      // Calcular tasa de retención del dominio de nodos
       const avgMastery = nodeProgress.length > 0
         ? nodeProgress.reduce((sum, np) => sum + (np.mastery_level || 0), 0) / nodeProgress.length
         : 0;
       const retentionRate = Math.round(avgMastery * 100);
 
-      // Calculate cognitive load (inverse of success rate)
+      // Calcular carga cognitiva (inverso de tasa de éxito)
       const avgSuccessRate = nodeProgress.length > 0
         ? nodeProgress.reduce((sum, np) => sum + (np.success_rate || 0), 0) / nodeProgress.length
         : 0.5;
       const cognitiveLoad = Math.round((1 - avgSuccessRate) * 100);
 
-      // Calculate weekly growth from diagnostics
-      const weeklyGrowth = diagnostics.length > 1 ? 5 + Math.random() * 10 : 0;
+      // Calcular crecimiento semanal
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentActivity = nodeProgress.filter(np => 
+        np.last_activity_at && new Date(np.last_activity_at) > weekAgo
+      ).length;
+      const weeklyGrowth = Math.round((recentActivity / Math.max(totalNodes, 1)) * 100);
 
-      // Calculate sessions and streak
+      // Calcular tiempo total de estudio en horas
+      const totalStudyMinutes = nodeProgress.reduce((sum, np) => sum + (np.time_spent_minutes || 0), 0);
+      const totalStudyTime = Math.round(totalStudyMinutes / 60);
+
+      // Calcular racha de días
+      const streakDays = calculateStudyStreak(nodeProgress);
+
+      // Calcular sesiones totales
       const totalSessions = exerciseAttempts.length + diagnostics.length;
-      const streakDays = Math.floor(Math.random() * 15) + 1;
 
-      // Calculate subject progress
+      // Calcular progreso por materia
       const subjectProgress: Record<string, number> = {};
       const testMapping: Record<number, string> = {
         1: 'COMPETENCIA_LECTORA',
@@ -118,30 +125,19 @@ export const useRealProgressData = () => {
         learningVelocity,
         retentionRate,
         cognitiveLoad,
-        weeklyGrowth: Math.round(weeklyGrowth),
+        weeklyGrowth,
         totalSessions,
         streakDays,
         completedNodes,
         totalNodes,
+        totalStudyTime,
         subjectProgress
       };
 
       setMetrics(realMetrics);
     } catch (error) {
       console.error('Error fetching progress data:', error);
-      // Fallback data
-      setMetrics({
-        overallProgress: 0,
-        learningVelocity: 0,
-        retentionRate: 0,
-        cognitiveLoad: 50,
-        weeklyGrowth: 0,
-        totalSessions: 0,
-        streakDays: 0,
-        completedNodes: 0,
-        totalNodes: 1,
-        subjectProgress: {}
-      });
+      setMetrics(null);
     } finally {
       setIsLoading(false);
     }
@@ -153,3 +149,29 @@ export const useRealProgressData = () => {
 
   return { metrics, isLoading, refetch: fetchProgressData };
 };
+
+// Función auxiliar para calcular racha de estudio
+function calculateStudyStreak(nodeProgress: any[]): number {
+  if (!nodeProgress.length) return 0;
+  
+  const sortedProgress = nodeProgress
+    .filter(np => np.last_activity_at)
+    .sort((a, b) => new Date(b.last_activity_at).getTime() - new Date(a.last_activity_at).getTime());
+  
+  let streak = 0;
+  let currentDate = new Date();
+  
+  for (const progress of sortedProgress) {
+    const activityDate = new Date(progress.last_activity_at);
+    const daysDiff = Math.floor((currentDate.getTime() - activityDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff <= 1) {
+      streak++;
+      currentDate = activityDate;
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+}
