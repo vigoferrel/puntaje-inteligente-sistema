@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CinematicProvider } from "./components/cinematic/CinematicTransitionSystem";
 import Index from "./pages/Index";
-import SurgeonPage from "./pages/SurgeonPage";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +18,6 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/surgeon" element={<SurgeonPage />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
