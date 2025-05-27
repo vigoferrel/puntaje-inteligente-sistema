@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Shield, Database, CheckCircle, AlertTriangle, TrendingUp, Settings } from 'lucide-react';
+import { Shield, Database, CheckCircle, AlertTriangle, TrendingUp, Settings, Activity } from 'lucide-react';
 import { parseSecurityData, SecurityMetrics } from '@/utils/typeGuards';
 
 interface ComplianceIssue {
@@ -14,13 +15,6 @@ interface ComplianceIssue {
   description: string;
   recommendation: string;
   status: 'needs_attention' | 'monitoring' | 'resolved';
-}
-
-interface ComplianceMetrics {
-  data_integrity_score: number;
-  performance_score: number;
-  security_headers_score: number;
-  database_security_score: number;
 }
 
 export const SecurityComplianceMonitor: React.FC = () => {
@@ -38,14 +32,10 @@ export const SecurityComplianceMonitor: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Obtener datos de readiness usando RPC
       const { data: readinessData } = await supabase.rpc('production_readiness_check');
-      
-      // Parsear datos de forma segura
       const securityData = parseSecurityData(readinessData);
       setMetrics(securityData);
 
-      // Análisis de cumplimiento
       const issues: ComplianceIssue[] = [];
       
       if (securityData.security_issues && securityData.security_issues > 0) {

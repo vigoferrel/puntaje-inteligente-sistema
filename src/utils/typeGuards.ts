@@ -1,8 +1,9 @@
 
 import { Json } from '@/integrations/supabase/types';
 
-// Type guards para datos de Supabase
+// Type guards para datos de Supabase con compatibilidad Json
 export interface SecurityMetrics {
+  [key: string]: Json;
   data_integrity_score?: number;
   security_issues?: number;
   overall_status?: string;

@@ -1,75 +1,61 @@
-import React, { lazy } from 'react';
 
-// Lazy loading optimizado para todos los componentes
-const Index = lazy(() => import('@/pages/Index').then(module => ({ default: module.default })));
-const Auth = lazy(() => import('@/pages/Auth').then(module => ({ default: module.default })));
-const LectoGuiaPage = lazy(() => import('@/pages/LectoGuiaPage').then(module => ({ default: module.default })));
-const FinancialPage = lazy(() => import('@/pages/FinancialPage').then(module => ({ default: module.default })));
-const DiagnosticPage = lazy(() => import('@/pages/DiagnosticPage').then(module => ({ default: module.default })));
-const PlanningPage = lazy(() => import('@/pages/PlanningPage').then(module => ({ default: module.default })));
-const UniverseVisualizationPage = lazy(() => import('@/pages/UniverseVisualizationPage').then(module => ({ default: module.default })));
-const AchievementsPage = lazy(() => import('@/pages/AchievementsPage').then(module => ({ default: module.default })));
-const EcosystemPage = lazy(() => import('@/pages/EcosystemPage').then(module => ({ default: module.default })));
-const ValidationDashboard = lazy(() => import('@/pages/ValidationDashboard').then(module => ({ default: module.default })));
-const SecurityDashboard = lazy(() => import('@/pages/SecurityDashboard').then(module => ({ default: module.SecurityDashboard })));
+import { lazy, useMemo, ComponentType } from 'react';
+import { useLocation } from 'react-router-dom';
 
-interface ComponentMap {
-  [key: string]: React.LazyExoticComponent<React.ComponentType<any>>;
-}
-
-// Mapa de componentes optimizado
-const componentMap: ComponentMap = {
-  Index,
-  Auth,
-  LectoGuiaPage,
-  FinancialPage,
-  DiagnosticPage,
-  PlanningPage,
-  UniverseVisualizationPage,
-  AchievementsPage,
-  EcosystemPage,
-  ValidationDashboard,
-  SecurityDashboard
+// Lazy imports consolidados
+const lazyComponents = {
+  Index: lazy(() => import('@/pages/Index')),
+  Auth: lazy(() => import('@/pages/auth')),
+  LectoGuiaPage: lazy(() => import('@/pages/LectoGuiaPage')),
+  FinancialPage: lazy(() => import('@/pages/FinancialPage')),
+  DiagnosticPage: lazy(() => import('@/pages/DiagnosticPage')),
+  PlanningPage: lazy(() => import('@/pages/PlanningPage')),
+  UniverseVisualizationPage: lazy(() => import('@/pages/UniverseVisualizationPage')),
+  AchievementsPage: lazy(() => import('@/pages/AchievementsPage')),
+  EcosystemPage: lazy(() => import('@/pages/EcosystemPage')),
+  ValidationDashboard: lazy(() => import('@/pages/ValidationDashboard')),
+  SecurityDashboard: lazy(() => import('@/pages/SecurityDashboard'))
 };
 
+interface BundleComponents {
+  [key: string]: React.LazyExoticComponent<ComponentType<any>>;
+}
+
 export const useAdvancedBundleOptimizer = (currentPath: string) => {
-  // Determinar componentes a precargar basado en la ruta actual
-  const getPreloadComponents = (path: string): string[] => {
-    switch (path) {
-      case '/':
-        return ['LectoGuiaPage', 'DiagnosticPage', 'ValidationDashboard', 'SecurityDashboard'];
-      case '/lectoguia':
-        return ['DiagnosticPage', 'PlanningPage'];
-      case '/diagnostic':
-        return ['PlanningPage', 'LectoGuiaPage'];
-      case '/validation-dashboard':
-        return ['SecurityDashboard', 'Index', 'DiagnosticPage'];
-      case '/security-dashboard':
-        return ['ValidationDashboard', 'Index', 'DiagnosticPage'];
-      default:
-        return ['Index'];
-    }
-  };
+  const location = useLocation();
 
-  const preloadComponents = getPreloadComponents(currentPath);
+  const components: BundleComponents = useMemo(() => {
+    return lazyComponents;
+  }, []);
 
-  // Precargar componentes relevantes
-  React.useEffect(() => {
-    const preloadTimer = setTimeout(() => {
-      preloadComponents.forEach(componentName => {
-        if (componentMap[componentName]) {
-          // Forzar la carga del componente
-          componentMap[componentName];
-        }
-      });
-    }, 1000);
+  const preloadComponents = useMemo(() => {
+    const pathMap: { [key: string]: (keyof typeof lazyComponents)[] } = {
+      '/': ['Index', 'LectoGuiaPage', 'DiagnosticPage'],
+      '/auth': ['Auth'],
+      '/lectoguia': ['LectoGuiaPage', 'DiagnosticPage'],
+      '/financial': ['FinancialPage'],
+      '/diagnostic': ['DiagnosticPage', 'PlanningPage'],
+      '/planning': ['PlanningPage', 'DiagnosticPage'],
+      '/universe': ['UniverseVisualizationPage'],
+      '/achievements': ['AchievementsPage'],
+      '/ecosystem': ['EcosystemPage'],
+      '/validation-dashboard': ['ValidationDashboard'],
+      '/security-dashboard': ['SecurityDashboard']
+    };
 
-    return () => clearTimeout(preloadTimer);
+    return pathMap[currentPath] || [];
   }, [currentPath]);
 
+  const bundleMetrics = useMemo(() => ({
+    totalComponents: Object.keys(lazyComponents).length,
+    preloadedComponents: preloadComponents.length,
+    currentRoute: currentPath,
+    optimization: 'active'
+  }), [preloadComponents.length, currentPath]);
+
   return {
-    components: componentMap,
+    components,
     preloadComponents,
-    currentPath
+    bundleMetrics
   };
 };

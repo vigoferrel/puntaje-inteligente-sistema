@@ -1,16 +1,39 @@
 
 /**
- * NEURAL SYSTEM PROVIDER v4.0 - SIN DEPENDENCIAS CIRCULARES
- * Proveedor base del sistema neural sin hooks complejos
+ * NEURAL SYSTEM PROVIDER v4.0 - ARQUITECTURA CONSOLIDADA
+ * Proveedor base del sistema neural con tipos completos
  */
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { NeuralDashboardWidget } from './NeuralDashboardWidget';
 
-// Tipos básicos para el contexto
+// Tipos completos para el contexto neural
+interface NeuralConfig {
+  enableTelemetry: boolean;
+  enablePredictions: boolean;
+  enableHealing: boolean;
+  enableInsights: boolean;
+  debugMode: boolean;
+  performanceMonitoring: boolean;
+}
+
+interface ComponentHealth {
+  component_name: string;
+  health_score: number;
+  error_count: number;
+  recovery_attempts: number;
+  status: 'healthy' | 'warning' | 'critical' | 'recovering';
+  performance_metrics: {
+    render_time: number;
+    memory_usage: number;
+    error_rate: number;
+  };
+}
+
 interface BasicNeuralState {
   isInitialized: boolean;
   sessionId: string | null;
+  config: NeuralConfig;
   metrics: {
     real_time_engagement: number;
     session_quality: number;
@@ -21,8 +44,10 @@ interface BasicNeuralState {
   };
   systemHealth: {
     overall_score: number;
+    components: Map<string, ComponentHealth>;
     active_issues: string[];
     last_health_check: number;
+    auto_healing_enabled: boolean;
   };
   insights: any[];
   predictions: any[];
@@ -46,9 +71,19 @@ interface BasicNeuralContext {
 
 const NeuralSystemContext = createContext<BasicNeuralContext | null>(null);
 
+const defaultConfig: NeuralConfig = {
+  enableTelemetry: true,
+  enablePredictions: true,
+  enableHealing: true,
+  enableInsights: true,
+  debugMode: false,
+  performanceMonitoring: true
+};
+
 const initialState: BasicNeuralState = {
   isInitialized: false,
   sessionId: null,
+  config: defaultConfig,
   metrics: {
     real_time_engagement: 0,
     session_quality: 0,
@@ -59,8 +94,10 @@ const initialState: BasicNeuralState = {
   },
   systemHealth: {
     overall_score: 100,
+    components: new Map<string, ComponentHealth>(),
     active_issues: [],
-    last_health_check: Date.now()
+    last_health_check: Date.now(),
+    auto_healing_enabled: true
   },
   insights: [],
   predictions: [],
@@ -85,7 +122,6 @@ function neuralReducer(state: BasicNeuralState, action: any): BasicNeuralState {
       };
 
     case 'CAPTURE_EVENT':
-      // Procesamiento básico de eventos
       return state;
 
     case 'ADD_INSIGHT':
@@ -126,7 +162,6 @@ export const NeuralSystemProvider: React.FC<NeuralSystemProviderProps> = ({
   const [showWidget, setShowWidget] = React.useState(false);
   const [widgetMinimized, setWidgetMinimized] = React.useState(true);
 
-  // Acciones básicas sin dependencias circulares
   const actions: BasicNeuralActions = {
     initialize: () => {
       dispatch({ type: 'INITIALIZE' });
@@ -148,21 +183,18 @@ export const NeuralSystemProvider: React.FC<NeuralSystemProviderProps> = ({
     }
   };
 
-  // Auto-inicialización
   useEffect(() => {
     if (!state.isInitialized) {
       actions.initialize();
     }
   }, [state.isInitialized]);
 
-  // Auto-mostrar widget después de inicialización
   useEffect(() => {
     if (state.isInitialized && showDashboard) {
       setTimeout(() => setShowWidget(true), 2000);
     }
   }, [state.isInitialized, showDashboard]);
 
-  // Auto-captura de errores globales
   useEffect(() => {
     if (!enableAutoCapture || !state.isInitialized) return;
 
@@ -201,7 +233,6 @@ export const NeuralSystemProvider: React.FC<NeuralSystemProviderProps> = ({
     <NeuralSystemContext.Provider value={contextValue}>
       {children}
       
-      {/* Widget de Dashboard Neural */}
       {showWidget && showDashboard && (
         <NeuralDashboardWidget
           isMinimized={widgetMinimized}
