@@ -9,9 +9,49 @@ import { RealTimeHealthMonitor } from '@/core/monitoring/RealTimeHealthMonitor';
 import { intelligentNav } from '@/core/navigation/IntelligentNavigationSystem';
 import { CheckCircle, XCircle, AlertTriangle, Activity, Zap, Award } from 'lucide-react';
 
+// Definir interfaces TypeScript para mayor seguridad de tipos
+interface ValidationReport {
+  overall: 'excellent' | 'good' | 'warning' | 'critical';
+  score: number;
+  systemHealth: {
+    performance: number;
+    stability: number;
+    memory_usage: number;
+    response_time: number;
+  };
+  tests: ValidationTest[];
+  certification: {
+    level: 'PLATINUM' | 'GOLD' | 'SILVER' | 'BRONZE';
+    validUntil: string;
+    issues: string[];
+  };
+}
+
+interface ValidationTest {
+  testType: string;
+  passed: boolean;
+  metrics: {
+    duration: number;
+    peakMemoryUsage: number;
+    averageResponseTime: number;
+    errorCount: number;
+  };
+  recommendations?: string[];
+}
+
+interface TestResult {
+  dimensionId: string;
+  passed: boolean;
+  errors: string[];
+  performance: {
+    loadTime: number;
+  };
+  coverage: number;
+}
+
 export const ValidationControlCenter: React.FC = () => {
-  const [validationReport, setValidationReport] = useState<any>(null);
-  const [testResults, setTestResults] = useState<any[]>([]);
+  const [validationReport, setValidationReport] = useState<ValidationReport | null>(null);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [currentPhase, setCurrentPhase] = useState<string>('');
 
@@ -58,7 +98,7 @@ export const ValidationControlCenter: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string): React.ReactNode => {
     switch (status) {
       case 'PASSED':
       case 'excellent':
@@ -74,7 +114,7 @@ export const ValidationControlCenter: React.FC = () => {
     }
   };
 
-  const getCertificationBadge = (level: string) => {
+  const getCertificationBadge = (level: string): React.ReactNode => {
     const colors: Record<string, string> = {
       'PLATINUM': 'from-purple-400 to-purple-600',
       'GOLD': 'from-yellow-400 to-yellow-600',
@@ -179,12 +219,12 @@ export const ValidationControlCenter: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               {Object.entries(validationReport.systemHealth).map(([metric, score]) => (
                 <div key={metric} className="bg-white/5 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-white mb-2">{score as number}%</div>
+                  <div className="text-2xl font-bold text-white mb-2">{score}%</div>
                   <div className="text-white/70 text-sm capitalize">{metric.replace('_', ' ')}</div>
                   <div className="w-full bg-white/20 rounded-full h-1 mt-2">
                     <div 
                       className="bg-purple-400 h-1 rounded-full transition-all duration-1000"
-                      style={{ width: `${score as number}%` }}
+                      style={{ width: `${score}%` }}
                     />
                   </div>
                 </div>
@@ -194,7 +234,7 @@ export const ValidationControlCenter: React.FC = () => {
             {/* Test Results */}
             <div className="space-y-3">
               <h4 className="text-white font-bold mb-3">Resultados de Tests</h4>
-              {validationReport.tests.map((test: any, index: number) => (
+              {validationReport.tests.map((test, index) => (
                 <div key={index} className="bg-white/5 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
