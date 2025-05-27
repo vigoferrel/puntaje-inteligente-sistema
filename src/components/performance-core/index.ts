@@ -5,7 +5,7 @@
  */
 
 // Lazy loading y carga optimizada
-export { LazyLoadWrapper, useIntelligentPreloading, resetPreloadManager } from '@/components/performance/LazyLoadWrapper';
+export { LazyLoadWrapper, useIntelligentPreloading } from '@/components/performance/LazyLoadWrapper';
 
 // Sistemas de carga por componentes
 export { createLazyComponent, ComponentPreloader } from '@/core/performance/LazyComponentLoader';

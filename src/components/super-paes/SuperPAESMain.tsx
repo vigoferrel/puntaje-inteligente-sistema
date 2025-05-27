@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { useUnifiedCinematic } from '@/components/cinematic/UnifiedCinematicProvider';
+import { useGlobalCinematic } from '@/contexts/GlobalCinematicContext';
 import { 
   Brain, 
   Target, 
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const SuperPAESMain: React.FC = () => {
-  const { state } = useUnifiedCinematic();
+  const { state } = useGlobalCinematic();
   const [activeTab, setActiveTab] = useState('overview');
   const [isLoading, setIsLoading] = useState(true);
 

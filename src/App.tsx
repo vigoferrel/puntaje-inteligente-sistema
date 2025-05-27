@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { GlobalCinematicProvider } from "@/contexts/GlobalCinematicContext";
 import { UnifiedEducationProvider } from "@/providers/UnifiedEducationProvider";
 import { IntersectionalProvider } from "@/contexts/IntersectionalProvider";
@@ -137,28 +138,30 @@ const AppRoutes = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <GlobalCinematicProvider>
-      <UnifiedEducationProvider>
-        <IntersectionalProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={
-                <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                    <p>Cargando Ecosistema Educativo...</p>
+    <AuthProvider>
+      <GlobalCinematicProvider>
+        <UnifiedEducationProvider>
+          <IntersectionalProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={
+                  <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+                      <p>Cargando Ecosistema Educativo...</p>
+                    </div>
                   </div>
-                </div>
-              }>
-                <AppRoutes />
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
-        </IntersectionalProvider>
-      </UnifiedEducationProvider>
-    </GlobalCinematicProvider>
+                }>
+                  <AppRoutes />
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </IntersectionalProvider>
+        </UnifiedEducationProvider>
+      </GlobalCinematicProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
