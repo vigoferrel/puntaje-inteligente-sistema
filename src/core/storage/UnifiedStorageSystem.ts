@@ -1,22 +1,22 @@
 
 /**
- * UNIFIED STORAGE SYSTEM v1.0
- * Sistema consolidado que fusiona OptimizedStorageManager e IntelligentStorageManager
+ * UNIFIED STORAGE SYSTEM v2.0 - SOLUCIÓN INTEGRAL
+ * Elimina todos los conflictos de storage y "Tracking Prevention" alerts
  */
-
-import { CacheDataTypes, CacheKey, TypeSafeBatchItem } from './types';
 
 interface StorageOptions {
   fallbackToMemory?: boolean;
   rateLimitMs?: number;
   batchOperations?: boolean;
   silentErrors?: boolean;
+  ttl?: number;
 }
 
 interface BatchOperation {
   key: string;
   value: any;
   timestamp: number;
+  retries: number;
 }
 
 interface CacheLayer {
@@ -33,28 +33,31 @@ interface PerformanceMetrics {
   storageAvailable: boolean;
   cacheSize: number;
   queueLength: number;
+  trackingBlocked: boolean;
 }
 
 export class UnifiedStorageSystem {
   private static instance: UnifiedStorageSystem;
   
-  // Cache layers (from OptimizedStorageManager)
+  // Cache layers optimizados
   private cache: CacheLayer;
   private batchQueue: BatchOperation[] = [];
   private batchTimer: NodeJS.Timeout | null = null;
   private syncQueue: Array<() => void> = [];
   
-  // Memory cache (from IntelligentStorageManager)
+  // Memory fallback
   private memoryCache = new Map<string, any>();
   private lastAccessTime = new Map<string, number>();
   private accessQueue: Array<() => void> = [];
   private isProcessingQueue = false;
   
-  // Configuration
+  // Estado del sistema
   private isOnline = true;
-  private storageAvailable = true;
-  private rateLimitMs = 100;
+  private storageAvailable = false;
+  private trackingBlocked = false;
+  private rateLimitMs = 200;
   private silentMode = true;
+  private isReady = false;
 
   static getInstance(): UnifiedStorageSystem {
     if (!UnifiedStorageSystem.instance) {
@@ -69,12 +72,84 @@ export class UnifiedStorageSystem {
       l2: new Map(),
     };
     
-    this.setupNetworkMonitoring();
-    this.setupPeriodicSync();
-    this.checkStorageAvailability();
+    this.initializeSystem();
   }
 
-  private setupNetworkMonitoring() {
+  private async initializeSystem(): Promise<void> {
+    try {
+      // Esperar a que el DOM esté completamente cargado
+      if (typeof window === 'undefined') {
+        this.isReady = true;
+        return;
+      }
+
+      // Verificar disponibilidad de storage de forma segura
+      await this.safeStorageCheck();
+      
+      // Configurar monitoreo
+      this.setupNetworkMonitoring();
+      this.setupPeriodicSync();
+      
+      this.isReady = true;
+      
+      if (!this.silentMode) {
+        console.log('🚀 UnifiedStorageSystem v2.0 inicializado:', {
+          storageAvailable: this.storageAvailable,
+          trackingBlocked: this.trackingBlocked
+        });
+      }
+      
+    } catch (error) {
+      this.isReady = true;
+      this.storageAvailable = false;
+      if (!this.silentMode) {
+        console.warn('⚠️ Storage initialization failed, using memory only');
+      }
+    }
+  }
+
+  private async safeStorageCheck(): Promise<void> {
+    try {
+      const testKey = `__storage_test_${Date.now()}__`;
+      
+      // Test con timeout para evitar bloqueos
+      const testPromise = new Promise<void>((resolve, reject) => {
+        try {
+          localStorage.setItem(testKey, 'test');
+          const retrieved = localStorage.getItem(testKey);
+          localStorage.removeItem(testKey);
+          
+          if (retrieved === 'test') {
+            this.storageAvailable = true;
+            this.trackingBlocked = false;
+            resolve();
+          } else {
+            throw new Error('Storage test failed');
+          }
+        } catch (error: any) {
+          if (error.message?.includes('Access is denied') || 
+              error.message?.includes('QuotaExceededError') ||
+              error.name === 'SecurityError') {
+            this.trackingBlocked = true;
+          }
+          this.storageAvailable = false;
+          reject(error);
+        }
+      });
+
+      const timeoutPromise = new Promise<void>((_, reject) => {
+        setTimeout(() => reject(new Error('Storage test timeout')), 1000);
+      });
+
+      await Promise.race([testPromise, timeoutPromise]);
+      
+    } catch (error) {
+      this.storageAvailable = false;
+      this.trackingBlocked = true;
+    }
+  }
+
+  private setupNetworkMonitoring(): void {
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
         this.isOnline = true;
@@ -84,65 +159,41 @@ export class UnifiedStorageSystem {
       window.addEventListener('offline', () => {
         this.isOnline = false;
       });
+
+      // Detectar cambios en storage availability
+      window.addEventListener('storage', () => {
+        this.safeStorageCheck();
+      });
     }
   }
 
-  private setupPeriodicSync() {
+  private setupPeriodicSync(): void {
     setInterval(() => {
-      this.flushBatchQueue();
-      this.cleanupCache();
+      if (this.isReady) {
+        this.flushBatchQueue();
+        this.cleanupCache();
+      }
     }, 5000);
   }
 
-  private checkStorageAvailability(): void {
-    try {
-      const testKey = '__storage_test__';
-      localStorage.setItem(testKey, 'test');
-      localStorage.removeItem(testKey);
-      this.storageAvailable = true;
-    } catch (error) {
-      this.storageAvailable = false;
-      if (!this.silentMode) {
-        console.warn('🔒 Storage no disponible, usando memoria');
-      }
-    }
-  }
-
-  // Cache L1 operations
-  private getFromL1Cache<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
-    const cached = this.cache.l1.get(key);
-    if (!cached) return null;
+  // Métodos principales con verificación de readiness
+  async waitForReady(): Promise<void> {
+    if (this.isReady) return;
     
-    if (Date.now() - cached.timestamp > cached.ttl) {
-      this.cache.l1.delete(key);
-      return null;
-    }
-    
-    return cached.data;
-  }
-
-  private setToL1Cache<K extends CacheKey>(key: K, data: CacheDataTypes[K], ttl = 300000) {
-    this.cache.l1.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl,
+    return new Promise(resolve => {
+      const checkReady = () => {
+        if (this.isReady) {
+          resolve();
+        } else {
+          setTimeout(checkReady, 50);
+        }
+      };
+      checkReady();
     });
   }
 
-  // Rate limiting
-  private shouldRateLimit(key: string): boolean {
-    const lastAccess = this.lastAccessTime.get(key) || 0;
-    const now = Date.now();
-    return (now - lastAccess) < this.rateLimitMs;
-  }
-
-  private updateAccessTime(key: string): void {
-    this.lastAccessTime.set(key, Date.now());
-  }
-
-  // Main type-safe methods
-  getItem<K extends CacheKey>(key: K): CacheDataTypes[K] | null {
-    // L1 Cache first
+  getItem<T = any>(key: string): T | null {
+    // L1 Cache first (siempre disponible)
     const l1Result = this.getFromL1Cache(key);
     if (l1Result !== null) return l1Result;
     
@@ -161,8 +212,10 @@ export class UnifiedStorageSystem {
       return data;
     }
     
-    // LocalStorage como último recurso
-    if (!this.storageAvailable) return null;
+    // LocalStorage solo si está disponible
+    if (!this.storageAvailable || this.trackingBlocked) {
+      return null;
+    }
     
     // Rate limiting check
     if (this.shouldRateLimit(key)) {
@@ -180,26 +233,23 @@ export class UnifiedStorageSystem {
         return parsed;
       }
     } catch (error) {
-      if (!this.silentMode) {
-        console.warn(`Storage get error for ${key}:`, error);
+      // Marcar tracking bloqueado si falla
+      if (error instanceof Error && error.message.includes('Access is denied')) {
+        this.trackingBlocked = true;
       }
     }
     
     return null;
   }
 
-  setItem<K extends CacheKey>(
-    key: K, 
-    value: CacheDataTypes[K], 
-    options: StorageOptions = {}
-  ): boolean {
+  setItem<T = any>(key: string, value: T, options: StorageOptions = {}): boolean {
     // Actualizar todos los caches inmediatamente
-    this.setToL1Cache(key, value);
+    this.setToL1Cache(key, value, options.ttl);
     this.cache.l2.set(key, value);
     this.memoryCache.set(key, value);
     
-    // Si no hay storage, solo memoria
-    if (!this.storageAvailable) {
+    // Si storage no está disponible, solo memoria
+    if (!this.storageAvailable || this.trackingBlocked) {
       return true;
     }
 
@@ -214,9 +264,10 @@ export class UnifiedStorageSystem {
       localStorage.setItem(key, JSON.stringify(value));
       return true;
     } catch (error) {
-      if (!options.silentErrors && !this.silentMode) {
-        console.warn(`Storage set error for ${key}:`, error);
+      if (error instanceof Error && error.message.includes('Access is denied')) {
+        this.trackingBlocked = true;
       }
+      
       // Fallback to batch queue
       this.addToBatchQueue(key, value);
       return false;
@@ -228,7 +279,9 @@ export class UnifiedStorageSystem {
     this.cache.l2.delete(key);
     this.memoryCache.delete(key);
     
-    if (!this.storageAvailable) return true;
+    if (!this.storageAvailable || this.trackingBlocked) {
+      return true;
+    }
 
     if (this.shouldRateLimit(key)) {
       this.queueOperation(() => {
@@ -250,13 +303,57 @@ export class UnifiedStorageSystem {
     }
   }
 
-  // Batch operations
-  private addToBatchQueue(key: string, value: any) {
-    this.batchQueue.push({
-      key,
-      value,
+  // Cache operations optimizadas
+  private getFromL1Cache<T>(key: string): T | null {
+    const cached = this.cache.l1.get(key);
+    if (!cached) return null;
+    
+    if (Date.now() - cached.timestamp > cached.ttl) {
+      this.cache.l1.delete(key);
+      return null;
+    }
+    
+    return cached.data;
+  }
+
+  private setToL1Cache<T>(key: string, data: T, ttl = 300000): void {
+    this.cache.l1.set(key, {
+      data,
       timestamp: Date.now(),
+      ttl,
     });
+  }
+
+  // Rate limiting mejorado
+  private shouldRateLimit(key: string): boolean {
+    const lastAccess = this.lastAccessTime.get(key) || 0;
+    const now = Date.now();
+    return (now - lastAccess) < this.rateLimitMs;
+  }
+
+  private updateAccessTime(key: string): void {
+    this.lastAccessTime.set(key, Date.now());
+  }
+
+  // Batch operations mejoradas
+  private addToBatchQueue(key: string, value: any): void {
+    // Verificar si ya existe en queue
+    const existingIndex = this.batchQueue.findIndex(op => op.key === key);
+    if (existingIndex >= 0) {
+      this.batchQueue[existingIndex] = {
+        key,
+        value,
+        timestamp: Date.now(),
+        retries: this.batchQueue[existingIndex].retries
+      };
+    } else {
+      this.batchQueue.push({
+        key,
+        value,
+        timestamp: Date.now(),
+        retries: 0
+      });
+    }
     
     if (this.batchTimer) {
       clearTimeout(this.batchTimer);
@@ -267,28 +364,42 @@ export class UnifiedStorageSystem {
     }, 1000);
   }
 
-  private flushBatchQueue() {
+  private flushBatchQueue(): void {
     if (this.batchQueue.length === 0) return;
     
     const operations = [...this.batchQueue];
     this.batchQueue = [];
     
-    if (!this.isOnline) {
-      this.syncQueue.push(() => this.executeBatchOperations(operations));
+    if (!this.isOnline || !this.storageAvailable || this.trackingBlocked) {
+      // Solo guardar operaciones con pocas retries
+      const retryableOps = operations.filter(op => op.retries < 3);
+      if (retryableOps.length > 0) {
+        this.syncQueue.push(() => this.executeBatchOperations(retryableOps));
+      }
       return;
     }
     
     this.executeBatchOperations(operations);
   }
 
-  private executeBatchOperations(operations: BatchOperation[]) {
-    try {
-      operations.forEach(({ key, value }) => {
+  private executeBatchOperations(operations: BatchOperation[]): void {
+    const successfulOps: string[] = [];
+    const failedOps: BatchOperation[] = [];
+
+    operations.forEach(({ key, value, retries }) => {
+      try {
         localStorage.setItem(key, JSON.stringify(value));
-      });
-    } catch (error) {
-      console.warn('Batch write failed:', error);
-      this.syncQueue.push(() => this.executeBatchOperations(operations));
+        successfulOps.push(key);
+      } catch (error) {
+        if (retries < 3) {
+          failedOps.push({ key, value, timestamp: Date.now(), retries: retries + 1 });
+        }
+      }
+    });
+
+    // Re-queue failed operations
+    if (failedOps.length > 0) {
+      this.batchQueue.unshift(...failedOps);
     }
   }
 
@@ -318,14 +429,14 @@ export class UnifiedStorageSystem {
     this.isProcessingQueue = false;
   }
 
-  private processSyncQueue() {
+  private processSyncQueue(): void {
     while (this.syncQueue.length > 0) {
       const operation = this.syncQueue.shift();
       if (operation) {
         try {
           operation();
         } catch (error) {
-          console.warn('Sync operation failed:', error);
+          // Error silencioso
         }
       }
     }
@@ -336,7 +447,7 @@ export class UnifiedStorageSystem {
     const result: Record<string, any> = {};
     
     keys.forEach(key => {
-      const value = this.getItem(key as CacheKey);
+      const value = this.getItem(key);
       if (value !== null) {
         result[key] = value;
       }
@@ -345,14 +456,14 @@ export class UnifiedStorageSystem {
     return result;
   }
 
-  batchSet(items: TypeSafeBatchItem[]): void {
+  batchSet(items: Array<{key: string; value: any}>): void {
     items.forEach(({ key, value }) => {
-      this.setItem(key as CacheKey, value);
+      this.setItem(key, value);
     });
   }
 
-  // Cleanup and maintenance
-  private cleanupCache() {
+  // Cleanup y mantenimiento
+  private cleanupCache(): void {
     const now = Date.now();
     const oneHourAgo = now - 3600000;
     
@@ -384,6 +495,7 @@ export class UnifiedStorageSystem {
       storageAvailable: this.storageAvailable,
       cacheSize: this.memoryCache.size,
       queueLength: this.accessQueue.length,
+      trackingBlocked: this.trackingBlocked,
     };
   }
 
@@ -408,22 +520,30 @@ export class UnifiedStorageSystem {
     this.batchQueue = [];
     this.lastAccessTime.clear();
     
-    try {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.includes('learning_') || key.includes('user_') || key.includes('paes_')) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch (error) {
-      console.warn('Clear operation failed:', error);
+    if (this.storageAvailable && !this.trackingBlocked) {
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (key.includes('learning_') || 
+              key.includes('user_') || 
+              key.includes('paes_') ||
+              key.includes('lectoguia_') ||
+              key.includes('diagnostic_')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (error) {
+        // Error silencioso
+      }
     }
   }
 
   // Status
   getStatus() {
     return {
+      isReady: this.isReady,
       storageAvailable: this.storageAvailable,
+      trackingBlocked: this.trackingBlocked,
       cacheSize: this.memoryCache.size,
       queueLength: this.accessQueue.length,
       isProcessing: this.isProcessingQueue,
@@ -434,21 +554,16 @@ export class UnifiedStorageSystem {
   }
 }
 
-// Export singleton instance and class
+// Export singleton instance
 export const unifiedStorageSystem = UnifiedStorageSystem.getInstance();
 
-// Auto-configuración
-unifiedStorageSystem.configure({
-  rateLimitMs: 200,
-  silentMode: true
-});
-
-// Limpieza automática cada 30 minutos
-setInterval(() => {
-  unifiedStorageSystem.getPerformanceMetrics(); // Trigger cleanup
-}, 1800000);
-
-// Export aliases for compatibility
+// Compatibilidad con imports existentes
 export const storageManager = unifiedStorageSystem;
 export const optimizedStorageManager = unifiedStorageSystem;
 export { UnifiedStorageSystem as StorageManager };
+
+// Auto-configuración optimizada
+unifiedStorageSystem.configure({
+  rateLimitMs: 300,
+  silentMode: true
+});

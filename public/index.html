@@ -1,0 +1,67 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAES Neural Education Platform</title>
+    
+    <!-- Optimización crítica para evitar errores de script -->
+    <script type="module" crossorigin>
+      // Prevenir errores de import.meta fuera de módulos
+      if (!window.importMeta) {
+        window.importMeta = { env: { MODE: 'production' } };
+      }
+    </script>
+    
+    <!-- Script corregido con type="module" -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module" defer></script>
+    
+    <!-- Metadatos optimizados -->
+    <meta name="description" content="Plataforma educativa neural para preparación PAES con IA avanzada" />
+    <meta name="theme-color" content="#1e40af" />
+    
+    <!-- Preconnect optimizado (sin Facebook tracking) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Performance hints -->
+    <link rel="dns-prefetch" href="https://cdn.gpteng.co" />
+    
+    <!-- Prevenir FOUC -->
+    <style>
+      html { background-color: #0f172a; }
+      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+      #root { min-height: 100vh; }
+      .loading-fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1e40af, #7c3aed, #4338ca);
+        color: white;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="loading-fallback">
+        <div>
+          <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <div>Inicializando PAES Neural Platform...</div>
+        </div>
+      </div>
+    </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+    
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

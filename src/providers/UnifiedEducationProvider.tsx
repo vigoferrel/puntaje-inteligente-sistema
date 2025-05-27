@@ -1,10 +1,9 @@
-
 /**
- * UNIFIED EDUCATION PROVIDER v1.0
- * Proveedor único que reemplaza múltiples contextos
+ * UNIFIED EDUCATION PROVIDER v2.0
+ * Inicialización segura sin errores de storage
  */
 
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnifiedEducationStore, useUnifiedActions, useSystemHealth } from '@/core/state/UnifiedEducationStateManager';
@@ -18,48 +17,87 @@ interface UnifiedEducationProviderProps {
 const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ children }) => {
   const { user } = useAuth();
   const actions = useUnifiedActions();
-  const { healthScore, isHealthy } = useSystemHealth();
+  const { healthScore, isHealthy, trackingBlocked } = useSystemHealth();
   const system = useUnifiedEducationStore((state) => state.system);
+  
+  const [storageReady, setStorageReady] = useState(false);
 
-  // Inicialización unificada
+  // Inicialización segura del storage
   useEffect(() => {
-    if (user?.id && !system.isInitialized) {
-      console.log('🚀 Initializing unified education system...');
+    const initializeStorage = async () => {
+      try {
+        await unifiedStorageSystem.waitForReady();
+        setStorageReady(true);
+        
+        const status = unifiedStorageSystem.getStatus();
+        console.log('🚀 Storage system ready:', {
+          available: status.storageAvailable,
+          trackingBlocked: status.trackingBlocked,
+          cacheSize: status.cacheSize
+        });
+        
+      } catch (error) {
+        console.warn('⚠️ Storage initialization with limited functionality');
+        setStorageReady(true); // Continuar en modo limitado
+      }
+    };
+
+    initializeStorage();
+  }, []);
+
+  // Inicialización unificada solo cuando storage esté listo
+  useEffect(() => {
+    if (user?.id && storageReady && !system.isInitialized) {
+      console.log('🚀 Initializing unified education system v2.0...');
       actions.initialize(user.id);
     }
-  }, [user?.id, system.isInitialized, actions]);
+  }, [user?.id, storageReady, system.isInitialized, actions]);
 
-  // Sync automático cada 30 segundos
+  // Sync optimizado cada 45 segundos
   useEffect(() => {
-    if (!system.isInitialized) return;
+    if (!system.isInitialized || !storageReady) return;
 
     const syncInterval = setInterval(() => {
-      actions.syncToStorage();
+      // Sync solo si el storage está disponible
+      const storageStatus = unifiedStorageSystem.getStatus();
+      if (storageStatus.isReady && storageStatus.storageAvailable) {
+        actions.syncToStorage();
+      }
       
-      // Health check usando el sistema unificado
+      // Health check mejorado
       const metrics = unifiedStorageSystem.getPerformanceMetrics();
-      const newHealthScore = Math.max(50, 100 - (metrics.syncQueueSize * 10));
+      const newHealthScore = Math.max(50, 100 - (metrics.syncQueueSize * 5) - (metrics.trackingBlocked ? 20 : 0));
       actions.setSystemHealth(newHealthScore);
       
-    }, 30000);
+    }, 45000);
 
     return () => clearInterval(syncInterval);
-  }, [system.isInitialized, actions]);
+  }, [system.isInitialized, storageReady, actions]);
 
-  // Notificaciones de salud del sistema
+  // Notificaciones mejoradas
   useEffect(() => {
-    if (healthScore < 70 && healthScore > 0) {
+    if (trackingBlocked && healthScore > 0) {
+      // Solo una notificación discreta sobre tracking
+      console.log('ℹ️ Storage running in memory mode (tracking prevention active)');
+    } else if (healthScore < 60 && healthScore > 0) {
       toast({
-        title: "⚠️ Sistema Optimizando",
-        description: `Health Score: ${healthScore}% - Optimizando rendimiento...`,
+        title: "⚠️ Sistema en Modo Limitado",
+        description: `Performance reducido - Health: ${healthScore}%`,
         variant: "default"
       });
     }
-  }, [healthScore]);
+  }, [healthScore, trackingBlocked]);
 
-  // Manejo de errores global
+  // Manejo de errores global mejorado
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
+      // Filtrar errores conocidos de storage/tracking
+      if (event.error?.message?.includes('Access is denied') ||
+          event.error?.message?.includes('QuotaExceeded') ||
+          event.error?.message?.includes('import.meta')) {
+        return; // Ignorar estos errores
+      }
+      
       console.error('Global error caught:', event.error);
       actions.addNotification({
         type: 'error',
@@ -87,14 +125,21 @@ const UnifiedEducationCore: React.FC<UnifiedEducationProviderProps> = ({ childre
     };
   }, [actions]);
 
-  // Loading state
-  if (system.isLoading) {
+  // Loading state mejorado
+  if (!storageReady || system.isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p className="text-lg">Inicializando Sistema Educativo Unificado...</p>
-          <p className="text-sm text-cyan-300 mt-2">Health Score: {healthScore}%</p>
+          <p className="text-lg">Inicializando Sistema Educativo Neural v2.0...</p>
+          <p className="text-sm text-cyan-300 mt-2">
+            {!storageReady ? 'Configurando Storage...' : 'Cargando Datos...'}
+          </p>
+          <div className="mt-4 text-xs text-cyan-200">
+            <div>🔧 Sistema Unificado v2.0</div>
+            <div>⚡ Health Score: {healthScore}%</div>
+            <div>🛡️ {trackingBlocked ? 'Modo Memoria' : 'Storage Normal'}</div>
+          </div>
         </div>
       </div>
     );

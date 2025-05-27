@@ -1,6 +1,6 @@
 /**
- * UNIFIED EDUCATION STATE MANAGER v1.0
- * Sistema centralizado que consolida todo el estado educativo
+ * UNIFIED EDUCATION STATE MANAGER v2.0
+ * Integrado con UnifiedStorageSystem v2.0 - Sin errores de storage
  */
 
 import { create } from 'zustand';
@@ -153,7 +153,7 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
         immer((set, get) => ({
           ...initialState,
           
-          // Sistema
+          // Sistema con storage seguro
           initialize: async (userId: string) => {
             if (get().system.isInitialized) return;
             
@@ -163,26 +163,38 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
             });
             
             try {
-              // Cargar datos desde storage unificado optimizado
+              // Esperar a que el storage esté listo
+              await unifiedStorageSystem.waitForReady();
+              
+              console.log('🚀 Inicializando sistema educativo unificado v2.0...');
+              
+              // Cargar datos con el nuevo sistema seguro
               const cachedData = unifiedStorageSystem.batchGet([
                 'user_preferences_cache_v2',
                 'lectoguia_chat_settings_v2',
-                'learning_plans_v2'
+                'learning_plans_v2',
+                'unified_metrics_v2'
               ]);
               
               set((state) => {
                 if (cachedData.user_preferences_cache_v2) {
                   state.user.preferences = cachedData.user_preferences_cache_v2;
                 }
+                if (cachedData.unified_metrics_v2) {
+                  state.metrics = { ...state.metrics, ...cachedData.unified_metrics_v2 };
+                }
+                
                 state.system.isInitialized = true;
                 state.system.isLoading = false;
                 state.system.lastSync = new Date();
+                state.system.healthScore = unifiedStorageSystem.getStatus().storageAvailable ? 100 : 80;
               });
               
             } catch (error) {
               console.error('Error initializing unified state:', error);
               set((state) => {
                 state.system.isLoading = false;
+                state.system.healthScore = 60; // Modo degradado
               });
             }
           },
@@ -298,10 +310,18 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
           syncToStorage: () => {
             const state = get();
             
+            // Solo sincronizar si el storage está disponible
+            const storageStatus = unifiedStorageSystem.getStatus();
+            if (!storageStatus.isReady) return;
+            
             unifiedStorageSystem.batchSet([
               { key: 'user_preferences_cache_v2', value: state.user.preferences },
               { key: 'lectoguia_state_v2', value: state.lectoguia },
-              { key: 'unified_metrics_v2', value: state.metrics }
+              { key: 'unified_metrics_v2', value: state.metrics },
+              { key: 'system_health_v2', value: { 
+                healthScore: state.system.healthScore,
+                lastSync: state.system.lastSync 
+              }}
             ]);
           },
           
@@ -309,7 +329,8 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
             const cached = unifiedStorageSystem.batchGet([
               'user_preferences_cache_v2',
               'lectoguia_state_v2',
-              'unified_metrics_v2'
+              'unified_metrics_v2',
+              'system_health_v2'
             ]);
             
             set((state) => {
@@ -322,20 +343,30 @@ export const useUnifiedEducationStore = create<UnifiedStore>()(
               if (cached.unified_metrics_v2) {
                 state.metrics = cached.unified_metrics_v2;
               }
+              if (cached.system_health_v2) {
+                state.system.healthScore = cached.system_health_v2.healthScore || 100;
+                state.system.lastSync = cached.system_health_v2.lastSync || null;
+              }
             });
           },
         }))
       ),
       {
-        name: 'unified-education-store',
+        name: 'unified-education-store-v2',
         partialize: (state) => ({
-          user: state.user,
+          user: { preferences: state.user.preferences },
           ui: { cinematicMode: state.ui.cinematicMode },
           metrics: state.metrics,
         }),
+        // Usar el storage unificado para persistencia
+        storage: {
+          getItem: (name) => unifiedStorageSystem.getItem(name),
+          setItem: (name, value) => unifiedStorageSystem.setItem(name, value),
+          removeItem: (name) => unifiedStorageSystem.removeItem(name),
+        },
       }
     ),
-    { name: 'UnifiedEducationStore' }
+    { name: 'UnifiedEducationStore-v2' }
   )
 );
 
@@ -369,14 +400,17 @@ export const useUnifiedActions = () => useUnifiedEducationStore((state) => ({
   loadFromStorage: state.loadFromStorage,
 }));
 
-// Health monitoring
+// Health monitoring mejorado
 export const useSystemHealth = () => {
   const healthScore = useUnifiedEducationStore((state) => state.system.healthScore);
   const connectionStatus = useUnifiedEducationStore((state) => state.ui.connectionStatus);
+  const storageMetrics = unifiedStorageSystem.getPerformanceMetrics();
   
   return {
     healthScore,
     connectionStatus,
-    isHealthy: healthScore > 70 && connectionStatus === 'connected',
+    storageMetrics,
+    isHealthy: healthScore > 70 && connectionStatus === 'connected' && !storageMetrics.trackingBlocked,
+    trackingBlocked: storageMetrics.trackingBlocked,
   };
 };
