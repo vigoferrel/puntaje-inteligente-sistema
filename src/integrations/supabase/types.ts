@@ -3611,6 +3611,16 @@ export type Database = {
           policy_with_check: string
         }[]
       }
+      neural_performance_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          metric_name: string
+          avg_response_time: number
+          total_events: number
+          events_per_hour: number
+          top_components: string[]
+        }[]
+      }
       obtener_estadisticas_respuestas_examen: {
         Args: { codigo_examen: string }
         Returns: Json
