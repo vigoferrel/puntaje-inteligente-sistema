@@ -96,6 +96,13 @@ export type Database = {
             referencedRelation: "ai_conversation_sessions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_ai_conversation_messages_session_id"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversation_sessions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ai_conversation_sessions: {
@@ -377,6 +384,13 @@ export type Database = {
             referencedRelation: "banco_preguntas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_alternativas_respuesta_pregunta_id"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas"
+            referencedColumns: ["id"]
+          },
         ]
       }
       analisis_evaluacion: {
@@ -588,6 +602,13 @@ export type Database = {
             columns: ["sesion_id"]
             isOneToOne: false
             referencedRelation: "sesiones_evaluacion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_analisis_evaluacion_evaluacion_id"
+            columns: ["evaluacion_id"]
+            isOneToOne: false
+            referencedRelation: "evaluaciones"
             referencedColumns: ["id"]
           },
         ]
@@ -851,6 +872,20 @@ export type Database = {
             referencedRelation: "learning_nodes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_banco_preguntas_nodo_id"
+            columns: ["nodo_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "fk_banco_preguntas_nodo_id"
+            columns: ["nodo_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       battle_sessions: {
@@ -1043,7 +1078,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_calendar_events_related_node_id"
+            columns: ["related_node_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "fk_calendar_events_related_node_id"
+            columns: ["related_node_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_calendar_events_related_plan_id"
+            columns: ["related_plan_id"]
+            isOneToOne: false
+            referencedRelation: "generated_study_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       diagnostic_tests: {
         Row: {
@@ -1351,6 +1408,27 @@ export type Database = {
             referencedRelation: "paes_tests"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_exercises_diagnostic_id"
+            columns: ["diagnostic_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_tests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_exercises_node_id"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "fk_exercises_node_id"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       explicaciones_pregunta: {
@@ -1453,6 +1531,13 @@ export type Database = {
             columns: ["pregunta_id"]
             isOneToOne: false
             referencedRelation: "banco_preguntas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_explicaciones_pregunta_pregunta_id"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas"
             referencedColumns: ["id"]
           },
         ]
@@ -1644,6 +1729,13 @@ export type Database = {
           student_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_institution_students_institution_id"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "institution_students_institution_id_fkey"
             columns: ["institution_id"]
@@ -1857,6 +1949,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_learning_sequences_biologia_node_id"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "fk_learning_sequences_biologia_node_id"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "learning_sequences_biologia_node_id_fkey"
             columns: ["node_id"]
             isOneToOne: false
@@ -1937,6 +2043,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_neural_events_session_id"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "neural_telemetry_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "neural_events_session_id_fkey"
             columns: ["session_id"]
@@ -2054,6 +2167,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_node_weights_node_id"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "critical_nodes_analysis_ciencias_2024"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "fk_node_weights_node_id"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "learning_nodes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "node_weights_node_id_fkey"
             columns: ["node_id"]
             isOneToOne: false
@@ -2146,6 +2273,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_opciones_respuesta_pregunta_id"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "opciones_respuesta_pregunta_id_fkey"
             columns: ["pregunta_id"]
@@ -2282,6 +2416,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_preguntas_examen_id"
+            columns: ["examen_id"]
+            isOneToOne: false
+            referencedRelation: "examenes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "preguntas_examen_id_fkey"
             columns: ["examen_id"]
@@ -3515,6 +3656,15 @@ export type Database = {
           enunciado: string
           contexto: string
           opciones: Json
+        }[]
+      }
+      validate_foreign_key_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          constraint_name: string
+          status: string
+          invalid_rows: number
         }[]
       }
       validate_nodes_coherence: {
