@@ -15,7 +15,7 @@ import {
   Atom,
   Zap,
   Star,
-  Galaxy
+  Sparkles
 } from 'lucide-react';
 import { SafeThreeProvider } from '@/core/three/SafeThreeProvider';
 import { PAESUniverseDashboard } from '@/components/paes-universe/PAESUniverseDashboard';
@@ -95,7 +95,7 @@ export const EducationalUniverse: React.FC = () => {
               }}
               className="w-16 h-16 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center"
             >
-              <Galaxy className="w-8 h-8 text-white" />
+              <Sparkles className="w-8 h-8 text-white" />
             </motion.div>
             
             <div>
@@ -140,7 +140,7 @@ export const EducationalUniverse: React.FC = () => {
               value="galaxies" 
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 text-white"
             >
-              <Galaxy className="w-4 h-4 mr-2" />
+              <Sparkles className="w-4 h-4 mr-2" />
               Galaxias
             </TabsTrigger>
             <TabsTrigger 
