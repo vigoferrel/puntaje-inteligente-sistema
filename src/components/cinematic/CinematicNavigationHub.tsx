@@ -1,193 +1,183 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
-  Home, 
   Brain, 
-  GraduationCap, 
+  Rocket, 
   Target, 
   BookOpen, 
-  BarChart3,
+  Calculator,
+  Award,
+  Volume2,
+  VolumeX,
   Settings,
-  Maximize2,
-  Minimize2
+  Home,
+  Globe
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const CinematicNavigationHub: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
   const navigate = useNavigate();
-  const location = useLocation();
 
   const navigationItems = [
     { 
-      path: '/', 
       icon: Home, 
       label: 'Inicio', 
-      color: 'from-blue-500 to-cyan-500',
-      description: 'Dashboard principal'
+      route: '/', 
+      color: 'from-purple-500 to-cyan-500' 
     },
     { 
-      path: '/unified', 
       icon: Brain, 
-      label: 'Sistema Unificado', 
-      color: 'from-purple-500 to-pink-500',
-      description: 'Plataforma IA completa'
+      label: 'LectoGuía', 
+      route: '/lectoguia', 
+      color: 'from-blue-500 to-indigo-500' 
     },
     { 
-      path: '/paes', 
-      icon: GraduationCap, 
-      label: 'PAES Dashboard', 
-      color: 'from-green-500 to-emerald-500',
-      description: 'Métricas y progreso'
-    },
-    { 
-      path: '/neural-command', 
       icon: Target, 
-      label: 'Comando Neural', 
-      color: 'from-red-500 to-orange-500',
-      description: 'Centro de control'
+      label: 'Diagnóstico', 
+      route: '/diagnostic', 
+      color: 'from-red-500 to-pink-500' 
     },
     { 
-      path: '/lectoguia', 
+      icon: Calculator, 
+      label: 'Centro Financiero', 
+      route: '/financial', 
+      color: 'from-green-500 to-emerald-500' 
+    },
+    { 
       icon: BookOpen, 
-      label: 'LectoGuía IA', 
-      color: 'from-indigo-500 to-purple-500',
-      description: 'Asistente de lectura'
+      label: 'Planificador', 
+      route: '/planning', 
+      color: 'from-orange-500 to-yellow-500' 
     },
     { 
-      path: '/analytics', 
-      icon: BarChart3, 
-      label: 'Analytics', 
-      color: 'from-yellow-500 to-orange-500',
-      description: 'Análisis avanzado'
+      icon: Globe, 
+      label: 'Universo 3D', 
+      route: '/universe', 
+      color: 'from-pink-500 to-purple-500' 
+    },
+    { 
+      icon: Award, 
+      label: 'Logros', 
+      route: '/achievements', 
+      color: 'from-yellow-500 to-orange-500' 
     }
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const handleNavigation = (route: string) => {
+    console.log(`🎬 Navegación cinematográfica: ${route}`);
+    navigate(route);
+    setIsExpanded(false);
+  };
 
   return (
-    <motion.div
-      className="fixed left-4 top-1/2 transform -translate-y-1/2 z-40"
-      initial={{ x: -100, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.5 }}
-    >
-      <div className="relative">
-        {/* Hub principal */}
-        <motion.div
-          className="bg-black/60 backdrop-blur-md rounded-2xl border border-white/20 p-2"
-          animate={{ 
-            scale: isExpanded ? 1.05 : 1,
-            borderColor: isExpanded ? 'rgba(139, 92, 246, 0.5)' : 'rgba(255, 255, 255, 0.2)'
-          }}
-          transition={{ duration: 0.3 }}
-        >
-          {/* Botón de expansión */}
-          <motion.button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-12 h-12 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl flex items-center justify-center mb-2 group"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+    <div className="fixed bottom-6 right-6 z-50">
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            className="absolute bottom-16 right-0 space-y-3"
           >
-            {isExpanded ? (
-              <Minimize2 className="w-5 h-5 text-white" />
-            ) : (
-              <Maximize2 className="w-5 h-5 text-white" />
-            )}
-          </motion.button>
-
-          {/* Navegación compacta */}
-          {!isExpanded && (
-            <div className="space-y-2">
-              {navigationItems.slice(0, 4).map((item, index) => (
-                <motion.button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                    isActive(item.path)
-                      ? `bg-gradient-to-r ${item.color} shadow-lg`
-                      : 'bg-white/10 hover:bg-white/20'
-                  }`}
+            {navigationItems.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={item.route}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
                 >
-                  <item.icon className={`w-5 h-5 ${
-                    isActive(item.path) ? 'text-white' : 'text-white/70'
-                  }`} />
-                </motion.button>
-              ))}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Panel expandido */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              className="absolute left-16 top-0 bg-black/80 backdrop-blur-md rounded-2xl border border-white/20 p-4 min-w-[280px]"
-              initial={{ opacity: 0, x: -20, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -20, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-            >
-              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-400" />
-                Centro de Navegación
-              </h3>
-
-              <div className="space-y-3">
-                {navigationItems.map((item, index) => (
-                  <motion.button
-                    key={item.path}
-                    onClick={() => {
-                      navigate(item.path);
-                      setIsExpanded(false);
-                    }}
-                    className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all duration-300 group ${
-                      isActive(item.path)
-                        ? `bg-gradient-to-r ${item.color} text-white`
-                        : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white'
-                    }`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <Button
+                    onClick={() => handleNavigation(item.route)}
+                    className={`bg-gradient-to-r ${item.color} hover:opacity-90 transition-all backdrop-blur-xl border border-white/20 flex items-center gap-3 px-4 py-3`}
                   >
-                    <div className={`p-2 rounded-lg ${
-                      isActive(item.path) 
-                        ? 'bg-white/20' 
-                        : 'bg-white/10 group-hover:bg-white/20'
-                    }`}>
-                      <item.icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold text-sm">{item.label}</div>
-                      <div className="text-xs opacity-70">{item.description}</div>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
+                    <Icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Button>
+                </motion.div>
+              );
+            })}
 
-              {/* Configuración */}
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <motion.button
-                  className="w-full p-2 rounded-xl bg-white/5 hover:bg-white/10 flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Settings className="w-4 h-4" />
-                  <span className="text-sm">Configuración</span>
-                </motion.button>
-              </div>
+            {/* Controles de Audio */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: navigationItems.length * 0.05 }}
+              className="flex gap-2"
+            >
+              <Button
+                onClick={() => setAudioEnabled(!audioEnabled)}
+                className={`${
+                  audioEnabled 
+                    ? 'bg-gradient-to-r from-green-500 to-blue-500' 
+                    : 'bg-gradient-to-r from-gray-500 to-gray-600'
+                } hover:opacity-90 transition-all backdrop-blur-xl border border-white/20 p-3`}
+              >
+                {audioEnabled ? (
+                  <Volume2 className="w-5 h-5" />
+                ) : (
+                  <VolumeX className="w-5 h-5" />
+                )}
+              </Button>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Botón Principal */}
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        <Button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-600 via-cyan-600 to-pink-600 hover:from-purple-700 hover:via-cyan-700 hover:to-pink-700 transition-all shadow-2xl backdrop-blur-xl border-2 border-white/30"
+        >
+          <motion.div
+            animate={{ rotate: isExpanded ? 45 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {isExpanded ? (
+              <Settings className="w-8 h-8 text-white" />
+            ) : (
+              <Rocket className="w-8 h-8 text-white" />
+            )}
+          </motion.div>
+        </Button>
+      </motion.div>
+
+      {/* Badge de Estado */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="absolute -top-2 -left-2"
+      >
+        <Badge className="bg-gradient-to-r from-green-400 to-emerald-400 text-black text-xs">
+          Neural IA
+        </Badge>
+      </motion.div>
+
+      {/* Efecto de Pulso */}
+      <motion.div
+        className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 via-cyan-600 to-pink-600"
+        animate={{ 
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.6, 0.3]
+        }}
+        transition={{ 
+          duration: 2, 
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+    </div>
   );
 };
