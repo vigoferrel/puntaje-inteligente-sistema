@@ -15,13 +15,14 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({ childr
 
     // Configurar scroll suave y evitar bouncing
     container.style.overflowY = 'auto';
-    container.style.WebkitOverflowScrolling = 'touch';
     container.style.scrollBehavior = 'smooth';
     
-    // Evitar problemas de scroll en iOS
+    // Evitar problemas de scroll en iOS usando tipos seguros
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
       container.style.position = 'relative';
       container.style.height = '100vh';
+      // Usar setProperty para propiedades vendor-specific
+      container.style.setProperty('-webkit-overflow-scrolling', 'touch');
     }
 
     // Optimizar rendering para Canvas y 3D

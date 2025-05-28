@@ -61,8 +61,12 @@ export const useRealNeuralData = () => {
       const totalProgress = progressData?.reduce((sum, p) => sum + p.mastery_level, 0) || 0;
       const avgMastery = progressData?.length ? totalProgress / progressData.length : 0;
       
+      // Calcular engagement usando tipo de datos seguro
       const recentEngagement = neuralEvents?.reduce((sum, event) => {
-        const engagement = event.event_data?.engagement || 0;
+        const eventData = event.event_data as any;
+        const engagement = typeof eventData === 'object' && eventData !== null 
+          ? (eventData.engagement || 0) 
+          : 0;
         return sum + engagement;
       }, 0) || 0;
       
