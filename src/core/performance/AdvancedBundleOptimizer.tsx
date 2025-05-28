@@ -30,7 +30,7 @@ const createSafeLazyComponent = (importFn: () => Promise<any>, componentName: st
 const lazyComponents = {
   // Páginas principales
   Index: createSafeLazyComponent(() => import('@/pages/Index'), 'Index'),
-  Auth: createSafeLazyComponent(() => import('@/pages/auth'), 'Auth'),
+  Auth: createSafeLazyComponent(() => import('@/pages/Auth'), 'Auth'),
   
   // Módulos educativos
   LectoGuiaPage: createSafeLazyComponent(() => import('@/pages/LectoGuiaPage'), 'LectoGuiaPage'),
