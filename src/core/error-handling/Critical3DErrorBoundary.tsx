@@ -5,6 +5,7 @@ import { productionErrorRecovery } from './ProductionErrorRecovery';
 interface Props {
   children: ReactNode;
   componentName: string;
+  fallback2D?: ReactNode;
 }
 
 interface State {
@@ -59,6 +60,12 @@ export class Critical3DErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      // Si hay un fallback2D personalizado, renderizarlo en lugar del error UI
+      if (this.props.fallback2D) {
+        return this.props.fallback2D;
+      }
+
+      // Fallback de error por defecto
       return (
         <div className="min-h-screen bg-gradient-to-br from-red-900 via-purple-900 to-indigo-900 flex items-center justify-center">
           <div className="text-center text-white p-8 bg-black/30 backdrop-blur-md rounded-lg border border-white/20">
