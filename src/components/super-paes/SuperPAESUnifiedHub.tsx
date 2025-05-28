@@ -6,7 +6,7 @@ import { NeuralSystemProvider } from '@/components/neural/NeuralSystemProvider';
 
 export const SuperPAESUnifiedHub: React.FC = () => {
   return (
-    <div className="relative">
+    <div className="relative h-screen overflow-hidden">
       <NeuralSystemProvider showDashboard={false} enableAutoCapture={true}>
         <NeuralPAESHub />
         <SystemHealthMonitor />

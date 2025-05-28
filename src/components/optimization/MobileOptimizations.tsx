@@ -26,7 +26,7 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({ childr
     };
   }, []);
 
-  // Optimizaciones específicas para móvil
+  // Optimizaciones específicas para móvil sin bloquear scroll
   const mobileStyles = isMobile ? {
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',
@@ -45,15 +45,17 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({ childr
     >
       {children}
       
-      {/* Styles específicos para móvil */}
+      {/* Styles específicos para móvil con scroll habilitado */}
       <style>{`
         .mobile-optimized {
           -webkit-overflow-scrolling: touch;
+          overflow-y: auto;
         }
         
         .landscape-mode {
-          height: 100vh;
-          overflow: hidden;
+          /* Removido overflow: hidden que bloqueaba el scroll */
+          -webkit-overflow-scrolling: touch;
+          overflow-y: auto;
         }
         
         @media (max-width: 768px) {
@@ -64,6 +66,12 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({ childr
           
           .backdrop-blur-xl {
             backdrop-filter: blur(8px);
+          }
+          
+          /* Asegurar scroll suave en móviles */
+          body {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
           }
         }
       `}</style>
