@@ -59,7 +59,7 @@ export class AdaptiveRecommendationEngine {
   private static createPhaseBasedRecommendations(
     userProgress: UserProgressData,
     subject: string
-  ): AdaptiveRecommendation[] => {
+  ): AdaptiveRecommendation[] {
     const phaseRecommendations: Partial<Record<TLearningCyclePhase, AdaptiveRecommendation>> = {
       'EXPERIENCIA_CONCRETA': {
         id: `phase-ec-${Date.now()}`,
