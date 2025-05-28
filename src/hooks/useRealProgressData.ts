@@ -166,8 +166,8 @@ export const useRealProgressData = () => {
       
       // Learning velocity based on recent completion rate
       const recentCompletions = progress.filter(p => {
-        if (!p.updated_at || p.status !== 'completed') return false;
-        const completionDate = new Date(p.updated_at);
+        if (!p.completed_at || p.status !== 'completed') return false;
+        const completionDate = new Date(p.completed_at);
         return completionDate >= weekAgo;
       }).length;
       const learningVelocity = Math.min(100, recentCompletions * 20);
