@@ -1,7 +1,7 @@
 
 /// <reference types="vite/client" />
 
-// Declaraciones globales para Lovable v2024
+// Declaraciones globales para Lovable v2024.2
 declare global {
   interface Window {
     importMeta?: {
@@ -14,7 +14,10 @@ declare global {
     };
     __TRACKING_PREVENTION_DETECTED__?: boolean;
     __SKIP_GPT_ENGINEER__?: boolean;
-    // Lovable v2024 specific properties
+    __EDGE_DETECTED__?: boolean;
+    __CSP_RESTRICTIVE__?: boolean;
+    __GPT_ENGINEER_LOADED__?: boolean;
+    // Lovable v2024.2 specific properties
     lovableEditor?: {
       isActive: boolean;
       version: string;

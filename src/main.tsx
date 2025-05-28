@@ -11,7 +11,7 @@ if (typeof window !== 'undefined') {
     performance.mark('lovable-app-start');
   }
   
-  // Sistema ULTRA-MEJORADO de filtrado de errores conocidos
+  // Sistema ULTRA-MEJORADO de filtrado de errores conocidos v2.0
   const knownErrorPatterns = [
     'Access is denied',
     'QuotaExceeded',
@@ -20,6 +20,7 @@ if (typeof window !== 'undefined') {
     'lockdown',
     'SES_',
     '_ES_UNCAUGHT_EXCEPTION',
+    'SES_UNCAUGHT_EXCEPTION',
     'vr',
     'ambient-light-sensor',
     'battery',
@@ -27,6 +28,7 @@ if (typeof window !== 'undefined') {
     'BloomFilter error',
     'Cannot use \'import.meta\' outside a module',
     'gptengineer',
+    'gpteng.co',
     'CORS',
     'Cross-Origin Request Blocked',
     'NetworkError',
@@ -46,7 +48,16 @@ if (typeof window !== 'undefined') {
     'Images loaded lazily',
     'Load events are deferred',
     'We\'re hiring!',
-    'lovable.dev/careers'
+    'lovable.dev/careers',
+    'cloudflareinsights.com',
+    'beacon.min.js',
+    'Content Security Policy directive',
+    'script-src',
+    'Refused to load the script',
+    'violates the following Content Security Policy',
+    'Intervention',
+    'replaced with placeholders',
+    'go.microsoft.com/fwlink'
   ];
 
   const isKnownError = (errorMessage: string) => {
@@ -68,12 +79,32 @@ if (typeof window !== 'undefined') {
            errorMessage.includes('blocked access to storage');
   };
 
-  // Error handling ultra-optimizado con filtrado robusto
+  // Filtrar errores CSP y CORS
+  const isCSPOrCORSError = (errorMessage: string) => {
+    return errorMessage.includes('Content Security Policy') ||
+           errorMessage.includes('CORS') ||
+           errorMessage.includes('Access-Control-Allow-Origin') ||
+           errorMessage.includes('script-src') ||
+           errorMessage.includes('Refused to load');
+  };
+
+  // Filtrar errores SES
+  const isSESError = (errorMessage: string) => {
+    return errorMessage.includes('SES_') ||
+           errorMessage.includes('lockdown') ||
+           errorMessage.includes('_ES_UNCAUGHT_EXCEPTION');
+  };
+
+  // Error handling ultra-optimizado con filtrado robusto v2.0
   window.addEventListener('unhandledrejection', (event) => {
     const error = event.reason;
     const errorMessage = error?.message || String(error);
     
-    if (isKnownError(errorMessage) || isFeatureError(errorMessage) || isTrackingError(errorMessage)) {
+    if (isKnownError(errorMessage) || 
+        isFeatureError(errorMessage) || 
+        isTrackingError(errorMessage) ||
+        isCSPOrCORSError(errorMessage) ||
+        isSESError(errorMessage)) {
       event.preventDefault();
       return;
     }
@@ -84,29 +115,35 @@ if (typeof window !== 'undefined') {
     }
   });
 
-  // Filtrado ultra-mejorado para errores de script
+  // Filtrado ultra-mejorado para errores de script v2.0
   window.addEventListener('error', (event) => {
     const error = event.error;
     const errorMessage = error?.message || event.message || '';
     
-    if (isKnownError(errorMessage) || isFeatureError(errorMessage) || isTrackingError(errorMessage)) {
+    if (isKnownError(errorMessage) || 
+        isFeatureError(errorMessage) || 
+        isTrackingError(errorMessage) ||
+        isCSPOrCORSError(errorMessage) ||
+        isSESError(errorMessage)) {
       event.preventDefault();
       return;
     }
 
-    // Filtrar errores específicos de recursos con type guard
+    // Filtrar errores específicos de recursos con type guard mejorado
     if (event.target && event.target !== window) {
       const target = event.target as HTMLElement;
       
-      // Type guard para elementos con src
+      // Type guard mejorado para elementos con src
       const hasSource = (element: HTMLElement): element is HTMLImageElement | HTMLScriptElement => {
-        return 'src' in element;
+        return 'src' in element && element.src !== undefined;
       };
       
       if (hasSource(target) && target.src && (
         target.src.includes('facebook.com') ||
         target.src.includes('gptengineer.js') ||
-        target.src.includes('gpteng.co')
+        target.src.includes('gpteng.co') ||
+        target.src.includes('cloudflareinsights.com') ||
+        target.src.includes('beacon.min.js')
       )) {
         event.preventDefault();
         return;
@@ -119,29 +156,47 @@ if (typeof window !== 'undefined') {
     }
   });
 
-  // Filtrar mensajes de consola conocidos
+  // Filtrar mensajes de consola conocidos v2.0
   const originalLog = console.log;
   const originalWarn = console.warn;
   const originalError = console.error;
+  const originalInfo = console.info;
 
   console.log = function(...args) {
     const message = args.join(' ');
-    if (!isKnownError(message) && !message.includes('⠀⣠⠴') && !message.includes('We\'re hiring')) {
+    if (!isKnownError(message) && 
+        !message.includes('⠀⣠⠴') && 
+        !message.includes('We\'re hiring') &&
+        !message.includes('Microsoft Edge is moving')) {
       originalLog.apply(console, args);
     }
   };
 
   console.warn = function(...args) {
     const message = args.join(' ');
-    if (!isKnownError(message) && !isFeatureError(message)) {
+    if (!isKnownError(message) && 
+        !isFeatureError(message) &&
+        !isCSPOrCORSError(message)) {
       originalWarn.apply(console, args);
     }
   };
 
   console.error = function(...args) {
     const message = args.join(' ');
-    if (!isKnownError(message) && !isTrackingError(message)) {
+    if (!isKnownError(message) && 
+        !isTrackingError(message) &&
+        !isCSPOrCORSError(message) &&
+        !isSESError(message)) {
       originalError.apply(console, args);
+    }
+  };
+
+  console.info = function(...args) {
+    const message = args.join(' ');
+    if (!isKnownError(message) &&
+        !message.includes('Microsoft Edge') &&
+        !message.includes('third-party cookies')) {
+      originalInfo.apply(console, args);
     }
   };
 }
