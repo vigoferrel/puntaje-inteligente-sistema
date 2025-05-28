@@ -14,6 +14,7 @@ interface UnifiedButtonProps {
   loading?: boolean;
   icon?: React.ReactNode;
   cinematicEffect?: boolean;
+  title?: string;
 }
 
 export const UnifiedButton: React.FC<UnifiedButtonProps> = ({
@@ -26,6 +27,7 @@ export const UnifiedButton: React.FC<UnifiedButtonProps> = ({
   loading = false,
   icon,
   cinematicEffect = false,
+  title,
   ...props
 }) => {
   const baseButton = (
@@ -34,6 +36,7 @@ export const UnifiedButton: React.FC<UnifiedButtonProps> = ({
       variant={variant === 'neural' ? 'default' : variant}
       size={size}
       disabled={disabled || loading}
+      title={title}
       className={cn(
         variant === 'neural' && 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white',
         loading && 'opacity-50 cursor-not-allowed',
