@@ -5,8 +5,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from "@/components/ui/toaster";
 import { WebGLContextProvider } from '@/core/webgl/WebGLContextManager';
 
-// Lazy load pages to prevent simultaneous 3D context creation
-const HomePage = React.lazy(() => import('@/pages/HomePage'));
+// Usar páginas existentes en lugar de las que no existen
+const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const PAESUniversePage = React.lazy(() => import('@/pages/PAESUniversePage'));
 
 function App() {
@@ -26,7 +26,7 @@ function App() {
               }
             >
               <Routes>
-                <Route path="/" element={<HomePage />} />
+                <Route path="/" element={<Dashboard />} />
                 <Route path="/paes-universe" element={<PAESUniversePage />} />
               </Routes>
             </React.Suspense>

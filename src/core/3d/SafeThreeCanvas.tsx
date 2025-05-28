@@ -116,9 +116,8 @@ export const SafeThreeCanvas: React.FC<SafeThreeCanvasProps> = ({
         <Canvas
           camera={camera || { position: [0, 5, 10], fov: 60 }}
           onCreated={(state) => {
-            // Configurar para eficiencia
+            // Configurar para eficiencia (sin powerPreference)
             state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            state.gl.powerPreference = 'high-performance';
             onCreated?.(state.gl);
           }}
           className="rounded-lg overflow-hidden"
