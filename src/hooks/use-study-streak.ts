@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { ultraSilentLogger } from '@/core/logging/UltraSilentLogger';
 
 interface StudyStreakData {
   currentStreak: number;
@@ -43,7 +45,7 @@ export const useStudyStreak = () => {
         .order('last_activity_at', { ascending: false });
       
       if (progressError) {
-        console.error('Error fetching streak data:', progressError);
+        ultraSilentLogger.emergency('Error fetching streak data:', progressError);
         return;
       }
       
@@ -57,7 +59,6 @@ export const useStudyStreak = () => {
             const date = new Date(record.last_activity_at).toISOString().split('T')[0];
             studyDays.add(date);
             
-            // Track the most recent activity date
             if (!lastActivityDate || date > lastActivityDate) {
               lastActivityDate = date;
             }
@@ -70,14 +71,10 @@ export const useStudyStreak = () => {
         const today = new Date().toISOString().split('T')[0];
         const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
         
-        // Check if user studied today or yesterday to maintain streak
         const hasStudiedRecently = lastActivityDate === today || lastActivityDate === yesterday;
         
         if (hasStudiedRecently) {
-          // Calculate current streak by checking consecutive days backwards
-          currentStreak = 1; // Count today/yesterday
-          
-          // Count consecutive days before today/yesterday
+          currentStreak = 1;
           let checkDate = lastActivityDate === today ? yesterday : 
                          new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0];
           
@@ -87,12 +84,8 @@ export const useStudyStreak = () => {
             checkDate = prevDate.toISOString().split('T')[0];
           }
           
-          // Update longest streak if needed
           longestStreak = Math.max(currentStreak, longestStreak);
         } else {
-          // Streak broken, but calculate longest streak from historical data
-          // This would require more complex logic to find consecutive days in the past
-          // For simplicity, we'll just use the total study days as an approximation
           longestStreak = studyDays.size > 0 ? studyDays.size : 0;
         }
         
@@ -104,12 +97,10 @@ export const useStudyStreak = () => {
         };
         
         setStreakData(updatedData);
-        
-        // Cache in localStorage
         localStorage.setItem(`study_streak_${profile.id}`, JSON.stringify(updatedData));
       }
     } catch (err) {
-      console.error('Error in fetchStreakData:', err);
+      ultraSilentLogger.emergency('Error in fetchStreakData:', err);
       setError('No se pudo cargar los datos de racha de estudio');
     } finally {
       setLoading(false);
@@ -127,9 +118,6 @@ export const useStudyStreak = () => {
       let newStreak = streakData.currentStreak;
       let longestStreak = streakData.longestStreak;
       
-      // If last study date is yesterday, increment streak
-      // If last study date is today, keep streak
-      // Otherwise, reset streak to 1
       if (streakData.lastStudyDate) {
         const lastDate = new Date(streakData.lastStudyDate);
         const todayDate = new Date(today);
@@ -137,41 +125,33 @@ export const useStudyStreak = () => {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
         if (diffDays === 1) {
-          // Yesterday - increment streak
           newStreak += 1;
         } else if (diffDays !== 0) {
-          // Not yesterday or today - reset streak
           newStreak = 1;
         }
       } else {
-        // First time studying
         newStreak = 1;
       }
       
-      // Update longest streak if needed
       if (newStreak > longestStreak) {
         longestStreak = newStreak;
       }
       
-      // Record study activity in user_node_progress
-      // This is just a placeholder - in a real app, this would be
-      // done when user completes a specific node
       const { error } = await supabase
         .from('user_node_progress')
         .insert({
           user_id: profile.id,
-          node_id: '00000000-0000-0000-0000-000000000000', // Placeholder node ID
+          node_id: '00000000-0000-0000-0000-000000000000',
           status: 'in_progress',
           progress: 50,
           last_activity_at: new Date().toISOString()
         });
       
       if (error) {
-        console.error('Error updating streak:', error);
+        ultraSilentLogger.emergency('Error updating streak:', error);
         return;
       }
       
-      // Update local state
       const updatedData = {
         ...streakData,
         currentStreak: newStreak,
@@ -181,19 +161,16 @@ export const useStudyStreak = () => {
       };
       
       setStreakData(updatedData);
-      
-      // Update cache
       localStorage.setItem(`study_streak_${profile.id}`, JSON.stringify(updatedData));
       
     } catch (err) {
-      console.error('Error in updateStreak:', err);
+      ultraSilentLogger.emergency('Error in updateStreak:', err);
       setError('No se pudo actualizar la racha de estudio');
     } finally {
       setLoading(false);
     }
   };
 
-  // Load streak data when profile changes
   useEffect(() => {
     if (profile?.id) {
       fetchStreakData();

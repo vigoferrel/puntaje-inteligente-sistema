@@ -1,4 +1,3 @@
-
 import React, { Suspense, memo } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -19,6 +18,7 @@ import { CinematicRouteTransitions } from "@/components/cinematic/CinematicRoute
 import { ContextualVisualFeedback } from "@/components/cinematic/ContextualVisualFeedback";
 import { CinematicParticleSystem } from "@/components/cinematic/CinematicParticleSystem";
 import { useParticleSystem } from "@/components/cinematic/CinematicParticleSystem";
+import { ultraSilentLogger } from "@/core/logging/UltraSilentLogger";
 
 // QueryClient optimizado para mejor performance
 const queryClient = new QueryClient({
@@ -235,7 +235,7 @@ const CinematicAppWrapper: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Componente principal corregido sin dependencias circulares
+// Componente principal con logging ultra-silencioso
 const App = memo(() => {
   const { getAllMetrics } = useGlobalMemoryMonitor();
 
@@ -243,7 +243,7 @@ const App = memo(() => {
     if (process.env.NODE_ENV === 'development') {
       setTimeout(() => {
         const metrics = getAllMetrics();
-        console.log('📊 Métricas iniciales de memoria:', metrics);
+        ultraSilentLogger.emergency('Métricas iniciales de memoria:', metrics);
       }, 5000);
     }
   }, [getAllMetrics]);
@@ -263,8 +263,8 @@ const App = memo(() => {
                       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
                         <div className="text-white text-center">
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                          <p>Cargando Ecosistema Neural Cinematográfico v4.0...</p>
-                          <p className="text-sm text-cyan-300 mt-2">Sistema neural optimizado sin dependencias circulares</p>
+                          <p>Cargando Ecosistema Neural Ultra-Silencioso...</p>
+                          <p className="text-sm text-cyan-300 mt-2">Sistema optimizado sin logs v2024.2</p>
                         </div>
                       </div>
                     }>

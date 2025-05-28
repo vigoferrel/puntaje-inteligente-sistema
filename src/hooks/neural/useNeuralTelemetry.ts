@@ -1,13 +1,14 @@
+
 /**
- * NEURAL TELEMETRY HOOK v3.0
- * Módulo especializado para telemetría y métricas neurales
+ * NEURAL TELEMETRY HOOK v4.0 - ULTRA SILENT
+ * Módulo especializado para telemetría neural completamente silencioso
  */
 
 import { useCallback, useRef, useEffect } from 'react';
 import { useNeuralSystem } from '@/components/neural/NeuralSystemProvider';
 import { NeuralBackendService } from '@/services/neural/neural-backend-service';
+import { ultraSilentLogger } from '@/core/logging/UltraSilentLogger';
 
-// Interfaces actualizadas
 interface NeuralEvent {
   type: string;
   data: Record<string, any>;
@@ -47,7 +48,7 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
   const flushTimer = useRef<NodeJS.Timeout | null>(null);
   const isOnline = useRef(navigator.onLine);
 
-  // Batch processing for events
+  // Batch processing for events - Silent mode
   const queueEvent = useCallback((event: NeuralEvent) => {
     const eventWithTimestamp = {
       ...event,
@@ -60,7 +61,7 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
     }
   }, [telemetryConfig.batchSize]);
 
-  // Flush queued events to backend
+  // Flush queued events to backend - Silent mode
   const flushEvents = useCallback(async () => {
     if (eventQueue.current.length === 0) return;
 
@@ -72,22 +73,18 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
         await processTelemetryEvent(event, state.sessionId);
       }
     } catch (error) {
-      // Re-queue failed events if offline queue is enabled
       if (telemetryConfig.enableOfflineQueue && !isOnline.current) {
         eventQueue.current.unshift(...eventsToProcess);
       }
       
-      if (state.config.debugMode) {
-        console.error('Failed to flush telemetry events:', error);
-      }
+      ultraSilentLogger.emergency('Failed to flush telemetry events:', error);
     }
-  }, [state.sessionId, state.config.debugMode, telemetryConfig.enableOfflineQueue]);
+  }, [state.sessionId, telemetryConfig.enableOfflineQueue]);
 
-  // Process metrics with debouncing
+  // Process metrics with debouncing - Silent mode
   const updateMetrics = useCallback((metrics: Partial<NeuralMetrics>) => {
     metricsBuffer.current.push(metrics);
     
-    // Debounce metrics updates
     if (flushTimer.current) {
       clearTimeout(flushTimer.current);
     }
@@ -102,10 +99,10 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
         actions.updateMetrics(aggregatedMetrics);
         metricsBuffer.current = [];
       }
-    }, 1000); // 1 second debounce
+    }, 1000);
   }, [actions]);
 
-  // Auto-capture common events
+  // Auto-capture common events - Silent mode
   const captureInteraction = useCallback((element: string, action: string) => {
     queueEvent({
       type: 'interaction',
@@ -144,7 +141,7 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
     });
   }, [queueEvent, state.metrics]);
 
-  // Performance monitoring
+  // Performance monitoring - Silent mode
   const measurePerformance = useCallback((operation: string, fn: () => any) => {
     const start = performance.now();
     const result = fn();
@@ -162,7 +159,7 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
     return result;
   }, [queueEvent]);
 
-  // Network status monitoring
+  // Network status monitoring - Silent mode
   useEffect(() => {
     const handleOnline = () => {
       isOnline.current = true;
@@ -184,13 +181,13 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
     };
   }, [flushEvents, telemetryConfig.enableOfflineQueue]);
 
-  // Auto-flush interval
+  // Auto-flush interval - Silent mode
   useEffect(() => {
     const interval = setInterval(flushEvents, telemetryConfig.flushInterval);
     return () => clearInterval(interval);
   }, [flushEvents, telemetryConfig.flushInterval]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - Silent mode
   useEffect(() => {
     return () => {
       if (flushTimer.current) {
@@ -213,7 +210,7 @@ export const useNeuralTelemetry = (config: Partial<TelemetryConfig> = {}) => {
   };
 };
 
-// Standalone function for processing telemetry events
+// Standalone function for processing telemetry events - Silent mode
 export const processTelemetryEvent = async (event: NeuralEvent, sessionId: string | null) => {
   if (!sessionId) return;
 
