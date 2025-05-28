@@ -132,6 +132,21 @@ export const SafeThreeCanvas: React.FC<SafeThreeCanvasProps> = ({
     );
   }
 
+  // Configurar las opciones del Canvas basadas en las capacidades del dispositivo
+  const canvasConfig = {
+    camera: camera || { position: [0, 5, 10], fov: 60 },
+    dpr: deviceCapabilities.isLowEnd ? 1 : Math.min(window.devicePixelRatio, 2),
+    gl: deviceCapabilities.isMobile ? {
+      antialias: false,
+      alpha: true,
+      powerPreference: 'low-power' as const
+    } : {
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance' as const
+    }
+  };
+
   return (
     <motion.div 
       ref={canvasRef}
@@ -142,19 +157,11 @@ export const SafeThreeCanvas: React.FC<SafeThreeCanvasProps> = ({
     >
       <Suspense fallback={fallback || <CriticalFallback reason="Cargando..." />}>
         <Canvas
-          camera={camera || { position: [0, 5, 10], fov: 60 }}
+          {...canvasConfig}
           onCreated={(state) => {
             try {
-              // Configuración conservadora para dispositivos
-              const pixelRatio = deviceCapabilities.isLowEnd ? 1 : Math.min(window.devicePixelRatio, 2);
-              state.gl.setPixelRatio(pixelRatio);
-              
-              // Configuración de performance para móviles
-              if (deviceCapabilities.isMobile) {
-                state.gl.antialias = false;
-                state.gl.precision = 'mediump';
-              }
-              
+              // Solo configurar el pixel ratio, el resto ya está configurado en gl
+              state.gl.setPixelRatio(canvasConfig.dpr);
               onCreated?.(state.gl);
             } catch (error) {
               console.error('❌ WebGL setup error:', error);
