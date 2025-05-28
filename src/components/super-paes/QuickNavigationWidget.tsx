@@ -1,0 +1,137 @@
+
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Brain, 
+  Target, 
+  BookOpen, 
+  Calculator,
+  Calendar,
+  Award,
+  ArrowRight,
+  Zap
+} from 'lucide-react';
+
+interface QuickNavItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  route: string;
+  gradient: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+const navigationItems: QuickNavItem[] = [
+  {
+    id: 'lectoguia',
+    title: 'LectoGuía IA',
+    description: 'Comprensión lectora inteligente',
+    icon: Brain,
+    route: '/lectoguia',
+    gradient: 'from-purple-500 to-pink-500',
+    priority: 'high'
+  },
+  {
+    id: 'diagnostic',
+    title: 'Diagnóstico',
+    description: 'Evaluación de nivel actual',
+    icon: Target,
+    route: '/diagnostic',
+    gradient: 'from-blue-500 to-cyan-500',
+    priority: 'high'
+  },
+  {
+    id: 'planning',
+    title: 'Planificador',
+    description: 'Plan de estudio personalizado',
+    icon: BookOpen,
+    route: '/planning',
+    gradient: 'from-green-500 to-emerald-500',
+    priority: 'medium'
+  },
+  {
+    id: 'financial',
+    title: 'Centro Financiero',
+    description: 'Becas y financiamiento',
+    icon: Calculator,
+    route: '/financial',
+    gradient: 'from-yellow-500 to-orange-500',
+    priority: 'medium'
+  },
+  {
+    id: 'achievements',
+    title: 'Logros',
+    description: 'Progreso y reconocimientos',
+    icon: Award,
+    route: '/achievements',
+    gradient: 'from-pink-500 to-purple-500',
+    priority: 'low'
+  }
+];
+
+export const QuickNavigationWidget: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleNavigation = (route: string) => {
+    navigate(route);
+  };
+
+  return (
+    <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+      <CardContent className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500">
+            <Zap className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Acceso Rápido</h3>
+            <p className="text-white/70 text-sm">Navega a tus herramientas favoritas</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {navigationItems.map((item, index) => {
+            const Icon = item.icon;
+            
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Button
+                  onClick={() => handleNavigation(item.route)}
+                  className={`
+                    h-auto p-4 w-full flex flex-col items-start gap-3
+                    bg-gradient-to-r ${item.gradient} hover:opacity-90
+                    border border-white/20 transition-all duration-300
+                    hover:scale-105 hover:shadow-lg
+                  `}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <Icon className="w-6 h-6 text-white" />
+                    <ArrowRight className="w-4 h-4 text-white/70" />
+                  </div>
+                  
+                  <div className="text-left">
+                    <div className="font-semibold text-white text-sm mb-1">
+                      {item.title}
+                    </div>
+                    <div className="text-white/80 text-xs">
+                      {item.description}
+                    </div>
+                  </div>
+                </Button>
+              </motion.div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
