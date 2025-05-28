@@ -13,193 +13,7 @@
     <!-- Content Security Policy optimizada para Lovable -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://cdn.lovable.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.gpteng.co https://cdn.lovable.dev; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
     
-    <!-- Sistema de Interceptación Temprana Pre-JavaScript v5.0 -->
-    <script>
-      (function() {
-        'use strict';
-        
-        // FASE 1: INTERCEPTACIÓN INMEDIATA DE CONSOLE
-        const originalConsole = {
-          log: console.log,
-          warn: console.warn,
-          error: console.error,
-          info: console.info,
-          debug: console.debug
-        };
-
-        // Lista ultra-expandida de patrones de spam v5.0
-        const ULTRA_SPAM_PATTERNS = [
-          'vr', 'ambient-light-sensor', 'battery', 'Unrecognized feature',
-          'Tracking Prevention', 'blocked access to storage',
-          'preloaded using link preload but not used',
-          'We\'re hiring', 'lovable.dev/careers',
-          'CORS policy', 'Access-Control-Allow-Origin',
-          'Content Security Policy', 'script-src', 'Refused to load',
-          'gptengineer', 'gpteng.co', 'cloudflareinsights.com',
-          'beacon.min.js', 'SES_UNCAUGHT_EXCEPTION', 'lockdown',
-          'Microsoft Edge is moving', 'third-party cookies',
-          'Images loaded lazily', 'Load events are deferred',
-          'Explain Console errors', 'Failed to load resource',
-          'violates the following', 'Intervention'
-        ];
-
-        const isSpamMessage = (message) => {
-          if (!message || typeof message !== 'string') return true;
-          const lowerMessage = message.toLowerCase();
-          return ULTRA_SPAM_PATTERNS.some(pattern => 
-            lowerMessage.includes(pattern.toLowerCase())
-          );
-        };
-
-        // Sobrescribir console methods INMEDIATAMENTE
-        console.log = function(...args) {
-          const message = args.join(' ');
-          if (!isSpamMessage(message) && !message.includes('⠀⣠⠴')) {
-            originalConsole.log.apply(console, args);
-          }
-        };
-
-        console.warn = function(...args) {
-          const message = args.join(' ');
-          if (!isSpamMessage(message)) {
-            originalConsole.warn.apply(console, args);
-          }
-        };
-
-        console.error = function(...args) {
-          const message = args.join(' ');
-          if (!isSpamMessage(message)) {
-            originalConsole.error.apply(console, args);
-          }
-        };
-
-        console.info = function(...args) {
-          const message = args.join(' ');
-          if (!isSpamMessage(message)) {
-            originalConsole.info.apply(console, args);
-          }
-        };
-
-        console.debug = function() {
-          // Debug completamente silenciado
-        };
-
-        // FASE 2: DETECCIÓN DE ENTORNO RESTRICTIVO ULTRA-AVANZADA
-        const detectRestrictiveEnvironment = () => {
-          try {
-            // Test 1: Storage access
-            const hasStorageAccess = (() => {
-              try {
-                localStorage.setItem('__test__', '1');
-                localStorage.removeItem('__test__');
-                return true;
-              } catch (e) {
-                return false;
-              }
-            })();
-
-            // Test 2: Browser detection
-            const isEdge = navigator.userAgent.includes('Edg/');
-            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-            
-            // Test 3: Security features
-            const hasCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]') !== null;
-            const hasLockdown = typeof window.lockdown !== 'undefined' || typeof window.SES !== 'undefined';
-            
-            // Test 4: Privacy features
-            const hasTrackingPrevention = !hasStorageAccess;
-            
-            return {
-              hasStorageAccess,
-              isEdge,
-              isSafari,
-              hasCSP,
-              hasLockdown,
-              hasTrackingPrevention,
-              shouldSkipGPTEngineer: !hasStorageAccess || hasLockdown || hasTrackingPrevention
-            };
-          } catch (error) {
-            return { shouldSkipGPTEngineer: true };
-          }
-        };
-
-        // FASE 3: CONFIGURACIÓN DE BANDERAS GLOBALES
-        const envDetection = detectRestrictiveEnvironment();
-        
-        // Configurar banderas de estado
-        window.__TRACKING_PREVENTION_DETECTED__ = envDetection.hasTrackingPrevention;
-        window.__SKIP_GPT_ENGINEER__ = envDetection.shouldSkipGPTEngineer;
-        window.__EDGE_DETECTED__ = envDetection.isEdge;
-        window.__CSP_RESTRICTIVE__ = envDetection.hasCSP;
-        window.__ENVIRONMENT_SAFE__ = !envDetection.shouldSkipGPTEngineer;
-
-        // FASE 4: POLYFILL ULTRA-ROBUSTO PARA IMPORT.META
-        if (!window.importMeta) {
-          Object.defineProperty(window, 'importMeta', {
-            value: { 
-              env: { 
-                MODE: 'production',
-                DEV: false,
-                PROD: true
-              },
-              url: window.location.href
-            },
-            writable: false,
-            configurable: false
-          });
-        }
-
-        // FASE 5: INTERCEPTACIÓN DE ERRORES GLOBALES ULTRA-AGRESIVA
-        window.addEventListener('error', (event) => {
-          const error = event.error;
-          const errorMessage = error?.message || event.message || '';
-          
-          if (isSpamMessage(errorMessage)) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            return false;
-          }
-
-          // Filtrar errores de recursos específicos
-          if (event.target && event.target !== window) {
-            const target = event.target;
-            if (target.src && (
-              target.src.includes('facebook.com') ||
-              target.src.includes('gptengineer.js') ||
-              target.src.includes('gpteng.co') ||
-              target.src.includes('cloudflareinsights.com') ||
-              target.src.includes('beacon.min.js')
-            )) {
-              event.preventDefault();
-              event.stopImmediatePropagation();
-              return false;
-            }
-          }
-        }, true);
-
-        window.addEventListener('unhandledrejection', (event) => {
-          const error = event.reason;
-          const errorMessage = error?.message || String(error);
-          
-          if (isSpamMessage(errorMessage)) {
-            event.preventDefault();
-            return;
-          }
-        });
-
-        // FASE 6: PERFORMANCE MARKING SILENCIOSO
-        if ('performance' in window && 'mark' in window.performance) {
-          try {
-            performance.mark('lovable-app-start');
-          } catch (e) {
-            // Silenciar errores de performance
-          }
-        }
-
-      })();
-    </script>
-    
-    <meta name="description" content="Plataforma educativa neural PAES - Ultra Optimizada v2025" />
+    <meta name="description" content="Plataforma educativa neural PAES - Ultra Optimizada v2025.1" />
     <meta name="theme-color" content="#1e40af" />
     
     <style>
@@ -223,8 +37,8 @@
       <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1e40af, #7c3aed); color: white; font-size: 18px;">
         <div style="text-align: center;">
           <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-          <div>Cargando PAES Neural Platform v2025...</div>
-          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Latest Lovable Version - Zero Errors</div>
+          <div>Cargando PAES Neural Platform v2025.1...</div>
+          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Sistema Unificado Ultra-Optimizado</div>
         </div>
       </div>
     </div>
@@ -236,8 +50,7 @@
       }
     </style>
     
-    <!-- Lovable Script - Latest Version -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <!-- Main Application Script - Sistema Unificado -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
