@@ -26,23 +26,34 @@ export const RealUnifiedDashboard: React.FC = () => {
   const { 
     neuralMetrics, 
     realNodes, 
-    isLoading: neuralLoading 
+    isLoading: neuralLoading,
+    error: neuralError
   } = useRealNeuralData();
 
-  const [activeView, setActiveView] = useState<'dashboard' | 'ecosystem'>('ecosystem');
+  const [activeView, setActiveView] = useState<'dashboard' | 'ecosystem'>('dashboard');
 
+  // Mejorar lógica de loading - no debe ser infinita
   const isLoading = dashboardLoading || neuralLoading;
+  const hasMinimumData = realNodes.length > 0;
 
-  if (isLoading) {
+  // Mostrar loading solo por un tiempo limitado
+  if (isLoading && !hasMinimumData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-spin w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto mb-6"></div>
-          <div className="text-2xl font-bold">Inicializando Sistema Neural Avanzado...</div>
-          <div className="text-cyan-300 mt-2">Conectando con datos reales desde Supabase</div>
-          <div className="text-white/60 text-sm mt-1">
-            {realNodes.length > 0 ? `${realNodes.length} nodos cargados` : 'Cargando nodos...'}
+          <div className="text-2xl font-bold">Inicializando Sistema Neural...</div>
+          <div className="text-cyan-300 mt-2">
+            {neuralError ? 'Modo offline activado' : 'Conectando con Supabase'}
           </div>
+          <div className="text-white/60 text-sm mt-1">
+            {hasMinimumData ? `${realNodes.length} nodos cargados` : 'Preparando datos...'}
+          </div>
+          {neuralError && (
+            <div className="text-yellow-400 text-xs mt-2">
+              ⚠️ {neuralError} - Usando datos de demostración
+            </div>
+          )}
         </div>
       </div>
     );
