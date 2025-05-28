@@ -3,16 +3,14 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRealDashboardData } from '@/hooks/dashboard/useRealDashboardData';
 import { useRealNeuralData } from '@/hooks/useRealNeuralData';
-import { Enhanced3DUniverse } from '@/components/real-3d/Enhanced3DUniverse';
-import { RealAdaptiveEngine } from '@/components/ai-recommendations/RealAdaptiveEngine';
-import { RealAchievementSystem } from '@/components/achievements/RealAchievementSystem';
+import { NeuralEcosystemHub } from '@/components/neural-hub/NeuralEcosystemHub';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Brain, Target, Zap, TrendingUp, 
   Calendar, BookOpen, Award, RefreshCw, 
-  Eye, BarChart3, Sparkles
+  Eye, BarChart3, Sparkles, Universe
 } from 'lucide-react';
 
 export const RealUnifiedDashboard: React.FC = () => {
@@ -31,13 +29,7 @@ export const RealUnifiedDashboard: React.FC = () => {
     isLoading: neuralLoading 
   } = useRealNeuralData();
 
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<'3d' | 'recommendations' | 'achievements'>('3d');
-
-  const handleNodeClick = (nodeId: string) => {
-    setSelectedNode(nodeId);
-    console.log('Nodo seleccionado:', nodeId);
-  };
+  const [activeView, setActiveView] = useState<'dashboard' | 'ecosystem'>('ecosystem');
 
   const isLoading = dashboardLoading || neuralLoading;
 
@@ -56,23 +48,9 @@ export const RealUnifiedDashboard: React.FC = () => {
     );
   }
 
-  const renderMainContent = () => {
-    switch (activeView) {
-      case '3d':
-        return (
-          <Enhanced3DUniverse 
-            onNodeClick={handleNodeClick}
-            selectedNodeId={selectedNode}
-          />
-        );
-      case 'recommendations':
-        return <RealAdaptiveEngine />;
-      case 'achievements':
-        return <RealAchievementSystem />;
-      default:
-        return null;
-    }
-  };
+  if (activeView === 'ecosystem') {
+    return <NeuralEcosystemHub />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6 overflow-y-auto">
@@ -94,6 +72,13 @@ export const RealUnifiedDashboard: React.FC = () => {
           </div>
           
           <div className="flex items-center justify-center gap-4">
+            <Button
+              onClick={() => setActiveView('ecosystem')}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
+            >
+              <Universe className="h-4 w-4 mr-2" />
+              Ir al Ecosistema 3D
+            </Button>
             <Button
               onClick={refreshData}
               variant="outline"
@@ -173,56 +158,30 @@ export const RealUnifiedDashboard: React.FC = () => {
           </Card>
         </motion.div>
 
-        {/* Navegación de Vistas */}
+        {/* Call to Action para Ecosistema 3D */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex justify-center gap-4"
+          className="text-center"
         >
-          <Button
-            onClick={() => setActiveView('3d')}
-            variant={activeView === '3d' ? 'default' : 'outline'}
-            className={activeView === '3d' 
-              ? 'bg-gradient-to-r from-cyan-600 to-blue-600' 
-              : 'border-white/30 text-white hover:bg-white/10'
-            }
-          >
-            <Eye className="w-4 h-4 mr-2" />
-            Universo 3D
-          </Button>
-          <Button
-            onClick={() => setActiveView('recommendations')}
-            variant={activeView === 'recommendations' ? 'default' : 'outline'}
-            className={activeView === 'recommendations' 
-              ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
-              : 'border-white/30 text-white hover:bg-white/10'
-            }
-          >
-            <BarChart3 className="w-4 h-4 mr-2" />
-            IA Recomendaciones
-          </Button>
-          <Button
-            onClick={() => setActiveView('achievements')}
-            variant={activeView === 'achievements' ? 'default' : 'outline'}
-            className={activeView === 'achievements' 
-              ? 'bg-gradient-to-r from-yellow-600 to-orange-600' 
-              : 'border-white/30 text-white hover:bg-white/10'
-            }
-          >
-            <Award className="w-4 h-4 mr-2" />
-            Logros
-          </Button>
-        </motion.div>
-
-        {/* Contenido Principal */}
-        <motion.div
-          key={activeView}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          {renderMainContent()}
+          <Card className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-purple-500/30">
+            <CardContent className="p-8">
+              <Universe className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-2">Ecosistema Neural 3D Disponible</h2>
+              <p className="text-white/70 mb-6">
+                Explora tus {realNodes.length} nodos de aprendizaje en un universo 3D inmersivo con visualizaciones neurales avanzadas
+              </p>
+              <Button
+                onClick={() => setActiveView('ecosystem')}
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
+              >
+                <Sparkles className="h-5 w-5 mr-2" />
+                Entrar al Ecosistema 3D
+              </Button>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Estado del Sistema */}
