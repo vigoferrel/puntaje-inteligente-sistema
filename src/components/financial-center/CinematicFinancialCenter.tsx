@@ -21,6 +21,7 @@ import { FinancialHologram } from './components/FinancialHologram';
 import { CinematicTimeline } from './components/CinematicTimeline';
 import { ScenarioSimulator } from './components/ScenarioSimulator';
 import { FUASBot } from './components/FUASBot';
+import { AdvancedFinancialCalculator } from './components/AdvancedFinancialCalculator';
 
 export const CinematicFinancialCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -216,29 +217,11 @@ export const CinematicFinancialCenter: React.FC = () => {
             <ScenarioSimulator currentMetrics={financialMetrics} />
           </TabsContent>
 
-          {/* Calculadora Avanzada */}
+          {/* Calculadora Avanzada - AHORA CON FUNCIONALIDAD REAL */}
           <TabsContent value="calculator">
             <Card className="bg-black/40 backdrop-blur-xl border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-green-400" />
-                  Calculadora Financiera Avanzada
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-20">
-                  <Calculator className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    Calculadora de Becas y Costos
-                  </h3>
-                  <p className="text-white/70 mb-6">
-                    Herramienta avanzada para calcular becas, aranceles y financiamiento universitario
-                  </p>
-                  <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90">
-                    <Target className="w-4 h-4 mr-2" />
-                    Iniciar Cálculo
-                  </Button>
-                </div>
+              <CardContent className="p-6">
+                <AdvancedFinancialCalculator />
               </CardContent>
             </Card>
           </TabsContent>
