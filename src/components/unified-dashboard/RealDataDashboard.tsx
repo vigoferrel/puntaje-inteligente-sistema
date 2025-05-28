@@ -1,25 +1,28 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Brain, 
-  BookOpen, 
-  Target, 
-  TrendingUp, 
-  Calendar,
-  GraduationCap,
-  RefreshCw,
-  Zap,
-  Users,
-  ChevronRight
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { useRealDashboardData } from '@/hooks/dashboard/useRealDashboardData';
 import { useRealUserMetrics } from '@/hooks/useRealUserMetrics';
 import { useNeuralIntegration } from '@/hooks/use-neural-integration';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Brain, 
+  Target, 
+  TrendingUp, 
+  Award, 
+  Database,
+  Zap,
+  Trophy,
+  DollarSign,
+  ArrowRight,
+  Calendar,
+  BookOpen,
+  BarChart3
+} from 'lucide-react';
 
 interface RealDataDashboardProps {
   userId: string;
@@ -27,285 +30,306 @@ interface RealDataDashboardProps {
 
 export const RealDataDashboard: React.FC<RealDataDashboardProps> = ({ userId }) => {
   const navigate = useNavigate();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const { metrics, systemStatus, isLoading, navigateToSection } = useRealDashboardData();
+  const { metrics: userMetrics, isLoading: metricsLoading } = useRealUserMetrics();
   
-  // Hooks de datos reales
-  const { 
-    metrics: dashboardMetrics, 
-    systemStatus, 
-    isLoading: dashboardLoading,
-    navigateToSection,
-    getSmartRecommendations,
-    refreshData
-  } = useRealDashboardData();
-  
-  const { 
-    metrics: userMetrics, 
-    isLoading: userLoading, 
-    error: userError 
-  } = useRealUserMetrics();
-  
-  // Sistema neural integrado
+  // Integración neural completa
   const {
     broadcastUserAction,
-    notifyEngagement,
     systemHealth,
-    integrationLevel
-  } = useNeuralIntegration('dashboard', [
-    'real_data_integration',
-    'user_metrics_tracking',
-    'smart_recommendations',
-    'navigation_optimization'
-  ]);
+    integrationLevel,
+    notifyProgress,
+    notifyEngagement
+  } = useNeuralIntegration('dashboard', ['data_visualization', 'user_metrics', 'navigation'], {
+    userId,
+    metrics,
+    userMetrics
+  });
 
-  // Actualizar hora cada minuto
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Notificar engagement al sistema neural
-  useEffect(() => {
-    if (userId) {
-      notifyEngagement({
-        type: 'dashboard_access',
-        user_id: userId,
-        integration_level: integrationLevel,
-        timestamp: Date.now()
-      });
-    }
-  }, [userId, notifyEngagement, integrationLevel]);
-
-  const handleModuleNavigation = (route: string, context?: any) => {
-    broadcastUserAction('MODULE_NAVIGATION', {
-      target_route: route,
-      context,
-      from: 'unified_dashboard'
-    });
+  // Acciones de navegación con broadcast neural
+  const handleNavigation = (route: string, context?: any) => {
+    broadcastUserAction('NAVIGATE_TO_TOOL', { route, context, timestamp: Date.now() });
     navigate(route);
+    notifyEngagement({ action: 'navigation', target: route });
   };
 
-  const smartRecommendations = getSmartRecommendations();
+  const handleSectionScroll = (section: string) => {
+    navigateToSection(section);
+    broadcastUserAction('SCROLL_TO_SECTION', { section, timestamp: Date.now() });
+  };
 
-  if (dashboardLoading || userLoading) {
+  const quickActions = [
+    {
+      title: "Diagnóstico Inteligente",
+      description: `${userMetrics.exercisesCompleted} evaluaciones realizadas`,
+      icon: Brain,
+      color: "from-blue-500 to-cyan-500",
+      route: "/diagnostic",
+      section: "diagnostic"
+    },
+    {
+      title: "LectoGuía IA",
+      description: "Chat inteligente personalizado",
+      icon: Zap,
+      color: "from-yellow-500 to-orange-500",
+      route: "/lectoguia",
+      section: "lectoguia"
+    },
+    {
+      title: "Planificación Adaptativa",
+      description: `${metrics.completedNodes} nodos completados`,
+      icon: Target,
+      color: "from-purple-500 to-pink-500",
+      route: "/plans",
+      section: "planning"
+    },
+    {
+      title: "Centro Financiero",
+      description: "Becas y oportunidades",
+      icon: DollarSign,
+      color: "from-green-500 to-emerald-500",
+      route: "/financial",
+      section: "financial"
+    }
+  ];
+
+  if (isLoading || metricsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-white border-t-transparent rounded-full"
+          className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full"
         />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6 overflow-y-auto">
+    <div className="dashboard-container min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         
-        {/* Header con datos reales */}
+        {/* Header con métricas reales */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-4"
+          data-section="header"
         >
           <h1 className="text-4xl font-bold text-white flex items-center justify-center gap-3">
-            <Brain className="w-10 h-10 text-blue-400" />
-            Dashboard PAES Master
+            <Brain className="w-10 h-10 text-cyan-400" />
+            Hub Educativo Neural
           </h1>
           <p className="text-white/80 text-xl">
-            Sistema Integrado con Datos Reales - {currentTime.toLocaleDateString()}
+            Sistema integrado con datos reales - Neural Level: {integrationLevel}%
           </p>
-          <div className="flex items-center justify-center gap-4 text-sm text-white/60">
-            <span>Neural Level: {Math.round(integrationLevel)}%</span>
-            <span>•</span>
-            <span>Sistema: {systemStatus.neural?.status}</span>
-            <span>•</span>
-            <span>Última actualización: {new Date().toLocaleTimeString()}</span>
+          <div className="flex justify-center gap-4">
+            <Badge variant="outline" className="text-cyan-400 border-cyan-400">
+              Usuario: {metrics.userId ? 'Conectado' : 'Invitado'}
+            </Badge>
+            <Badge variant="outline" className="text-green-400 border-green-400">
+              Sistema Neural: {systemHealth.neural_efficiency}%
+            </Badge>
           </div>
         </motion.div>
 
-        {/* Métricas principales con datos reales */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm">Nodos Completados</p>
-                  <p className="text-2xl font-bold text-white">{dashboardMetrics.completedNodes}</p>
+        {/* Métricas principales REALES */}
+        <div className="card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-section="metrics">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="metrics-card"
+          >
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Nodos Completados</p>
+                    <p className="text-3xl font-bold text-white">{metrics.completedNodes}</p>
+                    <p className="text-xs text-cyan-300">
+                      Progreso real del usuario
+                    </p>
+                  </div>
+                  <Brain className="w-8 h-8 text-cyan-400" />
                 </div>
-                <div className="p-3 rounded-full bg-gradient-to-r from-green-400 to-emerald-600">
-                  <Target className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm">Progreso Semanal</p>
-                  <p className="text-2xl font-bold text-white">{dashboardMetrics.weeklyProgress}%</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="metrics-card"
+          >
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Progreso Semanal</p>
+                    <p className="text-3xl font-bold text-white">{metrics.weeklyProgress}%</p>
+                    <Progress value={metrics.weeklyProgress} className="mt-2 bg-white/10" />
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-green-400" />
                 </div>
-                <div className="p-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-600">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm">Puntaje Predicho</p>
-                  <p className="text-2xl font-bold text-white">{dashboardMetrics.predictedScore}</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="metrics-card"
+          >
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Racha Actual</p>
+                    <p className="text-3xl font-bold text-white">{metrics.currentStreak}</p>
+                    <p className="text-xs text-orange-300">
+                      Días consecutivos reales
+                    </p>
+                  </div>
+                  <Award className="w-8 h-8 text-orange-400" />
                 </div>
-                <div className="p-3 rounded-full bg-gradient-to-r from-purple-400 to-pink-600">
-                  <GraduationCap className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm">Tiempo Total</p>
-                  <p className="text-2xl font-bold text-white">{userMetrics.totalStudyTime}h</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="metrics-card"
+          >
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm">Puntaje Predictivo</p>
+                    <p className="text-3xl font-bold text-white">{metrics.predictedScore}</p>
+                    <p className="text-xs text-purple-300">
+                      Basado en análisis real
+                    </p>
+                  </div>
+                  <BarChart3 className="w-8 h-8 text-purple-400" />
                 </div>
-                <div className="p-3 rounded-full bg-gradient-to-r from-yellow-400 to-orange-600">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        {/* Estado del sistema con datos reales */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+        {/* Arsenal de herramientas con datos reales */}
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10" data-section="tools">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Zap className="w-5 h-5" />
-              Estado del Sistema Neural
+              <Database className="w-5 h-5" />
+              Arsenal de Herramientas PAES - Datos Reales
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {Object.entries(systemStatus).map(([key, status]) => (
-                <div key={key} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                  <div className={`w-3 h-3 rounded-full ${
-                    status.status === 'active' ? 'bg-green-400' :
-                    status.status === 'ready' ? 'bg-blue-400' :
-                    status.status === 'loading' ? 'bg-yellow-400' :
-                    'bg-red-400'
-                  }`} />
-                  <div>
-                    <p className="text-white font-medium capitalize">{key}</p>
-                    <p className="text-white/70 text-sm">{status.data}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {quickActions.map((action, index) => {
+                const Icon = action.icon;
+                return (
+                  <motion.div
+                    key={action.route}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={() => handleNavigation(action.route, { from: 'dashboard' })}
+                      data-smooth-scroll={`[data-section="${action.section}"]`}
+                      className={`
+                        h-auto p-4 w-full flex flex-col items-center gap-3
+                        bg-gradient-to-r ${action.color} hover:opacity-90
+                        border border-white/20 transition-all duration-300
+                      `}
+                    >
+                      <Icon className="w-8 h-8 text-white" />
+                      <div className="text-center">
+                        <div className="text-white font-bold text-sm mb-1">
+                          {action.title}
+                        </div>
+                        <div className="text-white/80 text-xs">
+                          {action.description}
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white mt-2" />
+                    </Button>
+                  </motion.div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
-        {/* Recomendaciones inteligentes */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+        {/* Estado del sistema con datos reales */}
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10" data-section="system-status">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <Brain className="w-5 h-5" />
-              Recomendaciones Inteligentes
+              Estado del Sistema Neural - Datos Reales
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {smartRecommendations.map((rec) => (
-                <div key={rec.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer"
-                     onClick={rec.action}>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={rec.priority === 'urgent' ? 'destructive' : 'outline'}>
-                      {rec.priority}
-                    </Badge>
-                    <div>
-                      <p className="font-semibold text-white">{rec.title}</p>
-                      <p className="text-white/80 text-sm">{rec.description}</p>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Object.entries(systemStatus).map(([system, status]) => (
+                <motion.div
+                  key={system}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10"
+                >
+                  <div className={`w-3 h-3 rounded-full ${
+                    status.status === 'active' ? 'bg-green-400 animate-pulse' :
+                    status.status === 'ready' ? 'bg-blue-400' :
+                    status.status === 'error' ? 'bg-red-400' :
+                    'bg-yellow-400'
+                  }`} />
+                  <div>
+                    <div className="text-white font-medium capitalize">{system}</div>
+                    <div className="text-white/60 text-xs">{status.data}</div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-white/60" />
-                </div>
+                </motion.div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Módulos principales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all cursor-pointer group"
-                onClick={() => handleModuleNavigation('/lectoguia')}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 group-hover:scale-110 transition-transform">
-                  <BookOpen className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">LectoGuía IA</h3>
-                  <p className="text-white/70">Comprensión lectora adaptativa</p>
-                </div>
+        {/* Métricas de usuario detalladas */}
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10" data-section="user-metrics">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Trophy className="w-5 h-5" />
+              Métricas Detalladas del Usuario
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-4 bg-white/5 rounded-lg">
+                <BookOpen className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                <p className="text-white font-medium">Tiempo Total</p>
+                <p className="text-2xl font-bold text-blue-400">{userMetrics.totalStudyTime}h</p>
               </div>
-              <div className="text-sm text-white/60">
-                Actividad Neural: {Math.round(systemHealth.neural_efficiency || 85)}%
+              <div className="text-center p-4 bg-white/5 rounded-lg">
+                <Target className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                <p className="text-white font-medium">Precisión</p>
+                <p className="text-2xl font-bold text-green-400">{userMetrics.averageScore}%</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all cursor-pointer group"
-                onClick={() => handleModuleNavigation('/diagnostic')}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 group-hover:scale-110 transition-transform">
-                  <Target className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Diagnóstico Neural</h3>
-                  <p className="text-white/70">Evaluación inteligente</p>
-                </div>
+              <div className="text-center p-4 bg-white/5 rounded-lg">
+                <Award className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                <p className="text-white font-medium">Nivel</p>
+                <p className="text-2xl font-bold text-purple-400">{userMetrics.level}</p>
               </div>
-              <div className="text-sm text-white/60">
-                Precisión: {Math.round(systemHealth.cross_pollination_rate || 78)}%
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all cursor-pointer group"
-                onClick={() => handleModuleNavigation('/paes-universe')}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 group-hover:scale-110 transition-transform">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">PAES Universe</h3>
-                  <p className="text-white/70">Universo neural 3D</p>
-                </div>
-              </div>
-              <div className="text-sm text-white/60">
-                Integración: {Math.round(integrationLevel)}%
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Controles de actualización */}
-        <div className="flex justify-center">
-          <Button onClick={refreshData} variant="outline" className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Actualizar Datos Reales
-          </Button>
-        </div>
-
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

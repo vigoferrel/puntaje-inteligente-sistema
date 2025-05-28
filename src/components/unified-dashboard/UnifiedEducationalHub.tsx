@@ -4,7 +4,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { RealDataDashboard } from './RealDataDashboard';
 import { NeuralSystemProvider } from '@/components/neural/NeuralSystemProvider';
 import { SimpleLoadingScreen } from '@/components/SimpleLoadingScreen';
-import { SmoothNavigator } from '@/components/navigation/SmoothNavigator';
+import { OptimizedSmoothNavigator } from '@/components/navigation/OptimizedSmoothNavigator';
 
 interface UnifiedEducationalHubProps {
   userId: string;
@@ -13,7 +13,7 @@ interface UnifiedEducationalHubProps {
 export const UnifiedEducationalHub: React.FC<UnifiedEducationalHubProps> = ({ userId }) => {
   return (
     <NeuralSystemProvider showDashboard={true} enableAutoCapture={true}>
-      <SmoothNavigator />
+      <OptimizedSmoothNavigator />
       <ErrorBoundary fallback={
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
           <div className="text-center text-white">
@@ -29,7 +29,7 @@ export const UnifiedEducationalHub: React.FC<UnifiedEducationalHubProps> = ({ us
         </div>
       }>
         <Suspense fallback={<SimpleLoadingScreen />}>
-          <div className="fade-transition entered">
+          <div className="section-transition">
             <RealDataDashboard userId={userId} />
           </div>
         </Suspense>
