@@ -1,7 +1,7 @@
 
 /**
- * ULTRA SILENT LOGGER v1.0
- * Sistema de logging completamente silencioso con modo emergencia
+ * ULTRA SILENT LOGGER v2.0
+ * Sistema de logging completamente silencioso con modo emergencia - Sin errores TypeScript
  */
 
 interface EmergencyLogLevel {
@@ -28,8 +28,8 @@ class UltraSilentLogger {
   }
 
   private constructor() {
-    // Verificar si el sistema de interceptación global está activo
-    this.isTotalSilence = window.__TOTAL_SILENCE_MODE__ ?? true;
+    // Verificación segura del modo silencioso global
+    this.isTotalSilence = (window as any).__TOTAL_SILENCE_MODE__ ?? true;
   }
 
   // Métodos completamente silenciosos por defecto
@@ -42,8 +42,9 @@ class UltraSilentLogger {
   // Método de emergencia solo para desarrollo crítico
   emergency(...args: any[]) {
     if (this.emergencyMode && process.env.NODE_ENV === 'development') {
-      if (window.emergencyLog) {
-        window.emergencyLog(...args);
+      const emergencyLog = (window as any).emergencyLog;
+      if (typeof emergencyLog === 'function') {
+        emergencyLog(...args);
       }
     }
   }

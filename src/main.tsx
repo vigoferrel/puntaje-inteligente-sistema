@@ -5,7 +5,7 @@ import App from './App.tsx';
 import './index.css';
 import { ultraSilentLogger } from './core/logging/UltraSilentLogger';
 
-// Configuración Ultra-Silenciosa 2024.2
+// Configuración Ultra-Silenciosa v2024.3 - Sin errores TypeScript
 class UltraSilentCompatibilityLayer {
   private static instance: UltraSilentCompatibilityLayer;
   private isInitialized = false;
@@ -18,26 +18,28 @@ class UltraSilentCompatibilityLayer {
   }
 
   private setupSilentOperations(): void {
-    // Verificar que la interceptación global esté activa
-    if (!window.__CONSOLE_INTERCEPTED__) {
+    // Verificación segura de interceptación global
+    const consoleIntercepted = (window as any).__CONSOLE_INTERCEPTED__;
+    if (!consoleIntercepted) {
       // Backup de interceptación si falló la del HTML
       const silentConsole = () => {};
       ['log', 'warn', 'error', 'info', 'debug', 'trace', 'table', 'group', 'groupEnd'].forEach(method => {
-        console[method as keyof Console] = silentConsole as any;
+        (console as any)[method] = silentConsole;
       });
     }
 
-    // Configuración de entorno silencioso
-    window.__ENVIRONMENT_SAFE__ = true;
-    window.__ENVIRONMENT_SAFETY_LEVEL__ = 'SAFE';
+    // Configuración de entorno silencioso con type casting seguro
+    (window as any).__ENVIRONMENT_SAFE__ = true;
+    (window as any).__ENVIRONMENT_SAFETY_LEVEL__ = 'SAFE';
   }
 
   private setupPerformanceOptimizations(): void {
     // Optimizaciones sin logs
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
-        if (typeof window.gc === 'function') {
-          window.gc();
+        const gc = (window as any).gc;
+        if (typeof gc === 'function') {
+          gc();
         }
       });
     }
@@ -54,7 +56,7 @@ class UltraSilentCompatibilityLayer {
       
       // Solo en emergencia durante desarrollo
       if (process.env.NODE_ENV === 'development') {
-        ultraSilentLogger.emergency('Ultra-Silent System Initialized');
+        ultraSilentLogger.emergency('Ultra-Silent System v2024.3 Initialized - TypeScript Safe');
       }
     } catch (error) {
       // Silenciar errores de inicialización
