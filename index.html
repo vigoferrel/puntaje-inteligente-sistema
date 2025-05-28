@@ -7,6 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PAES Neural Education Platform</title>
     
+    <!-- Lovable GPT Engineer script - Required for latest features -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    
     <!-- Polyfill optimizado para import.meta -->
     <script>
       (function() {
@@ -49,38 +52,6 @@
       })();
     </script>
     
-    <!-- GPT Engineer carga condicional como módulo -->
-    <script type="module">
-      (function() {
-        if (window.__SKIP_GPT_ENGINEER__) {
-          return;
-        }
-        
-        try {
-          if (typeof lockdown !== 'undefined') {
-            return;
-          }
-          
-          // Cargar GPT Engineer con delay
-          setTimeout(() => {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.gpteng.co/gptengineer.js';
-            script.type = 'module';
-            script.defer = true;
-            
-            script.onerror = () => {
-              // Silenciar error esperado
-            };
-            
-            document.head.appendChild(script);
-          }, 2000);
-          
-        } catch (error) {
-          // Silenciar errores de carga
-        }
-      })();
-    </script>
-    
     <meta name="description" content="Plataforma educativa neural PAES" />
     <meta name="theme-color" content="#1e40af" />
     
@@ -106,7 +77,7 @@
         <div style="text-align: center;">
           <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
           <div>Cargando PAES Neural Platform v7.0...</div>
-          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Sistema ultra-optimizado sin errores</div>
+          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Sistema ultra-optimizado - Lovable v2024</div>
         </div>
       </div>
     </div>

@@ -4,18 +4,18 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Configuración global ultra-optimizada
+// Configuración optimizada para Lovable v2024
 if (typeof window !== 'undefined') {
-  // Performance monitoring optimizado
+  // Performance monitoring mejorado
   if ('performance' in window && 'mark' in window.performance) {
-    performance.mark('app-start');
+    performance.mark('lovable-app-start');
   }
   
-  // Error handling ultra-filtrado para reducir spam
+  // Error handling optimizado para Lovable
   window.addEventListener('unhandledrejection', (event) => {
     const error = event.reason;
     
-    // Lista extendida de errores conocidos a filtrar
+    // Lista de errores conocidos a filtrar para Lovable
     const knownErrors = [
       'Access is denied',
       'QuotaExceeded',
@@ -28,7 +28,8 @@ if (typeof window !== 'undefined') {
       'battery',
       'preloaded using link preload but not used',
       'BloomFilter error',
-      'Cannot use \'import.meta\' outside a module'
+      'Cannot use \'import.meta\' outside a module',
+      'gptengineer'
     ];
     
     if (knownErrors.some(known => error?.message?.includes(known))) {
@@ -36,7 +37,7 @@ if (typeof window !== 'undefined') {
       return;
     }
     
-    // Solo mostrar errores realmente críticos
+    // Solo mostrar errores críticos en desarrollo
     if (process.env.NODE_ENV === 'development') {
       console.warn('Unhandled rejection:', error);
     }
@@ -68,7 +69,7 @@ if (!rootElement) throw new Error("Failed to find the root element");
 
 const root = ReactDOM.createRoot(rootElement);
 
-// Renderizado simplificado y estable
+// Renderizado compatible con Lovable v2024
 const renderApp = () => {
   try {
     root.render(
@@ -78,6 +79,7 @@ const renderApp = () => {
     );
   } catch (error) {
     console.error('Render error:', error);
+    // Fallback sin StrictMode si es necesario
     root.render(<App />);
   }
 };
@@ -89,18 +91,18 @@ if (document.readyState === 'loading') {
   renderApp();
 }
 
-// Performance measurement simplificado
+// Performance measurement para Lovable
 if (typeof window !== 'undefined' && 'performance' in window) {
   window.addEventListener('load', () => {
     setTimeout(() => {
       if ('mark' in window.performance && 'measure' in window.performance) {
         try {
-          performance.mark('app-loaded');
-          performance.measure('app-load-time', 'app-start', 'app-loaded');
+          performance.mark('lovable-app-loaded');
+          performance.measure('lovable-load-time', 'lovable-app-start', 'lovable-app-loaded');
           
-          const measure = performance.getEntriesByName('app-load-time')[0];
+          const measure = performance.getEntriesByName('lovable-load-time')[0];
           if (measure && process.env.NODE_ENV === 'development') {
-            console.log(`🚀 App cargada en ${Math.round(measure.duration)}ms`);
+            console.log(`🚀 Lovable App cargada en ${Math.round(measure.duration)}ms`);
           }
         } catch (error) {
           // Performance API no disponible

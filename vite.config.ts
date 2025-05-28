@@ -22,24 +22,26 @@ export default defineConfig(({ mode }) => {
       },
     },
     
-    // Configuración conservadora para máxima estabilidad
+    // Configuración optimizada para Lovable v2024
     build: {
-      target: 'es2015',
+      target: 'esnext',
       sourcemap: mode === 'development',
-      minify: mode === 'production',
+      minify: mode === 'production' ? 'terser' : false,
       rollupOptions: {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
             motion: ['framer-motion'],
-            ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', 'lucide-react']
+            ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', 'lucide-react'],
+            supabase: ['@supabase/supabase-js'],
+            query: ['@tanstack/react-query']
           }
         }
       },
       chunkSizeWarningLimit: 1000
     },
     
-    // Optimizaciones conservadoras
+    // Optimizaciones para Lovable
     optimizeDeps: {
       include: [
         'react',
@@ -48,15 +50,27 @@ export default defineConfig(({ mode }) => {
         '@tanstack/react-query',
         'lucide-react',
         '@radix-ui/react-dialog',
-        '@radix-ui/react-select'
+        '@radix-ui/react-select',
+        '@supabase/supabase-js'
       ],
-      // Reducir exclusiones para evitar problemas de carga
-      exclude: []
+      exclude: ['lovable-tagger']
     },
 
-    // Configuración para mejor manejo de errores
+    // Configuración para mejor compatibilidad con Lovable
     define: {
-      __DEV__: mode === 'development'
+      __DEV__: mode === 'development',
+      __LOVABLE_VERSION__: JSON.stringify('2024.1'),
+      global: 'globalThis'
+    },
+    
+    // Manejo mejorado de assets
+    assetsInclude: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
+    
+    // Configuración de preview para Lovable
+    preview: {
+      port: 8080,
+      host: "::",
+      strictPort: true
     }
   };
 });
