@@ -3550,7 +3550,7 @@ export type Database = {
           dificultad_promedio: number | null
           node_id: string | null
           node_name: string | null
-          preguntas: number[] | null
+          preguntas: string[] | null
           tier_priority: Database["public"]["Enums"]["tier_priority"] | null
           total_preguntas: number | null
         }
@@ -3558,7 +3558,6 @@ export type Database = {
       }
       nodes_summary_by_subject: {
         Row: {
-          avg_base_weight: number | null
           avg_time_minutes: number | null
           cognitive_levels: string | null
           complementary_nodes: number | null
@@ -3575,7 +3574,7 @@ export type Database = {
           dificultad_promedio: number | null
           porcentaje: number | null
           skill_id: number | null
-          total_preguntas: number | null
+          total_nodos: number | null
         }
         Relationships: [
           {
@@ -3599,6 +3598,31 @@ export type Database = {
           tuples_read: number
           tuples_fetched: number
           usage_efficiency: number
+        }[]
+      }
+      beneficios_compatibles_seguro: {
+        Args: { estudiante_id: string; tipos_beneficio?: string[] }
+        Returns: {
+          nombre_beneficio: string
+          tipo: string
+          monto_maximo: number
+          porcentaje_cobertura: number
+          requisitos: Json
+        }[]
+      }
+      buscar_carreras_seguro: {
+        Args: {
+          universidad_param?: string
+          modalidades_param?: string[]
+          puntajes_minimos_param?: number[]
+          areas_param?: string[]
+        }
+        Returns: {
+          universidad: string
+          carrera: string
+          modalidad: string
+          puntaje_minimo: number
+          area_conocimiento: string
         }[]
       }
       calcular_puntaje_paes_historia: {
@@ -3635,6 +3659,21 @@ export type Database = {
           skill_breakdown: Json
           node_performance: Json
           eje_performance: Json
+        }[]
+      }
+      carreras_compatibles_paes_seguro: {
+        Args: {
+          cl_score: number
+          m1_score: number
+          m2_score: number
+          historia_score: number
+          ciencias_score: number
+        }
+        Returns: {
+          carrera: string
+          universidad: string
+          probabilidad_ingreso: number
+          puntaje_requerido: number
         }[]
       }
       exec_sql: {
@@ -3702,6 +3741,15 @@ export type Database = {
       production_readiness_check: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      proximas_fechas_estudiante_seguro: {
+        Args: { estudiante_id: string }
+        Returns: {
+          tipo_evento: string
+          fecha_evento: string
+          descripcion: string
+          prioridad: string
+        }[]
       }
       simular_examen_historia: {
         Args: { codigo_examen_param?: string; numero_preguntas?: number }

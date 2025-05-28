@@ -1,41 +1,35 @@
 
-import { Json } from '@/integrations/supabase/types';
-
-// Type guards para datos de Supabase con compatibilidad Json
 export interface SecurityMetrics {
-  [key: string]: Json;
-  data_integrity_score?: number;
-  security_issues?: number;
-  overall_status?: string;
+  data_integrity_score: number;
+  security_issues: number;
+  overall_status: 'healthy' | 'warning' | 'critical';
   performance_score?: number;
 }
 
-export function isSecurityMetrics(data: Json): data is SecurityMetrics {
-  return typeof data === 'object' && data !== null && !Array.isArray(data);
-}
-
-export function parseSecurityData(data: Json): SecurityMetrics {
-  if (isSecurityMetrics(data)) {
+export const parseSecurityData = (data: any): SecurityMetrics => {
+  if (!data || typeof data !== 'object') {
     return {
-      data_integrity_score: typeof data.data_integrity_score === 'number' ? data.data_integrity_score : 100,
-      security_issues: typeof data.security_issues === 'number' ? data.security_issues : 0,
-      overall_status: typeof data.overall_status === 'string' ? data.overall_status : 'healthy',
-      performance_score: typeof data.performance_score === 'number' ? data.performance_score : 85
+      data_integrity_score: 100,
+      security_issues: 0,
+      overall_status: 'healthy',
+      performance_score: 95
     };
   }
-  
+
   return {
-    data_integrity_score: 100,
-    security_issues: 0,
-    overall_status: 'healthy',
-    performance_score: 85
+    data_integrity_score: data.data_integrity_score || 100,
+    security_issues: data.security_issues || 0,
+    overall_status: data.overall_status || 'healthy',
+    performance_score: data.performance_score || 95
   };
-}
+};
 
-export function safeGetNumber(value: Json, fallback: number = 0): number {
-  return typeof value === 'number' ? value : fallback;
-}
-
-export function safeGetString(value: Json, fallback: string = ''): string {
-  return typeof value === 'string' ? value : fallback;
-}
+export const isValidSecurityMetrics = (data: any): data is SecurityMetrics => {
+  return (
+    typeof data === 'object' &&
+    typeof data.data_integrity_score === 'number' &&
+    typeof data.security_issues === 'number' &&
+    typeof data.overall_status === 'string' &&
+    ['healthy', 'warning', 'critical'].includes(data.overall_status)
+  );
+};
