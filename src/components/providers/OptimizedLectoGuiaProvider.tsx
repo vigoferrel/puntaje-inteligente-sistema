@@ -1,11 +1,12 @@
 
 import React, { createContext, useContext, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLectoGuiaReal } from '@/hooks/lectoguia/useLectoGuiaReal';
+import { useLectoGuiaReal, LectoGuiaTab } from '@/hooks/lectoguia/useLectoGuiaReal';
+import { TPAESHabilidad } from '@/types/system-types';
 
 interface OptimizedLectoGuiaContextType {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: LectoGuiaTab;
+  setActiveTab: React.Dispatch<React.SetStateAction<LectoGuiaTab>>;
   messages: any[];
   isTyping: boolean;
   handleSendMessage: (message: string, imageData?: string) => Promise<void>;
@@ -18,6 +19,8 @@ interface OptimizedLectoGuiaContextType {
   handleNewExercise: () => Promise<void>;
   isLoading: boolean;
   getStats: () => any;
+  activeSkill: TPAESHabilidad | null;
+  setActiveSkill: (skill: TPAESHabilidad | null) => void;
 }
 
 const OptimizedLectoGuiaContext = createContext<OptimizedLectoGuiaContextType | undefined>(undefined);
