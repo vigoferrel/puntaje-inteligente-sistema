@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EvaluationBank } from '@/components/evaluations/EvaluationBank';
+import { RealEvaluationSystem } from '@/components/real-evaluations/RealEvaluationSystem';
 import { motion } from 'framer-motion';
 import { MobileOptimizations } from '@/components/optimization/MobileOptimizations';
 
@@ -14,7 +14,7 @@ const EvaluationsPage: React.FC = () => {
           transition={{ duration: 0.5 }}
           className="h-full pb-32"
         >
-          <EvaluationBank />
+          <RealEvaluationSystem />
         </motion.div>
       </div>
     </MobileOptimizations>
