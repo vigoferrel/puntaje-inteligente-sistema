@@ -1,59 +1,15 @@
 
 import React from 'react';
-import { NeuralSystemProvider } from '@/components/neural/NeuralSystemProvider';
-import { NeuralPAESHub } from '@/components/neural-paes/NeuralPAESHub';
-import { VirtualAssistant } from '@/components/virtual-assistant/VirtualAssistant';
-import { TourGuide } from '@/components/virtual-assistant/TourGuide';
-import { AIChat } from '@/components/virtual-assistant/AIChat';
-import { useVirtualAssistant } from '@/hooks/useVirtualAssistant';
-import { useLocation } from 'react-router-dom';
+import { RealUnifiedDashboard } from '@/components/real-dashboard/RealUnifiedDashboard';
+import { MobileOptimizations } from '@/components/optimization/MobileOptimizations';
 
 const Index: React.FC = () => {
-  const location = useLocation();
-  const {
-    isFirstVisit,
-    currentTour,
-    isChatOpen,
-    assistantVisible,
-    startTour,
-    completeTour,
-    skipTour,
-    openChat,
-    closeChat
-  } = useVirtualAssistant();
-
   return (
-    <div className="relative">
-      {/* Hub Neural Principal */}
-      <NeuralSystemProvider showDashboard={false} enableAutoCapture={true}>
-        <NeuralPAESHub />
-      </NeuralSystemProvider>
-      
-      {/* Asistente Virtual */}
-      {assistantVisible && (
-        <VirtualAssistant
-          currentRoute={location.pathname}
-          isFirstVisit={isFirstVisit}
-          onStartTour={startTour}
-          onShowHelp={openChat}
-        />
-      )}
-
-      {/* Tour Guide */}
-      <TourGuide
-        tourType={currentTour as any || 'complete'}
-        isActive={!!currentTour}
-        onComplete={completeTour}
-        onSkip={skipTour}
-      />
-
-      {/* AI Chat */}
-      <AIChat
-        isOpen={isChatOpen}
-        onClose={closeChat}
-        currentRoute={location.pathname}
-      />
-    </div>
+    <MobileOptimizations>
+      <div className="min-h-screen overflow-y-auto">
+        <RealUnifiedDashboard />
+      </div>
+    </MobileOptimizations>
   );
 };
 
