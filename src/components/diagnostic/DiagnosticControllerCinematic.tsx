@@ -10,33 +10,53 @@ interface DiagnosticControllerCinematicProps {
 export const DiagnosticControllerCinematic: React.FC<DiagnosticControllerCinematicProps> = ({ 
   children 
 }) => {
+  console.log('🎬 DiagnosticControllerCinematic: Iniciando componente');
+  
   const unifiedState = useUnifiedState();
   const diagnosticController = useDiagnosticController();
 
-  // Combine both states for the children
+  console.log('🎬 DiagnosticControllerCinematic: Estados obtenidos', {
+    hasUnifiedState: !!unifiedState,
+    hasDiagnosticController: !!diagnosticController,
+    testsAvailable: diagnosticController.testsAvailable
+  });
+
+  // Combinar estados de forma simplificada
   const combinedProps = {
     ...unifiedState,
     ...diagnosticController,
     
-    // Handle progress updates
+    // Manejo optimizado de actualizaciones de progreso
     onProgressUpdate: (module: string, progress: number) => {
-      unifiedState.updateUserProgress(module, progress);
+      console.log('📊 Actualizando progreso:', { module, progress });
+      try {
+        unifiedState.updateUserProgress(module, progress);
+      } catch (error) {
+        console.error('❌ Error actualizando progreso:', error);
+      }
     },
     
-    // Handle metrics updates
+    // Manejo optimizado de métricas
     onMetricsUpdate: (metrics: any) => {
-      // Map metrics to the correct SystemMetrics properties
-      const systemMetricsUpdate = {
-        todayStudyTime: metrics.studyTime || unifiedState.systemMetrics.todayStudyTime,
-        totalExercises: metrics.exercises || unifiedState.systemMetrics.totalExercises,
-        averageScore: metrics.score || unifiedState.systemMetrics.averageScore,
-        streakDays: metrics.streak || unifiedState.systemMetrics.streakDays,
-        level: metrics.level || unifiedState.systemMetrics.level
-      };
-      
-      unifiedState.updateSystemMetrics(systemMetricsUpdate);
+      console.log('📈 Actualizando métricas:', metrics);
+      try {
+        const systemMetricsUpdate = {
+          todayStudyTime: metrics.studyTime || unifiedState.systemMetrics.todayStudyTime,
+          totalExercises: metrics.exercises || unifiedState.systemMetrics.totalExercises,
+          averageScore: metrics.score || unifiedState.systemMetrics.averageScore,
+          streakDays: metrics.streak || unifiedState.systemMetrics.streakDays,
+          level: metrics.level || unifiedState.systemMetrics.level
+        };
+        
+        unifiedState.updateSystemMetrics(systemMetricsUpdate);
+        console.log('✅ Métricas actualizadas exitosamente');
+      } catch (error) {
+        console.error('❌ Error actualizando métricas:', error);
+      }
     }
   };
+
+  console.log('🎬 DiagnosticControllerCinematic: Props combinadas preparadas');
 
   return children(combinedProps);
 };
