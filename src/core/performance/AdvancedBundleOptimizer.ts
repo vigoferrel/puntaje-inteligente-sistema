@@ -100,6 +100,16 @@ export class AdvancedBundleOptimizer {
       'module-ecosystem'
     ),
 
+    // Dashboards de seguridad y validación
+    ValidationDashboard: this.createTrackedLazyComponent(
+      () => import('@/pages/ValidationDashboard'),
+      'page-validation-dashboard'
+    ),
+    SecurityDashboard: this.createTrackedLazyComponent(
+      () => import('@/pages/SecurityDashboard'),
+      'page-security-dashboard'
+    ),
+
     // Componentes de dashboard
     SuperPAESUnifiedHub: this.createTrackedLazyComponent(
       () => import('@/components/super-paes/SuperPAESUnifiedHub').then(m => ({ default: m.SuperPAESUnifiedHub })),
