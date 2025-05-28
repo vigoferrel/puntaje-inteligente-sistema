@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +27,7 @@ interface SmartRecommendation {
   subject: string;
   estimatedTime: number;
   impact: 'high' | 'medium' | 'low';
+  priority: 'high' | 'medium' | 'low';
   action: {
     label: string;
     route: string;
@@ -208,6 +208,7 @@ export const useRealDashboardData = () => {
         subject: 'Diagnóstico General',
         estimatedTime: 15,
         impact: 'high',
+        priority: 'high',
         action: {
           label: 'Realizar Diagnóstico',
           route: '/diagnostic'
@@ -226,6 +227,7 @@ export const useRealDashboardData = () => {
         subject: 'Plan de Estudio',
         estimatedTime: 30,
         impact: 'medium',
+        priority: 'medium',
         action: {
           label: 'Generar Plan',
           route: '/plan-generator'
@@ -244,6 +246,7 @@ export const useRealDashboardData = () => {
         subject: 'Motivación',
         estimatedTime: 10,
         impact: 'low',
+        priority: 'low',
         action: {
           label: 'Ver Logros',
           route: '/gamification'
@@ -262,6 +265,7 @@ export const useRealDashboardData = () => {
         subject: 'Ejercitación',
         estimatedTime: 20,
         impact: 'high',
+        priority: 'medium',
         action: {
           label: 'Generar Ejercicios',
           route: '/exercise-generator'
