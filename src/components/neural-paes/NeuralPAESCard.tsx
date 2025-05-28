@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PAESSubjectNeural {
   id: string;
@@ -37,6 +38,7 @@ export const NeuralPAESCard: React.FC<NeuralPAESCardProps> = ({
   neuralState
 }) => {
   const Icon = subject.icon;
+  const navigate = useNavigate();
   
   const getNeuralAverage = () => {
     const { engagement, coherence, efficiency, adaptability } = subject.neuralMetrics;
@@ -50,6 +52,14 @@ export const NeuralPAESCard: React.FC<NeuralPAESCardProps> = ({
     return { text: 'Crítico', color: 'bg-red-600/20 text-red-400' };
   };
 
+  const handleCardClick = () => {
+    // Capturar evento neural
+    onSelect(subject);
+    
+    // Navegar a la ruta correspondiente
+    navigate(subject.route);
+  };
+
   const priority = getPriorityLevel();
 
   return (
@@ -59,7 +69,7 @@ export const NeuralPAESCard: React.FC<NeuralPAESCardProps> = ({
       transition={{ delay: index * 0.1 }}
       whileHover={{ scale: 1.02 }}
       className="cursor-pointer"
-      onClick={() => onSelect(subject)}
+      onClick={handleCardClick}
     >
       <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-300 h-full relative overflow-hidden">
         {/* Neural Pulse Effect */}

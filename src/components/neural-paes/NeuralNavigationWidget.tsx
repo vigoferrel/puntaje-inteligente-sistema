@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Navigation, Target, Brain, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PAESSubjectNeural {
   id: string;
   name: string;
+  route: string;
   neuralMetrics: {
     engagement: number;
     coherence: number;
@@ -25,12 +27,19 @@ export const NeuralNavigationWidget: React.FC<NeuralNavigationWidgetProps> = ({
   subjects,
   onNavigate
 }) => {
+  const navigate = useNavigate();
+
   const getRecommendedSubject = () => {
     return subjects.reduce((prev, current) => {
       const prevScore = (prev.neuralMetrics.engagement + prev.neuralMetrics.adaptability) / 2;
       const currentScore = (current.neuralMetrics.engagement + current.neuralMetrics.adaptability) / 2;
       return currentScore > prevScore ? current : prev;
     });
+  };
+
+  const handleNavigateToSubject = (subject: PAESSubjectNeural) => {
+    onNavigate(subject);
+    navigate(subject.route);
   };
 
   const recommendedSubject = getRecommendedSubject();
@@ -65,7 +74,7 @@ export const NeuralNavigationWidget: React.FC<NeuralNavigationWidgetProps> = ({
           </div>
           
           <Button
-            onClick={() => onNavigate(recommendedSubject)}
+            onClick={() => handleNavigateToSubject(recommendedSubject)}
             className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white"
           >
             <Target className="w-4 h-4 mr-2" />
@@ -78,7 +87,7 @@ export const NeuralNavigationWidget: React.FC<NeuralNavigationWidgetProps> = ({
           {subjects.slice(0, 4).map((subject) => (
             <Button
               key={subject.id}
-              onClick={() => onNavigate(subject)}
+              onClick={() => handleNavigateToSubject(subject)}
               className="bg-white/10 hover:bg-white/20 text-white text-xs p-2 h-auto flex flex-col gap-1"
             >
               <span className="font-medium">{subject.name.split(' ')[0]}</span>

@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Sparkles, TrendingUp, AlertTriangle, CheckCircle, Zap, Target } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface NeuralDimension {
   id: string;
@@ -16,6 +18,7 @@ interface NeuralDimension {
 interface PAESSubjectNeural {
   id: string;
   name: string;
+  route: string;
   neuralMetrics: {
     engagement: number;
     coherence: number;
@@ -33,6 +36,9 @@ export const NeuralRecommendationsPanel: React.FC<NeuralRecommendationsPanel> = 
   neuralMetrics,
   subjects
 }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const generateRecommendations = () => {
     const recommendations = [];
 
@@ -45,17 +51,19 @@ export const NeuralRecommendationsPanel: React.FC<NeuralRecommendationsPanel> = 
         type: 'warning',
         title: 'Optimización Neural Requerida',
         description: `${lowMetrics[0].name} necesita atención`,
-        action: 'optimize_neural_dimension',
+        action: () => optimizeNeuralDimension(lowMetrics[0]),
+        actionLabel: 'Optimizar',
         priority: 'high'
       });
     }
 
-    if (optimalMetrics.length >= 6) {
+    if (optimalMetrics.length >= 4) {
       recommendations.push({
         type: 'success',
         title: 'Estado Neural Excelente',
         description: 'Momento ideal para aprendizaje avanzado',
-        action: 'advanced_learning_session',
+        action: () => startAdvancedLearning(),
+        actionLabel: 'Comenzar',
         priority: 'medium'
       });
     }
@@ -70,12 +78,55 @@ export const NeuralRecommendationsPanel: React.FC<NeuralRecommendationsPanel> = 
         type: 'info',
         title: 'Refuerzo Recomendado',
         description: `${strugglingSubjects[0].name} muestra potencial de mejora`,
-        action: 'focused_practice',
+        action: () => navigate(strugglingSubjects[0].route),
+        actionLabel: 'Practicar',
         priority: 'medium'
       });
     }
 
+    // Recomendación de estudio inteligente
+    const bestSubject = subjects.reduce((prev, current) => {
+      const prevScore = (prev.neuralMetrics.engagement + prev.neuralMetrics.efficiency) / 2;
+      const currentScore = (current.neuralMetrics.engagement + current.neuralMetrics.efficiency) / 2;
+      return currentScore > prevScore ? current : prev;
+    });
+
+    recommendations.push({
+      type: 'info',
+      title: 'Sesión Óptima Detectada',
+      description: `Tu cerebro está preparado para ${bestSubject.name}`,
+      action: () => navigate(bestSubject.route),
+      actionLabel: 'Comenzar',
+      priority: 'high'
+    });
+
     return recommendations.slice(0, 3); // Máximo 3 recomendaciones
+  };
+
+  const optimizeNeuralDimension = (dimension: NeuralDimension) => {
+    toast({
+      title: "🧠 Optimización Neural Activada",
+      description: `Iniciando proceso de mejora para ${dimension.name}`,
+      duration: 3000
+    });
+
+    // Simular optimización
+    setTimeout(() => {
+      toast({
+        title: "✨ Optimización Completada",
+        description: `${dimension.name} ha mejorado un 15%`,
+        duration: 3000
+      });
+    }, 2000);
+  };
+
+  const startAdvancedLearning = () => {
+    toast({
+      title: "🚀 Modo Avanzado Activado",
+      description: "Sistema neural optimal detectado. Activando contenido avanzado.",
+      duration: 3000
+    });
+    navigate('/diagnostic');
   };
 
   const recommendations = generateRecommendations();
@@ -127,8 +178,13 @@ export const NeuralRecommendationsPanel: React.FC<NeuralRecommendationsPanel> = 
                       <Badge variant="outline" className="text-xs">
                         Prioridad: {rec.priority}
                       </Badge>
-                      <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white">
-                        Aplicar
+                      <Button 
+                        size="sm" 
+                        onClick={rec.action}
+                        className="bg-white/10 hover:bg-white/20 text-white"
+                      >
+                        <Target className="w-3 h-3 mr-1" />
+                        {rec.actionLabel}
                       </Button>
                     </div>
                   </div>

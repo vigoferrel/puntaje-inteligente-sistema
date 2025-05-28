@@ -1,7 +1,6 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCallback } from 'react';
-import { useGlobalCinematic } from '@/contexts/GlobalCinematicContext';
 
 interface NavigationOptions {
   transition?: 'fade' | 'slide' | 'scale' | 'blur';
@@ -12,7 +11,6 @@ interface NavigationOptions {
 export const useUnifiedNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { startTransition } = useGlobalCinematic();
 
   const navigateWithTransition = useCallback(async (
     path: string, 
@@ -21,17 +19,13 @@ export const useUnifiedNavigation = () => {
     const { replace = false } = options;
 
     try {
-      // Iniciar transición cinematográfica
-      await startTransition(path);
-
-      // Navegar a la nueva ruta
+      // Navegar directamente
       navigate(path, { replace });
     } catch (error) {
-      // Fallback: navegar sin transición
-      console.warn('Navigation transition failed, falling back to direct navigation:', error);
+      console.warn('Navigation failed:', error);
       navigate(path, { replace });
     }
-  }, [navigate, startTransition]);
+  }, [navigate]);
 
   const getCurrentModule = useCallback(() => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -67,16 +61,8 @@ export const useUnifiedNavigation = () => {
     navigateWithTransition('/planning').catch(() => navigate('/planning')), 
     [navigateWithTransition, navigate]);
   
-  const goToUniverse = useCallback(() => 
-    navigateWithTransition('/universe').catch(() => navigate('/universe')), 
-    [navigateWithTransition, navigate]);
-  
   const goToFinancial = useCallback(() => 
     navigateWithTransition('/financial').catch(() => navigate('/financial')), 
-    [navigateWithTransition, navigate]);
-  
-  const goToAchievements = useCallback(() => 
-    navigateWithTransition('/achievements').catch(() => navigate('/achievements')), 
     [navigateWithTransition, navigate]);
 
   const goToHub = useCallback(() => 
@@ -93,9 +79,7 @@ export const useUnifiedNavigation = () => {
     goToHistory,
     goToDiagnostic,
     goToPlanning,
-    goToUniverse,
     goToFinancial,
-    goToAchievements,
     goToHub,
     currentPath: location.pathname
   };

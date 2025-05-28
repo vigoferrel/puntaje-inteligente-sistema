@@ -53,11 +53,11 @@ const navigationItems: QuickNavItem[] = [
     priority: 'medium'
   },
   {
-    id: 'achievements',
-    title: 'Logros',
-    description: 'Progreso y reconocimientos',
+    id: 'lectoguia',
+    title: 'LectoGuía IA',
+    description: 'Comprensión lectora con IA',
     icon: Award,
-    route: '/achievements',
+    route: '/lectoguia',
     gradient: 'from-pink-500 to-purple-500',
     priority: 'low'
   }
@@ -97,29 +97,46 @@ export const QuickNavigationWidget: React.FC = () => {
                 <Button
                   onClick={() => handleNavigation(item.route)}
                   className={`
-                    h-auto p-4 w-full flex flex-col items-start gap-3
+                    h-auto p-4 w-full flex items-center justify-between
                     bg-gradient-to-r ${item.gradient} hover:opacity-90
                     border border-white/20 transition-all duration-300
                     hover:scale-105 hover:shadow-lg
                   `}
                 >
-                  <div className="flex items-center justify-between w-full">
-                    <Icon className="w-6 h-6 text-white" />
-                    <ArrowRight className="w-4 h-4 text-white/70" />
-                  </div>
-                  
-                  <div className="text-left">
-                    <div className="font-semibold text-white text-sm mb-1">
-                      {item.title}
-                    </div>
-                    <div className="text-white/80 text-xs">
-                      {item.description}
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-5 h-5 text-white" />
+                    <div className="text-left">
+                      <div className="text-white font-medium text-sm">
+                        {item.title}
+                      </div>
+                      <div className="text-white/80 text-xs">
+                        {item.description}
+                      </div>
                     </div>
                   </div>
+                  <ArrowRight className="w-4 h-4 text-white" />
                 </Button>
               </motion.div>
             );
           })}
+        </div>
+
+        {/* Quick Stats */}
+        <div className="mt-6 pt-4 border-t border-white/10">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="text-cyan-400 font-bold text-lg">85%</div>
+              <div className="text-white/60 text-xs">Preparación</div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="text-green-400 font-bold text-lg">12</div>
+              <div className="text-white/60 text-xs">Días activos</div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="text-yellow-400 font-bold text-lg">670</div>
+              <div className="text-white/60 text-xs">Puntaje meta</div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
