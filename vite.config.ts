@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     
-    // Configuración ULTRA-SILENCIOSA para Lovable v2024.2
+    // Configuración LOVABLE 2024.2 Compatible
     build: {
       target: 'esnext',
       sourcemap: mode === 'development',
@@ -37,14 +37,12 @@ export default defineConfig(({ mode }) => {
             query: ['@tanstack/react-query']
           }
         },
-        // SUPRESIÓN TOTAL DE WARNINGS
+        // Supresión total de warnings para Lovable 2024.2
         onwarn() {
-          // No mostrar NINGÚN warning durante el build
           return;
         }
       },
-      chunkSizeWarningLimit: 10000, // Eliminar warnings de tamaño
-      // Suprimir TODOS los logs de terser
+      chunkSizeWarningLimit: 10000,
       terserOptions: {
         compress: {
           drop_console: mode === 'production',
@@ -56,7 +54,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     
-    // Optimizaciones ultra-silenciosas
+    // Optimizaciones Lovable 2024.2
     optimizeDeps: {
       include: [
         'react',
@@ -71,27 +69,23 @@ export default defineConfig(({ mode }) => {
       exclude: ['lovable-tagger']
     },
 
-    // Configuración ultra-optimizada
     define: {
       __DEV__: mode === 'development',
       __LOVABLE_VERSION__: JSON.stringify('2024.2'),
       global: 'globalThis'
     },
     
-    // Manejo silencioso de assets
     assetsInclude: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
     
-    // Configuración de preview ultra-silenciosa
     preview: {
       port: 8080,
       host: "::",
       strictPort: true
     },
 
-    // NIVEL DE LOG ULTRA-MÍNIMO - Solo errores críticos
+    // Logging silencioso para compatibilidad
     logLevel: 'error',
     
-    // Configuración ESBuild ultra-silenciosa
     esbuild: {
       logLevel: 'silent',
       logOverride: { 
@@ -102,7 +96,6 @@ export default defineConfig(({ mode }) => {
       }
     },
 
-    // Configuración CSS ultra-silenciosa
     css: {
       devSourcemap: false
     }
