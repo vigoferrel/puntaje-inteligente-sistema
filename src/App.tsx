@@ -10,6 +10,7 @@ import Index from '@/pages/Index';
 import { LectoGuiaPage } from '@/pages/LectoGuiaPage';
 import { DiagnosticPage } from '@/pages/DiagnosticPage';
 import { PlanningPage } from '@/pages/PlanningPage';
+import FinancialCenterPage from '@/pages/FinancialCenterPage';
 
 // Contextos
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/lectoguia" element={<LectoGuiaPage />} />
                 <Route path="/diagnostic" element={<DiagnosticPage />} />
                 <Route path="/planning" element={<PlanningPage />} />
+                <Route path="/financial" element={<FinancialCenterPage />} />
               </Routes>
               <Navigation />
               <Toaster />
