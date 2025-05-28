@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Shield, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Shield, CheckCircle, AlertTriangle, Activity } from 'lucide-react';
 import { SecurityAuditService } from '@/services/security/SecurityAuditService';
 
 export const SecurityStatusBadge: React.FC = () => {
   const [securityStatus, setSecurityStatus] = useState<'loading' | 'secure' | 'warning' | 'error'>('loading');
   const [score, setScore] = useState(0);
+  const [isValidating, setIsValidating] = useState(false);
 
   useEffect(() => {
     checkSecurityStatus();
@@ -15,8 +16,12 @@ export const SecurityStatusBadge: React.FC = () => {
 
   const checkSecurityStatus = async () => {
     try {
+      setIsValidating(true);
+      console.log('🔍 Iniciando verificación de seguridad...');
+      
       const auditReport = await SecurityAuditService.runCompleteAudit();
       
+      // Determinar estado basado en score
       if (auditReport.overallScore >= 95) {
         setSecurityStatus('secure');
       } else if (auditReport.overallScore >= 80) {
@@ -26,14 +31,26 @@ export const SecurityStatusBadge: React.FC = () => {
       }
       
       setScore(auditReport.overallScore);
+      console.log('✅ Verificación completada:', { score: auditReport.overallScore, status: securityStatus });
+      
     } catch (error) {
-      console.error('Error verificando seguridad:', error);
+      console.error('❌ Error verificando seguridad:', error);
       setSecurityStatus('error');
       setScore(0);
+    } finally {
+      setIsValidating(false);
     }
   };
 
   const getStatusConfig = () => {
+    if (isValidating) {
+      return {
+        icon: <Activity className="w-3 h-3 animate-pulse" />,
+        text: 'Validando...',
+        className: 'bg-blue-500 hover:bg-blue-600'
+      };
+    }
+
     switch (securityStatus) {
       case 'secure':
         return {
@@ -71,7 +88,7 @@ export const SecurityStatusBadge: React.FC = () => {
       transition={{ duration: 0.3 }}
     >
       <Badge 
-        className={`${config.className} text-white flex items-center gap-1 cursor-pointer`}
+        className={`${config.className} text-white flex items-center gap-1 cursor-pointer transition-all duration-200`}
         onClick={checkSecurityStatus}
         title="Click para revalidar seguridad"
       >

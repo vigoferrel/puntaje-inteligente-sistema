@@ -7,14 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PAES Neural Education Platform</title>
     
-    <!-- Lovable GPT Engineer script - Required for latest features -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    
-    <!-- Polyfill optimizado para import.meta -->
+    <!-- Polyfill mejorado para import.meta con detección robusta -->
     <script>
       (function() {
         try {
-          // Detectar entornos restrictivos
+          // Detectar entornos restrictivos de manera más precisa
           const hasTrackingPrevention = (function() {
             try {
               localStorage.setItem('__test__', '1');
@@ -25,13 +22,18 @@
             }
           })();
           
-          if (hasTrackingPrevention || typeof lockdown !== 'undefined') {
+          // Detectar si estamos en un entorno SES o con lockdown
+          const hasLockdown = typeof lockdown !== 'undefined' || 
+                             typeof window.SES !== 'undefined' ||
+                             window.navigator.userAgent.includes('SES');
+          
+          if (hasTrackingPrevention || hasLockdown) {
             window.__SKIP_GPT_ENGINEER__ = true;
             window.__TRACKING_PREVENTION_DETECTED__ = true;
           }
           
           // Polyfill robusto para import.meta
-          if (!window.importMeta) {
+          if (!window.importMeta && typeof window.importMeta === 'undefined') {
             Object.defineProperty(window, 'importMeta', {
               value: { 
                 env: { 
@@ -47,7 +49,35 @@
           }
           
         } catch (error) {
+          // En caso de cualquier error, skip GPT Engineer para evitar problemas
           window.__SKIP_GPT_ENGINEER__ = true;
+          console.log('🔧 GPT Engineer deshabilitado por seguridad');
+        }
+      })();
+    </script>
+    
+    <!-- GPT Engineer script con carga condicional mejorada -->
+    <script>
+      (function() {
+        // Solo cargar si no estamos en un entorno restrictivo
+        if (!window.__SKIP_GPT_ENGINEER__ && !window.__TRACKING_PREVENTION_DETECTED__) {
+          try {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.gpteng.co/gptengineer.js';
+            script.type = 'module';
+            script.async = true;
+            script.defer = true;
+            
+            script.onerror = function() {
+              console.log('🔧 GPT Engineer script no disponible - continuando sin él');
+              window.__SKIP_GPT_ENGINEER__ = true;
+            };
+            
+            document.head.appendChild(script);
+          } catch (error) {
+            console.log('🔧 Error cargando GPT Engineer script - continuando sin él');
+            window.__SKIP_GPT_ENGINEER__ = true;
+          }
         }
       })();
     </script>
