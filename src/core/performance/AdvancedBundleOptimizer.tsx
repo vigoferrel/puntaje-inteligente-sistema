@@ -2,7 +2,7 @@
 import { lazy, useMemo, ComponentType } from 'react';
 import { useLocation } from 'react-router-dom';
 
-// Lazy imports consolidados con manejo de errores
+// Lazy imports consolidados con manejo de errores robusto
 const createSafeLazyComponent = (importFn: () => Promise<any>, componentName: string) => {
   return lazy(async () => {
     try {
@@ -26,16 +26,24 @@ const createSafeLazyComponent = (importFn: () => Promise<any>, componentName: st
   });
 };
 
+// Componentes lazy consolidados con todos los componentes necesarios
 const lazyComponents = {
+  // Páginas principales
   Index: createSafeLazyComponent(() => import('@/pages/Index'), 'Index'),
   Auth: createSafeLazyComponent(() => import('@/pages/auth'), 'Auth'),
+  
+  // Módulos educativos
   LectoGuiaPage: createSafeLazyComponent(() => import('@/pages/LectoGuiaPage'), 'LectoGuiaPage'),
-  FinancialPage: createSafeLazyComponent(() => import('@/pages/FinancialPage'), 'FinancialPage'),
   DiagnosticPage: createSafeLazyComponent(() => import('@/pages/DiagnosticPage'), 'DiagnosticPage'),
   PlanningPage: createSafeLazyComponent(() => import('@/pages/PlanningPage'), 'PlanningPage'),
+  
+  // Módulos especializados
+  FinancialPage: createSafeLazyComponent(() => import('@/pages/FinancialPage'), 'FinancialPage'),
   UniverseVisualizationPage: createSafeLazyComponent(() => import('@/pages/UniverseVisualizationPage'), 'UniverseVisualizationPage'),
   AchievementsPage: createSafeLazyComponent(() => import('@/pages/AchievementsPage'), 'AchievementsPage'),
   EcosystemPage: createSafeLazyComponent(() => import('@/pages/EcosystemPage'), 'EcosystemPage'),
+  
+  // Dashboards de seguridad y validación
   ValidationDashboard: createSafeLazyComponent(() => import('@/pages/ValidationDashboard'), 'ValidationDashboard'),
   SecurityDashboard: createSafeLazyComponent(() => import('@/pages/SecurityDashboard'), 'SecurityDashboard')
 };
