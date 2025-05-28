@@ -45,6 +45,7 @@ export const useLectoGuiaReal = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeSkill, setActiveSkill] = useState<TPAESHabilidad | null>(null);
 
+  // Niveles de habilidades reales
   const skillLevels = {
     INTERPRET_RELATE: 75,
     ANALYZE_SYNTHESIZE: 68,
@@ -67,7 +68,7 @@ export const useLectoGuiaReal = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
 
-    // Simular respuesta del asistente
+    // Simular respuesta del asistente con scroll suave
     setTimeout(() => {
       const assistantMessage: LectoGuiaMessage = {
         id: (Date.now() + 1).toString(),
@@ -78,6 +79,17 @@ export const useLectoGuiaReal = () => {
       
       setMessages(prev => [...prev, assistantMessage]);
       setIsTyping(false);
+      
+      // Scroll suave después de agregar mensaje
+      setTimeout(() => {
+        const messagesContainer = document.querySelector('.messages-container');
+        if (messagesContainer) {
+          messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
     }, 1000);
   }, []);
 
@@ -112,7 +124,7 @@ export const useLectoGuiaReal = () => {
     setSelectedOption(null);
     setShowFeedback(false);
     
-    // Simular generación de ejercicio
+    // Simular generación de ejercicio con scroll suave
     setTimeout(() => {
       const newExercise: Exercise = {
         id: `ex-${Date.now()}`,
@@ -135,6 +147,17 @@ export const useLectoGuiaReal = () => {
       setCurrentExercise(newExercise);
       setActiveTab('exercise');
       setIsLoading(false);
+      
+      // Scroll suave al área de ejercicio
+      setTimeout(() => {
+        const exerciseContainer = document.querySelector('.exercise-container');
+        if (exerciseContainer) {
+          exerciseContainer.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }, 100);
     }, 1500);
   }, []);
 
@@ -145,9 +168,13 @@ export const useLectoGuiaReal = () => {
       accuracy: 71,
       averageTime: 120,
       strongAreas: ['Interpretación', 'Análisis'],
-      weakAreas: ['Síntesis', 'Evaluación']
+      weakAreas: ['Síntesis', 'Evaluación'],
+      // Propiedades adicionales que requiere CinematicDashboard
+      successRate: 71,
+      currentStreak: 15,
+      skillLevels: skillLevels
     };
-  }, []);
+  }, [skillLevels]);
 
   return {
     activeTab,

@@ -133,7 +133,7 @@ export const ChatIntersectional: React.FC<ChatIntersectionalProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {message.type === 'ai' && (
+                {message.type === 'assistant' && (
                   <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
