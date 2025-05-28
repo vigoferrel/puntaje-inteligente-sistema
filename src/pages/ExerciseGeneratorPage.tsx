@@ -1,11 +1,66 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ExerciseGeneratorCore } from '@/components/exercise-generator/ExerciseGeneratorCore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { Zap, Target, BookOpen } from 'lucide-react';
+import { Zap, Target, BookOpen, Calculator, FlaskConical, History } from 'lucide-react';
+import { useExerciseGeneration } from '@/hooks/exercise/use-exercise-generation';
 
 const ExerciseGeneratorPage: React.FC = () => {
+  const [selectedSubject, setSelectedSubject] = useState('competencia-lectora');
+  const [showSettings, setShowSettings] = useState(false);
+  
+  const {
+    exerciseResults,
+    isGenerating,
+    generateExercises,
+    clearResults
+  } = useExerciseGeneration();
+
+  // Estructura de materias basada en el sistema de 277 nodos
+  const subjects = {
+    'competencia-lectora': {
+      name: 'Competencia Lectora',
+      icon: BookOpen,
+      color: 'bg-blue-500',
+      totalNodes: 30,
+      tier1: 14, tier2: 13, tier3: 3
+    },
+    'matematica-m1': {
+      name: 'Matemática M1',
+      icon: Calculator,
+      color: 'bg-green-500',
+      totalNodes: 25,
+      tier1: 10, tier2: 10, tier3: 5
+    },
+    'matematica-m2': {
+      name: 'Matemática M2',
+      icon: Calculator,
+      color: 'bg-purple-500',
+      totalNodes: 22,
+      tier1: 13, tier2: 6, tier3: 3
+    },
+    'historia': {
+      name: 'Historia y Ciencias Sociales',
+      icon: History,
+      color: 'bg-orange-500',
+      totalNodes: 65,
+      tier1: 19, tier2: 26, tier3: 20
+    },
+    'ciencias': {
+      name: 'Ciencias',
+      icon: FlaskConical,
+      color: 'bg-red-500',
+      totalNodes: 135,
+      tier1: 33, tier2: 53, tier3: 49
+    }
+  };
+
+  const handleGenerate = (config: any) => {
+    console.log('🔥 Generando ejercicios con configuración:', config);
+    generateExercises(config);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-6">
       <motion.div
@@ -28,7 +83,13 @@ const ExerciseGeneratorPage: React.FC = () => {
         </Card>
 
         {/* Generator Component */}
-        <ExerciseGeneratorCore />
+        <ExerciseGeneratorCore
+          selectedSubject={selectedSubject}
+          subjects={subjects}
+          showSettings={showSettings}
+          onGenerate={handleGenerate}
+          isGenerating={isGenerating}
+        />
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
