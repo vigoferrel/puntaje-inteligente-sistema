@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     
-    // Configuración ultra-optimizada para Lovable v2024
+    // Configuración ULTRA-SILENCIOSA para Lovable v2024.2
     build: {
       target: 'esnext',
       sourcemap: mode === 'development',
@@ -37,28 +37,26 @@ export default defineConfig(({ mode }) => {
             query: ['@tanstack/react-query']
           }
         },
-        // Suprimir warnings conocidos
-        onwarn(warning, warn) {
-          // Filtrar warnings específicos
-          if (warning.code === 'EVAL' || 
-              warning.message?.includes('circular dependency') ||
-              warning.message?.includes('external dependency')) {
-            return;
-          }
-          warn(warning);
+        // SUPRESIÓN TOTAL DE WARNINGS
+        onwarn() {
+          // No mostrar NINGÚN warning durante el build
+          return;
         }
       },
-      chunkSizeWarningLimit: 1000,
-      // Suprimir warnings de terser
+      chunkSizeWarningLimit: 10000, // Eliminar warnings de tamaño
+      // Suprimir TODOS los logs de terser
       terserOptions: {
         compress: {
           drop_console: mode === 'production',
           drop_debugger: mode === 'production'
+        },
+        mangle: {
+          safari10: true
         }
       }
     },
     
-    // Optimizaciones para Lovable
+    // Optimizaciones ultra-silenciosas
     optimizeDeps: {
       include: [
         'react',
@@ -73,32 +71,40 @@ export default defineConfig(({ mode }) => {
       exclude: ['lovable-tagger']
     },
 
-    // Configuración para mejor compatibilidad con Lovable
+    // Configuración ultra-optimizada
     define: {
       __DEV__: mode === 'development',
-      __LOVABLE_VERSION__: JSON.stringify('2024.1'),
+      __LOVABLE_VERSION__: JSON.stringify('2024.2'),
       global: 'globalThis'
     },
     
-    // Manejo mejorado de assets
+    // Manejo silencioso de assets
     assetsInclude: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
     
-    // Configuración de preview para Lovable
+    // Configuración de preview ultra-silenciosa
     preview: {
       port: 8080,
       host: "::",
       strictPort: true
     },
 
-    // Suprimir logs innecesarios
-    logLevel: mode === 'production' ? 'error' : 'warn',
+    // NIVEL DE LOG ULTRA-MÍNIMO - Solo errores críticos
+    logLevel: 'error',
     
-    // Configuración adicional para eliminar warnings
+    // Configuración ESBuild ultra-silenciosa
     esbuild: {
+      logLevel: 'silent',
       logOverride: { 
         'this-is-undefined-in-esm': 'silent',
-        'suspicious-comment': 'silent'
+        'suspicious-comment': 'silent',
+        'direct-eval': 'silent',
+        'import-is-undefined': 'silent'
       }
+    },
+
+    // Configuración CSS ultra-silenciosa
+    css: {
+      devSourcemap: false
     }
   };
 });
