@@ -71,7 +71,7 @@ export const useRealDashboardData = () => {
       ] = await Promise.all([
         supabase
           .from('user_node_progress')
-          .select('mastery_level, created_at') // Usar created_at en lugar de updated_at
+          .select('mastery_level, last_activity_at')
           .eq('user_id', user.id),
         
         supabase
@@ -105,9 +105,10 @@ export const useRealDashboardData = () => {
       const weeklyCorrect = exerciseAttemptsData.data?.filter(e => e.is_correct).length || 0;
       const weeklyProgress = weeklyExercises > 0 ? (weeklyCorrect / weeklyExercises) * 100 : 0;
 
-      // Calcular racha de estudio
-      const sortedAttempts = (exerciseAttemptsData.data || [])
-        .map(a => new Date(a.created_at).toDateString())
+      // Calcular racha de estudio usando last_activity_at
+      const activityDates = (nodeProgressData.data || [])
+        .filter(n => n.last_activity_at)
+        .map(n => new Date(n.last_activity_at).toDateString())
         .filter((date, index, arr) => arr.indexOf(date) === index)
         .sort();
       
@@ -115,12 +116,12 @@ export const useRealDashboardData = () => {
       const today = new Date().toDateString();
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
       
-      if (sortedAttempts.includes(today) || sortedAttempts.includes(yesterday)) {
+      if (activityDates.includes(today) || activityDates.includes(yesterday)) {
         currentStreak = 1;
         // Calcular racha completa hacia atrás
-        for (let i = sortedAttempts.length - 2; i >= 0; i--) {
-          const prevDate = new Date(sortedAttempts[i + 1]);
-          const currDate = new Date(sortedAttempts[i]);
+        for (let i = activityDates.length - 2; i >= 0; i--) {
+          const prevDate = new Date(activityDates[i + 1]);
+          const currDate = new Date(activityDates[i]);
           const diffDays = Math.floor((prevDate.getTime() - currDate.getTime()) / (24 * 60 * 60 * 1000));
           
           if (diffDays === 1) {
