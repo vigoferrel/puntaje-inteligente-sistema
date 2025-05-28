@@ -154,7 +154,7 @@ export const BalancedPAESHub: React.FC = () => {
                   className="cursor-pointer"
                   onClick={() => handleModuleSelect(module)}
                 >
-                  <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-300">
+                  <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-300 h-full">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -207,7 +207,7 @@ export const BalancedPAESHub: React.FC = () => {
             })}
           </div>
 
-          {/* Widget de Navegación Rápida */}
+          {/* Widget de Navegación */}
           <QuickNavigationWidget />
         </div>
       );
@@ -240,10 +240,10 @@ export const BalancedPAESHub: React.FC = () => {
         >
           <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
             <Brain className="w-8 h-8 text-cyan-400" />
-            Hub PAES Balanceado
+            Hub PAES 2025
           </h1>
           <p className="text-white/70 text-lg">
-            Preparación equilibrada para las 5 pruebas PAES 2025
+            Preparación integral para las 5 pruebas PAES
           </p>
         </motion.div>
 

@@ -7,8 +7,7 @@ import {
   Home,
   BookOpen,
   Target,
-  Calendar,
-  User
+  Calendar
 } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
@@ -16,8 +15,8 @@ export const Navigation: React.FC = () => {
   const location = useLocation();
 
   const routes = [
-    { path: '/', name: 'Hub', icon: Home },
-    { path: '/lectoguia', name: 'LectoGuía', icon: BookOpen },
+    { path: '/', name: 'Hub PAES', icon: Home },
+    { path: '/lectoguia', name: 'Comprensión', icon: BookOpen },
     { path: '/diagnostic', name: 'Diagnóstico', icon: Target },
     { path: '/planning', name: 'Planificación', icon: Calendar },
   ];

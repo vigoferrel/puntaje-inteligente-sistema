@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Brain, 
   Target, 
   BookOpen, 
   Calculator,
@@ -27,17 +26,8 @@ interface QuickNavItem {
 
 const navigationItems: QuickNavItem[] = [
   {
-    id: 'lectoguia',
-    title: 'LectoGuía IA',
-    description: 'Comprensión lectora inteligente',
-    icon: Brain,
-    route: '/lectoguia',
-    gradient: 'from-purple-500 to-pink-500',
-    priority: 'high'
-  },
-  {
     id: 'diagnostic',
-    title: 'Diagnóstico',
+    title: 'Diagnóstico PAES',
     description: 'Evaluación de nivel actual',
     icon: Target,
     route: '/diagnostic',
@@ -51,7 +41,7 @@ const navigationItems: QuickNavItem[] = [
     icon: BookOpen,
     route: '/planning',
     gradient: 'from-green-500 to-emerald-500',
-    priority: 'medium'
+    priority: 'high'
   },
   {
     id: 'financial',
@@ -88,12 +78,12 @@ export const QuickNavigationWidget: React.FC = () => {
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Acceso Rápido</h3>
-            <p className="text-white/70 text-sm">Navega a tus herramientas favoritas</p>
+            <h3 className="text-lg font-bold text-white">Herramientas PAES</h3>
+            <p className="text-white/70 text-sm">Accede a tus recursos de preparación</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {navigationItems.map((item, index) => {
             const Icon = item.icon;
             
