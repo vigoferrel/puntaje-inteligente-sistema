@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { parseSecurityData } from '@/utils/typeGuards';
 
 export interface SecurityAuditReport {
   functionsSecured: boolean;
@@ -32,18 +33,17 @@ export class SecurityAuditService {
         recommendations: []
       };
 
-      // Verificar datos específicos del readiness check
+      // Verificar datos específicos del readiness check usando el type guard
       if (readinessData) {
-        const securityIssues = readinessData.security_issues || 0;
-        const performanceScore = readinessData.performance_score || 95;
+        const securityMetrics = parseSecurityData(readinessData);
         
-        if (securityIssues > 0) {
-          report.overallScore -= securityIssues * 10;
-          report.recommendations.push(`Resolver ${securityIssues} problemas de seguridad restantes`);
+        if (securityMetrics.security_issues > 0) {
+          report.overallScore -= securityMetrics.security_issues * 10;
+          report.recommendations.push(`Resolver ${securityMetrics.security_issues} problemas de seguridad restantes`);
         }
         
-        if (performanceScore < 90) {
-          report.overallScore -= (90 - performanceScore);
+        if (securityMetrics.performance_score && securityMetrics.performance_score < 90) {
+          report.overallScore -= (90 - securityMetrics.performance_score);
           report.recommendations.push('Optimizar rendimiento del sistema');
         }
       }
