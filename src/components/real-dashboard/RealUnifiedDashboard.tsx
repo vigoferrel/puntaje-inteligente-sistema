@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Brain, Target, Zap, TrendingUp, 
   Calendar, BookOpen, Award, RefreshCw, 
-  Eye, BarChart3, Sparkles, Universe
+  Eye, BarChart3, Sparkles, Globe
 } from 'lucide-react';
 
 export const RealUnifiedDashboard: React.FC = () => {
@@ -76,7 +76,7 @@ export const RealUnifiedDashboard: React.FC = () => {
               onClick={() => setActiveView('ecosystem')}
               className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
             >
-              <Universe className="h-4 w-4 mr-2" />
+              <Globe className="h-4 w-4 mr-2" />
               Ir al Ecosistema 3D
             </Button>
             <Button
@@ -167,7 +167,7 @@ export const RealUnifiedDashboard: React.FC = () => {
         >
           <Card className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-purple-500/30">
             <CardContent className="p-8">
-              <Universe className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+              <Globe className="w-16 h-16 text-purple-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Ecosistema Neural 3D Disponible</h2>
               <p className="text-white/70 mb-6">
                 Explora tus {realNodes.length} nodos de aprendizaje en un universo 3D inmersivo con visualizaciones neurales avanzadas

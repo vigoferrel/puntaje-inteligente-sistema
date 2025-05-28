@@ -18,8 +18,7 @@ import {
   Target, 
   Award,
   Zap,
-  Eye,
-  Universe
+  Eye
 } from 'lucide-react';
 
 type ViewMode = 'enhanced3d' | 'educational' | 'recommendations' | 'achievements';
@@ -228,7 +227,7 @@ export const NeuralEcosystemHub: React.FC = () => {
 
             <Card className="bg-black/30 backdrop-blur-sm border-purple-500/30">
               <CardContent className="p-4 text-center">
-                <Universe className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                <Globe className="w-8 h-8 text-purple-400 mx-auto mb-2" />
                 <div className="text-white font-medium">Nodos Cargados</div>
                 <div className="text-purple-400 text-sm">{realNodes.length}</div>
               </CardContent>
