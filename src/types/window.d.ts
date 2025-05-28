@@ -1,5 +1,5 @@
 
-// Declaraciones globales para propiedades customizadas del window v2.0
+// Declaraciones globales para propiedades customizadas del window v3.0
 declare global {
   interface Window {
     importMeta?: {
@@ -15,6 +15,8 @@ declare global {
     __EDGE_DETECTED__?: boolean;
     __CSP_RESTRICTIVE__?: boolean;
     __GPT_ENGINEER_LOADED__?: boolean;
+    __ENVIRONMENT_SAFE__?: boolean;
+    isUltraSpam?: (message: string) => boolean;
   }
 }
 

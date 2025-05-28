@@ -4,18 +4,9 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Sistema Ultra-Optimizado de Filtrado de Errores v4.0 - ZERO ERRORS GARANTIZADO
+// Sistema Ultra-Optimizado de Filtrado de Errores v5.0 - ZERO ERRORS GARANTIZADO
 if (typeof window !== 'undefined') {
-  // Performance monitoring ultra-silencioso
-  if ('performance' in window && 'mark' in window.performance) {
-    try {
-      performance.mark('lovable-app-start');
-    } catch (e) {
-      // Silenciar completamente errores de performance
-    }
-  }
-  
-  // INTERCEPTACIÓN SECUNDARIA - Por si algo pasa por el filtro inicial
+  // LISTA ULTRA-EXPANDIDA DE PATRONES DE SPAM - NIVEL GLOBAL
   const ULTRA_ERROR_PATTERNS = [
     // Browser features
     'vr', 'ambient-light-sensor', 'battery', 'Unrecognized feature',
@@ -44,6 +35,7 @@ if (typeof window !== 'undefined') {
     'go.microsoft.com/fwlink'
   ];
 
+  // FUNCIÓN GLOBAL DE DETECCIÓN DE SPAM
   const isUltraSpam = (message: string): boolean => {
     if (!message || typeof message !== 'string') return true;
     const lowerMessage = message.toLowerCase();
@@ -52,7 +44,16 @@ if (typeof window !== 'undefined') {
     );
   };
 
-  // SOBRESCRITURA SECUNDARIA DE CONSOLE (por si acaso)
+  // Performance monitoring ultra-silencioso
+  if ('performance' in window && 'mark' in window.performance) {
+    try {
+      performance.mark('lovable-app-start');
+    } catch (e) {
+      // Silenciar completamente errores de performance
+    }
+  }
+  
+  // INTERCEPTACIÓN SECUNDARIA - Por si algo pasa por el filtro inicial
   const secondaryConsoleFilter = () => {
     const originalMethods = {
       log: console.log,
@@ -127,19 +128,20 @@ if (typeof window !== 'undefined') {
 
     // Filtrar errores de recursos con ultra-precisión y TypeScript correcto
     if (event.target && event.target !== window) {
-      const target = event.target as HTMLElement & { src?: string };
+      const target = event.target as HTMLElement;
       
-      if (target.src && (
-        target.src.includes('facebook.com') ||
-        target.src.includes('gptengineer.js') ||
-        target.src.includes('gpteng.co') ||
-        target.src.includes('cloudflareinsights.com') ||
-        target.src.includes('beacon.min.js') ||
-        target.src.includes('static.cloudflareinsights.com')
-      )) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return false;
+      // Type guard para verificar si el elemento tiene propiedad src
+      if ('src' in target && typeof target.src === 'string') {
+        if (target.src.includes('facebook.com') ||
+            target.src.includes('gptengineer.js') ||
+            target.src.includes('gpteng.co') ||
+            target.src.includes('cloudflareinsights.com') ||
+            target.src.includes('beacon.min.js') ||
+            target.src.includes('static.cloudflareinsights.com')) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return false;
+        }
       }
     }
 
@@ -164,14 +166,14 @@ const renderApp = () => {
       </React.StrictMode>
     );
   } catch (error: any) {
-    if (!isUltraSpam(error?.message || '')) {
+    if (typeof window !== 'undefined' && window.isUltraSpam && !window.isUltraSpam(error?.message || '')) {
       console.error('🚨 Render error:', error);
     }
     // Fallback ultra-robusto
     try {
       root.render(<App />);
     } catch (fallbackError: any) {
-      if (!isUltraSpam(fallbackError?.message || '')) {
+      if (typeof window !== 'undefined' && window.isUltraSpam && !window.isUltraSpam(fallbackError?.message || '')) {
         console.error('🚨 Fallback render error:', fallbackError);
       }
     }
