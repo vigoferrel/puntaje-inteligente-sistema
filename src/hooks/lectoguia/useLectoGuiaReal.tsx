@@ -59,10 +59,17 @@ export function useLectoGuiaReal() {
 
       if (attemptsError) throw attemptsError;
 
-      // Fetch real node progress
+      // Fetch real node progress with learning_nodes join
       const { data: nodeProgress, error: nodeError } = await supabase
         .from('user_node_progress')
-        .select('*')
+        .select(`
+          *,
+          learning_nodes!inner(
+            subject_area,
+            test_id,
+            skill_id
+          )
+        `)
         .eq('user_id', user.id);
 
       if (nodeError) throw nodeError;
@@ -152,15 +159,17 @@ export function useLectoGuiaReal() {
     const isCorrect = currentExercise.options[option] === currentExercise.correctAnswer;
 
     try {
-      // Save real attempt to database
-      await saveExerciseAttempt({
-        exerciseId: currentExercise.id || 'generated',
-        selectedOption: option,
+      // Save real attempt to database using correct function signature
+      await saveExerciseAttempt(
+        currentExercise.id || 'generated',
+        option,
         isCorrect,
-        skillType: activeSkill || 'INTERPRET_RELATE',
-        prueba: activeSubject,
-        timeTaken: Date.now() - (currentExercise.startTime || Date.now())
-      });
+        Date.now() - (currentExercise.startTime || Date.now()),
+        {
+          skillType: activeSkill || 'INTERPRET_RELATE',
+          prueba: activeSubject
+        }
+      );
 
       // Reload stats after saving attempt
       setTimeout(() => {
