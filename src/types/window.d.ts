@@ -1,6 +1,4 @@
 
-/// <reference types="vite/client" />
-
 // Declaraciones globales para propiedades customizadas del window
 declare global {
   interface Window {
@@ -16,3 +14,5 @@ declare global {
     __SKIP_GPT_ENGINEER__?: boolean;
   }
 }
+
+export {};

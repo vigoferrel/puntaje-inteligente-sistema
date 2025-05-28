@@ -6,11 +6,6 @@ import "./index.css";
 
 // Configuración global ultra-optimizada
 if (typeof window !== 'undefined') {
-  // Polyfill para import.meta mejorado
-  if (!window.importMeta) {
-    window.importMeta = { env: { MODE: 'production' } };
-  }
-  
   // Performance monitoring optimizado
   if ('performance' in window && 'mark' in window.performance) {
     performance.mark('app-start');
@@ -66,14 +61,6 @@ if (typeof window !== 'undefined') {
       return;
     }
   });
-
-  // Detección simplificada de tracking prevention
-  try {
-    localStorage.setItem('__test__', '1');
-    localStorage.removeItem('__test__');
-  } catch (e) {
-    window.__TRACKING_PREVENTION_DETECTED__ = true;
-  }
 }
 
 const rootElement = document.getElementById("root");
