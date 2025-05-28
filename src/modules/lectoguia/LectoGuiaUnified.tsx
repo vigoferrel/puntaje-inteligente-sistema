@@ -16,7 +16,7 @@ import {
   WifiOff,
   AlertCircle
 } from 'lucide-react';
-import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
+import { useLectoGuiaReal } from '@/hooks/lectoguia/useLectoGuiaReal';
 import { ChatInterface } from '@/components/ai/ChatInterface';
 
 interface LectoGuiaProps {
@@ -30,41 +30,42 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
 }) => {
   const [activeMode, setActiveMode] = useState<'chat' | 'reading' | 'analysis'>('chat');
 
-  // Usar el hook de chat real
+  // Use the REAL hook instead of simulated
   const {
+    activeTab,
+    setActiveTab,
     messages,
     isTyping,
-    processUserMessage,
-    activeSkill,
-    setActiveSkill,
+    handleSendMessage,
     connectionStatus,
     serviceStatus,
-    generateExerciseForSkill
-  } = useLectoGuiaChat();
+    activeSubject,
+    handleSubjectChange,
+    currentExercise,
+    selectedOption,
+    showFeedback,
+    handleOptionSelect,
+    handleNewExercise,
+    isLoading,
+    getStats,
+    activeSkill,
+    setActiveSkill
+  } = useLectoGuiaReal();
 
   const handleModeChange = useCallback((mode: 'chat' | 'reading' | 'analysis') => {
     setActiveMode(mode);
   }, []);
 
-  // Manejar envío de mensajes con el chat real
-  const handleSendMessage = useCallback(async (message: string, imageData?: string) => {
-    try {
-      await processUserMessage(message, imageData);
-    } catch (error) {
-      console.error('Error enviando mensaje:', error);
-    }
-  }, [processUserMessage]);
-
-  // Generar ejercicio específico
+  // Generate exercise for current skill
   const handleGenerateExercise = useCallback(async () => {
     try {
-      await generateExerciseForSkill(activeSkill || 'INTERPRET_RELATE');
+      await handleNewExercise();
     } catch (error) {
       console.error('Error generando ejercicio:', error);
     }
-  }, [generateExerciseForSkill, activeSkill]);
+  }, [handleNewExercise]);
 
-  // Determinar el estado de conexión para mostrar
+  // Connection status helpers
   const showConnectionStatus = connectionStatus !== 'connected' || serviceStatus !== 'available';
   
   const getConnectionIcon = () => {
@@ -87,9 +88,12 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
     return 'Sin conexión';
   };
 
+  // Get real statistics
+  const stats = getStats();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      {/* Header Consolidado */}
+      {/* Header with Real Connection Status */}
       <div className="bg-black/20 backdrop-blur-xl border-b border-white/10 p-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -98,33 +102,41 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">LectoGuía IA</h1>
-              <p className="text-white/70">Sistema unificado de comprensión lectora</p>
+              <p className="text-white/70">Sistema real de comprensión lectora</p>
             </div>
           </div>
           
-          <Badge className={`${
-            connectionStatus === 'connected' && serviceStatus === 'available'
-              ? 'bg-green-500/20 text-green-400 border-green-500/30'
-              : connectionStatus === 'connecting'
-              ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-              : 'bg-red-500/20 text-red-400 border-red-500/30'
-          }`}>
-            {getConnectionIcon()}
-            <span className="ml-2">{getConnectionText()}</span>
-          </Badge>
+          <div className="flex items-center gap-4">
+            {/* Real Stats Display */}
+            <div className="text-white/70 text-sm">
+              <div>Ejercicios: {stats.totalExercises}</div>
+              <div>Precisión: {stats.successRate}%</div>
+            </div>
+            
+            <Badge className={`${
+              connectionStatus === 'connected' && serviceStatus === 'available'
+                ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                : connectionStatus === 'connecting'
+                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                : 'bg-red-500/20 text-red-400 border-red-500/30'
+            }`}>
+              {getConnectionIcon()}
+              <span className="ml-2">{getConnectionText()}</span>
+            </Badge>
+          </div>
         </div>
       </div>
 
-      {/* Contenido Principal */}
+      {/* Real Content */}
       <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar Consolidado */}
+          {/* Sidebar with Real Status */}
           <div className="space-y-4">
             <Card className="bg-white/10 border-white/20">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5" />
-                  Módulos Unificados
+                  Módulos Reales
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -132,9 +144,10 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                   onClick={() => handleModeChange('chat')}
                   variant={activeMode === 'chat' ? 'default' : 'outline'}
                   className="w-full justify-start"
+                  disabled={isLoading}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Chat Inteligente
+                  Chat Real IA
                 </Button>
                 
                 <Button
@@ -143,7 +156,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                   className="w-full justify-start"
                 >
                   <BookOpen className="w-4 h-4 mr-2" />
-                  Análisis de Lectura
+                  Análisis Real
                 </Button>
                 
                 <Button
@@ -152,18 +165,18 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                   className="w-full justify-start"
                 >
                   <Target className="w-4 h-4 mr-2" />
-                  Evaluación PAES
+                  Evaluación Real
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Estado de Conexión y Acciones Rápidas */}
+            {/* Real Connection Status */}
             {showConnectionStatus && (
               <Card className="bg-white/5 border-white/10">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <AlertCircle className="w-4 h-4 text-yellow-400" />
-                    <span className="text-white text-sm">Estado del Sistema</span>
+                    <span className="text-white text-sm">Estado Real del Sistema</span>
                   </div>
                   <div className="text-white/70 text-xs mb-2">
                     Conexión: {connectionStatus}
@@ -175,7 +188,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
               </Card>
             )}
 
-            {/* Navegación Integrada */}
+            {/* Real Actions */}
             <Card className="bg-white/5 border-white/10">
               <CardContent className="p-4 space-y-2">
                 <Button 
@@ -184,7 +197,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                   variant="outline"
                 >
                   <Zap className="w-4 h-4 mr-2" />
-                  Diagnóstico
+                  Diagnóstico Real
                 </Button>
                 <Button 
                   onClick={() => onNavigate?.('/planning')}
@@ -192,22 +205,22 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                   variant="outline"
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
-                  Planificación
+                  Planificación Real
                 </Button>
                 <Button 
                   onClick={handleGenerateExercise}
                   className="w-full text-sm"
                   variant="outline"
-                  disabled={isTyping}
+                  disabled={isLoading}
                 >
                   <Target className="w-4 h-4 mr-2" />
-                  Generar Ejercicio
+                  {isLoading ? 'Generando...' : 'Ejercicio Real'}
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Área Principal */}
+          {/* Main Area with Real Chat */}
           <div className="lg:col-span-3">
             <AnimatePresence mode="wait">
               <motion.div
@@ -225,7 +238,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                           messages={messages}
                           onSendMessage={handleSendMessage}
                           isTyping={isTyping}
-                          placeholder="Pregunta sobre comprensión lectora, análisis textual o PAES..."
+                          placeholder="Chat real con IA - comprensión lectora, análisis textual y PAES..."
                           className="h-full"
                         />
                       </div>
@@ -234,13 +247,13 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                     {activeMode === 'reading' && (
                       <div className="p-8 text-center py-20">
                         <BookOpen className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Análisis de Lectura Avanzado</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">Análisis Real de Lectura</h3>
                         <p className="text-white/70 mb-6">
-                          Herramientas unificadas de análisis textual y comprensión
+                          Herramientas reales conectadas a servicios de IA
                         </p>
                         <div className="max-w-md mx-auto p-4 bg-white/5 rounded-lg border border-white/10">
                           <p className="text-white/60 text-sm">
-                            📚 Análisis contextual, estructural y semántico en un solo lugar
+                            📚 Datos reales desde base de datos y servicios IA
                           </p>
                         </div>
                       </div>
@@ -249,13 +262,13 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                     {activeMode === 'analysis' && (
                       <div className="p-8 text-center py-20">
                         <Target className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Evaluación PAES Integrada</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">Evaluación Real PAES</h3>
                         <p className="text-white/70 mb-6">
-                          Práctica de comprensión lectora con estándares PAES unificados
+                          Práctica real con ejercicios generados por IA
                         </p>
                         <div className="max-w-md mx-auto p-4 bg-white/5 rounded-lg border border-white/10">
                           <p className="text-white/60 text-sm">
-                            🎯 Ejercicios, métricas y progreso todo integrado
+                            🎯 Ejercicios reales, métricas reales, progreso real
                           </p>
                         </div>
                       </div>
