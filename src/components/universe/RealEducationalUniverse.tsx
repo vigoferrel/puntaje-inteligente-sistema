@@ -1,5 +1,5 @@
 import React, { Suspense, useMemo, useState } from 'react';
-import { Canvas, OrbitControls, Html, Environment } from '@react-three/fiber';
+import { OrbitControls, Html, Environment } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { useRealNeuralData } from '@/hooks/useRealNeuralData';
 import { useRealDashboardData } from '@/hooks/dashboard/useRealDashboardData';
