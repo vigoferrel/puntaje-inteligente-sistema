@@ -26,7 +26,6 @@ export const useDiagnosticController = () => {
   // Estado de disponibilidad de tests
   const [testsAvailable, setTestsAvailable] = useState(false);
   
-  // Verificar disponibilidad cuando termine la inicialización
   useEffect(() => {
     const isNotInitializing = !initializationState.initializing && !initializationState.generatingDiagnostic;
     console.log('🔬 DiagnosticController: Verificando disponibilidad de tests', {
@@ -125,7 +124,7 @@ export const useDiagnosticController = () => {
     resultSubmitted: resultState.resultSubmitted,
     testResults: resultState.testResults,
     
-    // Handlers con logging mejorado
+    // Handlers con logging mejorado y corrección del error
     handleTestSelect: (testId: string) => {
       console.log('🎯 Seleccionando test:', testId);
       selectionState.handleTestSelect(testId);
@@ -142,9 +141,10 @@ export const useDiagnosticController = () => {
       console.log('🗑️ Descartando progreso');
       selectionState.handleDiscardProgress();
     },
-    handleAnswerSelect: (answer: string) => {
-      console.log('✏️ Respuesta seleccionada:', answer);
-      executionState.handleAnswerSelect(answer);
+    // CORRECCIÓN: Ahora handleAnswerSelect recibe questionId y answer
+    handleAnswerSelect: (questionId: string, answer: string) => {
+      console.log('✏️ Respuesta seleccionada:', { questionId, answer });
+      executionState.handleAnswerSelect(questionId, answer);
     },
     handleRequestHint: () => {
       console.log('💡 Solicitando pista');
