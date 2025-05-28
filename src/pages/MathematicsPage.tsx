@@ -1,60 +1,31 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { useNeuralSystem } from '@/components/neural/NeuralSystemProvider';
-import { MathematicsIntegration } from '@/components/paes-mathematics/MathematicsIntegration';
-import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calculator } from 'lucide-react';
 
-export default function MathematicsPage() {
-  const { user } = useAuth();
-  const { actions } = useNeuralSystem();
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    if (user?.id) {
-      actions.captureEvent({
-        type: 'navigation',
-        data: {
-          page: 'mathematics',
-          subject: 'matematica',
-          user_action: 'accessing_mathematics_module'
-        }
-      });
-    }
-  }, [user?.id, actions]);
-
+const MathematicsPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900">
-      <div className="p-6">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-          >
-            <Button
-              onClick={() => navigate('/')}
-              variant="ghost"
-              className="text-white hover:bg-white/10 mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al Hub Neural
-            </Button>
-            
-            <h1 className="text-4xl font-bold text-white mb-2">
-              Matemática PAES
-            </h1>
-            <p className="text-white/70 text-lg">
-              M1 (7° básico a 2° medio) y M2 (3° y 4° medio)
-            </p>
-          </motion.div>
-
-          <MathematicsIntegration />
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-green-900 via-blue-900 to-purple-900 p-6">
+      <div className="max-w-4xl mx-auto">
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-3">
+              <Calculator className="w-6 h-6" />
+              Matemáticas PAES
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-white/90">
+              <p className="mb-4">Preparación completa en Matemática M1 y M2 para PAES.</p>
+              <div className="bg-purple-500/20 p-4 rounded-lg border border-purple-500/30">
+                <p className="text-purple-200">Módulo en desarrollo - Próximamente disponible</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
-}
+};
+
+export default MathematicsPage;

@@ -10,6 +10,12 @@ import { Critical3DErrorBoundary } from '@/core/error-handling/Critical3DErrorBo
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const PAESUniversePage = React.lazy(() => import('@/pages/PAESUniversePage'));
 const UnifiedEducationalHubPage = React.lazy(() => import('@/pages/UnifiedEducationalHub'));
+const LectoguiaPage = React.lazy(() => import('@/pages/LectoguiaPage'));
+const DiagnosticPage = React.lazy(() => import('@/pages/DiagnosticPage'));
+const FinancialPage = React.lazy(() => import('@/pages/FinancialPage'));
+const MathematicsPage = React.lazy(() => import('@/pages/MathematicsPage'));
+const SciencesPage = React.lazy(() => import('@/pages/SciencesPage'));
+const HistoryPage = React.lazy(() => import('@/pages/HistoryPage'));
 
 function App() {
   return (
@@ -32,6 +38,12 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/paes-universe" element={<PAESUniversePage />} />
                   <Route path="/unified" element={<UnifiedEducationalHubPage />} />
+                  <Route path="/lectoguia" element={<LectoguiaPage />} />
+                  <Route path="/diagnostic" element={<DiagnosticPage />} />
+                  <Route path="/financial" element={<FinancialPage />} />
+                  <Route path="/mathematics" element={<MathematicsPage />} />
+                  <Route path="/sciences" element={<SciencesPage />} />
+                  <Route path="/history" element={<HistoryPage />} />
                 </Routes>
               </React.Suspense>
               <Toaster />
