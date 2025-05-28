@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { CleanPAESHub } from '@/components/paes-hub/CleanPAESHub';
+import { NeuralPAESHub } from '@/components/neural-paes/NeuralPAESHub';
 import { SystemHealthMonitor } from '@/components/system-health/SystemHealthMonitor';
 
 export const SuperPAESUnifiedHub: React.FC = () => {
   return (
     <div className="relative">
-      <CleanPAESHub />
+      <NeuralPAESHub />
       <SystemHealthMonitor />
     </div>
   );
