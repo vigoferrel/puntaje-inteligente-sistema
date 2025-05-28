@@ -66,42 +66,8 @@
       })();
     </script>
     
-    <!-- GPT Engineer script con carga ultra-condicional -->
-    <script>
-      (function() {
-        // Solo cargar si no estamos en un entorno restrictivo Y no hay errores CORS
-        if (!window.__SKIP_GPT_ENGINEER__ && 
-            !window.__TRACKING_PREVENTION_DETECTED__ && 
-            !window.__EDGE_DETECTED__) {
-          try {
-            // Verificar si el dominio es accesible antes de intentar cargar
-            fetch('https://cdn.gpteng.co/gptengineer.js', { 
-              method: 'HEAD', 
-              mode: 'no-cors',
-              cache: 'no-cache'
-            })
-            .then(() => {
-              const script = document.createElement('script');
-              script.src = 'https://cdn.gpteng.co/gptengineer.js';
-              script.type = 'module';
-              script.async = true;
-              script.defer = true;
-              
-              script.onerror = function() {
-                window.__SKIP_GPT_ENGINEER__ = true;
-              };
-              
-              document.head.appendChild(script);
-            })
-            .catch(() => {
-              window.__SKIP_GPT_ENGINEER__ = true;
-            });
-          } catch (error) {
-            window.__SKIP_GPT_ENGINEER__ = true;
-          }
-        }
-      })();
-    </script>
+    <!-- Lovable script tag (required for Select feature and new functionality) -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     
     <meta name="description" content="Plataforma educativa neural PAES" />
     <meta name="theme-color" content="#1e40af" />
