@@ -1,121 +1,81 @@
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { motion } from 'framer-motion';
-import { AlertTriangle, RefreshCw, Monitor } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { Component, ReactNode } from 'react';
+import { productionErrorRecovery } from './ProductionErrorRecovery';
 
-interface Critical3DErrorState {
-  hasError: boolean;
-  error: Error | null;
-  retryCount: number;
-  fallbackMode: boolean;
-}
-
-interface Critical3DErrorProps {
+interface Props {
   children: ReactNode;
   componentName: string;
-  fallback2D?: ReactNode;
-  maxRetries?: number;
 }
 
-export class Critical3DErrorBoundary extends Component<Critical3DErrorProps, Critical3DErrorState> {
-  private readonly maxRetries: number;
+interface State {
+  hasError: boolean;
+  error?: Error;
+  retryCount: number;
+}
 
-  constructor(props: Critical3DErrorProps) {
+export class Critical3DErrorBoundary extends Component<Props, State> {
+  private maxRetries = 3;
+
+  constructor(props: Props) {
     super(props);
-    this.maxRetries = props.maxRetries || 2;
     this.state = {
       hasError: false,
-      error: null,
-      retryCount: 0,
-      fallbackMode: false
+      retryCount: 0
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<Critical3DErrorState> {
+  static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      error
+      error,
+      retryCount: 0
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(`🚨 3D Critical Error in ${this.props.componentName}:`, error.message);
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('Critical 3D Error:', error, errorInfo);
     
-    // Si es un error de WebGL, activar modo fallback inmediatamente
-    if (error.message.includes('WebGL') || error.message.includes('context')) {
-      this.setState({ fallbackMode: true });
-    }
+    // Trigger production error recovery
+    productionErrorRecovery.manualRecovery('webgl');
   }
 
   handleRetry = () => {
     if (this.state.retryCount < this.maxRetries) {
+      this.setState(prevState => ({
+        hasError: false,
+        error: undefined,
+        retryCount: prevState.retryCount + 1
+      }));
+    } else {
+      // Force full recovery after max retries
+      productionErrorRecovery.manualRecovery('full');
       this.setState({
         hasError: false,
-        error: null,
-        retryCount: this.state.retryCount + 1
+        error: undefined,
+        retryCount: 0
       });
-    } else {
-      this.setState({ fallbackMode: true });
     }
-  };
-
-  handleFallback2D = () => {
-    this.setState({
-      hasError: false,
-      fallbackMode: true,
-      retryCount: 0
-    });
   };
 
   render() {
-    if (this.state.fallbackMode && this.props.fallback2D) {
-      return this.props.fallback2D;
-    }
-
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-900/20 to-orange-900/20 rounded-lg border border-red-500/30">
-          <Card className="max-w-md bg-red-950/50 border-red-500/30">
-            <CardHeader>
-              <CardTitle className="text-red-400 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
-                Error en {this.props.componentName}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-red-300 text-sm">
-                Error en visualización 3D. El sistema puede continuar en modo 2D.
-              </p>
-              
-              <div className="flex gap-2">
-                {this.state.retryCount < this.maxRetries && (
-                  <Button
-                    onClick={this.handleRetry}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 border-yellow-500 text-yellow-400 hover:bg-yellow-500/20"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Reintentar ({this.maxRetries - this.state.retryCount})
-                  </Button>
-                )}
-                
-                {this.props.fallback2D && (
-                  <Button
-                    onClick={this.handleFallback2D}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 border-blue-500 text-blue-400 hover:bg-blue-500/20"
-                  >
-                    <Monitor className="w-4 h-4 mr-2" />
-                    Modo 2D
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="min-h-screen bg-gradient-to-br from-red-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+          <div className="text-center text-white p-8 bg-black/30 backdrop-blur-md rounded-lg border border-white/20">
+            <h2 className="text-2xl font-bold mb-4">Error Crítico del Sistema</h2>
+            <p className="text-red-300 mb-4">
+              {this.props.componentName}: {this.state.error?.message || 'Error desconocido'}
+            </p>
+            <p className="text-white/70 mb-6">
+              Intentos de recuperación: {this.state.retryCount}/{this.maxRetries}
+            </p>
+            <button
+              onClick={this.handleRetry}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium"
+            >
+              {this.state.retryCount >= this.maxRetries ? 'Recuperación Completa' : 'Reintentar'}
+            </button>
+          </div>
         </div>
       );
     }

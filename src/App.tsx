@@ -9,6 +9,7 @@ import { Critical3DErrorBoundary } from '@/core/error-handling/Critical3DErrorBo
 // Lazy load optimizado para prevenir contextos simultáneos
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const PAESUniversePage = React.lazy(() => import('@/pages/PAESUniversePage'));
+const UnifiedEducationalHubPage = React.lazy(() => import('@/pages/UnifiedEducationalHub'));
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/paes-universe" element={<PAESUniversePage />} />
+                  <Route path="/unified" element={<UnifiedEducationalHubPage />} />
                 </Routes>
               </React.Suspense>
               <Toaster />
