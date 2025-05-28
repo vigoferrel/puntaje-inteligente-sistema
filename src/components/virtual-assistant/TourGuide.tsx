@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -305,7 +304,7 @@ export const TourGuide: React.FC<TourGuideProps> = ({
       </motion.div>
 
       {/* Custom CSS for highlighting */}
-      <style jsx global>{`
+      <style global>{`
         .tour-highlight {
           position: relative;
           z-index: 45;
