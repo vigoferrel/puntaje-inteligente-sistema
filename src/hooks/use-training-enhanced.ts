@@ -1,118 +1,261 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLearningNodes } from '@/hooks/use-learning-nodes';
-import { usePAESData } from '@/hooks/use-paes-data';
+import { supabase } from '@/integrations/supabase/client';
 import { TrainingSession, TrainingStats } from '@/hooks/use-training';
-import { fetchPAESExam, getRandomQuestionsFromPool, PAESQuestion } from '@/services/paes/paes-exam-service';
 
 export interface PAESExercise {
   id: string;
   type: 'official-paes';
-  question: PAESQuestion;
+  question: string;
+  options: string[];
+  correctAnswer: string;
   source: string;
   difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED';
+  explanation?: string;
 }
 
 export const useTrainingEnhanced = () => {
-  const { profile } = useAuth();
-  const { nodeProgress } = useLearningNodes();
-  const { skills } = usePAESData();
+  const { user } = useAuth();
   
   const [currentSession, setCurrentSession] = useState<TrainingSession | null>(null);
   const [exercises, setExercises] = useState<PAESExercise[]>([]);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [sessionStats, setSessionStats] = useState<TrainingStats>({
-    totalSessions: 12,
-    totalExercises: 247,
-    correctAnswers: 189,
-    averageAccuracy: 76.5,
-    timeSpent: 1240,
-    streakDays: 5,
+    totalSessions: 0,
+    totalExercises: 0,
+    correctAnswers: 0,
+    averageAccuracy: 0,
+    timeSpent: 0,
+    streakDays: 0,
     weeklyGoal: 300,
-    weeklyProgress: 187
+    weeklyProgress: 0
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Generar ejercicios personalizados usando contenido oficial PAES
+  // Cargar estadísticas reales del usuario
+  useEffect(() => {
+    if (user?.id) {
+      loadRealStats();
+    }
+  }, [user?.id]);
+
+  const loadRealStats = async () => {
+    if (!user?.id) return;
+    
+    try {
+      // Obtener intentos de ejercicios del usuario
+      const { data: attempts, error } = await supabase
+        .from('user_exercise_attempts')
+        .select('created_at, is_correct, metadata')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      const totalExercises = attempts?.length || 0;
+      const correctAnswers = attempts?.filter(a => a.is_correct).length || 0;
+      const averageAccuracy = totalExercises > 0 ? (correctAnswers / totalExercises) * 100 : 0;
+
+      // Calcular sesiones únicas (agrupa por día)
+      const sessionDays = [...new Set(
+        attempts?.map(a => new Date(a.created_at).toDateString()) || []
+      )];
+      const totalSessions = sessionDays.length;
+
+      // Calcular tiempo de estudio (estimación: 2-3 min por ejercicio)
+      const timeSpent = totalExercises * 2.5;
+
+      // Calcular racha actual
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+      const hasActivityToday = sessionDays.includes(today);
+      const hasActivityYesterday = sessionDays.includes(yesterday);
+      
+      let streakDays = 0;
+      if (hasActivityToday || hasActivityYesterday) {
+        streakDays = 1;
+        // Calcular racha completa
+        const sortedDays = sessionDays.sort();
+        for (let i = sortedDays.length - 2; i >= 0; i--) {
+          const currDate = new Date(sortedDays[i + 1]);
+          const prevDate = new Date(sortedDays[i]);
+          const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / (24 * 60 * 60 * 1000));
+          
+          if (diffDays === 1) {
+            streakDays++;
+          } else {
+            break;
+          }
+        }
+      }
+
+      // Progreso semanal (últimos 7 días)
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const weeklyExercises = attempts?.filter(a => new Date(a.created_at) > weekAgo).length || 0;
+
+      setSessionStats({
+        totalSessions,
+        totalExercises,
+        correctAnswers,
+        averageAccuracy: Math.round(averageAccuracy * 100) / 100,
+        timeSpent: Math.round(timeSpent),
+        streakDays,
+        weeklyGoal: 300,
+        weeklyProgress: Math.min(weeklyExercises * 5, 300) // 5 puntos por ejercicio
+      });
+
+      console.log('✅ Estadísticas reales cargadas:', {
+        totalSessions,
+        totalExercises,
+        correctAnswers,
+        averageAccuracy: Math.round(averageAccuracy),
+        streakDays
+      });
+
+    } catch (err) {
+      console.error('❌ Error loading real stats:', err);
+    }
+  };
+
   const generatePersonalizedExercises = useCallback(async (count: number = 10) => {
-    if (!profile?.id) return;
+    if (!user?.id) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🎯 Generating personalized exercises from official PAES content...');
+      console.log('🎯 Generating personalized exercises from real database...');
       
-      // Usar el examen oficial PAES 2024
-      const examCode = 'PAES-2024-FORM-103';
-      const randomQuestions = await getRandomQuestionsFromPool(examCode, count);
-      
-      // Convertir preguntas PAES a ejercicios
-      const paesExercises: PAESExercise[] = randomQuestions.map((question, index) => ({
-        id: `paes-${examCode}-${question.numero}-${Date.now()}-${index}`,
-        type: 'official-paes',
-        question,
-        source: examCode,
-        difficulty: 'INTERMEDIATE' // Podríamos inferir esto del contexto
-      }));
-      
-      setExercises(paesExercises);
-      console.log(`✅ Generated ${paesExercises.length} exercises from official PAES content`);
+      // Obtener ejercicios reales del banco de preguntas
+      const { data: preguntasData, error: preguntasError } = await supabase
+        .from('banco_preguntas')
+        .select(`
+          id,
+          codigo_pregunta,
+          enunciado,
+          nivel_dificultad,
+          prueba_paes,
+          competencia_especifica
+        `)
+        .eq('validada', true)
+        .order('created_at', { ascending: false })
+        .limit(count);
+
+      if (preguntasError) throw preguntasError;
+
+      // Obtener alternativas para cada pregunta
+      const exercisesWithOptions = await Promise.all(
+        (preguntasData || []).map(async (pregunta) => {
+          const { data: alternativasData, error: alternativasError } = await supabase
+            .from('alternativas_respuesta')
+            .select('letra, contenido, es_correcta')
+            .eq('pregunta_id', pregunta.id)
+            .order('orden');
+
+          if (alternativasError) {
+            console.warn('⚠️ Error getting alternatives for question:', pregunta.id);
+            return null;
+          }
+
+          const correctAnswer = alternativasData?.find(alt => alt.es_correcta)?.contenido || '';
+          const options = alternativasData?.map(alt => alt.contenido) || [];
+
+          return {
+            id: pregunta.codigo_pregunta,
+            type: 'official-paes' as const,
+            question: pregunta.enunciado,
+            options,
+            correctAnswer,
+            source: `Banco Oficial - ${pregunta.prueba_paes}`,
+            difficulty: mapDifficultyLevel(pregunta.nivel_dificultad),
+            explanation: `Ejercicio oficial de ${pregunta.competencia_especifica}`
+          };
+        })
+      );
+
+      const validExercises = exercisesWithOptions.filter(Boolean) as PAESExercise[];
+      setExercises(validExercises);
+      console.log(`✅ Generated ${validExercises.length} personalized exercises from real database`);
       
     } catch (err) {
-      console.error('Error generating personalized exercises:', err);
+      console.error('❌ Error generating personalized exercises:', err);
       setError('Error al generar ejercicios personalizados');
     } finally {
       setLoading(false);
     }
-  }, [profile?.id]);
+  }, [user?.id]);
 
-  // Generar ejercicios de simulación usando examen completo
   const generateSimulationExercises = useCallback(async () => {
-    if (!profile?.id) return;
+    if (!user?.id) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🎮 Generating simulation exercises from complete PAES exam...');
+      console.log('🎮 Generating simulation exercises from complete database...');
       
-      const examCode = 'PAES-2024-FORM-103';
-      const examData = await fetchPAESExam(examCode);
-      
-      if (!examData) {
-        throw new Error('No se pudo cargar el examen oficial');
-      }
-      
-      // Usar todas las preguntas para simulación completa
-      const simulationExercises: PAESExercise[] = examData.preguntas.map((question, index) => ({
-        id: `simulation-${examCode}-${question.numero}-${Date.now()}`,
-        type: 'official-paes',
-        question,
-        source: examCode,
-        difficulty: 'INTERMEDIATE'
-      }));
-      
-      setExercises(simulationExercises);
-      console.log(`✅ Generated simulation with ${simulationExercises.length} official questions`);
+      // Obtener un conjunto balanceado de preguntas para simulación
+      const { data: simulationData, error: simulationError } = await supabase
+        .from('banco_preguntas')
+        .select(`
+          id,
+          codigo_pregunta,
+          enunciado,
+          nivel_dificultad,
+          prueba_paes,
+          competencia_especifica
+        `)
+        .eq('validada', true)
+        .limit(80); // Cantidad típica de un examen PAES
+
+      if (simulationError) throw simulationError;
+
+      // Obtener alternativas para cada pregunta
+      const simulationExercises = await Promise.all(
+        (simulationData || []).map(async (pregunta) => {
+          const { data: alternativasData, error: alternativasError } = await supabase
+            .from('alternativas_respuesta')
+            .select('letra, contenido, es_correcta')
+            .eq('pregunta_id', pregunta.id)
+            .order('orden');
+
+          if (alternativasError) return null;
+
+          const correctAnswer = alternativasData?.find(alt => alt.es_correcta)?.contenido || '';
+          const options = alternativasData?.map(alt => alt.contenido) || [];
+
+          return {
+            id: `simulation-${pregunta.codigo_pregunta}`,
+            type: 'official-paes' as const,
+            question: pregunta.enunciado,
+            options,
+            correctAnswer,
+            source: `Simulación PAES - ${pregunta.prueba_paes}`,
+            difficulty: mapDifficultyLevel(pregunta.nivel_dificultad),
+            explanation: `Pregunta oficial de simulación - ${pregunta.competencia_especifica}`
+          };
+        })
+      );
+
+      const validSimulationExercises = simulationExercises.filter(Boolean) as PAESExercise[];
+      setExercises(validSimulationExercises);
+      console.log(`✅ Generated simulation with ${validSimulationExercises.length} official questions`);
       
     } catch (err) {
-      console.error('Error generating simulation exercises:', err);
+      console.error('❌ Error generating simulation exercises:', err);
       setError('Error al generar simulación');
     } finally {
       setLoading(false);
     }
-  }, [profile?.id]);
+  }, [user?.id]);
 
-  // Iniciar sesión de entrenamiento
   const startTrainingSession = useCallback((type: 'personalizado' | 'simulacion' | 'dirigido') => {
-    if (!profile?.id) return;
+    if (!user?.id) return;
     
     const session: TrainingSession = {
       id: `session-${Date.now()}`,
-      userId: profile.id,
+      userId: user.id,
       exerciseType: type,
       startTime: new Date(),
       exercisesCompleted: 0,
@@ -124,18 +267,36 @@ export const useTrainingEnhanced = () => {
     
     setCurrentSession(session);
     setCurrentExerciseIndex(0);
-    console.log(`🚀 Started ${type} training session with ${exercises.length} exercises`);
-  }, [profile?.id, exercises.length]);
+    console.log(`🚀 Started ${type} training session with ${exercises.length} real exercises`);
+  }, [user?.id, exercises.length]);
 
-  // Responder ejercicio oficial PAES
-  const answerExercise = useCallback((selectedOption: string) => {
-    if (!currentSession || currentExerciseIndex >= exercises.length) return;
+  const answerExercise = useCallback(async (selectedOption: string) => {
+    if (!currentSession || currentExerciseIndex >= exercises.length || !user?.id) return;
     
     const currentExercise = exercises[currentExerciseIndex];
-    const correctOption = currentExercise.question.opciones.find(opt => opt.es_correcta);
-    const isCorrect = selectedOption === correctOption?.letra;
+    const isCorrect = selectedOption === currentExercise.correctAnswer;
     
-    console.log(`📝 Answer: ${selectedOption}, Correct: ${correctOption?.letra}, Result: ${isCorrect ? '✅' : '❌'}`);
+    console.log(`📝 Answer: ${selectedOption}, Correct: ${currentExercise.correctAnswer}, Result: ${isCorrect ? '✅' : '❌'}`);
+    
+    // Guardar el intento en la base de datos
+    try {
+      await supabase.from('user_exercise_attempts').insert({
+        user_id: user.id,
+        exercise_id: currentExercise.id,
+        answer: selectedOption,
+        is_correct: isCorrect,
+        skill_type: 'TRAINING',
+        metadata: JSON.stringify({
+          session_id: currentSession.id,
+          exercise_type: currentSession.exerciseType,
+          source: currentExercise.source,
+          difficulty: currentExercise.difficulty
+        })
+      });
+      console.log('✅ Exercise attempt saved to database');
+    } catch (err) {
+      console.error('❌ Error saving exercise attempt:', err);
+    }
     
     setCurrentSession(prev => prev ? {
       ...prev,
@@ -151,10 +312,9 @@ export const useTrainingEnhanced = () => {
       endTrainingSession();
     }
     
-    return { isCorrect, correctAnswer: correctOption?.letra };
-  }, [currentSession, currentExerciseIndex, exercises]);
+    return { isCorrect, correctAnswer: currentExercise.correctAnswer };
+  }, [currentSession, currentExerciseIndex, exercises, user?.id]);
 
-  // Finalizar sesión de entrenamiento
   const endTrainingSession = useCallback(() => {
     if (!currentSession) return;
     
@@ -169,15 +329,8 @@ export const useTrainingEnhanced = () => {
       accuracy: (endedSession.correctAnswers / endedSession.exercisesCompleted) * 100
     });
     
-    // Actualizar estadísticas
-    setSessionStats(prev => ({
-      ...prev,
-      totalSessions: prev.totalSessions + 1,
-      totalExercises: prev.totalExercises + endedSession.exercisesCompleted,
-      correctAnswers: prev.correctAnswers + endedSession.correctAnswers,
-      averageAccuracy: ((prev.correctAnswers + endedSession.correctAnswers) / (prev.totalExercises + endedSession.exercisesCompleted)) * 100,
-      timeSpent: prev.timeSpent + Math.ceil((endedSession.endTime!.getTime() - endedSession.startTime.getTime()) / 60000)
-    }));
+    // Actualizar estadísticas y recargar datos reales
+    loadRealStats();
     
     setCurrentSession(null);
     setExercises([]);
@@ -199,6 +352,20 @@ export const useTrainingEnhanced = () => {
     generateSimulationExercises,
     startTrainingSession,
     endTrainingSession,
-    answerExercise
+    answerExercise,
+    refreshStats: loadRealStats
   };
 };
+
+function mapDifficultyLevel(nivel: string): 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' {
+  switch (nivel?.toLowerCase()) {
+    case 'basico':
+    case 'basic':
+      return 'BASIC';
+    case 'avanzado':
+    case 'advanced':
+      return 'ADVANCED';
+    default:
+      return 'INTERMEDIATE';
+  }
+}
