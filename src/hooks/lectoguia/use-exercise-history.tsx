@@ -40,9 +40,8 @@ export function useExerciseHistory(
         options: [],
         correctAnswer: '',
         explanation: '',
-        skill: metadata.skillType as any,
-        difficulty: 'intermediate' as any,
-        bloomLevel: 'aplicar' as any
+        skill: metadata.skillType,
+        difficulty: 'intermediate'
       };
       
       // Save to database using existing service
