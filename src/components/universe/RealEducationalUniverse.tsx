@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useRealNeuralData } from '@/hooks/useRealNeuralData';
 import { useRealDashboardData } from '@/hooks/dashboard/useRealDashboardData';
 import { SafeThreeCanvas } from '@/core/3d/SafeThreeCanvas';
+import { Critical3DErrorBoundary } from '@/core/error-handling/Critical3DErrorBoundary';
 import * as THREE from 'three';
 
 interface RealGalaxyProps {
@@ -135,6 +136,40 @@ const InterGalacticConnections: React.FC<{ galaxies: any[] }> = ({ galaxies }) =
   );
 };
 
+const Educational2DFallback = ({ galaxies, onGalaxyClick }: { galaxies: any[], onGalaxyClick?: (code: string) => void }) => (
+  <div className="w-full h-[600px] bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-lg p-6 flex flex-wrap gap-4 items-center justify-center overflow-auto">
+    {galaxies.map((galaxy, index) => (
+      <motion.div
+        key={galaxy.id}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: index * 0.1 }}
+        className="bg-black/40 backdrop-blur-sm rounded-lg p-4 border border-white/20 cursor-pointer hover:bg-black/60 transition-all"
+        onClick={() => onGalaxyClick?.(galaxy.testCode)}
+        style={{ borderColor: galaxy.color }}
+      >
+        <div className="text-center">
+          <div className="text-lg font-bold mb-2" style={{ color: galaxy.color }}>
+            {galaxy.name}
+          </div>
+          <div className="text-sm text-white/80 mb-2">
+            {galaxy.completed}/{galaxy.nodes} nodos
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div 
+              className="h-2 rounded-full transition-all"
+              style={{ 
+                backgroundColor: galaxy.color,
+                width: `${(galaxy.completed / galaxy.nodes) * 100}%`
+              }}
+            />
+          </div>
+        </div>
+      </motion.div>
+    ))}
+  </div>
+);
+
 interface RealEducationalUniverseProps {
   onGalaxyClick?: (testCode: string) => void;
   selectedGalaxy?: string | null;
@@ -219,91 +254,96 @@ export const RealEducationalUniverse: React.FC<RealEducationalUniverseProps> = (
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8 }}
-      className="w-full h-[600px] relative overflow-hidden rounded-xl border border-purple-500/30"
+    <Critical3DErrorBoundary 
+      componentName="RealEducationalUniverse"
+      fallback2D={<Educational2DFallback galaxies={galaxies} onGalaxyClick={onGalaxyClick} />}
     >
-      <SafeThreeCanvas
-        componentId="real-educational-universe"
-        camera={{ position: cameraPosition, fov: 70 }}
-        className="w-full h-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+        className="w-full h-[600px] relative overflow-hidden rounded-xl border border-purple-500/30"
       >
-        <Environment preset="night" />
-        <ambientLight intensity={0.4} />
-        <pointLight position={[10, 10, 10]} intensity={1.5} color="#4ECDC4" />
-        <pointLight position={[-10, -10, -10]} intensity={1} color="#FF6B6B" />
-        
-        <OrbitControls
-          enableZoom={true}
-          enablePan={true}
-          enableRotate={true}
-          autoRotate={true}
-          autoRotateSpeed={0.3}
-          minDistance={8}
-          maxDistance={25}
-        />
-
-        {galaxies.map((galaxy) => (
-          <RealGalaxy
-            key={galaxy.id}
-            galaxy={galaxy}
-            isSelected={selectedGalaxy === galaxy.testCode}
-            onClick={() => onGalaxyClick?.(galaxy.testCode)}
+        <SafeThreeCanvas
+          componentId="real-educational-universe"
+          camera={{ position: cameraPosition, fov: 70 }}
+          className="w-full h-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"
+        >
+          <Environment preset="night" />
+          <ambientLight intensity={0.4} />
+          <pointLight position={[10, 10, 10]} intensity={1.5} color="#4ECDC4" />
+          <pointLight position={[-10, -10, -10]} intensity={1} color="#FF6B6B" />
+          
+          <OrbitControls
+            enableZoom={true}
+            enablePan={true}
+            enableRotate={true}
+            autoRotate={true}
+            autoRotateSpeed={0.3}
+            minDistance={8}
+            maxDistance={25}
           />
-        ))}
 
-        <InterGalacticConnections galaxies={galaxies} />
-      </SafeThreeCanvas>
+          {galaxies.map((galaxy) => (
+            <RealGalaxy
+              key={galaxy.id}
+              galaxy={galaxy}
+              isSelected={selectedGalaxy === galaxy.testCode}
+              onClick={() => onGalaxyClick?.(galaxy.testCode)}
+            />
+          ))}
 
-      {/* Panel de métricas universales */}
-      <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-lg rounded-lg p-4 text-white">
-        <div className="text-lg font-bold text-purple-400 mb-3">Universo PAES</div>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Galaxias:</span>
-            <span className="text-purple-400">{galaxies.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Nodos:</span>
-            <span className="text-cyan-400">{realNodes.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Coherencia:</span>
-            <span className="text-green-400">{neuralMetrics.neuralCoherence}%</span>
+          <InterGalacticConnections galaxies={galaxies} />
+        </SafeThreeCanvas>
+
+        {/* Panel de métricas universales */}
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-lg rounded-lg p-4 text-white">
+          <div className="text-lg font-bold text-purple-400 mb-3">Universo PAES</div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Galaxias:</span>
+              <span className="text-purple-400">{galaxies.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Nodos:</span>
+              <span className="text-cyan-400">{realNodes.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Coherencia:</span>
+              <span className="text-green-400">{neuralMetrics.neuralCoherence}%</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Progreso global */}
-      <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-lg rounded-lg p-4 text-white">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-purple-400">
-            {Math.round((metrics.completedNodes / realNodes.length) * 100)}%
-          </div>
-          <div className="text-xs text-white/70">Progreso Global</div>
-          <div className="text-sm text-white/50 mt-1">
-            {metrics.completedNodes} / {realNodes.length}
+        {/* Progreso global */}
+        <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-lg rounded-lg p-4 text-white">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-400">
+              {Math.round((metrics.completedNodes / realNodes.length) * 100)}%
+            </div>
+            <div className="text-xs text-white/70">Progreso Global</div>
+            <div className="text-sm text-white/50 mt-1">
+              {metrics.completedNodes} / {realNodes.length}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Controles de vista */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
-        <button
-          onClick={() => setCameraPosition([0, 8, 15])}
-          className="bg-purple-600/80 hover:bg-purple-500 text-white px-3 py-1 rounded text-xs"
-        >
-          Vista Panorámica
-        </button>
-        <button
-          onClick={() => setCameraPosition([0, 3, 8])}
-          className="bg-blue-600/80 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs"
-        >
-          Vista Inmersiva
-        </button>
-      </div>
-    </motion.div>
+        {/* Controles de vista */}
+        <div className="absolute top-4 right-4 flex flex-col gap-2">
+          <button
+            onClick={() => setCameraPosition([0, 8, 15])}
+            className="bg-purple-600/80 hover:bg-purple-500 text-white px-3 py-1 rounded text-xs"
+          >
+            Vista Panorámica
+          </button>
+          <button
+            onClick={() => setCameraPosition([0, 3, 8])}
+            className="bg-blue-600/80 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs"
+          >
+            Vista Inmersiva
+          </button>
+        </div>
+      </motion.div>
+    </Critical3DErrorBoundary>
   );
 };

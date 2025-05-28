@@ -1,7 +1,7 @@
 
 import React, { Suspense, useEffect, useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { useWebGLContext } from '@/core/webgl/WebGLContextManager';
+import { useCriticalWebGL } from '@/core/webgl/CriticalWebGLManager';
 import { motion } from 'framer-motion';
 
 interface SafeThreeCanvasProps {
@@ -13,11 +13,11 @@ interface SafeThreeCanvasProps {
   onCreated?: (gl: any) => void;
 }
 
-const Default3DFallback = () => (
+const CriticalFallback = ({ reason }: { reason: string }) => (
   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-lg border border-white/10">
     <div className="text-center text-white/60">
       <div className="text-sm">Visualización 3D no disponible</div>
-      <div className="text-xs mt-1">Límite de contextos WebGL alcanzado</div>
+      <div className="text-xs mt-1">{reason}</div>
     </div>
   </div>
 );
@@ -30,47 +30,75 @@ export const SafeThreeCanvas: React.FC<SafeThreeCanvasProps> = ({
   className,
   onCreated
 }) => {
-  const { requestContext, releaseContext, canCreateContext } = useWebGLContext();
+  const { requestContext, releaseContext, canCreateContext, emergencyMode, deviceCapabilities } = useCriticalWebGL();
   const [hasContext, setHasContext] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
+  useEffect(() => {
     const initializeContext = async () => {
-      if (!canCreateContext) {
-        setIsLoading(false);
-        return;
-      }
-
       try {
+        setError(null);
+        
+        // Verificaciones previas críticas
+        if (emergencyMode) {
+          setError('Sistema en modo de emergencia');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!canCreateContext) {
+          setError('WebGL no disponible');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (deviceCapabilities.isLowEnd && deviceCapabilities.isMobile) {
+          // Delay extra para dispositivos móviles de gama baja
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
         const granted = await requestContext(componentId);
-        if (mounted) {
+        
+        if (mountedRef.current) {
           setHasContext(granted);
           setIsLoading(false);
+          
+          if (!granted) {
+            setError('Límite de contextos WebGL alcanzado');
+          }
         }
       } catch (error) {
-        console.warn('Failed to request WebGL context:', error);
-        if (mounted) {
+        console.error('❌ Critical WebGL context error:', error);
+        if (mountedRef.current) {
+          setError('Error crítico de WebGL');
           setIsLoading(false);
         }
       }
     };
 
-    // Delay para evitar thrashing en mount simultáneo
-    const timer = setTimeout(initializeContext, Math.random() * 200);
+    // Delay escalonado para prevenir thrashing
+    const delay = Math.random() * 300 + (deviceCapabilities.isLowEnd ? 500 : 100);
+    const timer = setTimeout(initializeContext, delay);
 
     return () => {
-      mounted = false;
       clearTimeout(timer);
       if (hasContext) {
         releaseContext(componentId);
       }
     };
-  }, [componentId, requestContext, releaseContext, canCreateContext]);
+  }, [componentId, requestContext, releaseContext, canCreateContext, emergencyMode]);
 
-  // Marcar el elemento para cleanup
+  // Marcar elemento para cleanup automático
   useEffect(() => {
     if (canvasRef.current && hasContext) {
       canvasRef.current.setAttribute('data-webgl-component', componentId);
@@ -90,7 +118,7 @@ export const SafeThreeCanvas: React.FC<SafeThreeCanvasProps> = ({
     );
   }
 
-  if (!hasContext || !canCreateContext) {
+  if (error || !hasContext || !canCreateContext) {
     return (
       <motion.div 
         ref={canvasRef}
@@ -99,7 +127,7 @@ export const SafeThreeCanvas: React.FC<SafeThreeCanvasProps> = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        {fallback || <Default3DFallback />}
+        {fallback || <CriticalFallback reason={error || 'WebGL no disponible'} />}
       </motion.div>
     );
   }
@@ -112,13 +140,25 @@ export const SafeThreeCanvas: React.FC<SafeThreeCanvasProps> = ({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Suspense fallback={fallback || <Default3DFallback />}>
+      <Suspense fallback={fallback || <CriticalFallback reason="Cargando..." />}>
         <Canvas
           camera={camera || { position: [0, 5, 10], fov: 60 }}
           onCreated={(state) => {
-            // Configurar para eficiencia (sin powerPreference)
-            state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            onCreated?.(state.gl);
+            try {
+              // Configuración conservadora para dispositivos
+              const pixelRatio = deviceCapabilities.isLowEnd ? 1 : Math.min(window.devicePixelRatio, 2);
+              state.gl.setPixelRatio(pixelRatio);
+              
+              // Configuración de performance para móviles
+              if (deviceCapabilities.isMobile) {
+                state.gl.antialias = false;
+                state.gl.precision = 'mediump';
+              }
+              
+              onCreated?.(state.gl);
+            } catch (error) {
+              console.error('❌ WebGL setup error:', error);
+            }
           }}
           className="rounded-lg overflow-hidden"
         >
