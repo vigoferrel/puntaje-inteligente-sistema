@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +28,7 @@ interface SmartRecommendation {
   subject: string;
   estimatedTime: number;
   impact: 'high' | 'medium' | 'low';
-  priority: 'high' | 'medium' | 'low';
+  priority: 'urgent' | 'high' | 'medium' | 'low';
   action: {
     label: string;
     route: string;
