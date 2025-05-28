@@ -20,6 +20,21 @@ interface SystemStatus {
   };
 }
 
+interface SmartRecommendation {
+  id: string;
+  type: 'critical' | 'opportunity' | 'strength' | 'next_step';
+  title: string;
+  description: string;
+  subject: string;
+  estimatedTime: number;
+  impact: 'high' | 'medium' | 'low';
+  action: {
+    label: string;
+    route: string;
+  };
+  aiReason: string;
+}
+
 export const useRealDashboardData = () => {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<RealDashboardMetrics>({
@@ -179,6 +194,85 @@ export const useRealDashboardData = () => {
     }
   }, []);
 
+  // Generar recomendaciones inteligentes basadas en datos reales
+  const getSmartRecommendations = useCallback((): SmartRecommendation[] => {
+    const recommendations: SmartRecommendation[] = [];
+
+    // Recomendación crítica si hay pocos nodos completados
+    if (metrics.completedNodes < 5) {
+      recommendations.push({
+        id: 'critical_start',
+        type: 'critical',
+        title: 'Iniciar Diagnóstico PAES',
+        description: 'Necesitas completar más nodos para obtener una evaluación precisa',
+        subject: 'Diagnóstico General',
+        estimatedTime: 15,
+        impact: 'high',
+        action: {
+          label: 'Realizar Diagnóstico',
+          route: '/diagnostic'
+        },
+        aiReason: 'Sin datos suficientes de progreso para recomendaciones personalizadas'
+      });
+    }
+
+    // Recomendación de oportunidad si el progreso semanal es bajo
+    if (metrics.weeklyProgress < 50) {
+      recommendations.push({
+        id: 'improve_weekly',
+        type: 'opportunity',
+        title: 'Acelerar Progreso Semanal',
+        description: 'Tu progreso semanal está por debajo del objetivo',
+        subject: 'Plan de Estudio',
+        estimatedTime: 30,
+        impact: 'medium',
+        action: {
+          label: 'Generar Plan',
+          route: '/plan-generator'
+        },
+        aiReason: `Progreso actual: ${metrics.weeklyProgress}%, objetivo: 70%`
+      });
+    }
+
+    // Recomendación de fortaleza si la racha es buena
+    if (metrics.currentStreak >= 7) {
+      recommendations.push({
+        id: 'maintain_streak',
+        type: 'strength',
+        title: 'Mantener Racha de Estudio',
+        description: 'Excelente consistencia en tu estudio',
+        subject: 'Motivación',
+        estimatedTime: 10,
+        impact: 'low',
+        action: {
+          label: 'Ver Logros',
+          route: '/gamification'
+        },
+        aiReason: `Racha actual: ${metrics.currentStreak} días consecutivos`
+      });
+    }
+
+    // Recomendación de siguiente paso basada en tiempo de estudio
+    if (metrics.totalStudyTime > 0) {
+      recommendations.push({
+        id: 'next_exercise',
+        type: 'next_step',
+        title: 'Ejercicios Personalizados',
+        description: 'Practica con ejercicios adaptados a tu nivel',
+        subject: 'Ejercitación',
+        estimatedTime: 20,
+        impact: 'high',
+        action: {
+          label: 'Generar Ejercicios',
+          route: '/exercise-generator'
+        },
+        aiReason: `Basado en ${metrics.totalStudyTime}h de estudio registradas`
+      });
+    }
+
+    return recommendations.slice(0, 4); // Máximo 4 recomendaciones
+  }, [metrics]);
+
   useEffect(() => {
     if (user?.id) {
       loadRealMetrics();
@@ -194,6 +288,7 @@ export const useRealDashboardData = () => {
     systemStatus,
     isLoading,
     navigateToSection,
-    refreshData: loadRealMetrics
+    refreshData: loadRealMetrics,
+    getSmartRecommendations
   };
 };
