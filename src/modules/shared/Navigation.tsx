@@ -39,15 +39,20 @@ export const Navigation: React.FC = () => {
   };
 
   return (
-    <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="bg-black/80 backdrop-blur-xl rounded-full px-4 py-2 border border-white/20">
+    <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+      <div className="bg-black/80 backdrop-blur-xl rounded-full px-4 py-2 border border-white/20 pointer-events-auto">
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide max-w-[90vw]">
           {routes.map((route) => {
             const Icon = route.icon;
             const isActive = location.pathname === route.path;
             
             return (
-              <motion.div key={route.path} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <motion.div 
+                key={route.path} 
+                whileHover={{ scale: 1.05 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.1 }}
+              >
                 <Button
                   onClick={() => handleNavigation(route.path)}
                   variant="ghost"

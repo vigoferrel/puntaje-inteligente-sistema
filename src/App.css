@@ -1,8 +1,48 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+/* Optimizaciones de scroll globales */
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Padding bottom para compensar navegación flotante */
+  padding-bottom: 100px;
+}
+
+/* Optimizaciones para móviles */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 120px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  #root {
+    padding: 1rem;
+  }
+}
+
+/* Contenedores principales siempre permiten scroll */
+.min-h-screen {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Scroll suave para todos los elementos scrolleables */
+* {
+  scroll-behavior: smooth;
 }
 
 .logo {

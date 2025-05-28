@@ -18,7 +18,10 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({ childr
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    window.addEventListener('orientationchange', checkMobile);
+    window.addEventListener('orientationchange', () => {
+      // Pequeño delay para orientationchange
+      setTimeout(checkMobile, 100);
+    });
 
     return () => {
       window.removeEventListener('resize', checkMobile);
@@ -26,36 +29,44 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({ childr
     };
   }, []);
 
-  // Optimizaciones específicas para móvil sin bloquear scroll
+  // Optimizaciones específicas para móvil que mejoran el scroll
   const mobileStyles = isMobile ? {
-    touchAction: 'manipulation',
+    touchAction: 'pan-y pinch-zoom',
     WebkitTapHighlightColor: 'transparent',
-    userSelect: 'none' as const
+    overscrollBehavior: 'contain' as const
   } : {};
 
   return (
     <motion.div
       style={mobileStyles}
-      className={`${isMobile ? 'mobile-optimized' : ''} ${isLandscape ? 'landscape-mode' : ''}`}
+      className={`scroll-optimized ${isMobile ? 'mobile-optimized' : ''} ${isLandscape ? 'landscape-mode' : ''}`}
       initial={false}
       animate={{
-        scale: isMobile ? 1 : 1,
         transition: { duration: 0.2 }
       }}
     >
       {children}
       
-      {/* Styles específicos para móvil con scroll habilitado */}
       <style>{`
+        .scroll-optimized {
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+        }
+        
         .mobile-optimized {
+          /* Scroll optimizado para móviles */
           -webkit-overflow-scrolling: touch;
           overflow-y: auto;
+          overscroll-behavior-y: contain;
+          scroll-behavior: smooth;
         }
         
         .landscape-mode {
-          /* Removido overflow: hidden que bloqueaba el scroll */
+          /* Optimizaciones específicas para landscape */
           -webkit-overflow-scrolling: touch;
           overflow-y: auto;
+          overscroll-behavior: contain;
         }
         
         @media (max-width: 768px) {
@@ -68,10 +79,23 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({ childr
             backdrop-filter: blur(8px);
           }
           
-          /* Asegurar scroll suave en móviles */
-          body {
+          /* Contenedores principales optimizados para scroll móvil */
+          .min-h-screen {
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+          }
+          
+          /* Navegación flotante - compensar altura */
+          body {
+            padding-bottom: 120px !important;
+          }
+        }
+        
+        @media (max-height: 600px) and (orientation: landscape) {
+          /* Optimizaciones para landscape en móviles pequeños */
+          body {
+            padding-bottom: 80px !important;
           }
         }
       `}</style>

@@ -96,56 +96,64 @@ export const EvaluationBank: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto space-y-8"
-      >
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6 overflow-y-auto">
+      <div className="max-w-7xl mx-auto space-y-8 pb-8">
         {/* Header */}
-        <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <Database className="w-12 h-12 text-cyan-400" />
-              <div>
-                <CardTitle className="text-white text-4xl">Banco de Evaluaciones</CardTitle>
-                <p className="text-cyan-300 text-lg">Biblioteca Completa de Evaluaciones PAES</p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
+            <CardHeader className="text-center">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <Database className="w-12 h-12 text-cyan-400" />
+                <div>
+                  <CardTitle className="text-white text-4xl">Banco de Evaluaciones</CardTitle>
+                  <p className="text-cyan-300 text-lg">Biblioteca Completa de Evaluaciones PAES</p>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-center justify-center gap-4">
-              <Badge className="bg-cyan-600 text-white">
-                <Database className="w-4 h-4 mr-1" />
-                722 Evaluaciones
-              </Badge>
-              <Badge variant="outline" className="text-cyan-400 border-cyan-400">
-                <Star className="w-4 h-4 mr-1" />
-                Calidad Verificada
-              </Badge>
-            </div>
-          </CardHeader>
-        </Card>
+              
+              <div className="flex items-center justify-center gap-4">
+                <Badge className="bg-cyan-600 text-white">
+                  <Database className="w-4 h-4 mr-1" />
+                  722 Evaluaciones
+                </Badge>
+                <Badge variant="outline" className="text-cyan-400 border-cyan-400">
+                  <Star className="w-4 h-4 mr-1" />
+                  Calidad Verificada
+                </Badge>
+              </div>
+            </CardHeader>
+          </Card>
+        </motion.div>
 
         {/* Búsqueda y Filtros */}
-        <Card className="bg-black/40 backdrop-blur-xl border-white/20">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar evaluaciones..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-white/10 border-white/20 text-white"
-                />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <Card className="bg-black/40 backdrop-blur-xl border-white/20">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Buscar evaluaciones..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-white/10 border-white/20 text-white"
+                  />
+                </div>
+                <Button variant="outline" className="border-white/20 text-white">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filtros Avanzados
+                </Button>
               </div>
-              <Button variant="outline" className="border-white/20 text-white">
-                <Filter className="w-4 h-4 mr-2" />
-                Filtros Avanzados
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Categorías de Evaluaciones */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -154,8 +162,8 @@ export const EvaluationBank: React.FC = () => {
               key={category.id}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05 }}
+              transition={{ delay: 0.2 + index * 0.05, duration: 0.3 }}
+              whileHover={{ scale: 1.02 }}
               className="group cursor-pointer"
             >
               <Card className="bg-black/40 backdrop-blur-xl border-white/20 hover:border-white/40 transition-all duration-300 h-full">
@@ -193,7 +201,7 @@ export const EvaluationBank: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.4, duration: 0.3 }}
         >
           <Card className="bg-black/40 backdrop-blur-xl border-white/20">
             <CardHeader>
@@ -208,7 +216,7 @@ export const EvaluationBank: React.FC = () => {
                   key={evaluation.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
+                  transition={{ delay: 0.5 + index * 0.05, duration: 0.3 }}
                   className="p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -250,7 +258,7 @@ export const EvaluationBank: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
-      </motion.div>
+      </div>
     </div>
   );
 };
