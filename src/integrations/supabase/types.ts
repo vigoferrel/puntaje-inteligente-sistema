@@ -3550,7 +3550,7 @@ export type Database = {
           dificultad_promedio: number | null
           node_id: string | null
           node_name: string | null
-          preguntas: string[] | null
+          preguntas: number[] | null
           tier_priority: Database["public"]["Enums"]["tier_priority"] | null
           total_preguntas: number | null
         }
@@ -3558,9 +3558,12 @@ export type Database = {
       }
       nodes_summary_by_subject: {
         Row: {
+          avg_base_weight: number | null
           avg_time_minutes: number | null
+          cognitive_levels: string | null
           complementary_nodes: number | null
           critical_nodes: number | null
+          difficulty_levels: string | null
           important_nodes: number | null
           subject_area: string | null
           total_nodes: number | null
@@ -3569,11 +3572,10 @@ export type Database = {
       }
       skill_distribution_ciencias_2024: {
         Row: {
-          avg_difficulty: number | null
-          cognitive_level: Database["public"]["Enums"]["bloom_level"] | null
-          questions: string[] | null
+          dificultad_promedio: number | null
+          porcentaje: number | null
           skill_id: number | null
-          total_questions: number | null
+          total_preguntas: number | null
         }
         Relationships: [
           {
