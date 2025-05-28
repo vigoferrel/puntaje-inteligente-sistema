@@ -13,14 +13,7 @@ export const useDiagnosticController = () => {
   const { selectedTestId, testStarted, setSelectedTestId, setTestStarted } = useDiagnosticState();
   
   // Initialization hook con mejor manejo de estados
-  const { 
-    initializing, 
-    generatingDiagnostic, 
-    error, 
-    retryInitialization, 
-    retryCount,
-    isDemoMode 
-  } = useDiagnosticInitialization();
+  const initializationState = useDiagnosticInitialization();
   
   // Get diagnostic service
   const diagnosticService = useDiagnostic();
@@ -30,24 +23,23 @@ export const useDiagnosticController = () => {
   
   // Verificar disponibilidad de tests cuando la inicialización termine
   useEffect(() => {
-    if (!initializing && !generatingDiagnostic) {
-      const hasTests = diagnosticService.tests && diagnosticService.tests.length > 0;
+    if (!initializationState.initializing && !initializationState.generatingDiagnostic) {
+      const hasTests = initializationState.tests && initializationState.tests.length > 0;
       setTestsAvailable(hasTests);
       
       if (hasTests) {
-        console.log(`✅ Tests disponibles: ${diagnosticService.tests.length}`);
+        console.log(`✅ Tests disponibles: ${initializationState.tests.length}`);
       } else {
         console.warn("⚠️ No hay tests disponibles después de la inicialización");
       }
     }
-  }, [initializing, generatingDiagnostic, diagnosticService.tests]);
+  }, [initializationState.initializing, initializationState.generatingDiagnostic, initializationState.tests]);
   
   // Compose the sub-hooks
   const selectionState = useDiagnosticTestSelection({
     selectedTestId,
     setSelectedTestId,
-    setTestStarted,
-    isDemoMode
+    setTestStarted
   });
   
   const executionState = useDiagnosticTestExecution({
@@ -75,24 +67,24 @@ export const useDiagnosticController = () => {
 
   // Función para manejar el reintento con mejor feedback
   const handleRetryInitialization = async () => {
-    console.log(`🔄 Reintentando inicialización (intento ${retryCount + 1})`);
-    await retryInitialization();
+    console.log(`🔄 Reintentando inicialización (intento ${initializationState.retryCount + 1})`);
+    await initializationState.retryInitialization();
   };
   
   // Determinar el estado de loading general
-  const isLoading = initializing || generatingDiagnostic || selectionState.loading;
+  const isLoading = initializationState.initializing || initializationState.generatingDiagnostic || selectionState.loading;
   
   return {
     // State from initialization
-    initializing,
-    generatingDiagnostic,
-    error,
-    retryCount,
-    isDemoMode,
+    initializing: initializationState.initializing,
+    generatingDiagnostic: initializationState.generatingDiagnostic,
+    error: initializationState.error,
+    retryCount: initializationState.retryCount,
+    isDemoMode: initializationState.isDemoMode,
     testsAvailable,
     
     // State from hooks - usar los tests del servicio directamente
-    tests: diagnosticService.tests || [],
+    tests: initializationState.tests || [],
     loading: isLoading,
     selectedTestId,
     pausedProgress: selectionState.pausedProgress,

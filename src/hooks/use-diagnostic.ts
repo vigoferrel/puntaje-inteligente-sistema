@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { 
   DiagnosticTest, 
@@ -21,6 +20,7 @@ export type { DiagnosticTest, DiagnosticQuestion, DiagnosticResult } from "@/typ
 export const useDiagnostic = () => {
   const [tests, setTests] = useState<DiagnosticTest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [currentTest, setCurrentTest] = useState<DiagnosticTest | null>(null);
   const [results, setResults] = useState<DiagnosticResult[]>([]);
   
@@ -30,9 +30,15 @@ export const useDiagnostic = () => {
   const fetchTests = async (userId: string) => {
     try {
       setLoading(true);
+      setError(null);
       const testsWithQuestions = await fetchDiagnosticTests(userId);
       setTests(testsWithQuestions);
       return testsWithQuestions;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error fetching tests';
+      setError(errorMessage);
+      console.error('Error fetching diagnostic tests:', err);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -44,6 +50,7 @@ export const useDiagnostic = () => {
   const ensureDefaultDiagnostics = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       // Asegurarse que exista al menos un diagnóstico por defecto
       const hasTests = await ensureDefaultDiagnosticsExist();
@@ -58,8 +65,10 @@ export const useDiagnostic = () => {
       }
       
       return false;
-    } catch (error) {
-      console.error('Error al asegurar diagnósticos por defecto:', error);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error ensuring default diagnostics';
+      setError(errorMessage);
+      console.error('Error al asegurar diagnósticos por defecto:', err);
       toast({
         title: "Error",
         description: "No se pudo generar un diagnóstico de prueba",
@@ -77,14 +86,17 @@ export const useDiagnostic = () => {
   const createLocalFallbacks = async () => {
     try {
       setLoading(true);
+      setError(null);
       const success = await createLocalFallbackDiagnostics();
       if (success) {
         // Refrescar la lista
         await fetchTests("auto-generated");
       }
       return success;
-    } catch (error) {
-      console.error('Error al crear diagnósticos fallback:', error);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error creating fallback diagnostics';
+      setError(errorMessage);
+      console.error('Error al crear diagnósticos fallback:', err);
       return false;
     } finally {
       setLoading(false);
@@ -146,7 +158,7 @@ export const useDiagnostic = () => {
   /**
    * Fetches diagnostic results for a user
    */
-  const fetchResults = async (userId: string) => {
+  const fetchResultsForUser = async (userId: string) => {
     try {
       const fetchedResults = await fetchDiagnosticResults(userId);
       setResults(fetchedResults);
@@ -160,6 +172,7 @@ export const useDiagnostic = () => {
   return {
     tests,
     loading,
+    error,
     currentTest,
     results,
     fetchDiagnosticTests: fetchTests,
@@ -167,6 +180,6 @@ export const useDiagnostic = () => {
     createLocalFallbackDiagnostics: createLocalFallbacks,
     startDiagnosticTest,
     submitDiagnosticResult: submitResult,
-    fetchDiagnosticResults: fetchResults
+    fetchDiagnosticResults: fetchResultsForUser
   };
 };
