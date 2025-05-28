@@ -1,66 +1,81 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { UnifiedButton } from "@/components/ui/unified-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useProductionNavigation } from "@/hooks/useProductionNavigation";
 import { 
   Calculator, 
   Target, 
-  TrendingUp, 
   Stethoscope,
   Calendar,
   BookOpen,
   PlayCircle,
   FlaskConical,
-  Scroll
+  Scroll,
+  Globe
 } from "lucide-react";
 
 export const QuickActions: React.FC = () => {
-  const navigate = useNavigate();
+  const {
+    goToLectoguia,
+    goToMathematics,
+    goToSciences,
+    goToHistory,
+    goToDiagnostic,
+    goToFinancial,
+    goToPAESUniverse
+  } = useProductionNavigation();
 
   const quickActions = [
     {
       title: "Diagnóstico PAES",
       description: "Evaluación integral",
       icon: Stethoscope,
-      action: () => navigate('/diagnostic'),
+      action: goToDiagnostic,
       color: "bg-blue-500 hover:bg-blue-600"
     },
     {
       title: "Competencia Lectora",
       description: "Comprensión textual",
       icon: BookOpen,
-      action: () => navigate('/lectoguia'),
+      action: goToLectoguia,
       color: "bg-purple-500 hover:bg-purple-600"
     },
     {
       title: "Matemáticas",
       description: "M1 y M2",
       icon: Calculator,
-      action: () => navigate('/mathematics'),
+      action: goToMathematics,
       color: "bg-green-500 hover:bg-green-600"
     },
     {
       title: "Ciencias",
       description: "Física, Química, Biología",
       icon: FlaskConical,
-      action: () => navigate('/sciences'),
+      action: goToSciences,
       color: "bg-violet-500 hover:bg-violet-600"
     },
     {
       title: "Historia",
       description: "Ciencias Sociales",
       icon: Scroll,
-      action: () => navigate('/history'),
+      action: goToHistory,
       color: "bg-orange-500 hover:bg-orange-600"
     },
     {
-      title: "Plan de Estudio",
-      description: "Planificación inteligente",
+      title: "Centro Financiero",
+      description: "Planificación financiera",
       icon: Calendar,
-      action: () => navigate('/planning'),
+      action: goToFinancial,
       color: "bg-cyan-500 hover:bg-cyan-600"
+    },
+    {
+      title: "Universo PAES 3D",
+      description: "Experiencia inmersiva",
+      icon: Globe,
+      action: goToPAESUniverse,
+      color: "bg-pink-500 hover:bg-pink-600"
     }
   ];
 
@@ -79,16 +94,17 @@ export const QuickActions: React.FC = () => {
               key={action.title}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.05 }}
             >
-              <Button
+              <UnifiedButton
                 onClick={action.action}
-                className={`w-full h-20 ${action.color} text-white flex flex-col items-center justify-center gap-1 hover:scale-105 transition-all duration-300`}
+                className={`w-full h-20 ${action.color} text-white flex flex-col items-center justify-center gap-1`}
+                cinematicEffect
               >
                 <action.icon className="w-5 h-5" />
                 <div className="text-sm font-medium">{action.title}</div>
                 <div className="text-xs opacity-80">{action.description}</div>
-              </Button>
+              </UnifiedButton>
             </motion.div>
           ))}
         </div>

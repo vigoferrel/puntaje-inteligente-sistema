@@ -1,78 +1,86 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { UnifiedButton } from '@/components/ui/unified-button';
 import { Badge } from '@/components/ui/badge';
+import { useProductionNavigation } from '@/hooks/useProductionNavigation';
 import { 
   Brain, 
   Rocket, 
-  Target, 
+  Home,
   BookOpen, 
   Calculator,
-  Award,
   Volume2,
   VolumeX,
   Settings,
-  Home,
   Globe,
   FlaskConical,
-  Scroll
+  Scroll,
+  Target
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export const CinematicNavigationHub: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
-  const navigate = useNavigate();
+  
+  const {
+    navigateToRoute,
+    goToLectoguia,
+    goToMathematics,
+    goToSciences,
+    goToHistory,
+    goToDiagnostic,
+    goToPAESUniverse
+  } = useProductionNavigation();
 
   const navigationItems = [
     { 
       icon: Home, 
       label: 'Hub PAES', 
-      route: '/', 
+      action: () => navigateToRoute('/'), 
       color: 'from-purple-500 to-cyan-500' 
     },
     { 
       icon: BookOpen, 
       label: 'Competencia Lectora', 
-      route: '/lectoguia', 
+      action: goToLectoguia, 
       color: 'from-blue-500 to-indigo-500' 
     },
     { 
       icon: Calculator, 
       label: 'Matemáticas', 
-      route: '/mathematics', 
+      action: goToMathematics, 
       color: 'from-green-500 to-emerald-500' 
     },
     { 
       icon: FlaskConical, 
       label: 'Ciencias', 
-      route: '/sciences', 
+      action: goToSciences, 
       color: 'from-purple-500 to-violet-500' 
     },
     { 
       icon: Scroll, 
       label: 'Historia', 
-      route: '/history', 
+      action: goToHistory, 
       color: 'from-orange-500 to-yellow-500' 
     },
     { 
       icon: Target, 
       label: 'Diagnóstico', 
-      route: '/diagnostic', 
+      action: goToDiagnostic, 
       color: 'from-red-500 to-pink-500' 
     },
     { 
       icon: Globe, 
       label: 'Universo 3D', 
-      route: '/universe', 
+      action: goToPAESUniverse, 
       color: 'from-pink-500 to-purple-500' 
     }
   ];
 
-  const handleNavigation = (route: string) => {
-    console.log(`🎬 Navegación cinematográfica: ${route}`);
-    navigate(route);
+  const handleNavigation = (action: () => void) => {
+    console.log('🎬 Navegación cinematográfica ejecutada');
+    action();
     setIsExpanded(false);
   };
 
@@ -90,32 +98,31 @@ export const CinematicNavigationHub: React.FC = () => {
               const Icon = item.icon;
               return (
                 <motion.div
-                  key={item.route}
+                  key={item.label}
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button
-                    onClick={() => handleNavigation(item.route)}
+                  <UnifiedButton
+                    onClick={() => handleNavigation(item.action)}
                     className={`bg-gradient-to-r ${item.color} hover:opacity-90 transition-all backdrop-blur-xl border border-white/20 flex items-center gap-3 px-4 py-3`}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="text-sm font-medium">{item.label}</span>
-                  </Button>
+                  </UnifiedButton>
                 </motion.div>
               );
             })}
 
-            {/* Controles de Audio */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: navigationItems.length * 0.05 }}
               className="flex gap-2"
             >
-              <Button
+              <UnifiedButton
                 onClick={() => setAudioEnabled(!audioEnabled)}
                 className={`${
                   audioEnabled 
@@ -128,18 +135,17 @@ export const CinematicNavigationHub: React.FC = () => {
                 ) : (
                   <VolumeX className="w-5 h-5" />
                 )}
-              </Button>
+              </UnifiedButton>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Botón Principal */}
       <motion.div
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        <Button
+        <UnifiedButton
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-600 via-cyan-600 to-pink-600 hover:from-purple-700 hover:via-cyan-700 hover:to-pink-700 transition-all shadow-2xl backdrop-blur-xl border-2 border-white/30"
         >
@@ -153,10 +159,9 @@ export const CinematicNavigationHub: React.FC = () => {
               <Rocket className="w-8 h-8 text-white" />
             )}
           </motion.div>
-        </Button>
+        </UnifiedButton>
       </motion.div>
 
-      {/* Badge de Estado */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -167,7 +172,6 @@ export const CinematicNavigationHub: React.FC = () => {
         </Badge>
       </motion.div>
 
-      {/* Efecto de Pulso */}
       <motion.div
         className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 via-cyan-600 to-pink-600"
         animate={{ 

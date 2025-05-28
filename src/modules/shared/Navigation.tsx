@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { useLocation } from 'react-router-dom';
+import { UnifiedButton } from '@/components/ui/unified-button';
+import { useProductionNavigation } from '@/hooks/useProductionNavigation';
 import { 
   Home,
   BookOpen,
@@ -17,25 +18,32 @@ import {
 } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const {
+    navigateToRoute,
+    goToLectoguia,
+    goToMathematics,
+    goToSciences,
+    goToHistory,
+    goToDiagnostic
+  } = useProductionNavigation();
 
   const routes = [
-    { path: '/', name: 'Hub', icon: Home },
-    { path: '/lectoguia', name: 'Lectura', icon: BookOpen },
-    { path: '/mathematics', name: 'Matemática', icon: Calculator },
-    { path: '/sciences', name: 'Ciencias', icon: FlaskConical },
-    { path: '/history', name: 'Historia', icon: Scroll },
-    { path: '/diagnostic', name: 'Diagnóstico', icon: Target },
-    { path: '/evaluations', name: 'Evaluaciones', icon: Database },
-    { path: '/exercise-generator', name: 'Generador', icon: Zap },
-    { path: '/gamification', name: 'Logros', icon: Trophy },
-    { path: '/financial', name: 'Financiero', icon: DollarSign },
+    { path: '/', name: 'Hub', icon: Home, action: () => navigateToRoute('/') },
+    { path: '/lectoguia', name: 'Lectura', icon: BookOpen, action: goToLectoguia },
+    { path: '/mathematics', name: 'Matemática', icon: Calculator, action: goToMathematics },
+    { path: '/sciences', name: 'Ciencias', icon: FlaskConical, action: goToSciences },
+    { path: '/history', name: 'Historia', icon: Scroll, action: goToHistory },
+    { path: '/diagnostic', name: 'Diagnóstico', icon: Target, action: goToDiagnostic },
+    { path: '/evaluations', name: 'Evaluaciones', icon: Database, action: () => navigateToRoute('/evaluations') },
+    { path: '/exercise-generator', name: 'Generador', icon: Zap, action: () => navigateToRoute('/exercise-generator') },
+    { path: '/gamification', name: 'Logros', icon: Trophy, action: () => navigateToRoute('/gamification') },
+    { path: '/financial', name: 'Financiero', icon: DollarSign, action: () => navigateToRoute('/financial') },
   ];
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (action: () => void, path: string) => {
     console.log(`🧭 Navegación desde barra: ${path}`);
-    navigate(path);
+    action();
   };
 
   return (
@@ -53,8 +61,8 @@ export const Navigation: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 transition={{ duration: 0.1 }}
               >
-                <Button
-                  onClick={() => handleNavigation(route.path)}
+                <UnifiedButton
+                  onClick={() => handleNavigation(route.action, route.path)}
                   variant="ghost"
                   size="sm"
                   className={`
@@ -75,7 +83,7 @@ export const Navigation: React.FC = () => {
                       transition={{ duration: 0.2 }}
                     />
                   )}
-                </Button>
+                </UnifiedButton>
               </motion.div>
             );
           })}
