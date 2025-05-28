@@ -8,7 +8,12 @@ import {
   BookOpen,
   Calculator,
   FlaskConical,
-  Target
+  Target,
+  Scroll,
+  Trophy,
+  Zap,
+  DollarSign,
+  Database
 } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
@@ -16,11 +21,16 @@ export const Navigation: React.FC = () => {
   const location = useLocation();
 
   const routes = [
-    { path: '/', name: 'Hub Neural', icon: Home },
+    { path: '/', name: 'Hub', icon: Home },
     { path: '/lectoguia', name: 'Lectura', icon: BookOpen },
     { path: '/mathematics', name: 'Matemática', icon: Calculator },
     { path: '/sciences', name: 'Ciencias', icon: FlaskConical },
+    { path: '/history', name: 'Historia', icon: Scroll },
     { path: '/diagnostic', name: 'Diagnóstico', icon: Target },
+    { path: '/evaluations', name: 'Evaluaciones', icon: Database },
+    { path: '/exercise-generator', name: 'Generador', icon: Zap },
+    { path: '/gamification', name: 'Logros', icon: Trophy },
+    { path: '/financial', name: 'Financiero', icon: DollarSign },
   ];
 
   const handleNavigation = (path: string) => {
@@ -31,7 +41,7 @@ export const Navigation: React.FC = () => {
   return (
     <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
       <div className="bg-black/80 backdrop-blur-xl rounded-full px-4 py-2 border border-white/20">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide max-w-[90vw]">
           {routes.map((route) => {
             const Icon = route.icon;
             const isActive = location.pathname === route.path;
@@ -43,12 +53,13 @@ export const Navigation: React.FC = () => {
                   variant="ghost"
                   size="sm"
                   className={`
-                    relative px-3 py-2 rounded-full transition-colors
+                    relative px-2 py-2 rounded-full transition-colors min-w-0 flex-shrink-0
                     ${isActive 
                       ? 'bg-white/20 text-white' 
                       : 'text-white/60 hover:text-white hover:bg-white/10'
                     }
                   `}
+                  title={route.name}
                 >
                   <Icon className="w-4 h-4" />
                   {isActive && (

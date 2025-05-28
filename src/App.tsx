@@ -16,6 +16,12 @@ import MathematicsPage from '@/pages/MathematicsPage';
 import SciencesPage from '@/pages/SciencesPage';
 import HistoryPage from '@/pages/HistoryPage';
 
+// Nuevas páginas del arsenal completo
+import EvaluationsPage from '@/pages/EvaluationsPage';
+import ExerciseGeneratorPage from '@/pages/ExerciseGeneratorPage';
+import GamificationPage from '@/pages/GamificationPage';
+import AchievementsPage from '@/pages/AchievementsPage';
+
 // Contextos
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SuperContextProvider } from '@/contexts/SuperContext';
@@ -74,6 +80,12 @@ function App() {
                 <Route path="/diagnostic" element={<DiagnosticPage />} />
                 <Route path="/planning" element={<PlanningPage />} />
                 <Route path="/financial" element={<FinancialCenterPage />} />
+                
+                {/* Nuevas rutas del arsenal completo */}
+                <Route path="/evaluations" element={<EvaluationsPage />} />
+                <Route path="/exercise-generator" element={<ExerciseGeneratorPage />} />
+                <Route path="/gamification" element={<GamificationPage />} />
+                <Route path="/achievements" element={<AchievementsPage />} />
               </Routes>
               <Navigation />
               <Toaster />
