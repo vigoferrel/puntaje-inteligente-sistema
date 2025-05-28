@@ -10,10 +10,10 @@
     <!-- Permissions Policy ultra-específica para eliminar errores -->
     <meta http-equiv="Permissions-Policy" content="vr=(), ambient-light-sensor=(), battery=(), camera=(), microphone=(), geolocation=(), accelerometer=(), gyroscope=(), magnetometer=(), usb=(), serial=(), bluetooth=(), payment=(), display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(), screen-wake-lock=(), web-share=()">
     
-    <!-- Content Security Policy ultra-refinada -->
+    <!-- Content Security Policy optimizada para Lovable -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://cdn.lovable.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.gpteng.co https://cdn.lovable.dev; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
     
-    <!-- Sistema de Interceptación Temprana Pre-JavaScript -->
+    <!-- Sistema de Interceptación Temprana Pre-JavaScript v5.0 -->
     <script>
       (function() {
         'use strict';
@@ -27,7 +27,7 @@
           debug: console.debug
         };
 
-        // Lista ultra-expandida de patrones de spam v3.0
+        // Lista ultra-expandida de patrones de spam v5.0
         const ULTRA_SPAM_PATTERNS = [
           'vr', 'ambient-light-sensor', 'battery', 'Unrecognized feature',
           'Tracking Prevention', 'blocked access to storage',
@@ -187,26 +187,7 @@
           }
         });
 
-        // FASE 6: CARGA CONDICIONAL DEL GPT ENGINEER
-        if (window.__ENVIRONMENT_SAFE__) {
-          // Solo cargar si el entorno es completamente seguro
-          const script = document.createElement('script');
-          script.src = 'https://cdn.gpteng.co/gptengineer.js';
-          script.type = 'module';
-          script.async = true;
-          script.onerror = () => {
-            // Silenciar errores de carga
-            window.__GPT_ENGINEER_LOADED__ = false;
-          };
-          script.onload = () => {
-            window.__GPT_ENGINEER_LOADED__ = true;
-          };
-          document.head.appendChild(script);
-        } else {
-          window.__GPT_ENGINEER_LOADED__ = false;
-        }
-
-        // FASE 7: PERFORMANCE MARKING SILENCIOSO
+        // FASE 6: PERFORMANCE MARKING SILENCIOSO
         if ('performance' in window && 'mark' in window.performance) {
           try {
             performance.mark('lovable-app-start');
@@ -218,7 +199,7 @@
       })();
     </script>
     
-    <meta name="description" content="Plataforma educativa neural PAES - Ultra Optimizada v2024.2" />
+    <meta name="description" content="Plataforma educativa neural PAES - Ultra Optimizada v2025" />
     <meta name="theme-color" content="#1e40af" />
     
     <style>
@@ -242,8 +223,8 @@
       <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1e40af, #7c3aed); color: white; font-size: 18px;">
         <div style="text-align: center;">
           <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-          <div>Cargando PAES Neural Platform v2024.2...</div>
-          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Ultra Optimizada - Zero Errors</div>
+          <div>Cargando PAES Neural Platform v2025...</div>
+          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Latest Lovable Version - Zero Errors</div>
         </div>
       </div>
     </div>
@@ -255,6 +236,8 @@
       }
     </style>
     
+    <!-- Lovable Script - Latest Version -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

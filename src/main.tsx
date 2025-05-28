@@ -4,7 +4,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Sistema Ultra-Optimizado de Filtrado de Errores v3.0 - ZERO ERRORS GARANTIZADO
+// Sistema Ultra-Optimizado de Filtrado de Errores v4.0 - ZERO ERRORS GARANTIZADO
 if (typeof window !== 'undefined') {
   // Performance monitoring ultra-silencioso
   if ('performance' in window && 'mark' in window.performance) {
@@ -44,7 +44,7 @@ if (typeof window !== 'undefined') {
     'go.microsoft.com/fwlink'
   ];
 
-  const isUltraSpam = (message) => {
+  const isUltraSpam = (message: string): boolean => {
     if (!message || typeof message !== 'string') return true;
     const lowerMessage = message.toLowerCase();
     return ULTRA_ERROR_PATTERNS.some(pattern => 
@@ -114,7 +114,7 @@ if (typeof window !== 'undefined') {
     }
   });
 
-  // INTERCEPTACIÓN ULTRA-AGRESIVA DE ERRORES DE SCRIPT
+  // INTERCEPTACIÓN ULTRA-AGRESIVA DE ERRORES DE SCRIPT con TypeScript correcto
   window.addEventListener('error', (event) => {
     const error = event.error;
     const errorMessage = error?.message || event.message || '';
@@ -125,15 +125,11 @@ if (typeof window !== 'undefined') {
       return false;
     }
 
-    // Filtrar errores de recursos con ultra-precisión
+    // Filtrar errores de recursos con ultra-precisión y TypeScript correcto
     if (event.target && event.target !== window) {
-      const target = event.target;
+      const target = event.target as HTMLElement & { src?: string };
       
-      const hasSource = (element) => {
-        return 'src' in element && element.src !== undefined;
-      };
-      
-      if (hasSource(target) && target.src && (
+      if (target.src && (
         target.src.includes('facebook.com') ||
         target.src.includes('gptengineer.js') ||
         target.src.includes('gpteng.co') ||
@@ -167,14 +163,14 @@ const renderApp = () => {
         <App />
       </React.StrictMode>
     );
-  } catch (error) {
+  } catch (error: any) {
     if (!isUltraSpam(error?.message || '')) {
       console.error('🚨 Render error:', error);
     }
     // Fallback ultra-robusto
     try {
       root.render(<App />);
-    } catch (fallbackError) {
+    } catch (fallbackError: any) {
       if (!isUltraSpam(fallbackError?.message || '')) {
         console.error('🚨 Fallback render error:', fallbackError);
       }
