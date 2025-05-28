@@ -83,7 +83,7 @@ export const useOptimizedUnifiedEducation = (userId?: string) => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : `Error en ${operationName}`;
       setState(prev => ({ ...prev, error: errorMessage }));
-      optimizedLogger.critical('useOptimizedUnifiedEducation', `${operationName} failed`);
+      optimizedLogger.critical();
       return null;
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
