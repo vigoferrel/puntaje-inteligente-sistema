@@ -31,79 +31,109 @@ export const useRealDiagnosticData = () => {
       setIsLoading(true);
       setError(null);
 
-      // Obtener resultados diagnósticos del usuario
-      const { data: diagnosticResults, error: diagnosticError } = await supabase
-        .from('user_diagnostic_results')
-        .select('*')
+      // Fetch real exercise attempts instead of non-existent user_diagnostic_results
+      const { data: exerciseAttempts, error: attemptsError } = await supabase
+        .from('user_exercise_attempts')
+        .select(`
+          *,
+          exercises(test_id, skill_id, difficulty)
+        `)
         .eq('user_id', user.id)
-        .order('completed_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
-      if (diagnosticError) {
-        console.error('Error fetching diagnostic results:', diagnosticError);
-        throw diagnosticError;
+      if (attemptsError) {
+        console.error('Error fetching exercise attempts:', attemptsError);
+        throw attemptsError;
       }
 
-      // Obtener tests diagnósticos disponibles
+      // Fetch available diagnostic tests
       const { data: availableTests, error: testsError } = await supabase
         .from('diagnostic_tests')
         .select('*');
 
       if (testsError) {
-        console.error('Error fetching available tests:', testsError);
+        console.error('Error fetching diagnostic tests:', testsError);
       }
 
-      const results = diagnosticResults || [];
-      const tests = availableTests || [];
+      // Fetch user progress on learning nodes
+      const { data: nodeProgress, error: nodeError } = await supabase
+        .from('user_node_progress')
+        .select(`
+          *,
+          learning_nodes!inner(test_id, skill_id, subject_area)
+        `)
+        .eq('user_id', user.id);
 
-      // Calcular métricas
-      const completedDiagnostics = results.length;
+      if (nodeError) {
+        console.error('Error fetching node progress:', nodeError);
+      }
+
+      const attempts = exerciseAttempts || [];
+      const tests = availableTests || [];
+      const progress = nodeProgress || [];
+
+      // Calculate metrics from real data
+      const completedDiagnostics = tests.filter(test => 
+        attempts.some(attempt => attempt.exercises?.test_id === test.test_id)
+      ).length;
+      
       const availableTestsCount = tests.length;
 
-      // Calcular nivel de preparación basado en resultados
+      // Calculate readiness and average score from exercise attempts
       let readinessLevel = 0;
       let averageScore = 0;
       let strongAreas: string[] = [];
       let weakAreas: string[] = [];
       let progressTrend: 'up' | 'down' | 'stable' = 'stable';
 
-      if (results.length > 0) {
-        const latestResult = results[0];
-        const resultData = latestResult.results;
+      if (attempts.length > 0) {
+        // Calculate average performance
+        const correctAttempts = attempts.filter(a => a.is_correct).length;
+        averageScore = Math.round((correctAttempts / attempts.length) * 100);
+        
+        // Readiness based on performance and coverage
+        readinessLevel = Math.min(100, Math.max(0, 
+          (averageScore * 0.7) + (completedDiagnostics * 20)
+        ));
 
-        if (resultData && typeof resultData === 'object') {
-          const scores = Object.values(resultData).filter(score => typeof score === 'number') as number[];
-          if (scores.length > 0) {
-            averageScore = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
-            readinessLevel = Math.min(100, Math.max(0, (averageScore - 150) / 7)); // Escala PAES a porcentaje
+        // Analyze performance by subject area from node progress
+        const subjectPerformance: Record<string, { correct: number; total: number }> = {};
+        
+        progress.forEach(np => {
+          const subjectArea = np.learning_nodes?.subject_area || 'general';
+          if (!subjectPerformance[subjectArea]) {
+            subjectPerformance[subjectArea] = { correct: 0, total: 0 };
           }
+          subjectPerformance[subjectArea].total += 1;
+          if (np.mastery_level && np.mastery_level > 0.7) {
+            subjectPerformance[subjectArea].correct += 1;
+          }
+        });
 
-          // Identificar áreas fuertes y débiles
-          Object.entries(resultData).forEach(([area, score]) => {
-            if (typeof score === 'number') {
-              if (score > 600) {
-                strongAreas.push(area);
-              } else if (score < 450) {
-                weakAreas.push(area);
-              }
+        // Identify strong and weak areas
+        Object.entries(subjectPerformance).forEach(([area, perf]) => {
+          if (perf.total > 0) {
+            const performance = perf.correct / perf.total;
+            if (performance > 0.75) {
+              strongAreas.push(area);
+            } else if (performance < 0.5) {
+              weakAreas.push(area);
             }
-          });
-        }
+          }
+        });
 
-        // Calcular tendencia de progreso comparando últimos resultados
-        if (results.length > 1) {
-          const previousResult = results[1];
-          const previousData = previousResult.results;
+        // Calculate trend from recent vs older attempts
+        if (attempts.length > 4) {
+          const recentAttempts = attempts.slice(0, Math.floor(attempts.length / 2));
+          const olderAttempts = attempts.slice(Math.floor(attempts.length / 2));
           
-          if (previousData && typeof previousData === 'object') {
-            const previousScores = Object.values(previousData).filter(score => typeof score === 'number') as number[];
-            if (previousScores.length > 0) {
-              const previousAverage = previousScores.reduce((sum, score) => sum + score, 0) / previousScores.length;
-              if (averageScore > previousAverage + 10) {
-                progressTrend = 'up';
-              } else if (averageScore < previousAverage - 10) {
-                progressTrend = 'down';
-              }
-            }
+          const recentScore = recentAttempts.filter(a => a.is_correct).length / recentAttempts.length;
+          const olderScore = olderAttempts.filter(a => a.is_correct).length / olderAttempts.length;
+          
+          if (recentScore > olderScore + 0.1) {
+            progressTrend = 'up';
+          } else if (recentScore < olderScore - 0.1) {
+            progressTrend = 'down';
           }
         }
       }
@@ -115,7 +145,7 @@ export const useRealDiagnosticData = () => {
         averageScore,
         strongAreas,
         weakAreas,
-        lastDiagnosticDate: results.length > 0 ? results[0].completed_at : null,
+        lastDiagnosticDate: attempts.length > 0 ? attempts[0].created_at : null,
         nextRecommendedTest: weakAreas.length > 0 ? weakAreas[0] : null,
         progressTrend
       };

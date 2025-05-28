@@ -30,7 +30,7 @@ export const useRealPlanData = () => {
       try {
         setIsLoading(true);
 
-        // Fetch user's active study plans
+        // Fetch user's active study plans from existing table
         const { data: plans, error: plansError } = await supabase
           .from('generated_study_plans')
           .select('*')
@@ -39,77 +39,76 @@ export const useRealPlanData = () => {
 
         if (plansError) throw plansError;
 
-        // Fetch study plan nodes progress
-        const { data: planNodes, error: planNodesError } = await supabase
-          .from('study_plan_nodes')
-          .select(`
-            *,
-            generated_study_plans!inner(user_id)
-          `)
-          .eq('generated_study_plans.user_id', user.id);
+        // Fetch study plan nodes progress (alternative to non-existent study_plan_nodes)
+        const { data: nodeProgress, error: nodeError } = await supabase
+          .from('user_node_progress')
+          .select('*')
+          .eq('user_id', user.id);
 
-        if (planNodesError) throw planNodesError;
+        if (nodeError) throw nodeError;
 
-        // Fetch user's study schedule
-        const { data: schedule, error: scheduleError } = await supabase
-          .from('user_study_schedules')
+        // Since user_study_schedules and user_goals don't exist, create realistic fallbacks
+        // based on actual user activity from exercise attempts
+        const { data: exerciseAttempts, error: exerciseError } = await supabase
+          .from('user_exercise_attempts')
           .select('*')
           .eq('user_id', user.id)
-          .eq('is_active', true);
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-        if (scheduleError) throw scheduleError;
+        if (exerciseError) throw exerciseError;
 
-        // Fetch user goals for alignment calculation
-        const { data: goals, error: goalsError } = await supabase
-          .from('user_goals')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true);
-
-        if (goalsError) throw goalsError;
-
-        // Calculate real metrics
+        // Calculate real metrics from existing data
         const activePlans = plans?.length || 0;
-        const completedMilestones = planNodes?.filter(pn => pn.is_completed).length || 0;
-        const totalMilestones = planNodes?.length || 1;
+        const completedMilestones = nodeProgress?.filter(np => np.status === 'completed').length || 0;
+        const totalProgress = nodeProgress?.length || 1;
 
-        // Strategic efficiency based on plan completion rate
-        const strategicEfficiency = Math.round((completedMilestones / totalMilestones) * 100);
+        // Strategic efficiency based on node completion rate
+        const strategicEfficiency = Math.round((completedMilestones / totalProgress) * 100);
 
-        // Adaptive index based on plan variety and flexibility
-        const adaptiveIndex = plans && plans.length > 0 
-          ? Math.round(Math.min(100, plans.length * 25 + (strategicEfficiency * 0.5)))
-          : 0;
+        // Adaptive index based on plan variety and user engagement
+        const recentActivity = exerciseAttempts?.length || 0;
+        const adaptiveIndex = Math.min(100, 
+          (activePlans * 25) + (recentActivity * 2) + (strategicEfficiency * 0.5)
+        );
 
-        // Goal alignment based on target vs actual progress
-        const goalAlignment = goals && goals.length > 0
-          ? Math.round(strategicEfficiency * 0.8 + 20) // Base alignment with efficiency factor
-          : 0;
+        // Goal alignment based on consistent progress
+        const consistentProgress = nodeProgress?.filter(np => 
+          np.mastery_level && np.mastery_level > 0.5
+        ).length || 0;
+        const goalAlignment = Math.round(
+          Math.min(100, (consistentProgress / totalProgress) * 80 + 20)
+        );
 
-        // Execution rate based on weekly adherence
-        const weeklyExecutionRate = schedule && schedule.length > 0
-          ? Math.round(Math.min(100, schedule.length * 14.28)) // 7 days * ~14.28 = 100%
-          : 0;
+        // Execution rate based on recent activity
+        const recentAttemptsCount = exerciseAttempts?.filter(attempt => {
+          const attemptDate = new Date(attempt.created_at);
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return attemptDate >= weekAgo;
+        }).length || 0;
+        
+        const executionRate = Math.min(100, recentAttemptsCount * 10);
 
-        // Create weekly schedule from real data
+        // Create realistic weekly schedule based on user's activity patterns
         const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        const weeklySchedule = daysOfWeek.map((day, index) => {
-          const daySchedule = schedule?.find(s => s.day_of_week === index);
-          const subjects = ['Comprensión Lectora', 'Matemática M1', 'Ciencias', 'Matemática M2', 'Historia', 'Evaluación Integral', 'Revisión y Descanso'];
-          
-          return {
-            day,
-            focus: subjects[index] || 'Estudio General',
-            intensity: daySchedule ? Math.round((daySchedule.session_duration_minutes / 180) * 100) : 45,
-            duration: daySchedule ? `${Math.round(daySchedule.session_duration_minutes / 60)}h` : '1h'
-          };
-        });
+        const subjects = [
+          'Comprensión Lectora', 'Matemática M1', 'Ciencias', 
+          'Matemática M2', 'Historia', 'Evaluación Integral', 'Revisión y Descanso'
+        ];
+        
+        const weeklySchedule = daysOfWeek.map((day, index) => ({
+          day,
+          focus: subjects[index] || 'Estudio General',
+          intensity: Math.min(100, 45 + (recentActivity * 2)), // Base intensity + activity factor
+          duration: recentActivity > 10 ? '2h' : recentActivity > 5 ? '1.5h' : '1h'
+        }));
 
         const realMetrics: RealPlanMetrics = {
           strategicEfficiency,
-          adaptiveIndex,
+          adaptiveIndex: Math.round(adaptiveIndex),
           goalAlignment,
-          executionRate: weeklyExecutionRate,
+          executionRate,
           activePlans,
           completedMilestones,
           weeklySchedule
@@ -118,7 +117,7 @@ export const useRealPlanData = () => {
         setMetrics(realMetrics);
       } catch (error) {
         console.error('Error fetching real plan data:', error);
-        // Fallback to minimal real data
+        // Provide minimal fallback metrics
         setMetrics({
           strategicEfficiency: 0,
           adaptiveIndex: 0,
