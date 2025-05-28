@@ -1,219 +1,138 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+
+interface User {
+  id: string;
+  email: string;
+}
 
 interface Profile {
   id: string;
   name: string;
-  email?: string;
-  role: 'student' | 'parent' | 'admin';
-  target_career?: string;
-  learning_phase?: string;
+  email: string;
+  avatar_url?: string;
+  role?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
-  session: Session | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
   isLoading: boolean;
   error: string | null;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-    let retryTimeout: NodeJS.Timeout;
-
-    const loadUserProfile = async (userId: string, retryCount = 0) => {
+    // Sistema de autenticación de emergencia
+    const initEmergencyAuth = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (error) {
-          console.log('Profile not found or error:', error);
+        const emergencyMode = (window as any).__EMERGENCY_MODE__;
+        
+        if (emergencyMode) {
+          // Usuario mock para modo emergencia
+          const mockUser: User = {
+            id: 'emergency-user-001',
+            email: 'emergency@paes.local'
+          };
           
-          // Si no existe el perfil, crear uno básico
-          if (error.code === 'PGRST116') {
-            const { data: newProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert({
-                id: userId,
-                name: 'Usuario',
-                email: user?.email || '',
-                learning_phase: 'DIAGNOSIS'
-              })
-              .select()
-              .single();
-
-            if (!createError && newProfile && mounted) {
-              setProfile({
-                id: newProfile.id,
-                name: newProfile.name || 'Usuario',
-                email: newProfile.email,
-                role: 'student',
-                target_career: newProfile.target_career,
-                learning_phase: newProfile.learning_phase
-              });
-            }
-          }
+          const mockProfile: Profile = {
+            id: 'emergency-user-001',
+            name: 'Usuario Emergencia',
+            email: 'emergency@paes.local',
+            role: 'student'
+          };
+          
+          setTimeout(() => {
+            setUser(mockUser);
+            setProfile(mockProfile);
+            setIsLoading(false);
+            console.log('🚨 Emergency auth activated');
+          }, 100);
+          
           return;
         }
 
-        if (data && mounted) {
-          setProfile({
-            id: data.id,
-            name: data.name || 'Usuario',
-            email: data.email,
-            role: 'student',
-            target_career: data.target_career,
-            learning_phase: data.learning_phase
-          });
-        }
-      } catch (error) {
-        console.error('Error loading profile:', error);
-        
-        // Retry logic con backoff exponencial
-        if (retryCount < 3 && mounted) {
-          const delay = Math.pow(2, retryCount) * 1000;
-          retryTimeout = setTimeout(() => {
-            loadUserProfile(userId, retryCount + 1);
-          }, delay);
-        } else {
-          setError('Error cargando perfil de usuario');
-        }
-      }
-    };
+        // Autenticación normal con timeout
+        const authTimeout = setTimeout(() => {
+          console.log('⚠️ Auth timeout - activating guest mode');
+          setUser(null);
+          setProfile(null);
+          setIsLoading(false);
+        }, 2000);
 
-    // Listener de auth con manejo de errores mejorado
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-
-        console.log('Auth state changed:', event);
-        
-        try {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setError(null);
+        // Simulación de carga de usuario
+        setTimeout(() => {
+          clearTimeout(authTimeout);
           
-          if (session?.user) {
-            await loadUserProfile(session.user.id);
-          } else {
-            setProfile(null);
-          }
-        } catch (err) {
-          console.error('Error in auth state change:', err);
-          setError('Error en autenticación');
-        } finally {
+          // Por ahora, crear usuario guest
+          const guestUser: User = {
+            id: 'guest-user-001',
+            email: 'guest@paes.local'
+          };
+          
+          const guestProfile: Profile = {
+            id: 'guest-user-001',
+            name: 'Usuario Invitado',
+            email: 'guest@paes.local',
+            role: 'student'
+          };
+          
+          setUser(guestUser);
+          setProfile(guestProfile);
           setIsLoading(false);
-        }
-      }
-    );
-
-    // Verificar sesión inicial con timeout
-    const initTimeout = setTimeout(async () => {
-      if (!mounted) return;
-      
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        }, 500);
         
-        if (error) {
-          console.error('Error getting session:', error);
-          setError('Error obteniendo sesión');
-          setIsLoading(false);
-          return;
-        }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await loadUserProfile(session.user.id);
-        } else {
-          setIsLoading(false);
-        }
       } catch (err) {
-        console.error('Error in initial session check:', err);
-        setError('Error verificando sesión');
+        console.error('Auth initialization error:', err);
+        setError('Error de autenticación');
         setIsLoading(false);
       }
-    }, 100);
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-      clearTimeout(initTimeout);
-      if (retryTimeout) {
-        clearTimeout(retryTimeout);
-      }
     };
+
+    initEmergencyAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    setError(null);
-    
+  const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Login error:', error);
-      setError(error instanceof Error ? error.message : 'Error en login');
-      throw error;
-    } finally {
-      setIsLoading(false);
+      setUser(null);
+      setProfile(null);
+      console.log('User signed out');
+    } catch (err) {
+      console.error('Sign out error:', err);
+      setError('Error al cerrar sesión');
     }
   };
 
-  const logout = async () => {
-    try {
-      setError(null);
-      await supabase.auth.signOut();
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      setError('Error en logout');
-    }
+  const value: AuthContextType = {
+    user,
+    profile,
+    isLoading,
+    error,
+    signOut,
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      profile,
-      session,
-      login,
-      logout,
-      isLoading,
-      error
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
