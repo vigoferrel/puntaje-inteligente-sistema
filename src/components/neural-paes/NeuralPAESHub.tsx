@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNeuralSystem } from '@/components/neural/NeuralSystemProvider';
@@ -6,7 +5,7 @@ import { NeuralMetricsDisplay } from './NeuralMetricsDisplay';
 import { NeuralPAESCard } from './NeuralPAESCard';
 import { NeuralNavigationWidget } from './NeuralNavigationWidget';
 import { NeuralRecommendationsPanel } from './NeuralRecommendationsPanel';
-import { Brain, Activity } from 'lucide-react';
+import { Brain, Activity, BookOpen, Calculator, FlaskConical, Scroll } from 'lucide-react';
 
 interface NeuralDimension {
   id: string;
@@ -89,7 +88,7 @@ export const NeuralPAESHub: React.FC = () => {
       id: 'competencia-lectora',
       name: 'Competencia Lectora',
       description: 'Comprensión y análisis textual',
-      icon: require('lucide-react').BookOpen,
+      icon: BookOpen,
       progress: 75,
       color: 'from-blue-500 to-blue-600',
       projectedScore: 670,
@@ -105,7 +104,7 @@ export const NeuralPAESHub: React.FC = () => {
       id: 'matematica-m1',
       name: 'Matemática M1',
       description: '7° básico a 2° medio',
-      icon: require('lucide-react').Calculator,
+      icon: Calculator,
       progress: 68,
       color: 'from-green-500 to-green-600',
       projectedScore: 645,
@@ -121,7 +120,7 @@ export const NeuralPAESHub: React.FC = () => {
       id: 'matematica-m2',
       name: 'Matemática M2',
       description: '3° y 4° medio',
-      icon: require('lucide-react').Calculator,
+      icon: Calculator,
       progress: 58,
       color: 'from-emerald-500 to-emerald-600',
       projectedScore: 590,
@@ -137,7 +136,7 @@ export const NeuralPAESHub: React.FC = () => {
       id: 'ciencias',
       name: 'Ciencias',
       description: 'Física, Química y Biología',
-      icon: require('lucide-react').FlaskConical,
+      icon: FlaskConical,
       progress: 72,
       color: 'from-purple-500 to-purple-600',
       projectedScore: 680,
@@ -153,7 +152,7 @@ export const NeuralPAESHub: React.FC = () => {
       id: 'historia',
       name: 'Historia y C. Sociales',
       description: 'Pensamiento crítico e histórico',
-      icon: require('lucide-react').Scroll,
+      icon: Scroll,
       progress: 63,
       color: 'from-amber-500 to-amber-600',
       projectedScore: 620,
