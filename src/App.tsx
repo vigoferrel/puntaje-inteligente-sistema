@@ -10,7 +10,7 @@ import { Critical3DErrorBoundary } from '@/core/error-handling/Critical3DErrorBo
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const PAESUniversePage = React.lazy(() => import('@/pages/PAESUniversePage'));
 const UnifiedEducationalHubPage = React.lazy(() => import('@/pages/UnifiedEducationalHub'));
-const LectoguiaPage = React.lazy(() => import('@/pages/LectoguiaPage'));
+const LectoGuiaPage = React.lazy(() => import('@/pages/LectoGuiaPage'));
 const DiagnosticPage = React.lazy(() => import('@/pages/DiagnosticPage'));
 const FinancialPage = React.lazy(() => import('@/pages/FinancialPage'));
 const MathematicsPage = React.lazy(() => import('@/pages/MathematicsPage'));
@@ -38,7 +38,7 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/paes-universe" element={<PAESUniversePage />} />
                   <Route path="/unified" element={<UnifiedEducationalHubPage />} />
-                  <Route path="/lectoguia" element={<LectoguiaPage />} />
+                  <Route path="/lectoguia" element={<LectoGuiaPage />} />
                   <Route path="/diagnostic" element={<DiagnosticPage />} />
                   <Route path="/financial" element={<FinancialPage />} />
                   <Route path="/mathematics" element={<MathematicsPage />} />
