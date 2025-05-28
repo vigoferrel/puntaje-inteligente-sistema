@@ -1,99 +1,40 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { Navigation } from '@/modules/shared/Navigation';
-import { NeuralSystemProvider } from '@/components/neural/NeuralSystemProvider';
-
-// Páginas principales consolidadas
-import Index from '@/pages/Index';
-import { LectoGuiaPage } from '@/pages/LectoGuiaPage';
-import { DiagnosticPage } from '@/pages/DiagnosticPage';
-import { PlanningPage } from '@/pages/PlanningPage';
-import FinancialCenterPage from '@/pages/FinancialCenterPage';
-import MathematicsPage from '@/pages/MathematicsPage';
-import SciencesPage from '@/pages/SciencesPage';
-import HistoryPage from '@/pages/HistoryPage';
-
-// Nuevas páginas del arsenal completo
-import EvaluationsPage from '@/pages/EvaluationsPage';
-import ExerciseGeneratorPage from '@/pages/ExerciseGeneratorPage';
-import GamificationPage from '@/pages/GamificationPage';
-import AchievementsPage from '@/pages/AchievementsPage';
-
-// Contextos
 import { AuthProvider } from '@/contexts/AuthContext';
-import { SuperContextProvider } from '@/contexts/SuperContext';
+import { Toaster } from "@/components/ui/toaster";
+import { WebGLContextProvider } from '@/core/webgl/WebGLContextManager';
 
-// Cliente de React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-// Wrapper para páginas PAES que necesitan el Neural Provider
-const PAESPageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <NeuralSystemProvider showDashboard={false} enableAutoCapture={true}>
-    {children}
-  </NeuralSystemProvider>
-);
+// Lazy load pages to prevent simultaneous 3D context creation
+const HomePage = React.lazy(() => import('@/pages/HomePage'));
+const PAESUniversePage = React.lazy(() => import('@/pages/PAESUniversePage'));
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SuperContextProvider>
-          <Router>
-            <div className="min-h-screen">
+    <AuthProvider>
+      <WebGLContextProvider>
+        <Router>
+          <div className="min-h-screen">
+            <React.Suspense 
+              fallback={
+                <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <div>Cargando aplicación...</div>
+                  </div>
+                </div>
+              }
+            >
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/lectoguia" element={<LectoGuiaPage />} />
-                <Route 
-                  path="/mathematics" 
-                  element={
-                    <PAESPageWrapper>
-                      <MathematicsPage />
-                    </PAESPageWrapper>
-                  } 
-                />
-                <Route 
-                  path="/sciences" 
-                  element={
-                    <PAESPageWrapper>
-                      <SciencesPage />
-                    </PAESPageWrapper>
-                  } 
-                />
-                <Route 
-                  path="/history" 
-                  element={
-                    <PAESPageWrapper>
-                      <HistoryPage />
-                    </PAESPageWrapper>
-                  } 
-                />
-                <Route path="/diagnostic" element={<DiagnosticPage />} />
-                <Route path="/planning" element={<PlanningPage />} />
-                <Route path="/financial" element={<FinancialCenterPage />} />
-                
-                {/* Nuevas rutas del arsenal completo */}
-                <Route path="/evaluations" element={<EvaluationsPage />} />
-                <Route path="/exercise-generator" element={<ExerciseGeneratorPage />} />
-                <Route path="/gamification" element={<GamificationPage />} />
-                <Route path="/achievements" element={<AchievementsPage />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/paes-universe" element={<PAESUniversePage />} />
               </Routes>
-              <Navigation />
-              <Toaster />
-            </div>
-          </Router>
-        </SuperContextProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+            </React.Suspense>
+            <Toaster />
+          </div>
+        </Router>
+      </WebGLContextProvider>
+    </AuthProvider>
   );
 }
 

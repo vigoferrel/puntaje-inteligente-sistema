@@ -1,12 +1,10 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Enhanced3DUniverse } from '@/components/real-3d/Enhanced3DUniverse';
 import { RealEducationalUniverse } from '@/components/universe/RealEducationalUniverse';
 import { RealAdaptiveEngine } from '@/components/ai-recommendations/RealAdaptiveEngine';
 import { RealAchievementSystem } from '@/components/achievements/RealAchievementSystem';
-import { RealCinematicParticleSystem } from '@/components/cinematic/RealCinematicParticleSystem';
-import { Enhanced3DMobileOptimizations } from '@/components/optimization/Enhanced3DMobileOptimizations';
+import { WebGLContextProvider } from '@/core/webgl/WebGLContextManager';
 import { useRealNeuralData } from '@/hooks/useRealNeuralData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -99,7 +97,7 @@ export const NeuralEcosystemHub: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Enhanced3DMobileOptimizations>
+      <WebGLContextProvider>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center">
           <div className="text-center text-white">
             <div className="animate-spin w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto mb-6"></div>
@@ -107,19 +105,12 @@ export const NeuralEcosystemHub: React.FC = () => {
             <div className="text-cyan-300 mt-2">Conectando con {realNodes.length} nodos reales</div>
           </div>
         </div>
-      </Enhanced3DMobileOptimizations>
+      </WebGLContextProvider>
     );
   }
 
   return (
-    <Enhanced3DMobileOptimizations>
-      {/* Sistema de partículas cinematográficas */}
-      <RealCinematicParticleSystem
-        variant={currentConfig.particleVariant}
-        intensity={70}
-        isActive={true}
-      />
-      
+    <WebGLContextProvider>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-4 relative z-10">
         <div className="max-w-7xl mx-auto space-y-6">
           
@@ -251,6 +242,6 @@ export const NeuralEcosystemHub: React.FC = () => {
           </motion.div>
         </div>
       </div>
-    </Enhanced3DMobileOptimizations>
+    </WebGLContextProvider>
   );
 };

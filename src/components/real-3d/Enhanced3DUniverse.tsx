@@ -1,9 +1,10 @@
 
 import React, { Suspense, useMemo, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { OrbitControls, Html, Environment, Line } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { useRealNeuralData } from '@/hooks/useRealNeuralData';
+import { SafeThreeCanvas } from '@/core/3d/SafeThreeCanvas';
 import * as THREE from 'three';
 
 interface Enhanced3DNeuralNodeProps {
@@ -169,38 +170,37 @@ export const Enhanced3DUniverse: React.FC<Enhanced3DUniverseProps> = ({
       transition={{ duration: 0.8 }}
       className="w-full h-[600px] relative overflow-hidden rounded-xl border border-cyan-500/30"
     >
-      <Canvas
+      <SafeThreeCanvas
+        componentId="enhanced-3d-universe"
         camera={{ position: [0, 5, 15], fov: 60 }}
-        className="bg-gradient-to-br from-cyan-900 via-blue-900 to-purple-900"
+        className="w-full h-full bg-gradient-to-br from-cyan-900 via-blue-900 to-purple-900"
       >
-        <Suspense fallback={null}>
-          <Environment preset="night" />
-          <ambientLight intensity={0.3} />
-          <pointLight position={[10, 10, 10]} intensity={1.5} color="#4ECDC4" />
-          <pointLight position={[-10, -10, -10]} intensity={1} color="#FF4444" />
-          
-          <OrbitControls
-            enableZoom={true}
-            enablePan={true}
-            enableRotate={true}
-            autoRotate={true}
-            autoRotateSpeed={0.5}
-            minDistance={8}
-            maxDistance={30}
+        <Environment preset="night" />
+        <ambientLight intensity={0.3} />
+        <pointLight position={[10, 10, 10]} intensity={1.5} color="#4ECDC4" />
+        <pointLight position={[-10, -10, -10]} intensity={1} color="#FF4444" />
+        
+        <OrbitControls
+          enableZoom={true}
+          enablePan={true}
+          enableRotate={true}
+          autoRotate={true}
+          autoRotateSpeed={0.5}
+          minDistance={8}
+          maxDistance={30}
+        />
+
+        {realNodes.map((node) => (
+          <Enhanced3DNeuralNode
+            key={node.id}
+            node={node}
+            isSelected={selectedNodeId === node.id}
+            onClick={() => onNodeClick?.(node.id)}
           />
+        ))}
 
-          {realNodes.map((node) => (
-            <Enhanced3DNeuralNode
-              key={node.id}
-              node={node}
-              isSelected={selectedNodeId === node.id}
-              onClick={() => onNodeClick?.(node.id)}
-            />
-          ))}
-
-          <SafeNeuralConnections nodes={realNodes} />
-        </Suspense>
-      </Canvas>
+        <SafeNeuralConnections nodes={realNodes} />
+      </SafeThreeCanvas>
 
       {/* Panel de métricas 3D */}
       <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-lg rounded-lg p-4 text-white">

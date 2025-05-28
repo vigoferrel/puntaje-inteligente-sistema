@@ -1,10 +1,9 @@
-
 import React, { Suspense, useMemo, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Html, Environment } from '@react-three/drei';
+import { Canvas, OrbitControls, Html, Environment } from '@react-three/fiber';
 import { motion } from 'framer-motion';
 import { useRealNeuralData } from '@/hooks/useRealNeuralData';
 import { useRealDashboardData } from '@/hooks/dashboard/useRealDashboardData';
+import { SafeThreeCanvas } from '@/core/3d/SafeThreeCanvas';
 import * as THREE from 'three';
 
 interface RealGalaxyProps {
@@ -226,38 +225,37 @@ export const RealEducationalUniverse: React.FC<RealEducationalUniverseProps> = (
       transition={{ duration: 0.8 }}
       className="w-full h-[600px] relative overflow-hidden rounded-xl border border-purple-500/30"
     >
-      <Canvas
+      <SafeThreeCanvas
+        componentId="real-educational-universe"
         camera={{ position: cameraPosition, fov: 70 }}
-        className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"
+        className="w-full h-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"
       >
-        <Suspense fallback={null}>
-          <Environment preset="night" />
-          <ambientLight intensity={0.4} />
-          <pointLight position={[10, 10, 10]} intensity={1.5} color="#4ECDC4" />
-          <pointLight position={[-10, -10, -10]} intensity={1} color="#FF6B6B" />
-          
-          <OrbitControls
-            enableZoom={true}
-            enablePan={true}
-            enableRotate={true}
-            autoRotate={true}
-            autoRotateSpeed={0.3}
-            minDistance={8}
-            maxDistance={25}
+        <Environment preset="night" />
+        <ambientLight intensity={0.4} />
+        <pointLight position={[10, 10, 10]} intensity={1.5} color="#4ECDC4" />
+        <pointLight position={[-10, -10, -10]} intensity={1} color="#FF6B6B" />
+        
+        <OrbitControls
+          enableZoom={true}
+          enablePan={true}
+          enableRotate={true}
+          autoRotate={true}
+          autoRotateSpeed={0.3}
+          minDistance={8}
+          maxDistance={25}
+        />
+
+        {galaxies.map((galaxy) => (
+          <RealGalaxy
+            key={galaxy.id}
+            galaxy={galaxy}
+            isSelected={selectedGalaxy === galaxy.testCode}
+            onClick={() => onGalaxyClick?.(galaxy.testCode)}
           />
+        ))}
 
-          {galaxies.map((galaxy) => (
-            <RealGalaxy
-              key={galaxy.id}
-              galaxy={galaxy}
-              isSelected={selectedGalaxy === galaxy.testCode}
-              onClick={() => onGalaxyClick?.(galaxy.testCode)}
-            />
-          ))}
-
-          <InterGalacticConnections galaxies={galaxies} />
-        </Suspense>
-      </Canvas>
+        <InterGalacticConnections galaxies={galaxies} />
+      </SafeThreeCanvas>
 
       {/* Panel de métricas universales */}
       <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-lg rounded-lg p-4 text-white">
