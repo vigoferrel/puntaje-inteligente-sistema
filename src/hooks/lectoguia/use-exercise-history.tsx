@@ -15,11 +15,14 @@ export function useExerciseHistory(
   const [error, setError] = useState<string | null>(null);
 
   const saveExerciseAttempt = async (
-    exercise: Exercise,
+    exerciseId: string,
     selectedOption: number,
     isCorrect: boolean,
-    skillType: string = 'INTERPRET_RELATE',
-    prueba: string = 'COMPETENCIA_LECTORA'
+    timeTakenMs: number,
+    metadata: {
+      skillType: string;
+      prueba: string;
+    }
   ): Promise<ExerciseAttempt | null> => {
     if (!userId) {
       setError("No user ID provided. User must be logged in to save exercise attempts.");
@@ -30,21 +33,33 @@ export function useExerciseHistory(
       setSaving(true);
       setError(null);
       
-      // Save to database using existing table
+      // Create exercise object for the service
+      const exercise: Exercise = {
+        id: exerciseId,
+        question: 'Generated Exercise',
+        options: [],
+        correctAnswer: '',
+        explanation: '',
+        skill: metadata.skillType as any,
+        difficulty: 'intermediate' as any,
+        bloomLevel: 'aplicar' as any
+      };
+      
+      // Save to database using existing service
       const attempt = await saveExerciseAttemptToDb(
         userId,
         exercise,
         selectedOption,
         isCorrect,
-        skillType,
-        prueba
+        metadata.skillType,
+        metadata.prueba
       );
       
       // Update local state
       setExerciseHistory(prev => [attempt, ...prev]);
       
       // Update skill level based on performance
-      await updateSkillLevel(skillType, isCorrect);
+      await updateSkillLevel(metadata.skillType, isCorrect);
       
       return attempt;
     } catch (error) {

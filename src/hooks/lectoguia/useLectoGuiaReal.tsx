@@ -157,6 +157,7 @@ export function useLectoGuiaReal() {
     setShowFeedback(true);
 
     const isCorrect = currentExercise.options[option] === currentExercise.correctAnswer;
+    const timeTaken = Date.now() - (currentExercise.startTime || Date.now());
 
     try {
       // Save real attempt to database using correct function signature
@@ -164,7 +165,7 @@ export function useLectoGuiaReal() {
         currentExercise.id || 'generated',
         option,
         isCorrect,
-        Date.now() - (currentExercise.startTime || Date.now()),
+        timeTaken,
         {
           skillType: activeSkill || 'INTERPRET_RELATE',
           prueba: activeSubject
