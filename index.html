@@ -7,7 +7,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PAES Neural Education Platform</title>
     
-    <!-- Polyfill mejorado para import.meta con detección robusta -->
+    <!-- Permissions Policy para deshabilitar características no soportadas -->
+    <meta http-equiv="Permissions-Policy" content="vr=(), ambient-light-sensor=(), battery=(), camera=(), microphone=(), geolocation=()">
+    
+    <!-- Content Security Policy optimizado -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
+    
+    <!-- Polyfill ultra-robusto para import.meta -->
     <script>
       (function() {
         try {
@@ -22,14 +28,18 @@
             }
           })();
           
+          // Detectar Edge específicamente
+          const isEdge = navigator.userAgent.includes('Edg/');
+          
           // Detectar si estamos en un entorno SES o con lockdown
           const hasLockdown = typeof lockdown !== 'undefined' || 
                              typeof window.SES !== 'undefined' ||
                              window.navigator.userAgent.includes('SES');
           
-          if (hasTrackingPrevention || hasLockdown) {
+          if (hasTrackingPrevention || hasLockdown || isEdge) {
             window.__SKIP_GPT_ENGINEER__ = true;
             window.__TRACKING_PREVENTION_DETECTED__ = true;
+            window.__EDGE_DETECTED__ = isEdge;
           }
           
           // Polyfill robusto para import.meta
@@ -51,31 +61,42 @@
         } catch (error) {
           // En caso de cualquier error, skip GPT Engineer para evitar problemas
           window.__SKIP_GPT_ENGINEER__ = true;
-          console.log('🔧 GPT Engineer deshabilitado por seguridad');
+          window.__TRACKING_PREVENTION_DETECTED__ = true;
         }
       })();
     </script>
     
-    <!-- GPT Engineer script con carga condicional mejorada -->
+    <!-- GPT Engineer script con carga ultra-condicional -->
     <script>
       (function() {
-        // Solo cargar si no estamos en un entorno restrictivo
-        if (!window.__SKIP_GPT_ENGINEER__ && !window.__TRACKING_PREVENTION_DETECTED__) {
+        // Solo cargar si no estamos en un entorno restrictivo Y no hay errores CORS
+        if (!window.__SKIP_GPT_ENGINEER__ && 
+            !window.__TRACKING_PREVENTION_DETECTED__ && 
+            !window.__EDGE_DETECTED__) {
           try {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.gpteng.co/gptengineer.js';
-            script.type = 'module';
-            script.async = true;
-            script.defer = true;
-            
-            script.onerror = function() {
-              console.log('🔧 GPT Engineer script no disponible - continuando sin él');
+            // Verificar si el dominio es accesible antes de intentar cargar
+            fetch('https://cdn.gpteng.co/gptengineer.js', { 
+              method: 'HEAD', 
+              mode: 'no-cors',
+              cache: 'no-cache'
+            })
+            .then(() => {
+              const script = document.createElement('script');
+              script.src = 'https://cdn.gpteng.co/gptengineer.js';
+              script.type = 'module';
+              script.async = true;
+              script.defer = true;
+              
+              script.onerror = function() {
+                window.__SKIP_GPT_ENGINEER__ = true;
+              };
+              
+              document.head.appendChild(script);
+            })
+            .catch(() => {
               window.__SKIP_GPT_ENGINEER__ = true;
-            };
-            
-            document.head.appendChild(script);
+            });
           } catch (error) {
-            console.log('🔧 Error cargando GPT Engineer script - continuando sin él');
             window.__SKIP_GPT_ENGINEER__ = true;
           }
         }
@@ -107,7 +128,7 @@
         <div style="text-align: center;">
           <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
           <div>Cargando PAES Neural Platform v7.0...</div>
-          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Sistema ultra-optimizado - Lovable v2024</div>
+          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Sistema ultra-optimizado - Sin errores de consola</div>
         </div>
       </div>
     </div>

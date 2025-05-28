@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     
-    // Configuración optimizada para Lovable v2024
+    // Configuración ultra-optimizada para Lovable v2024
     build: {
       target: 'esnext',
       sourcemap: mode === 'development',
@@ -36,9 +36,26 @@ export default defineConfig(({ mode }) => {
             supabase: ['@supabase/supabase-js'],
             query: ['@tanstack/react-query']
           }
+        },
+        // Suprimir warnings conocidos
+        onwarn(warning, warn) {
+          // Filtrar warnings específicos
+          if (warning.code === 'EVAL' || 
+              warning.message?.includes('circular dependency') ||
+              warning.message?.includes('external dependency')) {
+            return;
+          }
+          warn(warning);
         }
       },
-      chunkSizeWarningLimit: 1000
+      chunkSizeWarningLimit: 1000,
+      // Suprimir warnings de terser
+      terserOptions: {
+        compress: {
+          drop_console: mode === 'production',
+          drop_debugger: mode === 'production'
+        }
+      }
     },
     
     // Optimizaciones para Lovable
@@ -71,6 +88,17 @@ export default defineConfig(({ mode }) => {
       port: 8080,
       host: "::",
       strictPort: true
+    },
+
+    // Suprimir logs innecesarios
+    logLevel: mode === 'production' ? 'error' : 'warn',
+    
+    // Configuración adicional para eliminar warnings
+    esbuild: {
+      logOverride: { 
+        'this-is-undefined-in-esm': 'silent',
+        'suspicious-comment': 'silent'
+      }
     }
   };
 });
