@@ -1,20 +1,23 @@
 
 import React, { createContext, useContext, useMemo } from 'react';
-import { useNodesEnhanced } from '@/contexts/lectoguia/useNodesEnhanced';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLectoGuiaReal } from '@/hooks/lectoguia/useLectoGuiaReal';
 
 interface OptimizedLectoGuiaContextType {
-  nodes: any[];
-  nodeProgress: any;
-  loading: boolean;
-  error: string | null;
-  validationStatus: any;
-  selectedTestId: number | null;
-  selectedPrueba: any;
-  handlePruebaChange: (prueba: any) => void;
-  updateNodeProgress: (nodeId: string, status: any, progress: number) => void;
-  refreshNodes: () => void;
-  getFilteredNodes: () => any[];
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  messages: any[];
+  isTyping: boolean;
+  handleSendMessage: (message: string, imageData?: string) => Promise<void>;
+  activeSubject: string;
+  handleSubjectChange: (subject: string) => void;
+  currentExercise: any;
+  selectedOption: number | null;
+  showFeedback: boolean;
+  handleOptionSelect: (option: number) => void;
+  handleNewExercise: () => Promise<void>;
+  isLoading: boolean;
+  getStats: () => any;
 }
 
 const OptimizedLectoGuiaContext = createContext<OptimizedLectoGuiaContextType | undefined>(undefined);
@@ -22,16 +25,15 @@ const OptimizedLectoGuiaContext = createContext<OptimizedLectoGuiaContextType | 
 export const OptimizedLectoGuiaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   
-  const nodeData = useNodesEnhanced(user?.id);
+  // Usar solo el hook real consolidado
+  const lectoGuiaData = useLectoGuiaReal();
   
-  // Memoize context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => nodeData, [
-    nodeData.nodes.length,
-    nodeData.loading,
-    nodeData.error,
-    nodeData.selectedTestId,
-    nodeData.selectedPrueba,
-    nodeData.validationStatus.issuesCount
+  // Memoizar para evitar re-renders innecesarios
+  const contextValue = useMemo(() => lectoGuiaData, [
+    lectoGuiaData.activeTab,
+    lectoGuiaData.isLoading,
+    lectoGuiaData.currentExercise?.id,
+    lectoGuiaData.messages.length
   ]);
   
   return (

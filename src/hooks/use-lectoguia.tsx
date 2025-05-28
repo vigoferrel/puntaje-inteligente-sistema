@@ -1,18 +1,18 @@
 
 import { useCallback } from "react";
 import { useLectoGuiaSession } from "@/hooks/use-lectoguia-session";
-import { useLectoGuiaChat } from "@/hooks/lectoguia-chat";
 import { LectoGuiaSkill } from "@/types/lectoguia-types";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Importamos el hook simplificado sin duplicaciones
 import { useLectoGuiaSimplified } from "./lectoguia/useLectoGuiaSimplified";
 
+/**
+ * Hook principal consolidado para LectoGuía - versión final para producción
+ */
 export function useLectoGuia() {
-  // Obtener datos del usuario
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { session } = useLectoGuiaSession();
   
-  // Usar el hook simplificado principal
+  // Usar el hook simplificado real
   const {
     activeTab,
     setActiveTab,
@@ -27,24 +27,21 @@ export function useLectoGuia() {
     handleOptionSelect,
     handleNewExercise,
     isLoading,
-    getStats
+    getStats,
+    activeSkill,
+    setActiveSkill
   } = useLectoGuiaSimplified();
-  
-  // Hooks complementarios para funcionalidad extendida
-  const { session } = useLectoGuiaSession();
 
-  // Funciones adicionales para compatibilidad
+  // Funciones adicionales consolidadas
   const handleExerciseOptionSelect = useCallback((option: number) => {
     handleOptionSelect(option);
   }, [handleOptionSelect]);
 
   const handleStartSimulation = useCallback(() => {
-    // Simular inicio de simulación
     console.log('Iniciando simulación PAES...');
   }, []);
 
   const handleNodeSelect = useCallback((nodeId: string) => {
-    // Simular selección de nodo
     console.log('Seleccionando nodo:', nodeId);
     setActiveTab('exercise');
   }, [setActiveTab]);
@@ -66,6 +63,12 @@ export function useLectoGuia() {
     skillLevels: session.skillLevels as Record<LectoGuiaSkill, number>,
     handleNodeSelect,
     isLoading,
-    getStats
+    getStats,
+    activeSkill,
+    setActiveSkill,
+    handleSkillSelect: async (skill: any) => {
+      setActiveSkill(skill);
+      return true;
+    }
   };
 }
