@@ -30,32 +30,36 @@ export class AdaptiveRecommendationEngine {
     userProgress: UserProgressData,
     subject: string
   ): AdaptiveRecommendation[] {
-    return userProgress.weakAreas.slice(0, 2).map(skill => ({
-      id: `weak-${skill}-${Date.now()}`,
-      type: 'exercises' as const,
-      title: `Refuerzo en ${this.getSkillName(skill)}`,
-      description: `Ejercicios específicos para mejorar tu desempeño en ${this.getSkillName(skill)}`,
-      priority: 'high' as const,
-      estimatedTime: 15,
-      config: {
-        materialType: 'exercises',
-        subject,
-        skill,
-        phase: userProgress.currentPhase,
-        count: 5,
-        difficulty: 'INTERMEDIO',
-        mode: 'hybrid',
-        useOfficialContent: true,
-        includeContext: true
-      },
-      reasoning: `Detectamos que necesitas reforzar esta habilidad basado en tu progreso actual`
-    }));
+    return userProgress.weakAreas.slice(0, 2).map(skillCode => {
+      const skill = this.mapSkillCodeToHabilidad(skillCode);
+      return {
+        id: `weak-${skillCode}-${Date.now()}`,
+        type: 'exercises' as const,
+        title: `Refuerzo en ${this.getSkillName(skill)}`,
+        description: `Ejercicios específicos para mejorar tu desempeño en ${this.getSkillName(skill)}`,
+        priority: 'high' as const,
+        estimatedTime: 15,
+        config: {
+          materialType: 'exercises',
+          subject,
+          skill,
+          phase: userProgress.currentPhase,
+          count: 5,
+          difficulty: 'INTERMEDIO',
+          mode: 'hybrid',
+          useOfficialContent: true,
+          includeContext: true,
+          prueba: subject as any
+        },
+        reasoning: `Detectamos que necesitas reforzar esta habilidad basado en tu progreso actual`
+      };
+    });
   }
 
   private static createPhaseBasedRecommendations(
     userProgress: UserProgressData,
     subject: string
-  ): AdaptiveRecommendation[] {
+  ): AdaptiveRecommendation[] => {
     const phaseRecommendations: Partial<Record<TLearningCyclePhase, AdaptiveRecommendation>> = {
       'EXPERIENCIA_CONCRETA': {
         id: `phase-ec-${Date.now()}`,
@@ -72,7 +76,8 @@ export class AdaptiveRecommendationEngine {
           difficulty: 'BASICO',
           mode: 'official',
           useOfficialContent: true,
-          includeContext: true
+          includeContext: true,
+          prueba: subject as any
         },
         reasoning: 'Fase de experiencia concreta: enfoque en práctica básica'
       },
@@ -91,7 +96,8 @@ export class AdaptiveRecommendationEngine {
           difficulty: 'INTERMEDIO',
           mode: 'hybrid',
           useOfficialContent: true,
-          includeContext: true
+          includeContext: true,
+          prueba: subject as any
         },
         reasoning: 'Fase de observación reflexiva: análisis de patrones'
       },
@@ -110,7 +116,8 @@ export class AdaptiveRecommendationEngine {
           difficulty: 'AVANZADO',
           mode: 'official',
           useOfficialContent: true,
-          includeContext: true
+          includeContext: true,
+          prueba: subject as any
         },
         reasoning: 'Fase de conceptualización abstracta: teoría profunda'
       },
@@ -129,7 +136,8 @@ export class AdaptiveRecommendationEngine {
           difficulty: 'INTERMEDIO',
           mode: 'official',
           useOfficialContent: true,
-          includeContext: false
+          includeContext: false,
+          prueba: subject as any
         },
         reasoning: 'Fase de experimentación activa: aplicación práctica'
       },
@@ -148,28 +156,10 @@ export class AdaptiveRecommendationEngine {
           difficulty: 'INTERMEDIO',
           mode: 'official',
           useOfficialContent: true,
-          includeContext: true
+          includeContext: true,
+          prueba: subject as any
         },
         reasoning: 'Fase de diagnóstico: evaluación inicial'
-      },
-      'SKILL_TRAINING': {
-        id: `phase-st-${Date.now()}`,
-        type: 'exercises',
-        title: 'Entrenamiento de Habilidades',
-        description: 'Práctica dirigida en habilidades específicas',
-        priority: 'medium',
-        estimatedTime: 25,
-        config: {
-          materialType: 'exercises',
-          subject,
-          phase: userProgress.currentPhase,
-          count: 5,
-          difficulty: 'INTERMEDIO',
-          mode: 'hybrid',
-          useOfficialContent: true,
-          includeContext: true
-        },
-        reasoning: 'Fase de entrenamiento: desarrollo de habilidades'
       }
     };
 
@@ -192,7 +182,9 @@ export class AdaptiveRecommendationEngine {
         difficulty: 'INTERMEDIO',
         mode: 'official',
         useOfficialContent: true,
-        includeContext: true
+        includeContext: true,
+        prueba: subject as any,
+        phase: 'DIAGNOSIS' as const
       },
       reasoning: 'Es momento de evaluar tu progreso actual'
     };
@@ -203,6 +195,17 @@ export class AdaptiveRecommendationEngine {
       (Date.now() - userProgress.lastActivity.getTime()) / (1000 * 60 * 60 * 24)
     );
     return daysSinceLastActivity >= 3 || userProgress.completedNodes.length % 5 === 0;
+  }
+
+  private static mapSkillCodeToHabilidad(skillCode: string): TPAESHabilidad {
+    // Map skill codes to TPAESHabilidad enum values
+    const mapping: Record<string, TPAESHabilidad> = {
+      'TRACK_LOCATE': 'TRACK_LOCATE',
+      'INTERPRET_RELATE': 'INTERPRET_RELATE',
+      'EVALUATE_REFLECT': 'EVALUATE_REFLECT',
+      // Add more mappings as needed
+    };
+    return mapping[skillCode] || 'INTERPRET_RELATE';
   }
 
   private static getSkillName(skill: TPAESHabilidad): string {

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Exercise } from '@/types/ai-types';
 import { TPAESHabilidad, TPAESPrueba } from '@/types/system-types';
@@ -118,14 +119,14 @@ export const useExerciseGenerationReal = () => {
         'ADVANCED': 'avanzado'
       };
       
-      const mappedDifficulty = difficultyMap[difficulty] as 'basico' | 'intermedio' | 'avanzado';
+      const mappedDifficulty = difficultyMap[difficulty];
       
       // Buscar ejercicio real en la base de datos
       const { data: exerciseData, error: exerciseError } = await supabase
         .from('exercises')
         .select('*')
         .eq('skill_id', getSkillIdFromCode(skill))
-        .eq('difficulty', mappedDifficulty)
+        .eq('difficulty', mappedDifficulty as 'basic' | 'intermediate' | 'advanced')
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -139,7 +140,7 @@ export const useExerciseGenerationReal = () => {
         correctAnswer: exerciseData.correct_answer,
         explanation: exerciseData.explanation || '',
         skill: skill,
-        difficulty: mappedDifficulty
+        difficulty: mappedDifficulty as 'basic' | 'intermediate' | 'advanced'
       };
 
       setCurrentExercise(exercise);

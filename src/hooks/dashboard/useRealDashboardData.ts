@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,7 +71,7 @@ export const useRealDashboardData = () => {
       ] = await Promise.all([
         supabase
           .from('user_node_progress')
-          .select('mastery_level, updated_at') // Usar solo columnas que existen
+          .select('mastery_level, created_at') // Usar created_at en lugar de updated_at
           .eq('user_id', user.id),
         
         supabase

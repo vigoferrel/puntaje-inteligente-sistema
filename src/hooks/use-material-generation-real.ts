@@ -65,7 +65,7 @@ export const useMaterialGenerationReal = () => {
   }, [user?.id]);
 
   const generateRealExercises = async (config: MaterialGenerationConfig): Promise<GeneratedMaterial[]> => {
-    const quantity = config.quantity || config.count || 5;
+    const quantity = config.count || 5;
     
     const { data: exercisesData, error } = await supabase
       .from('banco_preguntas')
@@ -94,18 +94,18 @@ export const useMaterialGenerationReal = () => {
         skill: exercise.competencia_especifica
       },
       metadata: {
-        source: 'banco_oficial' as const,
+        source: 'official' as const, // Changed from 'banco_oficial' to 'official'
         difficulty: exercise.nivel_dificultad,
         estimatedTime: Math.ceil((exercise.tiempo_estimado_segundos || 60) / 60),
         skill: exercise.competencia_especifica,
         prueba: exercise.prueba_paes
       },
-      createdAt: new Date() // Agregar createdAt requerido
+      createdAt: new Date()
     }));
   };
 
   const generateRealStudyContent = async (config: MaterialGenerationConfig): Promise<GeneratedMaterial[]> => {
-    const quantity = config.quantity || config.count || 3;
+    const quantity = config.count || 3;
     
     const { data: nodesData, error } = await supabase
       .from('learning_nodes')
@@ -125,18 +125,18 @@ export const useMaterialGenerationReal = () => {
         difficulty: node.difficulty
       },
       metadata: {
-        source: 'nodos_aprendizaje' as const,
+        source: 'official' as const, // Changed from 'nodos_aprendizaje' to 'official'
         difficulty: node.difficulty,
         estimatedTime: node.estimated_time_minutes,
         skill: node.subject_area,
         prueba: config.prueba
       },
-      createdAt: new Date() // Agregar createdAt requerido
+      createdAt: new Date()
     }));
   };
 
   const generateRealAssessment = async (config: MaterialGenerationConfig): Promise<GeneratedMaterial[]> => {
-    const quantity = config.quantity || config.count || 1;
+    const quantity = config.count || 1;
     
     const { data: assessmentData, error } = await supabase
       .from('evaluaciones')
@@ -157,13 +157,13 @@ export const useMaterialGenerationReal = () => {
         questions: assessment.total_preguntas
       },
       metadata: {
-        source: 'evaluaciones_oficiales' as const,
+        source: 'official' as const, // Changed from 'evaluaciones_oficiales' to 'official'
         difficulty: assessment.nivel_dificultad || 'intermedio',
         estimatedTime: assessment.duracion_minutos,
         skill: assessment.tipo_evaluacion,
         prueba: assessment.prueba_paes || config.prueba
       },
-      createdAt: new Date() // Agregar createdAt requerido
+      createdAt: new Date()
     }));
   };
 
@@ -186,17 +186,23 @@ export const useMaterialGenerationReal = () => {
 
       const realRecommendations: AdaptiveRecommendation[] = (progressData || []).map((progress: any) => ({
         id: `rec-${progress.node_id}`,
-        type: 'study_focus' as const,
+        type: 'exercises' as const, // Changed from 'study_focus' to 'exercises'
         priority: progress.learning_nodes?.tier_priority === 'tier1_critico' ? 'high' as const : 'medium' as const,
         title: `Reforzar: ${progress.learning_nodes?.title || 'Nodo desconocido'}`,
         description: `Dominio actual: ${Math.round(progress.mastery_level * 100)}%`,
-        estimatedTime: 30, // Agregar estimatedTime requerido
-        reasoning: `Basado en el bajo dominio (${Math.round(progress.mastery_level * 100)}%) en este nodo crítico`, // Agregar reasoning requerido
+        estimatedTime: 30,
+        reasoning: `Basado en el bajo dominio (${Math.round(progress.mastery_level * 100)}%) en este nodo crítico`,
         config: {
           materialType: 'exercises' as const,
           prueba: subject as any,
-          nodeId: progress.node_id,
-          difficulty: progress.learning_nodes?.difficulty || 'INTERMEDIO'
+          nodeIds: [progress.node_id],
+          difficulty: progress.learning_nodes?.difficulty || 'INTERMEDIO',
+          subject: subject,
+          phase: 'EXPERIENCIA_CONCRETA' as const,
+          count: 5,
+          mode: 'official' as const,
+          useOfficialContent: true,
+          includeContext: true
         }
       }));
 
