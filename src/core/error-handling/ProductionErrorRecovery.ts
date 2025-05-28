@@ -113,7 +113,7 @@ class ProductionErrorRecovery {
         maxRetries: 2,
         currentRetries: 0,
         action: async () => {
-          const { ultraStableWebGL } = await import('./UltraStableWebGLManager');
+          const { ultraStableWebGL } = await import('../webgl/UltraStableWebGLManager');
           const status = ultraStableWebGL.getStatus();
           return !status.emergencyMode;
         }
@@ -149,7 +149,7 @@ class ProductionErrorRecovery {
     if (now - this.lastRecoveryTime < 30000) return;
     
     // Verificar si necesitamos recovery
-    if (this.metrics.totalErrors < this.errorThreshold && type !== 'critical') {
+    if (this.metrics.totalErrors < this.errorThreshold && type !== 'full') {
       return;
     }
 
@@ -204,7 +204,7 @@ class ProductionErrorRecovery {
       antiTrackingStorage.clear();
 
       // 3. Reset WebGL system
-      const { ultraStableWebGL } = await import('./UltraStableWebGLManager');
+      const { ultraStableWebGL } = await import('../webgl/UltraStableWebGLManager');
       ultraStableWebGL.destroy();
 
       // 4. Clear CSP violations
