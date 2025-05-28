@@ -12,7 +12,6 @@ interface OptimizedLazyLoadWrapperProps {
   enableMemoryCleanup?: boolean;
 }
 
-// Fallback optimizado con React.memo para evitar re-renders
 const OptimizedFallback = memo<{ moduleName?: string; priority?: string }>(({ 
   moduleName, 
   priority 
@@ -38,7 +37,7 @@ const OptimizedFallback = memo<{ moduleName?: string; priority?: string }>(({
       </h3>
       <p className="text-sm text-gray-400 flex items-center justify-center gap-2">
         <Zap className="w-4 h-4" />
-        Sistema neural optimizado - Prioridad {priority || 'media'}
+        Sistema optimizado - Prioridad {priority || 'media'}
       </p>
     </motion.div>
   </div>
@@ -46,82 +45,31 @@ const OptimizedFallback = memo<{ moduleName?: string; priority?: string }>(({
 
 OptimizedFallback.displayName = 'OptimizedFallback';
 
-// Gestión inteligente de memoria y preloading
-class IntelligentMemoryManager {
-  private static instance: IntelligentMemoryManager;
+// Sistema de memoria simplificado
+class OptimizedMemoryManager {
+  private static instance: OptimizedMemoryManager;
   private loadedModules = new Set<string>();
-  private moduleTimestamps = new Map<string, number>();
-  private cleanupTimeouts = new Map<string, NodeJS.Timeout>();
 
   static getInstance() {
-    if (!IntelligentMemoryManager.instance) {
-      IntelligentMemoryManager.instance = new IntelligentMemoryManager();
+    if (!OptimizedMemoryManager.instance) {
+      OptimizedMemoryManager.instance = new OptimizedMemoryManager();
     }
-    return IntelligentMemoryManager.instance;
+    return OptimizedMemoryManager.instance;
   }
 
   markModuleLoaded(moduleName: string) {
     this.loadedModules.add(moduleName);
-    this.moduleTimestamps.set(moduleName, Date.now());
-    
-    // Limpiar módulos antiguos después de 10 minutos de inactividad
-    this.scheduleCleanup(moduleName);
-  }
-
-  private scheduleCleanup(moduleName: string) {
-    // Cancelar cleanup anterior si existe
-    const existingTimeout = this.cleanupTimeouts.get(moduleName);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
-    }
-
-    // Programar nuevo cleanup
-    const timeout = setTimeout(() => {
-      this.cleanupModule(moduleName);
-    }, 10 * 60 * 1000); // 10 minutos
-
-    this.cleanupTimeouts.set(moduleName, timeout);
-  }
-
-  private cleanupModule(moduleName: string) {
-    console.log(`🧹 Limpiando módulo inactivo: ${moduleName}`);
-    this.loadedModules.delete(moduleName);
-    this.moduleTimestamps.delete(moduleName);
-    this.cleanupTimeouts.delete(moduleName);
-    
-    // Forzar garbage collection si está disponible
-    if (typeof window !== 'undefined' && 'gc' in window) {
-      (window as any).gc?.();
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📦 Módulo cargado: ${moduleName}`);
     }
   }
 
-  getMemoryStats() {
-    return {
-      loadedModules: Array.from(this.loadedModules),
-      moduleCount: this.loadedModules.size,
-      oldestModule: Math.min(...Array.from(this.moduleTimestamps.values())),
-      memoryUsage: this.calculateMemoryUsage()
-    };
+  getLoadedCount() {
+    return this.loadedModules.size;
   }
 
-  private calculateMemoryUsage() {
-    const memory = (performance as any).memory;
-    if (memory) {
-      return {
-        used: Math.round(memory.usedJSHeapSize / 1024 / 1024),
-        total: Math.round(memory.totalJSHeapSize / 1024 / 1024),
-        limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024)
-      };
-    }
-    return null;
-  }
-
-  forceCleanup() {
-    console.log('🧹 Limpieza forzada de memoria iniciada');
+  cleanup() {
     this.loadedModules.clear();
-    this.moduleTimestamps.clear();
-    this.cleanupTimeouts.forEach(timeout => clearTimeout(timeout));
-    this.cleanupTimeouts.clear();
   }
 }
 
@@ -135,10 +83,9 @@ export const OptimizedLazyLoadWrapper: React.FC<OptimizedLazyLoadWrapperProps> =
 }) => {
   const [isPreloaded, setIsPreloaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const memoryManager = IntelligentMemoryManager.getInstance();
+  const memoryManager = OptimizedMemoryManager.getInstance();
 
   const handlePreload = useCallback(() => {
-    // Prioridad crítica se carga inmediatamente
     if (priority === 'critical') {
       setIsPreloaded(true);
       setIsVisible(true);
@@ -148,51 +95,26 @@ export const OptimizedLazyLoadWrapper: React.FC<OptimizedLazyLoadWrapperProps> =
       return;
     }
 
-    // Ajustar delay basado en prioridad
     const adjustedDelay = {
-      high: Math.min(preloadDelay, 100),
-      medium: preloadDelay,
-      low: Math.max(preloadDelay, 500)
+      high: Math.min(preloadDelay, 200),
+      medium: preloadDelay || 500,
+      low: Math.max(preloadDelay, 1000)
     }[priority];
     
-    if (adjustedDelay > 0) {
-      setTimeout(() => {
-        setIsPreloaded(true);
-        setTimeout(() => {
-          setIsVisible(true);
-          if (enableMemoryCleanup && moduleName) {
-            memoryManager.markModuleLoaded(moduleName);
-          }
-        }, 50);
-      }, adjustedDelay);
-    } else {
+    setTimeout(() => {
       setIsPreloaded(true);
-      setIsVisible(true);
-      if (enableMemoryCleanup && moduleName) {
-        memoryManager.markModuleLoaded(moduleName);
-      }
-    }
+      setTimeout(() => {
+        setIsVisible(true);
+        if (enableMemoryCleanup && moduleName) {
+          memoryManager.markModuleLoaded(moduleName);
+        }
+      }, 100);
+    }, adjustedDelay);
   }, [preloadDelay, priority, enableMemoryCleanup, moduleName, memoryManager]);
 
   useEffect(() => {
     handlePreload();
   }, [handlePreload]);
-
-  // Cleanup al desmontar
-  useEffect(() => {
-    return () => {
-      if (enableMemoryCleanup && moduleName) {
-        // Programar limpieza diferida
-        setTimeout(() => {
-          const stats = memoryManager.getMemoryStats();
-          if (stats.moduleCount > 5) {
-            console.log('🧹 Muchos módulos cargados, iniciando limpieza preventiva');
-            memoryManager.forceCleanup();
-          }
-        }, 30000); // 30 segundos después del desmontaje
-      }
-    };
-  }, [enableMemoryCleanup, moduleName, memoryManager]);
 
   if (!isPreloaded) {
     return fallback || <OptimizedFallback moduleName={moduleName} priority={priority} />;
@@ -214,50 +136,39 @@ export const OptimizedLazyLoadWrapper: React.FC<OptimizedLazyLoadWrapperProps> =
 
 OptimizedLazyLoadWrapper.displayName = 'OptimizedLazyLoadWrapper';
 
-// Hook optimizado para preloading inteligente con gestión de memoria
+// Hook de preloading optimizado y menos agresivo
 export const useOptimizedPreloading = (currentRoute: string) => {
-  const memoryManager = IntelligentMemoryManager.getInstance();
+  const memoryManager = OptimizedMemoryManager.getInstance();
 
   useEffect(() => {
+    // Solo preload en rutas específicas y con delay más alto
     const preloadMap: Record<string, string[]> = {
-      '/': ['lectoguia', 'diagnostic'],
-      '/lectoguia': ['diagnostic', 'planning'],
-      '/diagnostic': ['planning', 'universe'],
-      '/planning': ['universe', 'financial'],
-      '/universe': ['achievements', 'ecosystem'],
-      '/financial': ['achievements', 'lectoguia'],
-      '/achievements': ['ecosystem', 'lectoguia'],
-      '/ecosystem': ['lectoguia', 'diagnostic']
+      '/': ['lectoguia'],
+      '/lectoguia': ['diagnostic'],
+      '/diagnostic': ['planning'],
+      '/planning': ['financial']
     };
 
     const modulesToPreload = preloadMap[currentRoute] || [];
 
     if (modulesToPreload.length > 0 && 'requestIdleCallback' in window) {
       requestIdleCallback(() => {
-        const memoryStats = memoryManager.getMemoryStats();
-        console.log(`🚀 Preloading optimizado para ${currentRoute}:`, {
-          modules: modulesToPreload,
-          currentMemory: memoryStats.memoryUsage,
-          loadedModules: memoryStats.moduleCount
-        });
-
-        // Solo preload si la memoria está en buen estado
-        if (!memoryStats.memoryUsage || memoryStats.memoryUsage.used < 100) {
-          // Preload real solo si tenemos memoria disponible
-          modulesToPreload.forEach(module => {
-            memoryManager.markModuleLoaded(`preload_${module}`);
-          });
+        const loadedCount = memoryManager.getLoadedCount();
+        
+        // Solo preload si no hay muchos módulos cargados
+        if (loadedCount < 3) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`🚀 Preloading para ${currentRoute}:`, modulesToPreload);
+          }
         }
-      }, { timeout: 2000 });
+      }, { timeout: 5000 });
     }
   }, [currentRoute, memoryManager]);
 
-  // Retornar stats para debugging
   return {
-    memoryStats: memoryManager.getMemoryStats(),
-    forceCleanup: () => memoryManager.forceCleanup()
+    loadedModules: memoryManager.getLoadedCount(),
+    cleanup: () => memoryManager.cleanup()
   };
 };
 
-// Exportar el memory manager para uso externo
-export { IntelligentMemoryManager };
+export { OptimizedMemoryManager };

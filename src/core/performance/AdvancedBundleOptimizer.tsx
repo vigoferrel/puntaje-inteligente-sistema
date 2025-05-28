@@ -1,17 +1,18 @@
 
-import { lazy, useMemo, ComponentType } from 'react';
+import { lazy, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 
-// Lazy imports consolidados con manejo de errores robusto
+// Sistema de lazy loading simplificado y estable
 const createSafeLazyComponent = (importFn: () => Promise<any>, componentName: string) => {
   return lazy(async () => {
     try {
       const module = await importFn();
-      console.log(`✅ Componente cargado exitosamente: ${componentName}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ Componente cargado: ${componentName}`);
+      }
       return module;
     } catch (error) {
-      console.error(`❌ Error cargando componente ${componentName}:`, error);
-      // Retornar un componente de fallback
+      console.error(`❌ Error cargando ${componentName}:`, error);
       return {
         default: () => (
           <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -26,24 +27,17 @@ const createSafeLazyComponent = (importFn: () => Promise<any>, componentName: st
   });
 };
 
-// Componentes lazy consolidados con todos los componentes necesarios
+// Componentes lazy simplificados
 const lazyComponents = {
-  // Páginas principales
   Index: createSafeLazyComponent(() => import('@/pages/Index'), 'Index'),
   Auth: createSafeLazyComponent(() => import('@/pages/Auth'), 'Auth'),
-  
-  // Módulos educativos
   LectoGuiaPage: createSafeLazyComponent(() => import('@/pages/LectoGuiaPage'), 'LectoGuiaPage'),
   DiagnosticPage: createSafeLazyComponent(() => import('@/pages/DiagnosticPage'), 'DiagnosticPage'),
   PlanningPage: createSafeLazyComponent(() => import('@/pages/PlanningPage'), 'PlanningPage'),
-  
-  // Módulos especializados
   FinancialPage: createSafeLazyComponent(() => import('@/pages/FinancialPage'), 'FinancialPage'),
   UniverseVisualizationPage: createSafeLazyComponent(() => import('@/pages/UniverseVisualizationPage'), 'UniverseVisualizationPage'),
   AchievementsPage: createSafeLazyComponent(() => import('@/pages/AchievementsPage'), 'AchievementsPage'),
   EcosystemPage: createSafeLazyComponent(() => import('@/pages/EcosystemPage'), 'EcosystemPage'),
-  
-  // Dashboards de seguridad y validación
   ValidationDashboard: createSafeLazyComponent(() => import('@/pages/ValidationDashboard'), 'ValidationDashboard'),
   SecurityDashboard: createSafeLazyComponent(() => import('@/pages/SecurityDashboard'), 'SecurityDashboard')
 };
@@ -51,22 +45,21 @@ const lazyComponents = {
 export const useAdvancedBundleOptimizer = (currentPath: string) => {
   const location = useLocation();
 
-  // Retornar directamente los componentes lazy para uso inmediato en JSX
   const components = useMemo(() => lazyComponents, []);
 
+  // Preloading optimizado y no agresivo
   const preloadComponents = useMemo(() => {
     const pathMap: { [key: string]: (keyof typeof lazyComponents)[] } = {
-      '/': ['Index', 'LectoGuiaPage', 'DiagnosticPage'],
-      '/auth': ['Auth'],
-      '/lectoguia': ['LectoGuiaPage', 'DiagnosticPage'],
-      '/financial': ['FinancialPage'],
-      '/diagnostic': ['DiagnosticPage', 'PlanningPage'],
-      '/planning': ['PlanningPage', 'DiagnosticPage'],
-      '/universe': ['UniverseVisualizationPage'],
-      '/achievements': ['AchievementsPage'],
-      '/ecosystem': ['EcosystemPage'],
-      '/validation-dashboard': ['ValidationDashboard'],
-      '/security-dashboard': ['SecurityDashboard']
+      '/': ['LectoGuiaPage'],
+      '/lectoguia': ['DiagnosticPage'],
+      '/diagnostic': ['PlanningPage'],
+      '/planning': ['FinancialPage'],
+      '/financial': ['UniverseVisualizationPage'],
+      '/universe': ['AchievementsPage'],
+      '/achievements': ['EcosystemPage'],
+      '/ecosystem': ['ValidationDashboard'],
+      '/validation-dashboard': ['SecurityDashboard'],
+      '/security-dashboard': ['Index']
     };
 
     return pathMap[currentPath] || [];
@@ -76,7 +69,7 @@ export const useAdvancedBundleOptimizer = (currentPath: string) => {
     totalComponents: Object.keys(lazyComponents).length,
     preloadedComponents: preloadComponents.length,
     currentRoute: currentPath,
-    optimization: 'active'
+    optimization: 'stable' as const
   }), [preloadComponents.length, currentPath]);
 
   return {
