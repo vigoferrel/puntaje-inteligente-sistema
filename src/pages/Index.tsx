@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { SuperPAESUnifiedHub } from '@/components/super-paes/SuperPAESUnifiedHub';
+import { NeuralSystemProvider } from '@/components/neural/NeuralSystemProvider';
+import { NeuralPAESHub } from '@/components/neural-paes/NeuralPAESHub';
 import { VirtualAssistant } from '@/components/virtual-assistant/VirtualAssistant';
 import { TourGuide } from '@/components/virtual-assistant/TourGuide';
 import { AIChat } from '@/components/virtual-assistant/AIChat';
@@ -23,7 +24,10 @@ const Index: React.FC = () => {
 
   return (
     <div className="relative">
-      <SuperPAESUnifiedHub />
+      {/* Hub Neural Principal */}
+      <NeuralSystemProvider showDashboard={false} enableAutoCapture={true}>
+        <NeuralPAESHub />
+      </NeuralSystemProvider>
       
       {/* Asistente Virtual */}
       {assistantVisible && (

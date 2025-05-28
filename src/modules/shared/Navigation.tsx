@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { 
   Home,
   BookOpen,
-  Target,
-  Calendar
+  Calculator,
+  FlaskConical,
+  Target
 } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
@@ -15,11 +16,17 @@ export const Navigation: React.FC = () => {
   const location = useLocation();
 
   const routes = [
-    { path: '/', name: 'Hub PAES', icon: Home },
-    { path: '/lectoguia', name: 'Comprensión', icon: BookOpen },
+    { path: '/', name: 'Hub Neural', icon: Home },
+    { path: '/lectoguia', name: 'Lectura', icon: BookOpen },
+    { path: '/mathematics', name: 'Matemática', icon: Calculator },
+    { path: '/sciences', name: 'Ciencias', icon: FlaskConical },
     { path: '/diagnostic', name: 'Diagnóstico', icon: Target },
-    { path: '/planning', name: 'Planificación', icon: Calendar },
   ];
+
+  const handleNavigation = (path: string) => {
+    console.log(`🧭 Navegación desde barra: ${path}`);
+    navigate(path);
+  };
 
   return (
     <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
@@ -32,7 +39,7 @@ export const Navigation: React.FC = () => {
             return (
               <motion.div key={route.path} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Button
-                  onClick={() => navigate(route.path)}
+                  onClick={() => handleNavigation(route.path)}
                   variant="ghost"
                   size="sm"
                   className={`

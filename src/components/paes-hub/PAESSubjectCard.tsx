@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -30,11 +31,20 @@ export const PAESSubjectCard: React.FC<PAESSubjectCardProps> = ({
   onSelect
 }) => {
   const Icon = subject.icon;
+  const navigate = useNavigate();
   
   const getPriorityBadge = (progress: number) => {
     if (progress >= 70) return { text: 'Baja', color: 'bg-green-600/20 text-green-400' };
     if (progress >= 50) return { text: 'Media', color: 'bg-yellow-600/20 text-yellow-400' };
     return { text: 'Alta', color: 'bg-red-600/20 text-red-400' };
+  };
+
+  const handleCardClick = () => {
+    // Ejecutar callback de selección para tracking
+    onSelect(subject);
+    
+    // Navegar a la ruta del sujeto
+    navigate(subject.route);
   };
 
   const priority = getPriorityBadge(subject.progress);
@@ -46,7 +56,7 @@ export const PAESSubjectCard: React.FC<PAESSubjectCardProps> = ({
       transition={{ delay: index * 0.1 }}
       whileHover={{ scale: 1.02 }}
       className="cursor-pointer"
-      onClick={() => onSelect(subject)}
+      onClick={handleCardClick}
     >
       <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-300 h-full">
         <CardHeader className="pb-3">

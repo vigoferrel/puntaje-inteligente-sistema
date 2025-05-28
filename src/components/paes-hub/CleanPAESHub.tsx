@@ -4,7 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Target, TrendingUp } from 'lucide-react';
+import { 
+  Brain, 
+  Target, 
+  TrendingUp, 
+  BookOpen, 
+  Calculator, 
+  FlaskConical, 
+  Scroll 
+} from 'lucide-react';
 import { PAESSubjectCard } from './PAESSubjectCard';
 import { BalancedPAESMetrics } from './BalancedPAESMetrics';
 import { CompetenciaLectoraIntegration } from './CompetenciaLectoraIntegration';
@@ -12,6 +20,7 @@ import { MathematicsIntegration } from '@/components/paes-mathematics/Mathematic
 import { SciencesIntegration } from '@/components/paes-sciences/SciencesIntegration';
 import { HistoryIntegration } from '@/components/paes-history/HistoryIntegration';
 import { QuickNavigationWidget } from '@/components/super-paes/QuickNavigationWidget';
+import { useNavigate } from 'react-router-dom';
 
 interface PAESSubject {
   id: string;
@@ -31,7 +40,7 @@ const paesSubjects: PAESSubject[] = [
     id: 'competencia-lectora',
     name: 'Competencia Lectora',
     description: 'Comprensión y análisis textual',
-    icon: require('lucide-react').BookOpen,
+    icon: BookOpen,
     progress: 75,
     color: 'from-blue-500 to-blue-600',
     projectedScore: 670,
@@ -43,7 +52,7 @@ const paesSubjects: PAESSubject[] = [
     id: 'matematica-m1',
     name: 'Matemática M1',
     description: '7° básico a 2° medio',
-    icon: require('lucide-react').Calculator,
+    icon: Calculator,
     progress: 68,
     color: 'from-green-500 to-green-600',
     projectedScore: 645,
@@ -55,7 +64,7 @@ const paesSubjects: PAESSubject[] = [
     id: 'matematica-m2',
     name: 'Matemática M2',
     description: '3° y 4° medio',
-    icon: require('lucide-react').Calculator,
+    icon: Calculator,
     progress: 58,
     color: 'from-emerald-500 to-emerald-600',
     projectedScore: 590,
@@ -67,7 +76,7 @@ const paesSubjects: PAESSubject[] = [
     id: 'ciencias',
     name: 'Ciencias',
     description: 'Física, Química y Biología',
-    icon: require('lucide-react').FlaskConical,
+    icon: FlaskConical,
     progress: 72,
     color: 'from-purple-500 to-purple-600',
     projectedScore: 680,
@@ -79,7 +88,7 @@ const paesSubjects: PAESSubject[] = [
     id: 'historia',
     name: 'Historia y C. Sociales',
     description: 'Pensamiento crítico e histórico',
-    icon: require('lucide-react').Scroll,
+    icon: Scroll,
     progress: 63,
     color: 'from-amber-500 to-amber-600',
     projectedScore: 620,
@@ -92,10 +101,16 @@ const paesSubjects: PAESSubject[] = [
 export const CleanPAESHub: React.FC = () => {
   const [activeModule, setActiveModule] = useState<string>('overview');
   const [selectedSubject, setSelectedSubject] = useState<PAESSubject | null>(null);
+  const navigate = useNavigate();
 
   const handleSubjectSelect = (subject: PAESSubject) => {
     setSelectedSubject(subject);
     setActiveModule(subject.id);
+    
+    // Capturar evento de selección
+    console.log(`📊 Sujeto seleccionado: ${subject.name} - Navegando a: ${subject.route}`);
+    
+    // La navegación ya se maneja en PAESSubjectCard
   };
 
   const renderModuleContent = () => {
