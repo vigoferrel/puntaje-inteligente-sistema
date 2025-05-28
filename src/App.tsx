@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { Navigation } from '@/modules/shared/Navigation';
+import { NeuralSystemProvider } from '@/components/neural/NeuralSystemProvider';
 
 // Páginas principales consolidadas
 import Index from '@/pages/Index';
@@ -29,6 +30,13 @@ const queryClient = new QueryClient({
   },
 });
 
+// Wrapper para páginas PAES que necesitan el Neural Provider
+const PAESPageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <NeuralSystemProvider showDashboard={false} enableAutoCapture={true}>
+    {children}
+  </NeuralSystemProvider>
+);
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -39,9 +47,30 @@ function App() {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/lectoguia" element={<LectoGuiaPage />} />
-                <Route path="/mathematics" element={<MathematicsPage />} />
-                <Route path="/sciences" element={<SciencesPage />} />
-                <Route path="/history" element={<HistoryPage />} />
+                <Route 
+                  path="/mathematics" 
+                  element={
+                    <PAESPageWrapper>
+                      <MathematicsPage />
+                    </PAESPageWrapper>
+                  } 
+                />
+                <Route 
+                  path="/sciences" 
+                  element={
+                    <PAESPageWrapper>
+                      <SciencesPage />
+                    </PAESPageWrapper>
+                  } 
+                />
+                <Route 
+                  path="/history" 
+                  element={
+                    <PAESPageWrapper>
+                      <HistoryPage />
+                    </PAESPageWrapper>
+                  } 
+                />
                 <Route path="/diagnostic" element={<DiagnosticPage />} />
                 <Route path="/planning" element={<PlanningPage />} />
                 <Route path="/financial" element={<FinancialCenterPage />} />
