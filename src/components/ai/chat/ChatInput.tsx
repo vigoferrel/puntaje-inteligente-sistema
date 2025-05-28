@@ -1,161 +1,119 @@
 
-import React, { useState, useRef, useEffect } from "react";
-import { PaperAirplaneIcon } from "@/components/ui/icons";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, X } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { useChatSettings } from "@/components/lectoguia/chat-settings/ChatSettingsContext";
+import { Input } from "@/components/ui/input";
+import { Send, Image, Paperclip } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSendMessage: (message: string, imageData?: string) => void;
   placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
-export function ChatInput({ onSendMessage, placeholder = "Escribe un mensaje..." }: ChatInputProps) {
-  const { settings } = useChatSettings();
-  const [input, setInput] = useState("");
+export function ChatInput({
+  onSendMessage,
+  placeholder = "Escribe un mensaje...",
+  disabled = false,
+  className,
+}: ChatInputProps) {
+  const [message, setMessage] = useState("");
   const [imageData, setImageData] = useState<string | null>(null);
-  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const handleSendMessage = () => {
-    if (input.trim() || imageData) {
-      onSendMessage(input, imageData || undefined);
-      setInput("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (message.trim() || imageData) {
+      onSendMessage(message.trim(), imageData || undefined);
+      setMessage("");
       setImageData(null);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Only handle Enter key press according to settings
-    if (e.key === "Enter" && !e.shiftKey && settings.enterToSend) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Error",
-        description: "El archivo seleccionado no es una imagen",
-        variant: "destructive"
-      });
-      return;
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setImageData(result);
+      };
+      reader.readAsDataURL(file);
     }
-
-    setIsProcessingImage(true);
-    
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImageData(reader.result as string);
-      setIsProcessingImage(false);
-      toast({
-        title: "Imagen cargada",
-        description: "La imagen se ha cargado correctamente",
-      });
-    };
-    reader.onerror = () => {
-      setIsProcessingImage(false);
-      toast({
-        title: "Error",
-        description: "No se pudo cargar la imagen",
-        variant: "destructive"
-      });
-    };
-    reader.readAsDataURL(file);
   };
 
-  const handleImageUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const clearSelectedImage = () => {
+  const removeImage = () => {
     setImageData(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
-    toast({
-      title: "Imagen eliminada",
-      description: "La imagen ha sido eliminada",
-    });
   };
-  
+
   return (
-    <div className="border-t border-border p-4">
-      {/* Image preview */}
+    <div className={cn("border-t bg-background p-4", className)}>
+      {/* Preview de imagen */}
       {imageData && (
-        <div className="mb-2 relative">
-          <div className="relative inline-block">
-            <img 
-              src={imageData} 
-              alt="Preview" 
-              className="max-h-36 rounded-md object-contain"
-            />
-            <button 
-              onClick={clearSelectedImage}
-              className="absolute top-1 right-1 bg-black/70 rounded-full p-1"
-            >
-              <X className="h-4 w-4 text-white" />
-            </button>
-          </div>
+        <div className="mb-3 relative inline-block">
+          <img 
+            src={imageData} 
+            alt="Preview" 
+            className="max-w-24 max-h-24 rounded-lg border"
+          />
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+            onClick={removeImage}
+          >
+            ×
+          </Button>
         </div>
       )}
-
-      <div className="flex items-end gap-2 bg-secondary/30 rounded-lg p-2">
-        <textarea
-          className="flex-1 bg-transparent border-none focus:outline-none resize-none max-h-32 text-sm text-foreground placeholder:text-muted-foreground"
-          placeholder={placeholder}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyPress}
-          rows={1}
-          style={{ height: "2.5rem", maxHeight: "8rem" }}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = "2.5rem";
-            target.style.height = `${Math.min(target.scrollHeight, 128)}px`;
-          }}
-        />
-        
-        {/* Hidden file input */}
-        <input 
-          type="file" 
-          ref={fileInputRef}
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-
-        {/* Image upload button */}
-        <Button
-          type="button"
-          onClick={handleImageUploadClick}
-          disabled={isProcessingImage}
-          className="bg-secondary hover:bg-secondary/90 text-foreground rounded-full h-8 w-8 p-0 flex items-center justify-center"
-        >
-          <ImagePlus className="h-4 w-4" />
-        </Button>
-
-        {/* Send message button */}
-        <Button
-          onClick={handleSendMessage}
-          disabled={(!input.trim() && !imageData) || isProcessingImage}
-          className="bg-primary hover:bg-primary/90 text-white rounded-full h-8 w-8 p-0 flex items-center justify-center"
-        >
-          <PaperAirplaneIcon className="h-4 w-4" />
-        </Button>
-      </div>
       
-      {/* Enter to send hint */}
-      {settings.enterToSend && (
-        <div className="text-xs text-muted-foreground mt-1 text-right mr-1">
-          Presiona Enter para enviar, Shift+Enter para nueva línea
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="flex-1 flex gap-2">
+          <Input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={placeholder}
+            disabled={disabled}
+            className="flex-1"
+            autoComplete="off"
+          />
+          
+          {/* Botón para subir imagen */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled}
+            className="shrink-0"
+          >
+            <Image className="h-4 w-4" />
+          </Button>
         </div>
-      )}
+        
+        <Button 
+          type="submit" 
+          disabled={disabled || (!message.trim() && !imageData)}
+          size="icon"
+          className="shrink-0"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </form>
     </div>
   );
-};
+}

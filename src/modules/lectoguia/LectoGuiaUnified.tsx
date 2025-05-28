@@ -11,8 +11,13 @@ import {
   TrendingUp,
   Brain,
   Sparkles,
-  Zap
+  Zap,
+  Wifi,
+  WifiOff,
+  AlertCircle
 } from 'lucide-react';
+import { useLectoGuiaChat } from '@/hooks/lectoguia-chat';
+import { ChatInterface } from '@/components/ai/ChatInterface';
 
 interface LectoGuiaProps {
   userId?: string;
@@ -25,9 +30,62 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
 }) => {
   const [activeMode, setActiveMode] = useState<'chat' | 'reading' | 'analysis'>('chat');
 
+  // Usar el hook de chat real
+  const {
+    messages,
+    isTyping,
+    processUserMessage,
+    activeSkill,
+    setActiveSkill,
+    connectionStatus,
+    serviceStatus,
+    generateExerciseForSkill
+  } = useLectoGuiaChat();
+
   const handleModeChange = useCallback((mode: 'chat' | 'reading' | 'analysis') => {
     setActiveMode(mode);
   }, []);
+
+  // Manejar envío de mensajes con el chat real
+  const handleSendMessage = useCallback(async (message: string, imageData?: string) => {
+    try {
+      await processUserMessage(message, imageData);
+    } catch (error) {
+      console.error('Error enviando mensaje:', error);
+    }
+  }, [processUserMessage]);
+
+  // Generar ejercicio específico
+  const handleGenerateExercise = useCallback(async () => {
+    try {
+      await generateExerciseForSkill(activeSkill || 'INTERPRET_RELATE');
+    } catch (error) {
+      console.error('Error generando ejercicio:', error);
+    }
+  }, [generateExerciseForSkill, activeSkill]);
+
+  // Determinar el estado de conexión para mostrar
+  const showConnectionStatus = connectionStatus !== 'connected' || serviceStatus !== 'available';
+  
+  const getConnectionIcon = () => {
+    if (connectionStatus === 'connected' && serviceStatus === 'available') {
+      return <Wifi className="w-4 h-4 text-green-400" />;
+    }
+    if (connectionStatus === 'connecting') {
+      return <Zap className="w-4 h-4 text-yellow-400 animate-pulse" />;
+    }
+    return <WifiOff className="w-4 h-4 text-red-400" />;
+  };
+
+  const getConnectionText = () => {
+    if (connectionStatus === 'connected' && serviceStatus === 'available') {
+      return 'Sistema Neural Activo';
+    }
+    if (connectionStatus === 'connecting') {
+      return 'Conectando...';
+    }
+    return 'Sin conexión';
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
@@ -44,9 +102,15 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
             </div>
           </div>
           
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-            <Brain className="w-4 h-4 mr-2" />
-            Sistema Neural Activo
+          <Badge className={`${
+            connectionStatus === 'connected' && serviceStatus === 'available'
+              ? 'bg-green-500/20 text-green-400 border-green-500/30'
+              : connectionStatus === 'connecting'
+              ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+              : 'bg-red-500/20 text-red-400 border-red-500/30'
+          }`}>
+            {getConnectionIcon()}
+            <span className="ml-2">{getConnectionText()}</span>
           </Badge>
         </div>
       </div>
@@ -93,6 +157,24 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
               </CardContent>
             </Card>
 
+            {/* Estado de Conexión y Acciones Rápidas */}
+            {showConnectionStatus && (
+              <Card className="bg-white/5 border-white/10">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle className="w-4 h-4 text-yellow-400" />
+                    <span className="text-white text-sm">Estado del Sistema</span>
+                  </div>
+                  <div className="text-white/70 text-xs mb-2">
+                    Conexión: {connectionStatus}
+                  </div>
+                  <div className="text-white/70 text-xs">
+                    Servicio: {serviceStatus}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Navegación Integrada */}
             <Card className="bg-white/5 border-white/10">
               <CardContent className="p-4 space-y-2">
@@ -112,6 +194,15 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Planificación
                 </Button>
+                <Button 
+                  onClick={handleGenerateExercise}
+                  className="w-full text-sm"
+                  variant="outline"
+                  disabled={isTyping}
+                >
+                  <Target className="w-4 h-4 mr-2" />
+                  Generar Ejercicio
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -127,24 +218,21 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                 transition={{ duration: 0.3 }}
               >
                 <Card className="bg-white/10 border-white/20 min-h-[600px]">
-                  <CardContent className="p-8">
+                  <CardContent className="p-0">
                     {activeMode === 'chat' && (
-                      <div className="text-center py-20">
-                        <MessageCircle className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Chat Inteligente Unificado</h3>
-                        <p className="text-white/70 mb-6">
-                          Conversa con la IA sobre cualquier texto o concepto de comprensión lectora
-                        </p>
-                        <div className="max-w-md mx-auto p-4 bg-white/5 rounded-lg border border-white/10">
-                          <p className="text-white/60 text-sm">
-                            💡 Sistema consolidado: sube textos, imágenes o pregunta directamente
-                          </p>
-                        </div>
+                      <div className="h-[600px]">
+                        <ChatInterface
+                          messages={messages}
+                          onSendMessage={handleSendMessage}
+                          isTyping={isTyping}
+                          placeholder="Pregunta sobre comprensión lectora, análisis textual o PAES..."
+                          className="h-full"
+                        />
                       </div>
                     )}
 
                     {activeMode === 'reading' && (
-                      <div className="text-center py-20">
+                      <div className="p-8 text-center py-20">
                         <BookOpen className="w-16 h-16 text-blue-400 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">Análisis de Lectura Avanzado</h3>
                         <p className="text-white/70 mb-6">
@@ -159,7 +247,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                     )}
 
                     {activeMode === 'analysis' && (
-                      <div className="text-center py-20">
+                      <div className="p-8 text-center py-20">
                         <Target className="w-16 h-16 text-green-400 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">Evaluación PAES Integrada</h3>
                         <p className="text-white/70 mb-6">
