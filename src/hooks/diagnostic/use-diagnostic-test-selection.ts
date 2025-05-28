@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { useDiagnostic } from "@/hooks/use-diagnostic";
-import { useDemonstrationMode } from "./use-demonstration-mode";
 import { toast } from "@/components/ui/use-toast";
 import { StoredTestProgress, getTestProgress, clearTestProgress } from "@/utils/test-storage";
 
@@ -9,14 +8,12 @@ interface TestSelectionProps {
   selectedTestId: string | null;
   setSelectedTestId: (id: string | null) => void;
   setTestStarted: (started: boolean) => void;
-  isDemoMode?: boolean;
 }
 
 export const useDiagnosticTestSelection = ({
   selectedTestId,
   setSelectedTestId,
-  setTestStarted,
-  isDemoMode = false
+  setTestStarted
 }: TestSelectionProps) => {
   const { 
     tests, 

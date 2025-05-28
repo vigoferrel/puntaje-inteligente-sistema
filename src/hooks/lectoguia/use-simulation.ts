@@ -70,7 +70,9 @@ export const useSimulation = () => {
       }));
 
       setQuestions(simulationQuestions);
-      setCurrentQuestion(simulationQuestions[0] || null);
+      if (simulationQuestions[0]) {
+        setCurrentQuestion({ ...simulationQuestions[0], index: 0 });
+      }
       setCurrentQuestionIndex(0);
       setTimeRemaining(selectedSimulation.timeMinutes * 60);
       setAnswers({});
@@ -139,21 +141,21 @@ export const useSimulation = () => {
 
     setSimulationResults(results);
 
-    // Save simulation result to database
+    // Save simulation result to database using the correct schema
     try {
       await supabase.from('user_exercise_attempts').insert({
         user_id: user.id,
         exercise_id: `simulation-${selectedSimulation.id}`,
-        selected_option: 0,
+        answer: `${correctAnswers}/${questions.length}`,
         is_correct: percentageCorrect >= 60,
         skill_type: 'SIMULATION',
         prueba: selectedSimulation.prueba,
-        metadata: {
+        metadata: JSON.stringify({
           simulation_type: selectedSimulation.id,
           total_questions: questions.length,
           correct_answers: correctAnswers,
           estimated_score: estimatedScore
-        }
+        })
       });
     } catch (error) {
       console.error('Error saving simulation result:', error);
@@ -163,15 +165,17 @@ export const useSimulation = () => {
   const handleNavigation = useCallback((direction: 'prev' | 'next' | number) => {
     if (typeof direction === 'number') {
       setCurrentQuestionIndex(direction);
-      setCurrentQuestion(questions[direction] || null);
+      if (questions[direction]) {
+        setCurrentQuestion({ ...questions[direction], index: direction });
+      }
     } else if (direction === 'prev' && currentQuestionIndex > 0) {
       const newIndex = currentQuestionIndex - 1;
       setCurrentQuestionIndex(newIndex);
-      setCurrentQuestion(questions[newIndex]);
+      setCurrentQuestion({ ...questions[newIndex], index: newIndex });
     } else if (direction === 'next' && currentQuestionIndex < questions.length - 1) {
       const newIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(newIndex);
-      setCurrentQuestion(questions[newIndex]);
+      setCurrentQuestion({ ...questions[newIndex], index: newIndex });
     }
   }, [currentQuestionIndex, questions]);
 
