@@ -26,6 +26,32 @@ interface SmartRecommendation {
   action: () => void;
 }
 
+interface DiagnosticData {
+  lastTestDate?: string;
+  overallScore: number;
+  weakAreas: string[];
+  strongAreas: string[];
+}
+
+interface PlanData {
+  currentPlan?: string;
+  planProgress: number;
+  nextMilestone: string;
+  studyGoals: number;
+}
+
+interface CalendarData {
+  upcomingEvents: number;
+  todaySchedule: any[];
+  weeklyGoals: number;
+}
+
+interface LectoGuiaData {
+  conversationCount: number;
+  helpfulResponses: number;
+  averageRating: number;
+}
+
 export const useRealDashboardData = () => {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<RealDashboardMetrics>({
@@ -41,6 +67,29 @@ export const useRealDashboardData = () => {
     database: { status: 'loading', data: 'Conectando...' },
     ai: { status: 'loading', data: 'Preparando...' },
     analytics: { status: 'loading', data: 'Analizando...' }
+  });
+
+  // Nuevas propiedades agregadas
+  const [isSystemReady, setIsSystemReady] = useState(false);
+  const [diagnosticData, setDiagnosticData] = useState<DiagnosticData>({
+    overallScore: 0,
+    weakAreas: [],
+    strongAreas: []
+  });
+  const [planData, setPlanData] = useState<PlanData>({
+    planProgress: 0,
+    nextMilestone: 'Comenzar diagnóstico',
+    studyGoals: 0
+  });
+  const [calendarData, setCalendarData] = useState<CalendarData>({
+    upcomingEvents: 0,
+    todaySchedule: [],
+    weeklyGoals: 0
+  });
+  const [lectoGuiaData, setLectoGuiaData] = useState<LectoGuiaData>({
+    conversationCount: 0,
+    helpfulResponses: 0,
+    averageRating: 0
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -79,6 +128,28 @@ export const useRealDashboardData = () => {
         .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('timestamp', { ascending: false });
 
+      // Obtener datos de conversaciones LectoGuía
+      const { data: conversations } = await supabase
+        .from('lectoguia_conversations')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Obtener eventos del calendario
+      const { data: calendarEvents } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('start_date', new Date().toISOString());
+
+      // Obtener planes de estudio
+      const { data: studyPlans } = await supabase
+        .from('generated_study_plans')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
       const weeklyProgress = Math.min((recentActivity / 10) * 100, 100);
       const totalStudyTime = (neuralEvents?.length || 0) * 2; // Estimación
       const predictedScore = Math.min(450 + (completedNodes * 8), 850);
@@ -91,6 +162,39 @@ export const useRealDashboardData = () => {
         predictedScore
       });
 
+      // Actualizar datos diagnósticos
+      setDiagnosticData({
+        overallScore: Math.round((completedNodes / Math.max(progressData?.length || 1, 1)) * 100),
+        weakAreas: ['Álgebra', 'Comprensión Lectora'], // Ejemplo
+        strongAreas: ['Geometría', 'Análisis'], // Ejemplo
+        lastTestDate: progressData?.[0]?.last_activity_at
+      });
+
+      // Actualizar datos del plan
+      const currentPlan = studyPlans?.[0];
+      setPlanData({
+        currentPlan: currentPlan?.title,
+        planProgress: currentPlan ? Math.round((completedNodes / currentPlan.total_nodes) * 100) : 0,
+        nextMilestone: currentPlan ? 'Completar módulo actual' : 'Crear plan de estudios',
+        studyGoals: Math.round(currentPlan?.estimated_hours || 0)
+      });
+
+      // Actualizar datos del calendario
+      setCalendarData({
+        upcomingEvents: calendarEvents?.length || 0,
+        todaySchedule: calendarEvents?.filter(e => 
+          new Date(e.start_date).toDateString() === new Date().toDateString()
+        ) || [],
+        weeklyGoals: 5 // Meta semanal por defecto
+      });
+
+      // Actualizar datos de LectoGuía
+      setLectoGuiaData({
+        conversationCount: conversations?.length || 0,
+        helpfulResponses: Math.round((conversations?.length || 0) * 0.8), // Estimación
+        averageRating: 4.2 // Estimación
+      });
+
       // Actualizar estados del sistema
       setSystemStatus({
         neural: { status: 'active', data: `${neuralEvents?.length || 0} eventos` },
@@ -99,6 +203,8 @@ export const useRealDashboardData = () => {
         analytics: { status: 'active', data: 'Calculando predicciones' }
       });
 
+      setIsSystemReady(true);
+
     } catch (error) {
       console.error('Error loading real metrics:', error);
       
@@ -106,6 +212,7 @@ export const useRealDashboardData = () => {
         ...prev,
         database: { status: 'error', data: 'Error de conexión' }
       }));
+      setIsSystemReady(false);
     } finally {
       setIsLoading(false);
     }
@@ -154,6 +261,11 @@ export const useRealDashboardData = () => {
     metrics,
     systemStatus,
     isLoading,
+    isSystemReady,
+    diagnosticData,
+    planData,
+    calendarData,
+    lectoGuiaData,
     navigateToSection,
     getSmartRecommendations,
     refreshData

@@ -2,239 +2,257 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Trophy, 
+  Award, 
   Star, 
   Target, 
   Zap, 
-  Award,
-  Crown,
-  Flame,
-  TrendingUp
+  BookOpen, 
+  Brain,
+  TrendingUp,
+  Calendar,
+  CheckCircle
 } from 'lucide-react';
 
-interface RealAchievement {
+interface Achievement {
   id: string;
   title: string;
   description: string;
   category: string;
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
-  unlockedAt?: Date;
-  progress: number;
-  maxProgress: number;
-  points: number;
-  iconType: string;
+  points_reward: number;
+  unlocked_at?: string;
+  progress?: number;
+  total_required?: number;
+  is_unlocked: boolean;
+}
+
+interface UserProgress {
+  total_nodes: number;
+  completed_nodes: number;
+  total_study_time: number;
+  current_streak: number;
+  avg_performance: number;
 }
 
 export const RealAchievementSystem: React.FC = () => {
   const { user } = useAuth();
-  const [achievements, setAchievements] = useState<RealAchievement[]>([]);
-  const [newlyUnlocked, setNewlyUnlocked] = useState<string[]>([]);
-  const [totalPoints, setTotalPoints] = useState(0);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    total_nodes: 0,
+    completed_nodes: 0,
+    total_study_time: 0,
+    current_streak: 0,
+    avg_performance: 0
+  });
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
-    const calculateRealAchievements = async () => {
+    const loadAchievementsAndProgress = async () => {
       if (!user?.id) return;
 
       try {
         setIsLoading(true);
 
-        // Obtener progreso real del usuario
+        // Cargar progreso del usuario con JOIN correcto
         const { data: progressData } = await supabase
           .from('user_node_progress')
-          .select('*')
+          .select(`
+            *,
+            learning_nodes!inner(
+              id,
+              title,
+              code,
+              skill_id,
+              test_id
+            )
+          `)
           .eq('user_id', user.id);
 
-        // Obtener eventos neurales
-        const { data: neuralEvents } = await supabase
-          .from('neural_events')
-          .select('*')
-          .eq('user_id', user.id);
+        // Calcular métricas de progreso
+        const totalNodes = progressData?.length || 0;
+        const completedNodes = progressData?.filter(p => p.mastery_level >= 0.8).length || 0;
+        const totalStudyTime = progressData?.reduce((sum, p) => sum + (p.time_spent_minutes || 0), 0) || 0;
+        const avgPerformance = totalNodes > 0 
+          ? progressData?.reduce((sum, p) => sum + (p.mastery_level || 0), 0)! / totalNodes 
+          : 0;
 
-        // Obtener logros almacenados
-        const { data: storedAchievements } = await supabase
+        // Calcular racha actual
+        const recentActivity = progressData?.filter(p => 
+          p.last_activity_at && 
+          new Date(p.last_activity_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        ).length || 0;
+
+        setUserProgress({
+          total_nodes: totalNodes,
+          completed_nodes: completedNodes,
+          total_study_time: Math.round(totalStudyTime / 60), // horas
+          current_streak: recentActivity,
+          avg_performance: Math.round(avgPerformance * 100)
+        });
+
+        // Cargar logros disponibles
+        const { data: availableAchievements } = await supabase
+          .from('intelligent_achievements')
+          .select('*')
+          .eq('is_active', true);
+
+        // Cargar logros desbloqueados por el usuario
+        const { data: unlockedAchievements } = await supabase
           .from('user_achievements')
-          .select('achievement_id, unlocked_at')
+          .select('*')
           .eq('user_id', user.id);
 
-        const unlockedIds = new Set(storedAchievements?.map(a => a.achievement_id) || []);
-        
-        const realAchievements: RealAchievement[] = [];
-        let points = 0;
+        // Procesar logros con estado y progreso
+        const processedAchievements: Achievement[] = (availableAchievements || []).map(achievement => {
+          const userAchievement = unlockedAchievements?.find(ua => ua.achievement_id === achievement.id);
+          const isUnlocked = !!userAchievement;
+          
+          // Calcular progreso basado en condiciones
+          let progress = 0;
+          let totalRequired = 1;
+          
+          if (achievement.unlock_conditions) {
+            const conditions = achievement.unlock_conditions as any;
+            
+            if (conditions.completed_nodes) {
+              totalRequired = conditions.completed_nodes;
+              progress = Math.min(completedNodes, totalRequired);
+            } else if (conditions.study_streak) {
+              totalRequired = conditions.study_streak;
+              progress = Math.min(recentActivity, totalRequired);
+            } else if (conditions.study_hours) {
+              totalRequired = conditions.study_hours;
+              progress = Math.min(Math.round(totalStudyTime / 60), totalRequired);
+            } else if (conditions.avg_performance) {
+              totalRequired = conditions.avg_performance;
+              progress = Math.min(avgPerformance * 100, totalRequired);
+            }
+          }
 
-        // Logro: Primeros Pasos
-        const completedNodes = progressData?.filter(p => p.mastery_level > 0) || [];
-        const firstStepsProgress = Math.min(completedNodes.length, 5);
-        const firstStepsUnlocked = firstStepsProgress >= 5;
-        if (firstStepsUnlocked && !unlockedIds.has('first_steps')) {
-          await unlockAchievement('first_steps');
-          setNewlyUnlocked(prev => [...prev, 'first_steps']);
-        }
-        realAchievements.push({
-          id: 'first_steps',
-          title: 'Primeros Pasos',
-          description: 'Completa tus primeros 5 nodos de aprendizaje',
-          category: 'Progreso',
-          rarity: 'common',
-          unlockedAt: firstStepsUnlocked ? new Date() : undefined,
-          progress: firstStepsProgress,
-          maxProgress: 5,
-          points: 100,
-          iconType: 'target'
+          return {
+            id: achievement.id,
+            title: achievement.title,
+            description: achievement.description || '',
+            category: achievement.category,
+            rarity: achievement.rarity as any,
+            points_reward: achievement.points_reward || 0,
+            unlocked_at: userAchievement?.unlocked_at,
+            progress: isUnlocked ? totalRequired : progress,
+            total_required: totalRequired,
+            is_unlocked: isUnlocked
+          };
         });
-        if (firstStepsUnlocked) points += 100;
 
-        // Logro: Maestría Inicial
-        const masteredNodes = progressData?.filter(p => p.mastery_level >= 0.8) || [];
-        const masteryProgress = Math.min(masteredNodes.length, 10);
-        const masteryUnlocked = masteryProgress >= 10;
-        if (masteryUnlocked && !unlockedIds.has('initial_mastery')) {
-          await unlockAchievement('initial_mastery');
-          setNewlyUnlocked(prev => [...prev, 'initial_mastery']);
-        }
-        realAchievements.push({
-          id: 'initial_mastery',
-          title: 'Maestría Inicial',
-          description: 'Alcanza 80% de dominio en 10 nodos',
-          category: 'Excelencia',
-          rarity: 'rare',
-          unlockedAt: masteryUnlocked ? new Date() : undefined,
-          progress: masteryProgress,
-          maxProgress: 10,
-          points: 250,
-          iconType: 'star'
-        });
-        if (masteryUnlocked) points += 250;
+        // Verificar y desbloquear nuevos logros
+        await checkAndUnlockAchievements(processedAchievements, userProgress);
 
-        // Logro: Estudiante Consistente
-        const recentEvents = neuralEvents?.filter(e => 
-          new Date(e.timestamp) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        ) || [];
-        const consistencyProgress = Math.min(recentEvents.length, 20);
-        const consistencyUnlocked = consistencyProgress >= 20;
-        if (consistencyUnlocked && !unlockedIds.has('consistency')) {
-          await unlockAchievement('consistency');
-          setNewlyUnlocked(prev => [...prev, 'consistency']);
-        }
-        realAchievements.push({
-          id: 'consistency',
-          title: 'Estudiante Consistente',
-          description: 'Mantén actividad por 7 días consecutivos',
-          category: 'Dedicación',
-          rarity: 'epic',
-          unlockedAt: consistencyUnlocked ? new Date() : undefined,
-          progress: Math.min(consistencyProgress / 3, 7),
-          maxProgress: 7,
-          points: 500,
-          iconType: 'flame'
-        });
-        if (consistencyUnlocked) points += 500;
-
-        // Logro: Explorador Neural
-        const diverseSkills = new Set(progressData?.map(p => p.learning_nodes?.skill_id).filter(Boolean));
-        const explorerProgress = Math.min(diverseSkills.size, 15);
-        const explorerUnlocked = explorerProgress >= 15;
-        if (explorerUnlocked && !unlockedIds.has('neural_explorer')) {
-          await unlockAchievement('neural_explorer');
-          setNewlyUnlocked(prev => [...prev, 'neural_explorer']);
-        }
-        realAchievements.push({
-          id: 'neural_explorer',
-          title: 'Explorador Neural',
-          description: 'Domina habilidades en 15 áreas diferentes',
-          category: 'Diversidad',
-          rarity: 'epic',
-          unlockedAt: explorerUnlocked ? new Date() : undefined,
-          progress: explorerProgress,
-          maxProgress: 15,
-          points: 750,
-          iconType: 'trending'
-        });
-        if (explorerUnlocked) points += 750;
-
-        // Logro: Leyenda PAES
-        const totalMastery = progressData?.reduce((sum, p) => sum + p.mastery_level, 0) || 0;
-        const avgMastery = progressData?.length ? totalMastery / progressData.length : 0;
-        const legendProgress = Math.min(Math.round(avgMastery * 100), 90);
-        const legendUnlocked = avgMastery >= 0.9;
-        if (legendUnlocked && !unlockedIds.has('paes_legend')) {
-          await unlockAchievement('paes_legend');
-          setNewlyUnlocked(prev => [...prev, 'paes_legend']);
-        }
-        realAchievements.push({
-          id: 'paes_legend',
-          title: 'Leyenda PAES',
-          description: 'Alcanza 90% de dominio promedio global',
-          category: 'Élite',
-          rarity: 'legendary',
-          unlockedAt: legendUnlocked ? new Date() : undefined,
-          progress: legendProgress,
-          maxProgress: 90,
-          points: 1500,
-          iconType: 'crown'
-        });
-        if (legendUnlocked) points += 1500;
-
-        setAchievements(realAchievements);
-        setTotalPoints(points);
-
+        setAchievements(processedAchievements);
       } catch (error) {
-        console.error('Error calculating achievements:', error);
+        console.error('Error loading achievements:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    const unlockAchievement = async (achievementId: string) => {
-      try {
-        await supabase.from('user_achievements').insert({
-          user_id: user?.id,
-          achievement_id: achievementId,
-          unlocked_at: new Date().toISOString()
-        });
-
-        // Registrar evento neural
-        await supabase.from('neural_events').insert({
-          user_id: user?.id,
-          event_type: 'achievement_unlocked',
-          component_source: 'RealAchievementSystem',
-          event_data: {
-            achievementId,
-            engagement: 1.0
-          }
-        });
-      } catch (error) {
-        console.error('Error unlocking achievement:', error);
-      }
-    };
-
-    calculateRealAchievements();
+    loadAchievementsAndProgress();
   }, [user?.id]);
 
-  const getIcon = (iconType: string) => {
-    switch (iconType) {
-      case 'target': return Target;
-      case 'star': return Star;
-      case 'flame': return Flame;
-      case 'trending': return TrendingUp;
-      case 'crown': return Crown;
-      default: return Trophy;
+  const checkAndUnlockAchievements = async (achievements: Achievement[], progress: UserProgress) => {
+    if (!user?.id) return;
+
+    for (const achievement of achievements) {
+      if (achievement.is_unlocked) continue;
+
+      let shouldUnlock = false;
+      const conditions = await getAchievementConditions(achievement.id);
+
+      if (conditions) {
+        if (conditions.completed_nodes && progress.completed_nodes >= conditions.completed_nodes) {
+          shouldUnlock = true;
+        } else if (conditions.study_streak && progress.current_streak >= conditions.study_streak) {
+          shouldUnlock = true;
+        } else if (conditions.study_hours && progress.total_study_time >= conditions.study_hours) {
+          shouldUnlock = true;
+        } else if (conditions.avg_performance && progress.avg_performance >= conditions.avg_performance) {
+          shouldUnlock = true;
+        }
+      }
+
+      if (shouldUnlock) {
+        await unlockAchievement(achievement);
+      }
+    }
+  };
+
+  const getAchievementConditions = async (achievementId: string) => {
+    const { data } = await supabase
+      .from('intelligent_achievements')
+      .select('unlock_conditions')
+      .eq('id', achievementId)
+      .single();
+    
+    return data?.unlock_conditions as any;
+  };
+
+  const unlockAchievement = async (achievement: Achievement) => {
+    if (!user?.id) return;
+
+    try {
+      // Insertar con todos los campos requeridos
+      await supabase.from('user_achievements').insert({
+        user_id: user.id,
+        achievement_id: achievement.id,
+        achievement_type: 'progress', // valor por defecto
+        category: achievement.category,
+        title: achievement.title,
+        description: achievement.description,
+        points_awarded: achievement.points_reward,
+        rarity: achievement.rarity,
+        unlocked_at: new Date().toISOString()
+      });
+
+      // Mostrar notificación (opcional)
+      console.log(`¡Logro desbloqueado: ${achievement.title}!`);
+    } catch (error) {
+      console.error('Error unlocking achievement:', error);
     }
   };
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'common': return 'from-gray-500 to-gray-600';
-      case 'rare': return 'from-blue-500 to-blue-600';
-      case 'epic': return 'from-purple-500 to-purple-600';
       case 'legendary': return 'from-yellow-500 to-orange-500';
+      case 'epic': return 'from-purple-500 to-pink-500';
+      case 'rare': return 'from-blue-500 to-cyan-500';
       default: return 'from-gray-500 to-gray-600';
     }
   };
+
+  const getRarityIcon = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary': return Trophy;
+      case 'epic': return Star;
+      case 'rare': return Award;
+      default: return Target;
+    }
+  };
+
+  const categories = ['all', 'progress', 'skill', 'engagement', 'mastery'];
+  const filteredAchievements = achievements.filter(a => 
+    selectedCategory === 'all' || a.category === selectedCategory
+  );
+
+  const unlockedCount = achievements.filter(a => a.is_unlocked).length;
+  const totalPoints = achievements
+    .filter(a => a.is_unlocked)
+    .reduce((sum, a) => sum + a.points_reward, 0);
 
   if (isLoading) {
     return (
@@ -242,7 +260,7 @@ export const RealAchievementSystem: React.FC = () => {
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full mr-3"></div>
-            <span className="text-white">Calculando logros...</span>
+            <span className="text-white">Cargando sistema de logros...</span>
           </div>
         </CardContent>
       </Card>
@@ -250,97 +268,153 @@ export const RealAchievementSystem: React.FC = () => {
   }
 
   return (
-    <Card className="bg-black/40 backdrop-blur-xl border-white/20">
-      <CardHeader>
-        <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header con estadísticas */}
+      <Card className="bg-black/40 backdrop-blur-xl border-white/20">
+        <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Trophy className="w-6 h-6 text-yellow-400" />
-            Sistema de Logros
+            Sistema de Logros Inteligente
+            <Badge className="bg-green-600 text-white ml-2">
+              {unlockedCount} Desbloqueados
+            </Badge>
           </CardTitle>
-          <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white">
-            {totalPoints} Puntos
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="text-center p-4 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-400">{unlockedCount}</div>
+              <div className="text-white/70 text-sm">Logros Desbloqueados</div>
+            </div>
+            <div className="text-center p-4 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-lg">
+              <div className="text-2xl font-bold text-blue-400">{totalPoints}</div>
+              <div className="text-white/70 text-sm">Puntos Totales</div>
+            </div>
+            <div className="text-center p-4 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg">
+              <div className="text-2xl font-bold text-green-400">{userProgress.completed_nodes}</div>
+              <div className="text-white/70 text-sm">Nodos Completados</div>
+            </div>
+            <div className="text-center p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg">
+              <div className="text-2xl font-bold text-purple-400">{userProgress.total_study_time}h</div>
+              <div className="text-white/70 text-sm">Tiempo de Estudio</div>
+            </div>
+          </div>
+
+          {/* Filtros por categoría */}
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {categories.map(category => (
+              <Button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                variant={selectedCategory === category ? 'default' : 'outline'}
+                size="sm"
+                className={selectedCategory === category 
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600' 
+                  : 'border-white/30 text-white hover:bg-white/10'
+                }
+              >
+                {category === 'all' ? 'Todos' : category}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Grid de logros */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
-          {achievements.map((achievement, index) => {
-            const Icon = getIcon(achievement.iconType);
-            const isUnlocked = achievement.unlockedAt !== undefined;
-            const progressPercent = (achievement.progress / achievement.maxProgress) * 100;
+          {filteredAchievements.map((achievement, index) => {
+            const Icon = getRarityIcon(achievement.rarity);
+            const progressPercentage = achievement.total_required 
+              ? (achievement.progress! / achievement.total_required) * 100 
+              : 0;
             
             return (
               <motion.div
                 key={achievement.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
                 transition={{ delay: index * 0.1 }}
-                className={`p-4 rounded-lg border transition-all duration-300 ${
-                  isUnlocked 
-                    ? 'border-yellow-400/50 bg-gradient-to-r from-yellow-900/20 to-orange-900/20' 
-                    : 'border-white/20 bg-white/5'
-                }`}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-lg bg-gradient-to-r ${getRarityColor(achievement.rarity)} ${
-                      !isUnlocked ? 'opacity-50 grayscale' : ''
-                    }`}>
-                      <Icon className="w-6 h-6 text-white" />
+                <Card className={`relative overflow-hidden border ${
+                  achievement.is_unlocked 
+                    ? 'border-yellow-400/50 bg-gradient-to-br from-yellow-600/10 to-orange-600/10' 
+                    : 'border-white/20 bg-black/40'
+                } backdrop-blur-xl hover:border-white/40 transition-all duration-300`}>
+                  
+                  {achievement.is_unlocked && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle className="w-6 h-6 text-green-400" />
                     </div>
-                    <div>
-                      <h4 className={`font-bold ${isUnlocked ? 'text-yellow-300' : 'text-white/60'}`}>
-                        {achievement.title}
-                      </h4>
-                      <p className="text-sm text-white/70">{achievement.description}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge className={`text-xs bg-gradient-to-r ${getRarityColor(achievement.rarity)}`}>
-                          {achievement.rarity.charAt(0).toUpperCase() + achievement.rarity.slice(1)}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {achievement.points} pts
-                        </Badge>
+                  )}
+                  
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className={`p-2 rounded-lg bg-gradient-to-r ${getRarityColor(achievement.rarity)} ${
+                        achievement.is_unlocked ? 'opacity-100' : 'opacity-50'
+                      }`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className={`font-bold ${achievement.is_unlocked ? 'text-white' : 'text-white/60'}`}>
+                          {achievement.title}
+                        </h4>
+                        <p className={`text-sm ${achievement.is_unlocked ? 'text-white/80' : 'text-white/50'}`}>
+                          {achievement.description}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/70">Progreso</span>
-                    <span className={isUnlocked ? 'text-green-400' : 'text-white'}>
-                      {achievement.progress}/{achievement.maxProgress}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <motion.div 
-                      className={`h-2 rounded-full bg-gradient-to-r ${
-                        isUnlocked ? 'from-green-400 to-emerald-500' : 'from-blue-400 to-cyan-500'
-                      }`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progressPercent}%` }}
-                      transition={{ duration: 1, delay: index * 0.1 }}
-                    />
-                  </div>
-                </div>
-
-                {isUnlocked && newlyUnlocked.includes(achievement.id) && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="mt-3 text-center"
-                  >
-                    <Badge className="bg-gradient-to-r from-green-600 to-emerald-600 text-white animate-pulse">
-                      <Award className="w-4 h-4 mr-1" />
-                      ¡Recién Desbloqueado!
-                    </Badge>
-                  </motion.div>
-                )}
+                    
+                    {!achievement.is_unlocked && (
+                      <div className="mb-3">
+                        <div className="flex justify-between text-sm text-white/70 mb-1">
+                          <span>Progreso</span>
+                          <span>{achievement.progress}/{achievement.total_required}</span>
+                        </div>
+                        <Progress 
+                          value={progressPercentage} 
+                          className="h-2 bg-white/10"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className={`capitalize ${
+                        achievement.is_unlocked ? 'border-yellow-400/50 text-yellow-400' : 'border-white/30 text-white/50'
+                      }`}>
+                        {achievement.rarity}
+                      </Badge>
+                      <div className={`flex items-center gap-1 ${
+                        achievement.is_unlocked ? 'text-yellow-400' : 'text-white/50'
+                      }`}>
+                        <Star className="w-4 h-4" />
+                        <span className="text-sm font-medium">{achievement.points_reward} pts</span>
+                      </div>
+                    </div>
+                    
+                    {achievement.unlocked_at && (
+                      <div className="text-xs text-green-400 mt-2">
+                        Desbloqueado: {new Date(achievement.unlocked_at).toLocaleDateString()}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </motion.div>
             );
           })}
         </AnimatePresence>
-      </CardContent>
-    </Card>
+      </div>
+
+      {filteredAchievements.length === 0 && (
+        <Card className="bg-black/40 backdrop-blur-xl border-white/20">
+          <CardContent className="p-8 text-center">
+            <Trophy className="w-12 h-12 text-white/30 mx-auto mb-4" />
+            <div className="text-white font-medium">No hay logros en esta categoría</div>
+            <div className="text-white/70 text-sm">Prueba con otra categoría o sigue estudiando para desbloquear más logros</div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
