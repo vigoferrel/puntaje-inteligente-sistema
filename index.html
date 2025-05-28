@@ -1,0 +1,123 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAES Neural Education Platform</title>
+    
+    <!-- Polyfill optimizado para import.meta -->
+    <script>
+      (function() {
+        try {
+          // Detectar entornos restrictivos
+          const hasTrackingPrevention = (function() {
+            try {
+              localStorage.setItem('__test__', '1');
+              localStorage.removeItem('__test__');
+              return false;
+            } catch (e) {
+              return true;
+            }
+          })();
+          
+          if (hasTrackingPrevention || typeof lockdown !== 'undefined') {
+            window.__SKIP_GPT_ENGINEER__ = true;
+            window.__TRACKING_PREVENTION_DETECTED__ = true;
+          }
+          
+          // Polyfill robusto para import.meta
+          if (!window.importMeta) {
+            Object.defineProperty(window, 'importMeta', {
+              value: { 
+                env: { 
+                  MODE: 'production',
+                  DEV: false,
+                  PROD: true
+                },
+                url: window.location.href
+              },
+              writable: false,
+              configurable: false
+            });
+          }
+          
+        } catch (error) {
+          window.__SKIP_GPT_ENGINEER__ = true;
+        }
+      })();
+    </script>
+    
+    <!-- GPT Engineer carga condicional como módulo -->
+    <script type="module">
+      (function() {
+        if (window.__SKIP_GPT_ENGINEER__) {
+          return;
+        }
+        
+        try {
+          if (typeof lockdown !== 'undefined') {
+            return;
+          }
+          
+          // Cargar GPT Engineer con delay
+          setTimeout(() => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.gpteng.co/gptengineer.js';
+            script.type = 'module';
+            script.defer = true;
+            
+            script.onerror = () => {
+              // Silenciar error esperado
+            };
+            
+            document.head.appendChild(script);
+          }, 2000);
+          
+        } catch (error) {
+          // Silenciar errores de carga
+        }
+      })();
+    </script>
+    
+    <meta name="description" content="Plataforma educativa neural PAES" />
+    <meta name="theme-color" content="#1e40af" />
+    
+    <style>
+      html { 
+        background-color: #0f172a; 
+        overflow: hidden;
+      }
+      body { 
+        margin: 0; 
+        font-family: system-ui, -apple-system, sans-serif;
+        overflow: hidden;
+      }
+      #root { 
+        min-height: 100vh; 
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1e40af, #7c3aed); color: white; font-size: 18px;">
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <div>Cargando PAES Neural Platform v7.0...</div>
+          <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Sistema ultra-optimizado sin errores</div>
+        </div>
+      </div>
+    </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+    
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
