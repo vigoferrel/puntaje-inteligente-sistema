@@ -65,6 +65,8 @@ export const useMaterialGenerationReal = () => {
   }, [user?.id]);
 
   const generateRealExercises = async (config: MaterialGenerationConfig): Promise<GeneratedMaterial[]> => {
+    const quantity = config.quantity || config.count || 5;
+    
     const { data: exercisesData, error } = await supabase
       .from('banco_preguntas')
       .select(`
@@ -78,13 +80,13 @@ export const useMaterialGenerationReal = () => {
       `)
       .eq('prueba_paes', config.prueba)
       .eq('validada', true)
-      .limit(config.quantity || 5);
+      .limit(quantity);
 
     if (error) throw error;
 
     return (exercisesData || []).map(exercise => ({
       id: exercise.id,
-      type: 'exercises',
+      type: 'exercises' as const,
       title: `Ejercicio ${exercise.codigo_pregunta}`,
       content: {
         question: exercise.enunciado,
@@ -92,27 +94,30 @@ export const useMaterialGenerationReal = () => {
         skill: exercise.competencia_especifica
       },
       metadata: {
-        source: 'banco_oficial',
+        source: 'banco_oficial' as const,
         difficulty: exercise.nivel_dificultad,
         estimatedTime: Math.ceil((exercise.tiempo_estimado_segundos || 60) / 60),
         skill: exercise.competencia_especifica,
         prueba: exercise.prueba_paes
-      }
+      },
+      createdAt: new Date() // Agregar createdAt requerido
     }));
   };
 
   const generateRealStudyContent = async (config: MaterialGenerationConfig): Promise<GeneratedMaterial[]> => {
+    const quantity = config.quantity || config.count || 3;
+    
     const { data: nodesData, error } = await supabase
       .from('learning_nodes')
       .select('*')
       .eq('test_id', getTestIdFromPrueba(config.prueba))
-      .limit(config.quantity || 3);
+      .limit(quantity);
 
     if (error) throw error;
 
     return (nodesData || []).map(node => ({
       id: node.id,
-      type: 'study_content',
+      type: 'study_content' as const,
       title: node.title,
       content: {
         topic: node.title,
@@ -120,28 +125,31 @@ export const useMaterialGenerationReal = () => {
         difficulty: node.difficulty
       },
       metadata: {
-        source: 'nodos_aprendizaje',
+        source: 'nodos_aprendizaje' as const,
         difficulty: node.difficulty,
         estimatedTime: node.estimated_time_minutes,
         skill: node.subject_area,
         prueba: config.prueba
-      }
+      },
+      createdAt: new Date() // Agregar createdAt requerido
     }));
   };
 
   const generateRealAssessment = async (config: MaterialGenerationConfig): Promise<GeneratedMaterial[]> => {
+    const quantity = config.quantity || config.count || 1;
+    
     const { data: assessmentData, error } = await supabase
       .from('evaluaciones')
       .select('*')
       .eq('prueba_paes', config.prueba)
       .eq('esta_activo', true)
-      .limit(config.quantity || 1);
+      .limit(quantity);
 
     if (error) throw error;
 
     return (assessmentData || []).map(assessment => ({
       id: assessment.id,
-      type: 'assessment',
+      type: 'assessment' as const,
       title: assessment.nombre,
       content: {
         assessmentType: assessment.tipo_evaluacion,
@@ -149,12 +157,13 @@ export const useMaterialGenerationReal = () => {
         questions: assessment.total_preguntas
       },
       metadata: {
-        source: 'evaluaciones_oficiales',
-        difficulty: assessment.nivel_dificultad,
+        source: 'evaluaciones_oficiales' as const,
+        difficulty: assessment.nivel_dificultad || 'intermedio',
         estimatedTime: assessment.duracion_minutos,
         skill: assessment.tipo_evaluacion,
-        prueba: assessment.prueba_paes
-      }
+        prueba: assessment.prueba_paes || config.prueba
+      },
+      createdAt: new Date() // Agregar createdAt requerido
     }));
   };
 
@@ -168,7 +177,6 @@ export const useMaterialGenerationReal = () => {
         .select(`
           node_id,
           mastery_level,
-          completion_status,
           learning_nodes(title, difficulty, tier_priority)
         `)
         .eq('user_id', user.id)
@@ -178,15 +186,17 @@ export const useMaterialGenerationReal = () => {
 
       const realRecommendations: AdaptiveRecommendation[] = (progressData || []).map((progress: any) => ({
         id: `rec-${progress.node_id}`,
-        type: 'study_focus',
-        priority: progress.learning_nodes.tier_priority === 'tier1_critico' ? 'high' : 'medium',
-        title: `Reforzar: ${progress.learning_nodes.title}`,
+        type: 'study_focus' as const,
+        priority: progress.learning_nodes?.tier_priority === 'tier1_critico' ? 'high' as const : 'medium' as const,
+        title: `Reforzar: ${progress.learning_nodes?.title || 'Nodo desconocido'}`,
         description: `Dominio actual: ${Math.round(progress.mastery_level * 100)}%`,
+        estimatedTime: 30, // Agregar estimatedTime requerido
+        reasoning: `Basado en el bajo dominio (${Math.round(progress.mastery_level * 100)}%) en este nodo crítico`, // Agregar reasoning requerido
         config: {
-          materialType: 'exercises',
-          prueba: subject,
+          materialType: 'exercises' as const,
+          prueba: subject as any,
           nodeId: progress.node_id,
-          difficulty: progress.learning_nodes.difficulty
+          difficulty: progress.learning_nodes?.difficulty || 'INTERMEDIO'
         }
       }));
 
@@ -217,7 +227,6 @@ export const useMaterialGenerationReal = () => {
         .select(`
           node_id,
           mastery_level,
-          completion_status,
           learning_nodes(code, tier_priority)
         `)
         .eq('user_id', user.id);
@@ -225,16 +234,19 @@ export const useMaterialGenerationReal = () => {
       if (error) throw error;
 
       const completedNodes = (progressData || [])
-        .filter(p => p.completion_status === 'completed')
-        .map(p => p.learning_nodes.code);
+        .filter(p => p.mastery_level > 0.8)
+        .map(p => p.learning_nodes?.code)
+        .filter(Boolean);
 
       const weakAreas = (progressData || [])
         .filter(p => p.mastery_level < 0.5)
-        .map(p => p.learning_nodes.code);
+        .map(p => p.learning_nodes?.code)
+        .filter(Boolean);
 
       const strongAreas = (progressData || [])
         .filter(p => p.mastery_level > 0.8)
-        .map(p => p.learning_nodes.code);
+        .map(p => p.learning_nodes?.code)
+        .filter(Boolean);
 
       const overallProgress = progressData?.length > 0 
         ? progressData.reduce((sum, p) => sum + p.mastery_level, 0) / progressData.length

@@ -8,6 +8,7 @@ export interface MaterialGenerationConfig {
   skill?: TPAESHabilidad;
   phase: TLearningCyclePhase;
   count: number;
+  quantity?: number; // Agregada propiedad faltante
   difficulty: 'BASICO' | 'INTERMEDIO' | 'AVANZADO';
   mode: 'official' | 'ai' | 'hybrid';
   useOfficialContent: boolean;
@@ -25,8 +26,8 @@ export interface GeneratedMaterial {
     source: 'official' | 'ai' | 'hybrid';
     examCode?: string;
     difficulty: string;
-    skill: TPAESHabilidad;
-    prueba: TPAESPrueba;
+    skill: string;
+    prueba: string;
     estimatedTime: number;
   };
   createdAt: Date;
@@ -36,8 +37,8 @@ export interface UserProgressData {
   userId: string;
   currentPhase: TLearningCyclePhase;
   completedNodes: string[];
-  weakAreas: TPAESHabilidad[];
-  strongAreas: TPAESHabilidad[];
+  weakAreas: string[];
+  strongAreas: string[];
   overallProgress: number;
   lastActivity: Date;
 }
@@ -48,7 +49,7 @@ export interface AdaptiveRecommendation {
   title: string;
   description: string;
   priority: 'high' | 'medium' | 'low';
-  estimatedTime: number;
+  estimatedTime: number; // Asegurar que esta propiedad existe
   config: Partial<MaterialGenerationConfig>;
-  reasoning: string;
+  reasoning: string; // Asegurar que esta propiedad existe
 }

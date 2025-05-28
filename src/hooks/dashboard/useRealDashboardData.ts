@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,7 +60,7 @@ export const useRealDashboardData = () => {
       setIsLoading(true);
       logger.info('useRealDashboardData', 'Loading real dashboard data for user', { userId: user.id });
 
-      // Cargar métricas reales del usuario
+      // Cargar métricas reales del usuario usando solo columnas existentes
       const [
         nodeProgressData,
         exerciseAttemptsData,
@@ -71,7 +70,7 @@ export const useRealDashboardData = () => {
       ] = await Promise.all([
         supabase
           .from('user_node_progress')
-          .select('completion_status, mastery_level, updated_at')
+          .select('mastery_level, updated_at') // Usar solo columnas que existen
           .eq('user_id', user.id),
         
         supabase
@@ -99,8 +98,8 @@ export const useRealDashboardData = () => {
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       ]);
 
-      // Calcular métricas reales
-      const completedNodes = nodeProgressData.data?.filter(n => n.completion_status === 'completed').length || 0;
+      // Calcular métricas reales usando datos disponibles
+      const completedNodes = nodeProgressData.data?.filter(n => n.mastery_level > 0.8).length || 0;
       const weeklyExercises = exerciseAttemptsData.data?.length || 0;
       const weeklyCorrect = exerciseAttemptsData.data?.filter(e => e.is_correct).length || 0;
       const weeklyProgress = weeklyExercises > 0 ? (weeklyCorrect / weeklyExercises) * 100 : 0;

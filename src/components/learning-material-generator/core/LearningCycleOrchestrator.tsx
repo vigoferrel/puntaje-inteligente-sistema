@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +30,7 @@ export const LearningCycleOrchestrator: React.FC<LearningCycleOrchestratorProps>
     recommendations,
     generateMaterial,
     generateRecommendations,
-    getMockUserProgress
+    getRealUserProgress
   } = useMaterialGeneration();
 
   const isGenerating = externalIsGenerating || internalIsGenerating;
@@ -47,10 +46,14 @@ export const LearningCycleOrchestrator: React.FC<LearningCycleOrchestratorProps>
 
   useEffect(() => {
     // Generar recomendaciones cuando cambia la materia o fase
-    const userProgress = getMockUserProgress(selectedSubject);
-    userProgress.currentPhase = currentPhase;
-    generateRecommendations(userProgress, selectedSubject);
-  }, [selectedSubject, currentPhase, generateRecommendations, getMockUserProgress]);
+    const loadRecommendations = async () => {
+      const userProgress = await getRealUserProgress(selectedSubject);
+      userProgress.currentPhase = currentPhase;
+      generateRecommendations(userProgress, selectedSubject);
+    };
+    
+    loadRecommendations();
+  }, [selectedSubject, currentPhase, generateRecommendations, getRealUserProgress]);
 
   const handleMaterialGeneration = async (config: any) => {
     const prueba = subjectToPruebaMap[selectedSubject] || 'COMPETENCIA_LECTORA';
