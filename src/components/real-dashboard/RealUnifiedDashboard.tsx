@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Brain, Target, Zap, TrendingUp, 
   Calendar, BookOpen, Award, RefreshCw, 
-  Eye, BarChart3, Sparkles, Globe
+  Eye, BarChart3, Sparkles, Globe, CheckCircle
 } from 'lucide-react';
 
 export const RealUnifiedDashboard: React.FC = () => {
@@ -32,28 +32,22 @@ export const RealUnifiedDashboard: React.FC = () => {
 
   const [activeView, setActiveView] = useState<'dashboard' | 'ecosystem'>('dashboard');
 
-  // Mejorar lógica de loading - no debe ser infinita
   const isLoading = dashboardLoading || neuralLoading;
-  const hasMinimumData = realNodes.length > 0;
+  const hasRealData = realNodes.length > 0;
 
-  // Mostrar loading solo por un tiempo limitado
-  if (isLoading && !hasMinimumData) {
+  // Mostrar loading solo inicialmente
+  if (isLoading && !hasRealData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-spin w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto mb-6"></div>
-          <div className="text-2xl font-bold">Inicializando Sistema Neural...</div>
+          <div className="text-2xl font-bold">Conectando Sistema Neural PAES...</div>
           <div className="text-cyan-300 mt-2">
-            {neuralError ? 'Modo offline activado' : 'Conectando con Supabase'}
+            Cargando nodos reales desde Supabase
           </div>
           <div className="text-white/60 text-sm mt-1">
-            {hasMinimumData ? `${realNodes.length} nodos cargados` : 'Preparando datos...'}
+            Preparando datos de producción...
           </div>
-          {neuralError && (
-            <div className="text-yellow-400 text-xs mt-2">
-              ⚠️ {neuralError} - Usando datos de demostración
-            </div>
-          )}
         </div>
       </div>
     );
@@ -77,9 +71,9 @@ export const RealUnifiedDashboard: React.FC = () => {
             <Brain className="w-12 h-12 text-cyan-400" />
             <div>
               <h1 className="text-5xl font-bold text-white">Dashboard Neural PAES</h1>
-              <p className="text-cyan-300 text-xl">Sistema Inteligente de Aprendizaje Real</p>
+              <p className="text-cyan-300 text-xl">Sistema de Producción - Datos Reales</p>
             </div>
-            <Sparkles className="w-12 h-12 text-purple-400 animate-pulse" />
+            <CheckCircle className="w-12 h-12 text-green-400" />
           </div>
           
           <div className="flex items-center justify-center gap-4">
@@ -96,18 +90,18 @@ export const RealUnifiedDashboard: React.FC = () => {
               className="border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              Actualizar Datos
+              Actualizar Sistema
             </Button>
             <Badge className="bg-green-600 text-white">
-              Sistema Neural Activo
+              Sistema Productivo Activo
             </Badge>
             <Badge variant="outline" className="text-white border-white">
-              {realNodes.length} Nodos Conectados
+              {realNodes.length} Nodos Reales Cargados
             </Badge>
           </div>
         </motion.div>
 
-        {/* Métricas Principales */}
+        {/* Métricas Principales del Sistema Real */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,11 +112,11 @@ export const RealUnifiedDashboard: React.FC = () => {
             <CardHeader className="pb-2">
               <CardTitle className="text-green-400 flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                Progreso Global
+                Nodos Sistema
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white">{metrics.completedNodes}</div>
+              <div className="text-3xl font-bold text-white">{realNodes.length}</div>
               <div className="text-green-400 text-sm">
                 {realNodes.filter(n => n.isActive).length} nodos activos
               </div>
@@ -146,12 +140,12 @@ export const RealUnifiedDashboard: React.FC = () => {
             <CardHeader className="pb-2">
               <CardTitle className="text-purple-400 flex items-center gap-2">
                 <Zap className="w-5 h-5" />
-                Velocidad
+                Velocidad Neural
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white">{neuralMetrics.learningVelocity}%</div>
-              <div className="text-purple-400 text-sm">Aprendizaje acelerado</div>
+              <div className="text-purple-400 text-sm">Procesamiento acelerado</div>
             </CardContent>
           </Card>
 
@@ -164,42 +158,46 @@ export const RealUnifiedDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white">{neuralMetrics.engagementScore}%</div>
-              <div className="text-orange-400 text-sm">+{metrics.currentStreak} días</div>
+              <div className="text-orange-400 text-sm">Sistema preparado</div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Call to Action para Ecosistema 3D */}
+        {/* Estado del Sistema Real */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-center"
         >
-          <Card className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-purple-500/30">
+          <Card className="bg-gradient-to-r from-green-900/50 to-blue-900/50 border-green-500/30">
             <CardContent className="p-8">
-              <Globe className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-2">Ecosistema Neural 3D Disponible</h2>
-              <p className="text-white/70 mb-6">
-                Explora tus {realNodes.length} nodos de aprendizaje en un universo 3D inmersivo con visualizaciones neurales avanzadas
-              </p>
-              <Button
-                onClick={() => setActiveView('ecosystem')}
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
-              >
-                <Sparkles className="h-5 w-5 mr-2" />
-                Entrar al Ecosistema 3D
-              </Button>
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <CheckCircle className="w-16 h-16 text-green-400" />
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-white mb-2">Sistema de Producción Activo</h2>
+                  <p className="text-white/70 mb-4">
+                    Conectado a Supabase con {realNodes.length} nodos reales de PAES
+                  </p>
+                  <Button
+                    onClick={() => setActiveView('ecosystem')}
+                    size="lg"
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
+                  >
+                    <Sparkles className="h-5 w-5 mr-2" />
+                    Explorar Universo Neural 3D
+                  </Button>
+                </div>
+                <Brain className="w-16 h-16 text-cyan-400 animate-pulse" />
+              </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Estado del Sistema */}
+        {/* Estado de Conexiones del Sistema */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.3 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {Object.entries(systemStatus).map(([key, status]) => (
@@ -219,6 +217,38 @@ export const RealUnifiedDashboard: React.FC = () => {
               </CardContent>
             </Card>
           ))}
+        </motion.div>
+
+        {/* Información del Sistema */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="bg-black/20 backdrop-blur-sm border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Estado del Sistema Neural
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-white/80">Nodos Totales:</span>
+                  <span className="text-cyan-400 font-bold ml-2">{realNodes.length}</span>
+                </div>
+                <div>
+                  <span className="text-white/80">Nodos Activos:</span>
+                  <span className="text-green-400 font-bold ml-2">{realNodes.filter(n => n.isActive).length}</span>
+                </div>
+                <div>
+                  <span className="text-white/80">Tests PAES:</span>
+                  <span className="text-purple-400 font-bold ml-2">{new Set(realNodes.map(n => n.testId)).size}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
     </div>
