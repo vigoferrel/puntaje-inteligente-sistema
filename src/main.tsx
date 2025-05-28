@@ -3,9 +3,9 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { ultraSilentLogger } from './core/logging/UltraSilentLogger';
+import { ultraStabilityLayer } from './core/system/UltraStabilityLayer';
 
-// Configuración Ultra-Silenciosa v2024.3 - Sin errores TypeScript
+// Ultra-Silent System v2024.4 con Estabilidad Total
 class UltraSilentCompatibilityLayer {
   private static instance: UltraSilentCompatibilityLayer;
   private isInitialized = false;
@@ -17,70 +17,71 @@ class UltraSilentCompatibilityLayer {
     return UltraSilentCompatibilityLayer.instance;
   }
 
-  private setupSilentOperations(): void {
-    // Verificación segura de interceptación global
-    const consoleIntercepted = (window as any).__CONSOLE_INTERCEPTED__;
-    if (!consoleIntercepted) {
-      // Backup de interceptación si falló la del HTML
-      const silentConsole = () => {};
-      ['log', 'warn', 'error', 'info', 'debug', 'trace', 'table', 'group', 'groupEnd'].forEach(method => {
-        (console as any)[method] = silentConsole;
-      });
-    }
-
-    // Configuración de entorno silencioso con type casting seguro
-    (window as any).__ENVIRONMENT_SAFE__ = true;
-    (window as any).__ENVIRONMENT_SAFETY_LEVEL__ = 'SAFE';
-  }
-
-  private setupPerformanceOptimizations(): void {
-    // Optimizaciones sin logs
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
-        const gc = (window as any).gc;
-        if (typeof gc === 'function') {
-          gc();
-        }
-      });
-    }
-  }
-
-  initialize(): void {
+  async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
     try {
-      this.setupSilentOperations();
-      this.setupPerformanceOptimizations();
+      // Esperar a que el sistema de estabilidad esté listo
+      await ultraStabilityLayer.waitForStability();
+      
+      const config = ultraStabilityLayer.getOptimizedConfig();
+      
+      // Configuración ultra-optimizada basada en el estado del sistema
+      (window as any).__ULTRA_STABILITY_CONFIG__ = config;
+      (window as any).__ENVIRONMENT_STABLE__ = true;
+      (window as any).__SYSTEM_STATUS__ = ultraStabilityLayer.getSystemStatus();
       
       this.isInitialized = true;
       
-      // Solo en emergencia durante desarrollo
       if (process.env.NODE_ENV === 'development') {
-        ultraSilentLogger.emergency('Ultra-Silent System v2024.3 Initialized - TypeScript Safe');
+        console.log('✅ Ultra-Silent System v2024.4 with Total Stability Initialized');
       }
     } catch (error) {
-      // Silenciar errores de inicialización
+      // Sistema de fallback ultra-robusto
+      (window as any).__ENVIRONMENT_STABLE__ = false;
+      (window as any).__EMERGENCY_MODE__ = true;
     }
   }
 }
 
-// Inicialización Ultra-Silenciosa
-const silentLayer = UltraSilentCompatibilityLayer.getInstance();
-silentLayer.initialize();
+// Inicialización asíncrona mejorada
+const initializeApplication = async () => {
+  const silentLayer = UltraSilentCompatibilityLayer.getInstance();
+  await silentLayer.initialize();
 
-// React 18 Ultra-Optimizado
-const container = document.getElementById('root');
-if (!container) {
-  throw new Error('Root container not found');
-}
+  const container = document.getElementById('root');
+  if (!container) {
+    throw new Error('Root container not found');
+  }
 
-const root = createRoot(container, {
-  identifierPrefix: 'paes-ultra-silent',
+  const root = createRoot(container, {
+    identifierPrefix: 'paes-ultra-stable',
+  });
+
+  root.render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+};
+
+// Inicializar con manejo de errores total
+initializeApplication().catch((error) => {
+  console.error('Critical application initialization error:', error);
+  
+  // Fallback de último recurso
+  const container = document.getElementById('root');
+  if (container) {
+    container.innerHTML = `
+      <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e40af, #7c3aed); color: white; font-family: system-ui;">
+        <div style="text-align: center;">
+          <h1>Sistema PAES - Modo Seguro</h1>
+          <p>La aplicación se está ejecutando en modo de recuperación.</p>
+          <button onclick="window.location.reload()" style="background: white; color: #1e40af; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 16px;">
+            Reiniciar Aplicación
+          </button>
+        </div>
+      </div>
+    `;
+  }
 });
-
-// Renderizado silencioso
-root.render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
