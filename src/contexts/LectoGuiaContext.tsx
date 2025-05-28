@@ -1,7 +1,5 @@
 
-// Este archivo ahora re-exporta desde la estructura refactorizada
-// para mantener compatibilidad con backwards
-
+// Contexto LectoGuía consolidado y simplificado
 import { LectoGuiaProvider, LectoGuiaContext, useLectoGuia } from './lectoguia';
 import { SUBJECT_TO_PRUEBA_MAP, SUBJECT_DISPLAY_NAMES } from './lectoguia/types';
 

@@ -10,7 +10,8 @@ import {
   Target, 
   TrendingUp,
   Brain,
-  Sparkles
+  Sparkles,
+  Zap
 } from 'lucide-react';
 
 interface LectoGuiaProps {
@@ -30,7 +31,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      {/* Header */}
+      {/* Header Consolidado */}
       <div className="bg-black/20 backdrop-blur-xl border-b border-white/10 p-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -39,7 +40,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">LectoGuía IA</h1>
-              <p className="text-white/70">Asistente inteligente de comprensión lectora</p>
+              <p className="text-white/70">Sistema unificado de comprensión lectora</p>
             </div>
           </div>
           
@@ -50,16 +51,16 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Contenido Principal */}
       <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
+          {/* Sidebar Consolidado */}
           <div className="space-y-4">
             <Card className="bg-white/10 border-white/20">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5" />
-                  Modos de Trabajo
+                  Módulos Unificados
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -92,7 +93,7 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
+            {/* Navegación Integrada */}
             <Card className="bg-white/5 border-white/10">
               <CardContent className="p-4 space-y-2">
                 <Button 
@@ -100,20 +101,22 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                   className="w-full text-sm"
                   variant="outline"
                 >
-                  Ir a Diagnóstico
+                  <Zap className="w-4 h-4 mr-2" />
+                  Diagnóstico
                 </Button>
                 <Button 
                   onClick={() => onNavigate?.('/planning')}
                   className="w-full text-sm"
                   variant="outline"
                 >
-                  Ver Planificación
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Planificación
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Main Content */}
+          {/* Área Principal */}
           <div className="lg:col-span-3">
             <AnimatePresence mode="wait">
               <motion.div
@@ -128,13 +131,13 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                     {activeMode === 'chat' && (
                       <div className="text-center py-20">
                         <MessageCircle className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Chat Inteligente</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">Chat Inteligente Unificado</h3>
                         <p className="text-white/70 mb-6">
-                          Conversa con la IA sobre cualquier texto o concepto
+                          Conversa con la IA sobre cualquier texto o concepto de comprensión lectora
                         </p>
                         <div className="max-w-md mx-auto p-4 bg-white/5 rounded-lg border border-white/10">
                           <p className="text-white/60 text-sm">
-                            💡 Sube un texto, imagen o simplemente pregunta sobre comprensión lectora
+                            💡 Sistema consolidado: sube textos, imágenes o pregunta directamente
                           </p>
                         </div>
                       </div>
@@ -143,13 +146,13 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                     {activeMode === 'reading' && (
                       <div className="text-center py-20">
                         <BookOpen className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Análisis de Lectura</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">Análisis de Lectura Avanzado</h3>
                         <p className="text-white/70 mb-6">
-                          Analiza textos con IA para mejorar tu comprensión
+                          Herramientas unificadas de análisis textual y comprensión
                         </p>
                         <div className="max-w-md mx-auto p-4 bg-white/5 rounded-lg border border-white/10">
                           <p className="text-white/60 text-sm">
-                            📚 Herramientas avanzadas de análisis textual y comprensión
+                            📚 Análisis contextual, estructural y semántico en un solo lugar
                           </p>
                         </div>
                       </div>
@@ -158,13 +161,13 @@ export const LectoGuiaUnified: React.FC<LectoGuiaProps> = ({
                     {activeMode === 'analysis' && (
                       <div className="text-center py-20">
                         <Target className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Evaluación PAES</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">Evaluación PAES Integrada</h3>
                         <p className="text-white/70 mb-6">
-                          Practica comprensión lectora con enfoque PAES
+                          Práctica de comprensión lectora con estándares PAES unificados
                         </p>
                         <div className="max-w-md mx-auto p-4 bg-white/5 rounded-lg border border-white/10">
                           <p className="text-white/60 text-sm">
-                            🎯 Ejercicios específicos para prueba de Competencia Lectora
+                            🎯 Ejercicios, métricas y progreso todo integrado
                           </p>
                         </div>
                       </div>
