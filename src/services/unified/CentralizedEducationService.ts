@@ -56,7 +56,7 @@ export class CentralizedEducationService {
       return dashboard;
 
     } catch (error) {
-      optimizedLogger.error('CentralizedEducation', 'Dashboard load failed', error);
+      optimizedLogger.error();
       return this.getDefaultDashboard();
     }
   }
@@ -83,7 +83,7 @@ export class CentralizedEducationService {
         ]
       };
     } catch (error) {
-      optimizedLogger.error('CentralizedEducation', 'Path calculation failed', error);
+      optimizedLogger.error();
       return this.getDefaultOptimalPath();
     }
   }
@@ -105,7 +105,7 @@ export class CentralizedEducationService {
         }
       ];
     } catch (error) {
-      optimizedLogger.error('CentralizedEducation', 'Alerts failed', error);
+      optimizedLogger.error();
       return [];
     }
   }
@@ -126,7 +126,7 @@ export class CentralizedEducationService {
         type: format === 'json' ? 'application/json' : 'text/plain'
       });
     } catch (error) {
-      optimizedLogger.error('CentralizedEducation', 'Export failed', error);
+      optimizedLogger.error();
       throw error;
     }
   }

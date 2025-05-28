@@ -94,10 +94,16 @@ if (typeof window !== 'undefined') {
       return;
     }
 
-    // Filtrar errores específicos de recursos
+    // Filtrar errores específicos de recursos con type guard
     if (event.target && event.target !== window) {
       const target = event.target as HTMLElement;
-      if (target.src && (
+      
+      // Type guard para elementos con src
+      const hasSource = (element: HTMLElement): element is HTMLImageElement | HTMLScriptElement => {
+        return 'src' in element;
+      };
+      
+      if (hasSource(target) && target.src && (
         target.src.includes('facebook.com') ||
         target.src.includes('gptengineer.js') ||
         target.src.includes('gpteng.co')
