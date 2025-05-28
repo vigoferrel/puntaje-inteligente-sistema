@@ -14,7 +14,9 @@ import {
   VolumeX,
   Settings,
   Home,
-  Globe
+  Globe,
+  FlaskConical,
+  Scroll
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,15 +28,33 @@ export const CinematicNavigationHub: React.FC = () => {
   const navigationItems = [
     { 
       icon: Home, 
-      label: 'Inicio', 
+      label: 'Hub PAES', 
       route: '/', 
       color: 'from-purple-500 to-cyan-500' 
     },
     { 
-      icon: Brain, 
-      label: 'LectoGuía', 
+      icon: BookOpen, 
+      label: 'Competencia Lectora', 
       route: '/lectoguia', 
       color: 'from-blue-500 to-indigo-500' 
+    },
+    { 
+      icon: Calculator, 
+      label: 'Matemáticas', 
+      route: '/mathematics', 
+      color: 'from-green-500 to-emerald-500' 
+    },
+    { 
+      icon: FlaskConical, 
+      label: 'Ciencias', 
+      route: '/sciences', 
+      color: 'from-purple-500 to-violet-500' 
+    },
+    { 
+      icon: Scroll, 
+      label: 'Historia', 
+      route: '/history', 
+      color: 'from-orange-500 to-yellow-500' 
     },
     { 
       icon: Target, 
@@ -43,28 +63,10 @@ export const CinematicNavigationHub: React.FC = () => {
       color: 'from-red-500 to-pink-500' 
     },
     { 
-      icon: Calculator, 
-      label: 'Centro Financiero', 
-      route: '/financial', 
-      color: 'from-green-500 to-emerald-500' 
-    },
-    { 
-      icon: BookOpen, 
-      label: 'Planificador', 
-      route: '/planning', 
-      color: 'from-orange-500 to-yellow-500' 
-    },
-    { 
       icon: Globe, 
       label: 'Universo 3D', 
       route: '/universe', 
       color: 'from-pink-500 to-purple-500' 
-    },
-    { 
-      icon: Award, 
-      label: 'Logros', 
-      route: '/achievements', 
-      color: 'from-yellow-500 to-orange-500' 
     }
   ];
 
@@ -161,7 +163,7 @@ export const CinematicNavigationHub: React.FC = () => {
         className="absolute -top-2 -left-2"
       >
         <Badge className="bg-gradient-to-r from-green-400 to-emerald-400 text-black text-xs">
-          Neural IA
+          PAES 2025
         </Badge>
       </motion.div>
 

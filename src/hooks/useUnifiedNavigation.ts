@@ -43,8 +43,20 @@ export const useUnifiedNavigation = () => {
   }, [location.pathname]);
 
   // Navegación específica a módulos con fallbacks seguros
-  const goToLectoGuia = useCallback(() => 
+  const goToCompetenciaLectora = useCallback(() => 
     navigateWithTransition('/lectoguia').catch(() => navigate('/lectoguia')), 
+    [navigateWithTransition, navigate]);
+  
+  const goToMathematics = useCallback(() => 
+    navigateWithTransition('/mathematics').catch(() => navigate('/mathematics')), 
+    [navigateWithTransition, navigate]);
+  
+  const goToSciences = useCallback(() => 
+    navigateWithTransition('/sciences').catch(() => navigate('/sciences')), 
+    [navigateWithTransition, navigate]);
+  
+  const goToHistory = useCallback(() => 
+    navigateWithTransition('/history').catch(() => navigate('/history')), 
     [navigateWithTransition, navigate]);
   
   const goToDiagnostic = useCallback(() => 
@@ -75,7 +87,10 @@ export const useUnifiedNavigation = () => {
     navigateWithTransition,
     getCurrentModule,
     isActive,
-    goToLectoGuia,
+    goToCompetenciaLectora,
+    goToMathematics,
+    goToSciences,
+    goToHistory,
     goToDiagnostic,
     goToPlanning,
     goToUniverse,

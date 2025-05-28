@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, ArrowRight, Target, Brain, BookOpen, BarChart3 } from 'lucide-react';
+import { Loader2, ArrowRight, Target, Calculator, BookOpen, BarChart3, FlaskConical, Scroll } from 'lucide-react';
 
 interface CinematicTransitionProps {
   isActive: boolean;
@@ -20,9 +20,12 @@ export const CinematicTransition: React.FC<CinematicTransitionProps> = ({
 }) => {
   const flowIcons = {
     evaluation: Target,
-    lectoguia: Brain,
+    competencia: BookOpen,
+    mathematics: Calculator,
+    sciences: FlaskConical,
+    history: Scroll,
     dashboard: BarChart3,
-    plan: BookOpen,
+    plan: BarChart3,
     diagnostic: Target
   };
 
@@ -75,7 +78,7 @@ export const CinematicTransition: React.FC<CinematicTransitionProps> = ({
               animate={{ y: 0, opacity: 1 }}
               className="text-2xl font-bold text-white"
             >
-              {targetFlow ? `Navegando a ${getFlowDisplayName(targetFlow)}` : 'Cargando...'}
+              {targetFlow ? `Navegando a ${getFlowDisplayName(targetFlow)}` : 'Cargando PAES...'}
             </motion.h3>
             
             {context && (
@@ -125,7 +128,10 @@ export const CinematicTransition: React.FC<CinematicTransitionProps> = ({
 function getFlowDisplayName(flow: string): string {
   const names = {
     evaluation: 'Evaluación',
-    lectoguia: 'LectoGuía IA',
+    competencia: 'Competencia Lectora',
+    mathematics: 'Matemáticas',
+    sciences: 'Ciencias',
+    history: 'Historia',
     dashboard: 'Panel Principal',
     plan: 'Plan de Estudio',
     diagnostic: 'Diagnóstico'
@@ -139,7 +145,10 @@ function getContextDisplayName(context: string): string {
     const [type, detail] = context.split(':');
     const contextNames = {
       evaluation: `Preparando evaluación de ${detail}`,
-      lectoguia: `Cargando contenido de ${detail}`,
+      competencia: `Cargando contenido de ${detail}`,
+      mathematics: `Preparando ejercicios de ${detail}`,
+      sciences: `Iniciando laboratorio de ${detail}`,
+      history: `Cargando análisis de ${detail}`,
       dashboard: `Actualizando métricas de ${detail}`,
       diagnostic: `Configurando diagnóstico ${detail}`
     };
