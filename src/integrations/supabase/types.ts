@@ -1398,6 +1398,13 @@ export type Database = {
             foreignKeyName: "exercises_skill_id_fkey"
             columns: ["skill_id"]
             isOneToOne: false
+            referencedRelation: "cognitive_distribution_m2_2024"
+            referencedColumns: ["skill_id"]
+          },
+          {
+            foreignKeyName: "exercises_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
             referencedRelation: "paes_skills"
             referencedColumns: ["id"]
           },
@@ -1945,6 +1952,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "learning_nodes_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "cognitive_distribution_m2_2024"
+            referencedColumns: ["skill_id"]
+          },
           {
             foreignKeyName: "learning_nodes_skill_id_fkey"
             columns: ["skill_id"]
@@ -3514,7 +3528,9 @@ export type Database = {
     Views: {
       cognitive_distribution_m2_2024: {
         Row: {
-          cognitive_demand: string | null
+          cognitive_demand:
+            | Database["public"]["Enums"]["tpaes_habilidad"]
+            | null
           cognitive_level: Database["public"]["Enums"]["bloom_level"] | null
           dificultad_promedio: number | null
           porcentaje: number | null
@@ -3522,15 +3538,7 @@ export type Database = {
           skill_id: number | null
           total_preguntas: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "learning_nodes_skill_id_fkey"
-            columns: ["skill_id"]
-            isOneToOne: false
-            referencedRelation: "paes_skills"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       content_distribution_m2_2024: {
         Row: {
@@ -3550,7 +3558,7 @@ export type Database = {
           dificultad_promedio: number | null
           node_id: string | null
           node_name: string | null
-          preguntas: string[] | null
+          preguntas: number[] | null
           tier_priority: Database["public"]["Enums"]["tier_priority"] | null
           total_preguntas: number | null
         }
@@ -3562,7 +3570,9 @@ export type Database = {
           cognitive_levels: string | null
           complementary_nodes: number | null
           critical_nodes: number | null
-          difficulty_levels: string | null
+          difficulty_levels:
+            | Database["public"]["Enums"]["difficulty_level"][]
+            | null
           important_nodes: number | null
           subject_area: string | null
           total_nodes: number | null
@@ -3571,20 +3581,15 @@ export type Database = {
       }
       skill_distribution_ciencias_2024: {
         Row: {
-          dificultad_promedio: number | null
-          porcentaje: number | null
-          skill_id: number | null
-          total_nodos: number | null
+          avg_difficulty: number | null
+          code: string | null
+          name: string | null
+          percentage: number | null
+          skill_type: Database["public"]["Enums"]["tpaes_habilidad"] | null
+          total_nodes: number | null
+          total_questions: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "learning_nodes_skill_id_fkey"
-            columns: ["skill_id"]
-            isOneToOne: false
-            referencedRelation: "paes_skills"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -3674,6 +3679,14 @@ export type Database = {
           universidad: string
           probabilidad_ingreso: number
           puntaje_requerido: number
+        }[]
+      }
+      check_view_security_definers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          view_name: string
+          has_security_definer: boolean
+          definition_snippet: string
         }[]
       }
       exec_sql: {
