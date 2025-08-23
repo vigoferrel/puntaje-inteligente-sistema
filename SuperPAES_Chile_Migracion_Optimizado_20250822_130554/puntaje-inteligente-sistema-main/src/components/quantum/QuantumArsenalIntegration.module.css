@@ -1,0 +1,455 @@
+/* QUANTUM ARSENAL INTEGRATION - ESTILOS CUÁNTICOS */
+/* Context7 + Arsenal Educativo + Calendario Inteligente */
+
+.arsenalContainer {
+  background: linear-gradient(135deg, rgba(0, 20, 40, 0.95), rgba(0, 40, 80, 0.9));
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px 0;
+  color: #00ffff;
+  font-family: 'Arial', sans-serif;
+  position: relative;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.arsenalContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.arsenalContainer > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Estados de transcendencia */
+.pending {
+  border-color: rgba(255, 255, 0, 0.5);
+  box-shadow: 0 0 20px rgba(255, 255, 0, 0.2);
+}
+
+.processing {
+  border-color: rgba(0, 255, 136, 0.7);
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
+  animation: quantumPulse 2s ease-in-out infinite;
+}
+
+.transcendent {
+  border-color: rgba(255, 100, 255, 0.8);
+  box-shadow: 0 0 30px rgba(255, 100, 255, 0.4);
+  background: linear-gradient(135deg, rgba(20, 0, 40, 0.95), rgba(40, 0, 80, 0.9));
+  animation: transcendentGlow 3s ease-in-out infinite;
+}
+
+@keyframes quantumPulse {
+  0%, 100% { 
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 35px rgba(0, 255, 136, 0.5);
+  }
+}
+
+@keyframes transcendentGlow {
+  0%, 100% { 
+    box-shadow: 0 0 30px rgba(255, 100, 255, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 50px rgba(255, 100, 255, 0.7);
+  }
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.header h3 {
+  margin: 0;
+  color: #00ff88;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  font-size: 1.4em;
+}
+
+.coherenceIndicator {
+  background: rgba(0, 255, 255, 0.1);
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  font-size: 0.9em;
+  color: #88ffff;
+}
+
+/* Navigation */
+.tabNavigation {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 5px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 15px;
+  background: transparent;
+  border: none;
+  color: #88ffff;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+}
+
+.tab:hover {
+  background: rgba(0, 255, 255, 0.1);
+  color: #00ffff;
+}
+
+.tabActive {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 255, 0.2));
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.4);
+}
+
+/* Content */
+.content {
+  min-height: 200px;
+  margin-bottom: 20px;
+}
+
+/* Arsenal Tab */
+.arsenalTab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.statusCard {
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.statusCard:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.statusCard h4 {
+  margin: 0 0 10px 0;
+  color: #88ffff;
+  font-size: 0.9em;
+}
+
+.statusValue {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.active {
+  color: #00ff88;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+.inactive {
+  color: #ff6666;
+  text-shadow: 0 0 8px rgba(255, 102, 102, 0.5);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.actionButton {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 255, 0.2));
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  border-radius: 8px;
+  color: #00ff88;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+}
+
+.actionButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.3), rgba(0, 255, 255, 0.3));
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Calendar Tab */
+.calendarTab {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.calendarEvents h4 {
+  margin: 0 0 15px 0;
+  color: #00ff88;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+.eventList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  gap: 15px;
+  align-items: center;
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px 15px;
+  transition: all 0.3s ease;
+}
+
+.event:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.4);
+}
+
+.eventTime {
+  color: #88ffff;
+  font-weight: bold;
+  text-align: center;
+}
+
+.eventTitle {
+  color: #00ffff;
+}
+
+.eventCoherence {
+  color: #00ff88;
+  font-weight: bold;
+  text-align: center;
+  text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+}
+
+/* Recommendations Tab */
+.recommendationsTab {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.recommendationsTab h4 {
+  margin: 0 0 15px 0;
+  color: #00ff88;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+.recommendationList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recommendation {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 8px;
+  padding: 12px 15px;
+  color: #88ffff;
+  border-left: 4px solid #00ff88;
+  transition: all 0.3s ease;
+}
+
+.recommendation:hover {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: rgba(0, 255, 136, 0.5);
+  transform: translateX(5px);
+}
+
+/* Activity Log */
+.activityLog {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.activityLog h4 {
+  margin: 0 0 10px 0;
+  color: #88ffff;
+  font-size: 1em;
+}
+
+.logContainer {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.logEntry {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8em;
+  color: #00ff88;
+  padding: 3px 8px;
+  border-left: 2px solid rgba(0, 255, 136, 0.3);
+  background: rgba(0, 255, 136, 0.05);
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.logEntry:hover {
+  background: rgba(0, 255, 136, 0.1);
+  border-left-color: #00ff88;
+}
+
+/* Loading Overlay */
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  color: #00ffff;
+  z-index: 10;
+  border-radius: 15px;
+}
+
+.loadingSpinner {
+  font-size: 2em;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Scrollbar personalizado */
+.logContainer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.logContainer::-webkit-scrollbar-track {
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.logContainer::-webkit-scrollbar-thumb {
+  background: #00ff88;
+  border-radius: 2px;
+}
+
+.logContainer::-webkit-scrollbar-thumb:hover {
+  background: #00ffff;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .arsenalContainer {
+    padding: 15px;
+    margin: 15px 0;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .statusGrid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+  }
+  
+  .actionButton {
+    min-width: auto;
+  }
+  
+  .event {
+    grid-template-columns: 60px 1fr 60px;
+    gap: 10px;
+    padding: 10px;
+  }
+  
+  .tabNavigation {
+    flex-wrap: wrap;
+  }
+  
+  .tab {
+    flex: 1 1 45%;
+    margin: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .arsenalContainer {
+    padding: 12px;
+  }
+  
+  .statusGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .event {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 5px;
+  }
+  
+  .header h3 {
+    font-size: 1.2em;
+  }
+  
+  .coherenceIndicator {
+    font-size: 0.8em;
+    padding: 6px 12px;
+  }
+}

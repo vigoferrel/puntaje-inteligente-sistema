@@ -1,0 +1,393 @@
+/* QUANTUM GRAN COLADOR MODULE - ESTILOS OPTIMIZADOS */
+/* Context7 + Sequential Thinking - Aprovechando arsenal CSS existente */
+
+.granColadorContainer {
+  padding: var(--quantum-spacing-lg, 16px);
+  background: var(--quantum-bg-card, rgba(51, 65, 85, 0.6));
+  border-radius: 12px;
+  border: 1px solid var(--quantum-border-primary, rgba(148, 163, 184, 0.2));
+  backdrop-filter: blur(10px);
+}
+
+.granColadorHeader {
+  margin-bottom: var(--quantum-spacing-lg, 16px);
+}
+
+.granColadorTitle {
+  color: var(--quantum-text-primary, #f1f5f9);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: var(--quantum-spacing-sm, 8px);
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.granColadorDescription {
+  color: var(--quantum-text-secondary, #94a3b8);
+  font-size: 14px;
+  margin-bottom: var(--quantum-spacing-md, 12px);
+}
+
+.estadisticasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--quantum-spacing-sm, 8px);
+  margin-bottom: var(--quantum-spacing-md, 12px);
+}
+
+.estadisticaCard {
+  background: var(--quantum-bg-secondary, rgba(30, 41, 59, 0.95));
+  padding: var(--quantum-spacing-sm, 8px);
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid var(--quantum-border-secondary, rgba(148, 163, 184, 0.1));
+}
+
+.estadisticaValue {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.estadisticaValuePrimary {
+  color: var(--quantum-accent-primary, #3b82f6);
+}
+
+.estadisticaValueSecondary {
+  color: var(--quantum-accent-secondary, #8b5cf6);
+}
+
+.estadisticaValueSuccess {
+  color: var(--quantum-status-excellent, #22c55e);
+}
+
+.estadisticaLabel {
+  color: var(--quantum-text-secondary, #94a3b8);
+  font-size: 12px;
+}
+
+.controlesContainer {
+  display: flex;
+  gap: var(--quantum-spacing-md, 12px);
+  margin-bottom: var(--quantum-spacing-lg, 16px);
+  flex-wrap: wrap;
+}
+
+.busquedaInput {
+  flex: 1;
+  min-width: 200px;
+  padding: var(--quantum-spacing-sm, 8px);
+  background: var(--quantum-bg-secondary, rgba(30, 41, 59, 0.95));
+  border: 1px solid var(--quantum-border-primary, rgba(148, 163, 184, 0.2));
+  border-radius: 8px;
+  color: var(--quantum-text-primary, #f1f5f9);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.busquedaInput:focus {
+  outline: none;
+  border-color: var(--quantum-accent-primary, #3b82f6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.busquedaInput::placeholder {
+  color: var(--quantum-text-muted, #64748b);
+}
+
+.filtroSelect {
+  padding: var(--quantum-spacing-sm, 8px);
+  background: var(--quantum-bg-secondary, rgba(30, 41, 59, 0.95));
+  border: 1px solid var(--quantum-border-primary, rgba(148, 163, 184, 0.2));
+  border-radius: 8px;
+  color: var(--quantum-text-primary, #f1f5f9);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.filtroSelect:focus {
+  outline: none;
+  border-color: var(--quantum-accent-primary, #3b82f6);
+}
+
+.nodosContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--quantum-accent-primary, #3b82f6) transparent;
+}
+
+.nodosContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nodosContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nodosContainer::-webkit-scrollbar-thumb {
+  background: var(--quantum-accent-primary, #3b82f6);
+  border-radius: 3px;
+}
+
+.loadingContainer {
+  text-align: center;
+  padding: var(--quantum-spacing-xl, 20px);
+  color: var(--quantum-text-secondary, #94a3b8);
+}
+
+.nodoItem {
+  background: var(--quantum-bg-secondary, rgba(30, 41, 59, 0.95));
+  border: 1px solid var(--quantum-border-primary, rgba(148, 163, 184, 0.2));
+  border-radius: 8px;
+  padding: var(--quantum-spacing-md, 12px);
+  margin-bottom: var(--quantum-spacing-sm, 8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  will-change: transform, border-color;
+}
+
+.nodoItem:hover {
+  border-color: var(--quantum-accent-primary, #3b82f6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.nodoHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--quantum-spacing-sm, 8px);
+}
+
+.nodoTitulo {
+  color: var(--quantum-text-primary, #f1f5f9);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.relevanceBadge {
+  background: var(--quantum-accent-primary, #3b82f6);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: center;
+}
+
+.tagsContainer {
+  display: flex;
+  gap: var(--quantum-spacing-sm, 8px);
+  margin-bottom: var(--quantum-spacing-sm, 8px);
+  flex-wrap: wrap;
+}
+
+.tagSubject {
+  background: var(--quantum-accent-secondary, #8b5cf6);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tagDifficulty {
+  background: var(--quantum-status-warning, #f59e0b);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tagTime {
+  background: var(--quantum-status-good, #3b82f6);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.nodoMeta {
+  color: var(--quantum-text-secondary, #94a3b8);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.perfilContainer {
+  margin-top: var(--quantum-spacing-lg, 16px);
+  padding: var(--quantum-spacing-md, 12px);
+  background: var(--quantum-bg-primary, rgba(15, 23, 42, 0.98));
+  border-radius: 8px;
+  border: 1px solid var(--quantum-border-secondary, rgba(148, 163, 184, 0.1));
+}
+
+.perfilTitulo {
+  color: var(--quantum-text-primary, #f1f5f9);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: var(--quantum-spacing-sm, 8px);
+}
+
+.perfilGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--quantum-spacing-sm, 8px);
+  font-size: 12px;
+  color: var(--quantum-text-secondary, #94a3b8);
+}
+
+.perfilItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.perfilLabel {
+  font-weight: 600;
+  color: var(--quantum-text-primary, #f1f5f9);
+}
+
+/* RESPONSIVE DESIGN - OPTIMIZADO PARA MOVILES GAMA MEDIA */
+@media (max-width: 768px) {
+  .granColadorContainer {
+    padding: var(--quantum-spacing-md, 12px);
+  }
+  
+  .granColadorTitle {
+    font-size: 18px;
+  }
+  
+  .estadisticasGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--quantum-spacing-xs, 4px);
+  }
+  
+  .estadisticaCard {
+    padding: var(--quantum-spacing-xs, 4px);
+  }
+  
+  .estadisticaValue {
+    font-size: 16px;
+  }
+  
+  .controlesContainer {
+    flex-direction: column;
+    gap: var(--quantum-spacing-sm, 8px);
+  }
+  
+  .busquedaInput {
+    min-width: unset;
+  }
+  
+  .nodoHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--quantum-spacing-xs, 4px);
+  }
+  
+  .tagsContainer {
+    gap: var(--quantum-spacing-xs, 4px);
+  }
+  
+  .perfilGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .estadisticasGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .nodoTitulo {
+    font-size: 14px;
+  }
+  
+  .nodosContainer {
+    max-height: 300px;
+  }
+}
+
+/* ANIMACIONES OPTIMIZADAS PARA PERFORMANCE */
+@media (prefers-reduced-motion: no-preference) {
+  .nodoItem {
+    will-change: transform;
+  }
+  
+  .busquedaInput,
+  .filtroSelect {
+    will-change: border-color;
+  }
+}
+
+/* MODO OSCURO MEJORADO */
+@media (prefers-color-scheme: dark) {
+  .granColadorContainer {
+    background: rgba(15, 23, 42, 0.98);
+    border-color: rgba(148, 163, 184, 0.15);
+  }
+  
+  .estadisticaCard,
+  .nodoItem {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(148, 163, 184, 0.1);
+  }
+}
+
+/* ESTADOS DE CARGA Y INTERACCION */
+.nodoItem:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
+
+.busquedaInput:disabled,
+.filtroSelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ACCESIBILIDAD MEJORADA */
+.nodoItem:focus-visible {
+  outline: 2px solid var(--quantum-accent-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+.busquedaInput:focus-visible,
+.filtroSelect:focus-visible {
+  outline: 2px solid var(--quantum-accent-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* UTILIDADES CUANTICAS */
+.textPrimary {
+  color: var(--quantum-text-primary, #f1f5f9);
+}
+
+.textSecondary {
+  color: var(--quantum-text-secondary, #94a3b8);
+}
+
+.textMuted {
+  color: var(--quantum-text-muted, #64748b);
+}
+
+.bgPrimary {
+  background: var(--quantum-bg-primary, rgba(15, 23, 42, 0.98));
+}
+
+.bgSecondary {
+  background: var(--quantum-bg-secondary, rgba(30, 41, 59, 0.95));
+}
+
+.borderPrimary {
+  border-color: var(--quantum-border-primary, rgba(148, 163, 184, 0.2));
+}

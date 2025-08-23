@@ -1,0 +1,710 @@
+/* 🧠 QUANTUM CSS - VARIABLES CUÁNTICAS MAESTRAS */
+/* Context7 + Pensamiento Secuencial + Trilogía Cuántica */
+/* Rafael (Visual/3D) + Michelangelo (Métricas) + Leonardo (Neural/IA) */
+
+:root {
+  /* 🎭 Estados de los Maestros Cuánticos */
+  --rafael-visual: 0;        /* 0 = inactivo, 1 = activo */
+  --michelangelo-metrics: 0;
+  --leonardo-neural: 1;      /* Por defecto Leonardo activo */
+  
+  /* 🎨 Rafael Variables (Visual/3D Arsenal) */
+  --rafael-bg: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 50%, #ff6b35 100%);
+  --rafael-primary: #ff6b6b;
+  --rafael-secondary: #ff8e53;
+  --rafael-transform: perspective(1000px) rotateX(calc(var(--rafael-visual) * 10deg));
+  --rafael-opacity: var(--rafael-visual);
+  --rafael-3d-depth: calc(var(--rafael-visual) * 50px);
+  
+  /* 📊 Michelangelo Variables (Métricas/Dashboard) */
+  --michelangelo-bg: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #096dd9 100%);
+  --michelangelo-primary: #4ecdc4;
+  --michelangelo-secondary: #44a08d;
+  --michelangelo-grid: calc(var(--michelangelo-metrics) * 1fr);
+  --michelangelo-opacity: var(--michelangelo-metrics);
+  --michelangelo-charts: calc(var(--michelangelo-metrics) * 100%);
+  
+  /* 🧠 Leonardo Variables (IA/Neural) */
+  --leonardo-bg: linear-gradient(135deg, #a8edea 0%, #fed6e3 50%, #d299c2 100%);
+  --leonardo-primary: #a8edea;
+  --leonardo-secondary: #fed6e3;
+  --leonardo-intelligence: calc(var(--leonardo-neural) * 100%);
+  --leonardo-opacity: var(--leonardo-neural);
+  --leonardo-neural-glow: calc(var(--leonardo-neural) * 20px);
+  
+  /* 🌟 Variables Dinámicas Computadas */
+  --active-primary: color-mix(
+    in srgb,
+    var(--rafael-primary) calc(var(--rafael-visual) * 100%),
+    color-mix(
+      in srgb,
+      var(--michelangelo-primary) calc(var(--michelangelo-metrics) * 100%),
+      var(--leonardo-primary) calc(var(--leonardo-neural) * 100%)
+    )
+  );
+  
+  --active-bg: var(--rafael-bg);
+  --glass-bg: rgba(15, 23, 42, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* 🧠 LAYOUT CUÁNTICO ÚNICO - Grid Adaptativo */
+.quantum-master {
+  display: grid;
+  grid-template-areas: 
+    "header header header"
+    "sidebar content contextual"
+    "maestros content contextual"
+    "metrics content contextual";
+  grid-template-columns: 
+    calc(200px + var(--rafael-visual) * 50px) 
+    1fr 
+    calc(300px + var(--michelangelo-metrics) * 100px);
+  grid-template-rows: 
+    calc(60px + var(--leonardo-neural) * 20px) 
+    1fr auto auto;
+  min-height: 100vh;
+  background: var(--active-bg);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: white;
+  
+  /* Transformaciones cuánticas Rafael */
+  transform: var(--rafael-transform);
+}
+
+/* 🎭 HEADER CUÁNTICO ADAPTATIVO */
+.quantum-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 2px solid var(--active-primary);
+  z-index: 1000;
+  
+  /* Efectos por maestro activo */
+  box-shadow: 
+    0 10px 30px rgba(255, 107, 107, calc(var(--rafael-visual) * 0.3)),
+    0 10px 30px rgba(78, 205, 196, calc(var(--michelangelo-metrics) * 0.3)),
+    0 10px 30px rgba(168, 237, 234, calc(var(--leonardo-neural) * 0.3));
+  
+  /* Pulsación cuántica */
+  animation: quantumPulse 4s ease-in-out infinite;
+}
+
+.consciousness-display {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.consciousness-display span {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border: 1px solid var(--active-primary);
+}
+
+.aspirations-display {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--active-primary);
+  font-weight: 600;
+}
+
+/* 🎯 SIDEBAR ARSENAL EDUCATIVO */
+.quantum-sidebar {
+  grid-area: sidebar;
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  margin: 1rem;
+  padding: 1rem;
+  overflow-y: auto;
+  
+  /* Visibilidad según maestro */
+  opacity: calc(0.3 + var(--rafael-visual) * 0.7 + var(--leonardo-neural) * 0.7);
+  transform: translateX(calc(var(--michelangelo-metrics) * -20px));
+  transition: all 0.3s ease;
+}
+
+.quantum-sidebar h3 {
+  color: var(--active-primary);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.quantum-sidebar h4 {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 1.5rem 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.arsenal-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.arsenal-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--active-primary);
+  transform: translateX(4px);
+}
+
+.arsenal-item.active {
+  background: var(--active-primary);
+  color: black;
+  font-weight: 600;
+  border-color: var(--active-primary);
+}
+
+/* 📊 CONTENIDO PRINCIPAL ADAPTATIVO */
+.quantum-content {
+  grid-area: content;
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  margin: 1rem 0;
+  padding: 2rem;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* 🎨 Contenido Rafael (Visual/3D) */
+.rafael-content {
+  display: block;
+  opacity: var(--rafael-opacity);
+  transform: translateZ(var(--rafael-3d-depth));
+  transition: all 0.5s ease;
+}
+
+.rafael-content h2 {
+  color: var(--rafael-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.visual-3d-container {
+  background: rgba(255, 107, 107, 0.1);
+  border: 2px solid var(--rafael-primary);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* 📊 Contenido Michelangelo (Métricas) */
+.michelangelo-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  opacity: var(--michelangelo-opacity);
+  transition: all 0.5s ease;
+}
+
+.metric-card {
+  background: rgba(78, 205, 196, 0.1);
+  border: 2px solid var(--michelangelo-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(78, 205, 196, 0.2);
+}
+
+.metric-card h3 {
+  color: var(--michelangelo-primary);
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+/* 🧠 Contenido Leonardo (IA/Neural) */
+.leonardo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  opacity: var(--leonardo-opacity);
+  transition: all 0.5s ease;
+}
+
+.leonardo-content h2 {
+  color: var(--leonardo-primary);
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-shadow: 0 0 var(--leonardo-neural-glow) var(--leonardo-primary);
+}
+
+.neural-insights {
+  background: rgba(168, 237, 234, 0.1);
+  border: 2px solid var(--leonardo-primary);
+  border-radius: 12px;
+  padding: 2rem;
+  line-height: 1.6;
+}
+
+.neural-insights p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+/* 🖼️ VENTANA CONTEXTUAL INTELIGENTE */
+.quantum-contextual {
+  grid-area: contextual;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  border: 2px solid var(--active-primary);
+  border-radius: 16px;
+  margin: 1rem 1rem 1rem 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  
+  /* Tamaño según maestro */
+  width: calc(300px + var(--michelangelo-metrics) * 200px);
+  min-height: 400px;
+  transition: all 0.5s ease;
+}
+
+.contextual-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid var(--active-primary);
+}
+
+.contextual-header h3 {
+  color: var(--active-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.contextual-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.contextual-controls button {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.contextual-controls button:hover {
+  background: var(--active-primary);
+  color: black;
+  border-color: var(--active-primary);
+}
+
+.contextual-content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+.contextual-content h4 {
+  color: var(--active-primary);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.contextual-content p {
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 🔮 MAESTROS ORBS - Trilogía Cuántica */
+.quantum-maestros {
+  grid-area: maestros;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  margin: 0 1rem;
+}
+
+.maestro-orb {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  position: relative;
+  border: 3px solid transparent;
+}
+
+.maestro-orb::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(45deg, var(--active-primary), transparent);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.maestro-orb.rafael {
+  background: var(--rafael-bg);
+  opacity: calc(0.5 + var(--rafael-visual) * 0.5);
+  transform: scale(calc(1 + var(--rafael-visual) * 0.3));
+  box-shadow: 0 0 calc(var(--rafael-visual) * 20px) var(--rafael-primary);
+}
+
+.maestro-orb.michelangelo {
+  background: var(--michelangelo-bg);
+  opacity: calc(0.5 + var(--michelangelo-metrics) * 0.5);
+  transform: scale(calc(1 + var(--michelangelo-metrics) * 0.3));
+  box-shadow: 0 0 calc(var(--michelangelo-metrics) * 20px) var(--michelangelo-primary);
+}
+
+.maestro-orb.leonardo {
+  background: var(--leonardo-bg);
+  opacity: calc(0.5 + var(--leonardo-neural) * 0.5);
+  transform: scale(calc(1 + var(--leonardo-neural) * 0.3));
+  box-shadow: 0 0 calc(var(--leonardo-neural) * 20px) var(--leonardo-primary);
+}
+
+.maestro-orb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.maestro-orb:hover::before {
+  opacity: 1;
+}
+
+/* 📊 MÉTRICAS CUÁNTICAS FLOTANTES */
+.quantum-metrics {
+  grid-area: metrics;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  margin: 0 1rem 1rem 1rem;
+  
+  /* Visibilidad según Michelangelo */
+  opacity: calc(0.4 + var(--michelangelo-metrics) * 0.6);
+  transform: translateY(calc((1 - var(--michelangelo-metrics)) * 20px));
+  transition: all 0.5s ease;
+}
+
+.quantum-metrics .metric-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--active-primary);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  animation: dataFlow 2s ease-in-out infinite;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.5rem;
+}
+
+/* 📱 RESPONSIVE CUÁNTICO */
+@media (max-width: 1200px) {
+  .quantum-master {
+    grid-template-areas: 
+      "header header"
+      "content contextual"
+      "sidebar sidebar"
+      "maestros metrics";
+    grid-template-columns: 1fr 400px;
+    grid-template-rows: auto 1fr auto auto;
+  }
+  
+  .michelangelo-content {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .quantum-master {
+    grid-template-areas: 
+      "header"
+      "content"
+      "contextual"
+      "sidebar"
+      "maestros"
+      "metrics";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto auto auto auto;
+    gap: 0.5rem;
+  }
+  
+  .quantum-header {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .quantum-contextual {
+    margin: 0.5rem;
+    height: 300px;
+    width: auto;
+  }
+  
+  .quantum-maestros {
+    justify-content: center;
+    margin: 0.5rem;
+  }
+  
+  .quantum-metrics {
+    grid-template-columns: repeat(2, 1fr);
+    margin: 0.5rem;
+  }
+  
+  .michelangelo-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 🌟 ANIMACIONES CUÁNTICAS */
+@keyframes quantumPulse {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px rgba(255, 255, 255, 0.1),
+      0 10px 30px rgba(255, 107, 107, calc(var(--rafael-visual) * 0.3)),
+      0 10px 30px rgba(78, 205, 196, calc(var(--michelangelo-metrics) * 0.3)),
+      0 10px 30px rgba(168, 237, 234, calc(var(--leonardo-neural) * 0.3));
+  }
+  50% { 
+    box-shadow: 
+      0 0 40px rgba(255, 255, 255, 0.2),
+      0 15px 40px rgba(255, 107, 107, calc(var(--rafael-visual) * 0.5)),
+      0 15px 40px rgba(78, 205, 196, calc(var(--michelangelo-metrics) * 0.5)),
+      0 15px 40px rgba(168, 237, 234, calc(var(--leonardo-neural) * 0.5));
+  }
+}
+
+@keyframes dataFlow {
+  0%, 100% { 
+    border-color: var(--active-primary);
+    transform: scale(1);
+  }
+  50% { 
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes maestroTransition {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.8) rotate(-180deg); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) rotate(0deg); 
+  }
+}
+
+/* 🔄 TRANSICIONES CONTEXT7 */
+.quantum-transition {
+  animation: maestroTransition 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quantum-master.transitioning {
+  pointer-events: none;
+  filter: blur(2px);
+  transition: filter 0.3s ease;
+}
+
+.quantum-master.transitioning * {
+  transition: all 0.5s ease;
+}
+
+/* 🎯 ESTADOS ESPECIALES DE CONSCIENCIA */
+.quantum-master.consciousness-high {
+  --leonardo-neural: 1;
+  filter: brightness(1.1) saturate(1.2);
+}
+
+.quantum-master.consciousness-medium {
+  --leonardo-neural: 0.7;
+  filter: brightness(1) saturate(1);
+}
+
+.quantum-master.consciousness-low {
+  --leonardo-neural: 0.3;
+  filter: brightness(0.9) saturate(0.8);
+}
+
+/* 🚀 EFECTOS ESPECIALES CUÁNTICOS */
+.quantum-glow {
+  position: relative;
+}
+
+.quantum-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(45deg, var(--active-primary), transparent);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.quantum-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.quantum-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideIn {
+  from { 
+    transform: translateX(-100%); 
+  }
+  to { 
+    transform: translateX(0); 
+  }
+}
+
+/* 🎨 UTILIDADES CUÁNTICAS */
+.text-quantum-primary {
+  color: var(--active-primary);
+}
+
+.bg-quantum-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+}
+
+.border-quantum {
+  border: 1px solid var(--active-primary);
+}
+
+.shadow-quantum {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* 🎯 CLASES PARA ESTILOS INLINE CORREGIDOS */
+
+/* Pequeño texto alineado a la derecha para porcentajes */
+.arsenal-item-percentage {
+  margin-left: auto;
+  font-size: 0.7rem;
+}
+
+/* Contenedor de información Rafael 3D */
+.rafael-info-box {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(255, 107, 107, 0.2);
+  border-radius: 8px;
+}
+
+/* Contenedor de características Rafael */
+.rafael-features-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+}
+
+/* Contenedor de métricas Michelangelo */
+.michelangelo-metrics-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(78, 205, 196, 0.1);
+  border-radius: 8px;
+}
+
+/* Contenedor de insights Leonardo */
+.leonardo-insights-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(168, 237, 234, 0.1);
+  border-radius: 8px;
+}
+
+/* Estado vacío del contenido contextual */
+.contextual-empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Contenedor de página completa para QuantumTest */
+.quantum-test-container {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}

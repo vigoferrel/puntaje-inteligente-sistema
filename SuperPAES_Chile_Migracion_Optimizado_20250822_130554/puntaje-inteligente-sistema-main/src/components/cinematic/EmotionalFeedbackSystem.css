@@ -1,0 +1,289 @@
+/* Estilos para el Sistema de Feedback Emocional */
+
+.emotional-feedback-container {
+  position: fixed;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  z-index: 30;
+}
+
+.emotional-indicator {
+  position: relative;
+}
+
+.emotional-icon-container {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  border-width: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.emotional-icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border-width: 2px;
+  opacity: 0.3;
+}
+
+.intensity-bar {
+  margin-top: 1rem;
+  width: 0.5rem;
+  height: 6rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 9999px;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.intensity-fill {
+  width: 100%;
+  border-radius: 9999px;
+}
+
+.state-label {
+  margin-top: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.state-text {
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.percentage-text {
+  font-size: 0.75rem;
+  text-align: center;
+  margin-top: 0.25rem;
+}
+
+.particles-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  left: 50%;
+  top: 50%;
+}
+
+.contextual-feedback {
+  position: absolute;
+  left: 5rem;
+  top: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 20rem;
+}
+
+.feedback-title {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.feedback-description {
+  color: rgb(209, 213, 219);
+  font-size: 0.75rem;
+}
+
+.neural-sync-container {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.neural-sync-indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.neural-sync-text {
+  font-size: 0.75rem;
+}
+
+/* Estados emocionales específicos */
+.emotional-focused {
+  --emotional-color: #4ECDC4;
+}
+
+.emotional-excited {
+  --emotional-color: #FFD700;
+}
+
+.emotional-calm {
+  --emotional-color: #9B59B6;
+}
+
+.emotional-motivated {
+  --emotional-color: #E74C3C;
+}
+
+/* Aplicar colores dinámicos */
+.emotional-icon-container[data-state="focused"] {
+  border-color: #4ECDC4;
+  background-color: rgba(78, 205, 196, 0.125);
+  box-shadow: 0 0 30px rgba(78, 205, 196, 0.25);
+}
+
+.emotional-icon-container[data-state="excited"] {
+  border-color: #FFD700;
+  background-color: rgba(255, 215, 0, 0.125);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.25);
+}
+
+.emotional-icon-container[data-state="calm"] {
+  border-color: #9B59B6;
+  background-color: rgba(155, 89, 182, 0.125);
+  box-shadow: 0 0 30px rgba(155, 89, 182, 0.25);
+}
+
+.emotional-icon-container[data-state="motivated"] {
+  border-color: #E74C3C;
+  background-color: rgba(231, 76, 60, 0.125);
+  box-shadow: 0 0 30px rgba(231, 76, 60, 0.25);
+}
+
+.emotional-icon[data-state="focused"] {
+  color: #4ECDC4;
+}
+
+.emotional-icon[data-state="excited"] {
+  color: #FFD700;
+}
+
+.emotional-icon[data-state="calm"] {
+  color: #9B59B6;
+}
+
+.emotional-icon[data-state="motivated"] {
+  color: #E74C3C;
+}
+
+.pulse-ring[data-state="focused"] {
+  border-color: #4ECDC4;
+}
+
+.pulse-ring[data-state="excited"] {
+  border-color: #FFD700;
+}
+
+.pulse-ring[data-state="calm"] {
+  border-color: #9B59B6;
+}
+
+.pulse-ring[data-state="motivated"] {
+  border-color: #E74C3C;
+}
+
+.intensity-fill[data-state="focused"] {
+  background: linear-gradient(to top, #4ECDC4, rgba(78, 205, 196, 0.5));
+}
+
+.intensity-fill[data-state="excited"] {
+  background: linear-gradient(to top, #FFD700, rgba(255, 215, 0, 0.5));
+}
+
+.intensity-fill[data-state="calm"] {
+  background: linear-gradient(to top, #9B59B6, rgba(155, 89, 182, 0.5));
+}
+
+.intensity-fill[data-state="motivated"] {
+  background: linear-gradient(to top, #E74C3C, rgba(231, 76, 60, 0.5));
+}
+
+.percentage-text[data-state="focused"] {
+  color: #4ECDC4;
+}
+
+.percentage-text[data-state="excited"] {
+  color: #FFD700;
+}
+
+.percentage-text[data-state="calm"] {
+  color: #9B59B6;
+}
+
+.percentage-text[data-state="motivated"] {
+  color: #E74C3C;
+}
+
+.particle[data-state="focused"] {
+  background-color: #4ECDC4;
+}
+
+.particle[data-state="excited"] {
+  background-color: #FFD700;
+}
+
+.particle[data-state="calm"] {
+  background-color: #9B59B6;
+}
+
+.particle[data-state="motivated"] {
+  background-color: #E74C3C;
+}
+
+.neural-sync-indicator[data-state="focused"] {
+  background-color: #4ECDC4;
+}
+
+.neural-sync-indicator[data-state="excited"] {
+  background-color: #FFD700;
+}
+
+.neural-sync-indicator[data-state="calm"] {
+  background-color: #9B59B6;
+}
+
+.neural-sync-indicator[data-state="motivated"] {
+  background-color: #E74C3C;
+}
+
+.neural-sync-text[data-state="focused"] {
+  color: #4ECDC4;
+}
+
+.neural-sync-text[data-state="excited"] {
+  color: #FFD700;
+}
+
+.neural-sync-text[data-state="calm"] {
+  color: #9B59B6;
+}
+
+.neural-sync-text[data-state="motivated"] {
+  color: #E74C3C;
+}

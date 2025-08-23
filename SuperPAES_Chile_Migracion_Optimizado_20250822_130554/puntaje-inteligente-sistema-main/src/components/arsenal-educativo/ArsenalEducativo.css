@@ -1,0 +1,987 @@
+/* ===================================================================================== */
+/* 🎯 ARSENAL EDUCATIVO CUÁNTICO - ESTILOS AVANZADOS */
+/* ===================================================================================== */
+
+.arsenal-educativo-completo {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ===================================================================================== */
+/* 🎨 HEADER CUÁNTICO */
+/* ===================================================================================== */
+
+.arsenal-header-cuantico {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+  position: relative;
+}
+
+.arsenal-titulo-cuantico {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.arsenal-icono-cuantico {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.cubo-cuantico {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, #00ff88, #00ffff);
+  border-radius: 8px;
+  animation: rotacionCuantica 4s infinite linear;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.particulas-cuanticas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.particulas-cuanticas::before,
+.particulas-cuanticas::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #00ff88;
+  border-radius: 50%;
+  animation: particulasFlotantes 3s infinite ease-in-out;
+}
+
+.particulas-cuanticas::before {
+  top: 10px;
+  left: 10px;
+  animation-delay: 0s;
+}
+
+.particulas-cuanticas::after {
+  bottom: 10px;
+  right: 10px;
+  animation-delay: 1.5s;
+}
+
+.arsenal-info-cuantico h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #00ff88, #00ffff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.arsenal-info-cuantico p {
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0.5rem 0;
+}
+
+.entrelazamiento-indicator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.entrelazamiento-barra {
+  width: 200px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.entrelazamiento-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #00ffff);
+  width: var(--entrelazamiento-global, 0%);
+  transition: width 0.5s ease;
+  animation: pulsoEntrelazamiento 2s infinite ease-in-out;
+}
+
+.arsenal-metricas-cuanticas {
+  display: flex;
+  gap: 2rem;
+}
+
+.metrica-cuantica {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.metrica-orbe {
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #00ff88, transparent);
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+  animation: pulsoOrbe 2s infinite ease-in-out;
+}
+
+.metrica-valor {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #00ff88;
+}
+
+.metrica-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ===================================================================================== */
+/* 🎮 NAVEGACIÓN CUÁNTICA */
+/* ===================================================================================== */
+
+.arsenal-navegacion-cuantica {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.modo-btn-cuantico {
+  position: relative;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.modo-btn-cuantico:hover {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.5);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.modo-btn-cuantico.activo {
+  background: rgba(0, 255, 136, 0.2);
+  border-color: #00ff88;
+  color: #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.modo-particulas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modo-btn-cuantico:hover .modo-particulas,
+.modo-btn-cuantico.activo .modo-particulas {
+  opacity: 1;
+}
+
+.modo-icono {
+  font-size: 1.5rem;
+}
+
+.modo-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.modo-resonancia {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff88, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modo-btn-cuantico.activo .modo-resonancia {
+  opacity: 1;
+  animation: resonanciaFlujo 2s infinite ease-in-out;
+}
+
+/* ===================================================================================== */
+/* 🌐 DASHBOARD CUÁNTICO */
+/* ===================================================================================== */
+
+.arsenal-contenido-cuantico {
+  padding: 2rem;
+  min-height: 60vh;
+}
+
+.conexiones-cuanticas-visualizer {
+  margin-bottom: 2rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.conexiones-svg {
+  width: 100%;
+  height: 200px;
+}
+
+.conexion-linea {
+  animation: flujoEnergia 3s infinite ease-in-out;
+}
+
+.conexion-nodo {
+  animation: pulsoNodo 2s infinite ease-in-out;
+}
+
+.widgets-grid-cuantico {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.widget-arsenal-cuantico {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.widget-arsenal-cuantico:hover {
+  transform: translateY(-5px);
+  border-color: var(--widget-color, #00ff88);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.widget-arsenal-cuantico.activo {
+  border-color: var(--widget-color, #00ff88);
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+}
+
+.widget-aura-cuantica {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, var(--widget-color, #00ff88)20, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.widget-arsenal-cuantico:hover .widget-aura-cuantica,
+.widget-arsenal-cuantico.activo .widget-aura-cuantica {
+  opacity: 0.1;
+}
+
+.widget-header-cuantico {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.widget-icono-cuantico {
+  position: relative;
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.icono-particulas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.icono-particulas::before,
+.icono-particulas::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--widget-color, #00ff88);
+  border-radius: 50%;
+  animation: particulasWidget 4s infinite ease-in-out;
+}
+
+.icono-particulas::before {
+  top: 5px;
+  left: 5px;
+}
+
+.icono-particulas::after {
+  bottom: 5px;
+  right: 5px;
+  animation-delay: 2s;
+}
+
+.widget-info-cuantico h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #ffffff;
+}
+
+.widget-info-cuantico p {
+  margin: 0.5rem 0 0 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+.widget-status-cuantico {
+  margin-left: auto;
+}
+
+.status-orbe {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.status-orbe.activo {
+  background: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.status-orbe.inactivo {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.orbe-pulso {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--widget-color, #00ff88);
+  border-radius: 50%;
+  opacity: 0;
+  animation: pulsoStatus 2s infinite ease-out;
+}
+
+.status-orbe.activo .orbe-pulso {
+  animation-play-state: running;
+}
+
+.widget-progreso-cuantico {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.progreso-barra-cuantica {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progreso-fill-cuantica {
+  height: 100%;
+  background: linear-gradient(90deg, var(--widget-color, #00ff88), rgba(255, 255, 255, 0.8));
+  width: var(--widget-progreso, 0%);
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.progreso-particulas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: flujoProgreso 2s infinite ease-in-out;
+}
+
+.progreso-texto-cuantico {
+  font-weight: 600;
+  color: var(--widget-color, #00ff88);
+  min-width: 40px;
+}
+
+.widget-entrelazamiento {
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.entrelazamiento-visualizer {
+  height: 30px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.entrelazamiento-ondas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--widget-color, #00ff88)20 25%, 
+    transparent 50%, 
+    var(--widget-color, #00ff88)20 75%, 
+    transparent 100%);
+  animation: ondasEntrelazamiento 3s infinite ease-in-out;
+  opacity: var(--widget-entrelazamiento, 0);
+}
+
+.widget-metricas-cuanticas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.metrica-widget-cuantica {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.metrica-key {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metrica-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--widget-color, #00ff88);
+}
+
+.metrica-resonancia {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--widget-color, #00ff88);
+  opacity: 0.3;
+  animation: resonanciaMetrica 2s infinite ease-in-out;
+}
+
+.widget-acciones-cuanticas {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.accion-btn-cuantica {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 8px;
+  color: #00ff88;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.accion-btn-cuantica:hover {
+  background: rgba(0, 255, 136, 0.2);
+  border-color: #00ff88;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2);
+}
+
+/* ===================================================================================== */
+/* 🔔 NOTIFICACIONES CUÁNTICAS */
+/* ===================================================================================== */
+
+.arsenal-notificaciones-cuanticas {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  width: 350px;
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.arsenal-notificaciones-cuanticas h3 {
+  color: #00ff88;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.notificaciones-lista-cuantica {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notificacion-cuantica {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.notificacion-achievement {
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.notificacion-insight {
+  border-color: rgba(0, 255, 255, 0.5);
+}
+
+.notificacion-recommendation {
+  border-color: rgba(255, 107, 0, 0.5);
+}
+
+.notif-aura {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top right, rgba(0, 255, 136, 0.1), transparent);
+  pointer-events: none;
+}
+
+.notif-header-cuantica {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.notif-titulo {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.notif-timestamp {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.notif-prioridad {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #00ff88;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.notif-mensaje-cuantica {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.notif-accion-cuantica {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 6px;
+  color: #00ff88;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.notif-accion-cuantica:hover {
+  background: rgba(0, 255, 136, 0.2);
+  border-color: #00ff88;
+}
+
+/* ===================================================================================== */
+/* 🎮 MODOS ESPECÍFICOS */
+/* ===================================================================================== */
+
+.arsenal-modo-cuantico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+}
+
+.modo-placeholder-cuantico {
+  text-align: center;
+  max-width: 500px;
+}
+
+.placeholder-icono-cuantico {
+  position: relative;
+  margin: 0 auto 2rem;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icono-holograma {
+  font-size: 4rem;
+  animation: rotacionHolograma 6s infinite linear;
+}
+
+.holograma-particulas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 50%;
+  animation: pulsoHolograma 3s infinite ease-in-out;
+}
+
+.desarrollo-progreso {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.progreso-cuantico {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progreso-cuantico::before {
+  content: '';
+  display: block;
+  width: 75%;
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #00ffff);
+  animation: progresoDesarrollo 2s infinite ease-in-out;
+}
+
+.btn-volver-dashboard-cuantico {
+  padding: 1rem 2rem;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 12px;
+  color: #00ff88;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.btn-volver-dashboard-cuantico:hover {
+  background: rgba(0, 255, 136, 0.2);
+  border-color: #00ff88;
+  transform: translateY(-2px);
+}
+
+/* ===================================================================================== */
+/* 🔄 LOADING CUÁNTICO */
+/* ===================================================================================== */
+
+.arsenal-loading-cuantico {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.loading-cuantico {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.cubo-loading {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(45deg, #00ff88, #00ffff);
+  border-radius: 12px;
+  animation: rotacionCuantica 2s infinite linear;
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+}
+
+.particulas-loading {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 100px;
+  height: 100px;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 50%;
+  animation: pulsoLoading 3s infinite ease-in-out;
+}
+
+.loading-progreso-cuantico {
+  width: 300px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.progreso-ondas {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #00ff88, transparent);
+  animation: ondasLoading 2s infinite ease-in-out;
+}
+
+/* ===================================================================================== */
+/* 🎨 ANIMACIONES CUÁNTICAS */
+/* ===================================================================================== */
+
+@keyframes rotacionCuantica {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes particulasFlotantes {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-20px) scale(1.2); opacity: 0.7; }
+}
+
+@keyframes pulsoEntrelazamiento {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes pulsoOrbe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+@keyframes resonanciaFlujo {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes flujoEnergia {
+  0%, 100% { stroke-dasharray: 5, 10; stroke-dashoffset: 0; }
+  50% { stroke-dasharray: 10, 5; stroke-dashoffset: 15; }
+}
+
+@keyframes pulsoNodo {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+@keyframes particulasWidget {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
+  25% { transform: translate(10px, -10px) scale(1.2); opacity: 0.8; }
+  50% { transform: translate(-5px, -15px) scale(0.8); opacity: 0.6; }
+  75% { transform: translate(-10px, 5px) scale(1.1); opacity: 0.9; }
+}
+
+@keyframes pulsoStatus {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes flujoProgreso {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes ondasEntrelazamiento {
+  0%, 100% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+}
+
+@keyframes resonanciaMetrica {
+  0%, 100% { opacity: 0.3; transform: scaleX(1); }
+  50% { opacity: 0.8; transform: scaleX(1.2); }
+}
+
+@keyframes rotacionHolograma {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulsoHolograma {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.1); opacity: 0.6; }
+}
+
+@keyframes progresoDesarrollo {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulsoLoading {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+@keyframes ondasLoading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ===================================================================================== */
+/* 📱 RESPONSIVE DESIGN */
+/* ===================================================================================== */
+
+@media (max-width: 768px) {
+  .arsenal-header-cuantico {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .arsenal-metricas-cuanticas {
+    gap: 1rem;
+  }
+
+  .arsenal-navegacion-cuantica {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .modo-btn-cuantico {
+    padding: 0.75rem 1rem;
+    min-width: 120px;
+  }
+
+  .widgets-grid-cuantico {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+
+  .arsenal-notificaciones-cuanticas {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    margin-top: 2rem;
+  }
+
+  .entrelazamiento-indicator {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .entrelazamiento-barra {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .arsenal-contenido-cuantico {
+    padding: 1rem;
+  }
+
+  .widget-arsenal-cuantico {
+    padding: 1rem;
+  }
+
+  .arsenal-titulo-cuantico {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .arsenal-info-cuantico h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Clase para eliminar estilo inline */
+.widget-aura-cuantica-fixed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, var(--widget-color, #00ff88) 20%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}

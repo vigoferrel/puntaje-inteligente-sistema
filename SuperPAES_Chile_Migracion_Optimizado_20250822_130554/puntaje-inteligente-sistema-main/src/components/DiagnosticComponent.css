@@ -1,0 +1,57 @@
+.diagnostic-container {
+  padding: 2rem;
+  font-family: system-ui;
+  background: linear-gradient(135deg, #1e40af, #7c3aed);
+  color: white;
+  min-height: 100vh;
+}
+
+.diagnostic-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.diagnostic-section {
+  margin-top: 2rem;
+}
+
+.diagnostic-section h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.diagnostic-list {
+  font-size: 1.2rem;
+  line-height: 2;
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.env-list {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.reload-button {
+  background: white;
+  color: #1e40af;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reload-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.reload-button:active {
+  transform: translateY(0);
+}

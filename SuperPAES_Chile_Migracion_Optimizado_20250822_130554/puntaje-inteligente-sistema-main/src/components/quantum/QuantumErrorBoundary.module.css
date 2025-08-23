@@ -1,0 +1,87 @@
+/* 🛡️ QuantumErrorBoundary.module.css - Estilos para Error Boundary */
+/* Context7 + Pensamiento Secuencial - Solución prolija sin inline styles */
+
+.quantumErrorBoundary {
+  padding: 2rem;
+  margin: 1rem;
+  border: 2px solid #ff6b6b;
+  border-radius: 12px;
+  background-color: #fff5f5;
+  color: #c92a2a;
+  text-align: center;
+  font-family: system-ui, sans-serif;
+}
+
+.errorIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.errorTitle {
+  margin: 0 0 1rem 0;
+  color: #c92a2a;
+}
+
+.errorDescription {
+  margin: 0 0 1.5rem 0;
+  color: #666;
+}
+
+.buttonContainer {
+  margin-bottom: 1.5rem;
+}
+
+.retryButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #4c6ef5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-right: 1rem;
+}
+
+.retryButton:hover {
+  background-color: #364fc7;
+}
+
+.reloadButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #868e96;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.reloadButton:hover {
+  background-color: #495057;
+}
+
+.technicalDetails {
+  text-align: left;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.detailsSummary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.detailsContent {
+  font-size: 0.875rem;
+  overflow: auto;
+  margin: 1rem 0 0 0;
+  color: #495057;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: #868e96;
+}

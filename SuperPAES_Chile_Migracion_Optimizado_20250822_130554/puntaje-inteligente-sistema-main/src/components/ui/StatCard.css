@@ -1,0 +1,82 @@
+/* ============================================================================ */
+/* 📊 STAT CARD STYLES - ESTILOS CINEMATOGRÁFICOS PARA TARJETAS DE ESTADÍSTICAS */
+/* Sequential Thinking + Context7 - Estilos Premium Externalizados */
+/* ============================================================================ */
+
+/* Gradientes de texto para diferentes colores */
+.stat-card-value-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-card-value-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-card-value-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-card-value-error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-card-value-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Efectos de brillo para hover */
+.stat-card-glow-primary {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+}
+
+.stat-card-glow-success {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+}
+
+.stat-card-glow-warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, transparent 100%);
+}
+
+.stat-card-glow-error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%);
+}
+
+.stat-card-glow-info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+}
+
+/* Clase base para el efecto de brillo */
+.stat-card-glow-effect {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.75rem; /* rounded-xl */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Hover effect */
+.stat-card:hover .stat-card-glow-effect {
+  opacity: 1;
+}
+
+/* Clase base para valores con gradiente */
+.stat-card-gradient-value {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+}

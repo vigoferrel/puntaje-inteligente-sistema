@@ -1,0 +1,276 @@
+/* ============================================================================
+   📊 UNIFIED DASHBOARD - CSS MODULES
+   Barras de progreso dinámicas y efectos visuales optimizados
+   ============================================================================ */
+
+/* Barras de progreso dinámicas */
+.progressBar {
+  height: 8px;
+  background: linear-gradient(90deg, #1f2937, #374151);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressBar:hover {
+  transform: scaleY(1.2);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  border-radius: inherit;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  width: var(--progress-width, 0%);
+}
+
+.progressFill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: progressShimmer 2s infinite;
+}
+
+@keyframes progressShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Variantes de color para diferentes métricas */
+.progressFill.neural {
+  background: linear-gradient(90deg, #06b6d4, #0891b2);
+}
+
+.progressFill.efficiency {
+  background: linear-gradient(90deg, #eab308, #f59e0b);
+}
+
+.progressFill.learning {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.progressFill.prediction {
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
+/* Barra de progreso neural específica */
+.neuralProgressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(55, 65, 81, 0.8);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(4px);
+}
+
+.neuralProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gradient-from, #06b6d4), var(--gradient-to, #3b82f6));
+  background-size: 200% 100%;
+  border-radius: inherit;
+  transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: neuralFlow 3s ease-in-out infinite;
+  position: relative;
+  width: var(--progress-width, 0%);
+}
+
+@keyframes neuralFlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.neuralProgressFill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: neuralPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes neuralPulse {
+  0%, 100% { opacity: 0; transform: translateX(-100%); }
+  50% { opacity: 1; transform: translateX(100%); }
+}
+
+/* Contenedor de métricas neurales */
+.neuralMetricDisplay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  transition: all 0.3s ease;
+}
+
+.neuralMetricDisplay:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(6, 182, 212, 0.4);
+  transform: translateY(-2px);
+}
+
+.neuralMetricValue {
+  font-weight: 600;
+  color: #06b6d4;
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+  animation: neuralGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes neuralGlow {
+  from { text-shadow: 0 0 10px rgba(6, 182, 212, 0.3); }
+  to { text-shadow: 0 0 20px rgba(6, 182, 212, 0.6); }
+}
+
+/* Efectos de hover para elementos interactivos */
+.interactiveElement {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.interactiveElement:hover {
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.1);
+}
+
+.interactiveElement:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s ease;
+}
+
+/* Optimizaciones para dispositivos móviles */
+@media (max-width: 768px) {
+  .progressBar {
+    height: 6px;
+  }
+  
+  .neuralProgressBar {
+    height: 4px;
+  }
+  
+  .neuralMetricDisplay {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  
+  .interactiveElement:hover {
+    transform: none;
+  }
+}
+
+/* Optimizaciones para modo de ahorro de energía */
+@media (prefers-reduced-motion: reduce) {
+  .progressFill::after,
+  .neuralProgressFill,
+  .neuralProgressFill::before,
+  .neuralMetricValue {
+    animation: none;
+  }
+  
+  .progressBar,
+  .progressFill,
+  .neuralProgressBar,
+  .neuralProgressFill,
+  .neuralMetricDisplay,
+  .interactiveElement {
+    transition: none;
+  }
+}
+
+/* Soporte para temas de alto contraste */
+@media (prefers-contrast: high) {
+  .progressBar {
+    background: #000000;
+    border: 1px solid #ffffff;
+  }
+  
+  .progressFill {
+    background: #ffffff;
+  }
+  
+  .neuralMetricDisplay {
+    background: #000000;
+    border: 2px solid #ffffff;
+  }
+}
+
+/* Clases dinámicas para valores específicos */
+.dynamicProgress {
+  width: 100%;
+  height: 6px;
+  background: rgba(55, 65, 81, 0.8);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(4px);
+}
+
+.dynamicProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6);
+  background-size: 200% 100%;
+  border-radius: inherit;
+  transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: neuralFlow 3s ease-in-out infinite;
+  position: relative;
+}
+
+.volumeProgress {
+  width: 80px;
+  height: 4px;
+  background: rgba(55, 65, 81, 0.8);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.volumeProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6);
+  border-radius: inherit;
+  transition: width 0.3s ease;
+  width: 75%;
+}
+
+.efficiencyProgress {
+  height: 8px;
+  background: linear-gradient(90deg, #1f2937, #374151);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.efficiencyProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #eab308, #f59e0b);
+  border-radius: inherit;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  width: var(--efficiency-width, 92%);
+}
+
+.efficiencyProgressFill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: progressShimmer 2s infinite;
+}

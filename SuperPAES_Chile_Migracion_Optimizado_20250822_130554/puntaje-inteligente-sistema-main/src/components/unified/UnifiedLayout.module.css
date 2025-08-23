@@ -1,0 +1,356 @@
+/* ============================================================================
+   🎨 UNIFIED LAYOUT - OPTIMIZADO ENFOQUE MICHELANGELO 🎨
+   Context7 + Pensamiento Secuencial - Funcionalidad > Efectos
+   ============================================================================ */
+
+/* 🌟 LAYOUT PRINCIPAL OPTIMIZADO */
+.unified-layout {
+  position: relative;
+  min-height: 100vh;
+  background: #0f172a; /* Fondo sólido más eficiente */
+  overflow: hidden;
+  transition: background-color 0.2s ease; /* Transición rápida */
+}
+
+/* 🎯 TEMAS SIMPLIFICADOS (Michelangelo + Rafael: menos es más con elegancia) */
+.theme-leonardo {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --primary-color: #d4af37;
+  --secondary-color: #00d4ff;
+  --glass-bg: rgba(15, 23, 42, 0.9);
+  --rafael-marble: #f8f6f0;
+  --rafael-gold: #d4af37;
+  --rafael-shadow: 0 8px 32px rgba(212, 175, 55, 0.2);
+}
+
+.theme-spotify {
+  background: #121212;
+  --primary-color: #1db954;
+  --glass-bg: rgba(18, 18, 18, 0.9);
+}
+
+.theme-paes {
+  background: #451a03;
+  --primary-color: #f59e0b;
+  --glass-bg: rgba(69, 26, 3, 0.9);
+}
+
+.theme-neural {
+  background: #1e1b4b;
+  --primary-color: #8b5cf6;
+  --glass-bg: rgba(30, 27, 75, 0.9);
+}
+
+/* 🔄 OVERLAY DE TRANSICIÓN OPTIMIZADO */
+.unified-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  animation: transitionFade 0.3s ease-out forwards;
+  pointer-events: none;
+}
+
+.transition-particles {
+  display: none; /* Eliminado para mejor rendimiento */
+}
+
+.transition-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: var(--primary-color, #00d4ff);
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: glowPulse 0.6s ease-out;
+}
+
+/* 🧭 NAVEGACIÓN UNIFICADA FUNCIONAL */
+.unified-navigation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px; /* Más compacto */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 1000;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px); /* Menos blur para mejor rendimiento */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.brand-icon {
+  font-size: 1.3rem;
+}
+
+.nav-sections {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-section:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: var(--primary-color, #00d4ff);
+}
+
+.nav-section.active {
+  background: var(--primary-color, #00d4ff);
+  color: black;
+  font-weight: 600;
+}
+
+.section-icon {
+  font-size: 1rem;
+}
+
+.section-name {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.section-indicator {
+  display: none; /* Simplificado */
+}
+
+.nav-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background: var(--primary-color, #00d4ff);
+  color: black;
+}
+
+/* 📊 CONTENIDO PRINCIPAL */
+.unified-content {
+  padding-top: 80px; /* Espacio para navegación */
+  min-height: 100vh;
+}
+
+.content-wrapper {
+  transition: opacity 0.2s ease;
+}
+
+.content-wrapper.transitioning {
+  opacity: 0.7;
+}
+
+/* 📈 MÉTRICAS GLOBALES OPTIMIZADAS */
+.unified-global-metrics {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 999;
+}
+
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.8rem;
+  min-width: 120px;
+}
+
+.metric-icon {
+  font-size: 1rem;
+}
+
+.metric-value {
+  font-weight: 600;
+  color: var(--primary-color, #00d4ff);
+}
+
+.metric-label {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* 🔔 NOTIFICACIONES OPTIMIZADAS */
+.unified-notifications {
+  position: fixed;
+  top: 90px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 999;
+  max-width: 300px;
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.85rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification-icon {
+  font-size: 1rem;
+}
+
+.notification-message {
+  flex: 1;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.notification-close:hover {
+  color: white;
+}
+
+/* 🎬 ANIMACIONES OPTIMIZADAS */
+@keyframes transitionFade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes glowPulse {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.4; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+}
+
+@keyframes slideIn {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* 📱 RESPONSIVE OPTIMIZADO */
+@media (max-width: 768px) {
+  .nav-sections {
+    gap: 0.25rem;
+  }
+  
+  .nav-section {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .section-name {
+    display: none; /* Solo iconos en móvil */
+  }
+  
+  .unified-global-metrics {
+    position: relative;
+    top: auto;
+    right: auto;
+    flex-direction: row;
+    justify-content: center;
+    margin: 1rem;
+  }
+  
+  .metric-card {
+    min-width: auto;
+    flex: 1;
+  }
+}
+
+/* 🎯 CLASES UTILITARIAS MICHELANGELO */
+.spotify-glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.spotify-glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.spotify-play-button {
+  background: var(--primary-color, #00d4ff);
+  color: black;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.spotify-play-button:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+/* 🚀 PERFORMANCE CLASSES */
+.performance-low .unified-transition-overlay {
+  animation: none;
+  opacity: 0;
+}
+
+.performance-low .metric-card,
+.performance-low .notification {
+  backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.8);
+}

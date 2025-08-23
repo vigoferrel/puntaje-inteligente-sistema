@@ -1,0 +1,5 @@
+/* CinematicParticleSystem.module.css */
+
+.particleCanvas {
+  will-change: transform;
+}

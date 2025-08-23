@@ -1,0 +1,116 @@
+/* QuantumPrototype.css - Estilos base del prototipo */
+/* Context7 + Modo Secuencial - Optimizado moviles gama media */
+
+.quantum-prototype-container {
+  min-height: 100vh;
+  background: var(--quantum-bg-primary);
+  color: var(--quantum-text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.quantum-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--quantum-bg-loading);
+  color: var(--quantum-text-loading);
+}
+
+.quantum-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--quantum-accent-secondary);
+  border-top: 3px solid var(--quantum-accent-primary);
+  border-radius: 50;
+  animation: quantum-spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes quantum-spin {
+  0 rotate(0deg); }
+  100 rotate(360deg); }
+}
+
+.quantum-main-content {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.quantum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--quantum-bg-header);
+  border-radius: 12px;
+  border: 1px solid var(--quantum-border-primary);
+}
+
+.quantum-title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: var(--quantum-gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.quantum-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantum-indicator {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.quantum-indicator.active {
+  background: var(--quantum-success-bg);
+  color: var(--quantum-success-text);
+  border: 1px solid var(--quantum-success-border);
+}
+
+.quantum-indicator.inactive {
+  background: var(--quantum-warning-bg);
+  color: var(--quantum-warning-text);
+  border: 1px solid var(--quantum-warning-border);
+}
+
+.quantum-content {
+  background: var(--quantum-bg-content);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid var(--quantum-border-secondary);
+  min-height: 400px;
+}
+
+/* Responsive para moviles gama media */
+@media (max-width: 768px) {
+  .quantum-main-content {
+    padding: 0.5rem;
+  }
+
+  .quantum-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .quantum-title {
+    font-size: 1.5rem;
+  }
+
+  .quantum-content {
+    padding: 1rem;
+  }
+}

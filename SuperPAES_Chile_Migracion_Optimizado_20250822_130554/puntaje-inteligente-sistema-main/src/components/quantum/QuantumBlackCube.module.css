@@ -1,0 +1,40 @@
+/* QuantumBlackCube Styles - Context7 + Sequential Thinking */
+
+.quantumCube {
+  width: 200px;
+  height: 200px;
+  background-color: #000;
+  border: 2px solid #00ffff;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #00ffff;
+  font-size: 14px;
+  text-align: center;
+  margin: 20px auto;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.quantumCube:hover {
+  transform: scale(1.02);
+}
+
+.quantumCubeActive {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #00ffff;
+}
+
+.layerInfo {
+  font-size: 10px;
+  margin-top: 10px;
+}
+
+.cubeContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}

@@ -1,0 +1,84 @@
+/**
+ * ESTILOS EXTERNOS PARA TERCER OJO SIMPLE
+ * Context7 + Modo Secuencial - Sin estilos inline
+ */
+
+.tercerOjoContainer {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.tercerOjoButton {
+  width: 60px;
+  height: 60px;
+  background-color: #000;
+  border: 2px solid #00ffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00ffff;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+.tercerOjoButton:hover {
+  box-shadow: 0 0 15px #00ffff;
+  transform: scale(1.05);
+}
+
+.tercerOjoPanel {
+  position: absolute;
+  top: 70px;
+  right: 0;
+  width: 250px;
+  background-color: #000;
+  border: 2px solid #00ffff;
+  border-radius: 10px;
+  padding: 15px;
+  color: #00ffff;
+  font-size: 12px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.panelTitle {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.panelFooter {
+  margin-top: 10px;
+  font-size: 10px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .tercerOjoContainer {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .tercerOjoButton {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .tercerOjoPanel {
+    width: 200px;
+    font-size: 11px;
+  }
+}

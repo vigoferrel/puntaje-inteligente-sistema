@@ -1,0 +1,593 @@
+/**
+ * 🎨 TRIADA VISUAL CUÁNTICA LEONARDO - ESTILOS DEFINITIVOS
+ * Mármol Digital Puro + Geometría Sin Iconos + Context7 + Sequential Thinking
+ * Simbiosis Cuántica: Funnel → Ciclo → Cubo
+ * ✅ Compatibilidad Universal: Chrome, Firefox, Safari, Edge
+ * ✅ Orden de prefijos CSS optimizado
+ */
+
+.triada-visual-cuantica-leonardo {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 🏛️ MÁRMOL DIGITAL PURO - Sin iconos, solo textura */
+.marmo-digital-puro {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.marble-surface {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+  opacity: 0.1;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.3) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.2) 0%, transparent 50%);
+  animation: marbleFlow 8s ease-in-out infinite;
+}
+
+@keyframes marbleFlow {
+  0%, 100% { 
+    background-position: 0% 0%, 100% 100%; 
+    opacity: 0.1;
+  }
+  50% { 
+    background-position: 100% 100%, 0% 0%; 
+    opacity: 0.15;
+  }
+}
+
+/* 🌐 CONTEXT7 LAYERS - 7 capas de consciencia */
+.context7-layers {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
+}
+
+.layer {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.5s ease;
+}
+
+.layer-1 { width: 100px; height: 100px; top: 350px; left: 350px; }
+.layer-2 { width: 200px; height: 200px; top: 300px; left: 300px; }
+.layer-3 { width: 300px; height: 300px; top: 250px; left: 250px; }
+.layer-4 { width: 400px; height: 400px; top: 200px; left: 200px; }
+.layer-5 { width: 500px; height: 500px; top: 150px; left: 150px; }
+.layer-6 { width: 600px; height: 600px; top: 100px; left: 100px; }
+.layer-7 { width: 700px; height: 700px; top: 50px; left: 50px; }
+
+.layer.active {
+  border-color: rgba(0, 255, 255, 0.6);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  background: radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
+}
+
+/* ⚛️ SISTEMA DE PARTÍCULAS REACTIVAS - Arsenal completo */
+.reactive-particle-system {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  z-index: 3;
+}
+
+.particle {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  color: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.particle.agent-active {
+  background: radial-gradient(circle, #00ff88 0%, #00cc66 100%);
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+}
+
+.particle.agent-idle {
+  background: radial-gradient(circle, #666 0%, #444 100%);
+  box-shadow: 0 0 15px rgba(102, 102, 102, 0.3);
+}
+
+.particle.agent-processing {
+  background: radial-gradient(circle, #ff6b00 0%, #cc5500 100%);
+  box-shadow: 0 0 25px rgba(255, 107, 0, 0.4);
+  animation: processing 1.5s ease-in-out infinite;
+}
+
+@keyframes processing {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.agent-name {
+  font-size: 8px;
+  line-height: 1.2;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 🌊🔄🎯 FASES DE LA SIMBIOSIS CUÁNTICA */
+.fases-simbiosis-cuantica {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  z-index: 4;
+}
+
+/* 🌊 FASE FUNNEL - Geometría de embudo */
+.fase-funnel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.funnel-geometry {
+  text-align: center;
+  color: white;
+}
+
+.funnel-shape {
+  width: 200px;
+  height: 300px;
+  background: linear-gradient(to bottom, 
+    rgba(0, 255, 255, 0.3) 0%,
+    rgba(0, 255, 255, 0.1) 50%,
+    rgba(0, 255, 255, 0.05) 100%
+  );
+  clip-path: polygon(20% 0%, 80% 0%, 60% 100%, 40% 100%);
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.funnel-entry {
+  padding: 20px;
+  text-align: center;
+}
+
+.funnel-entry h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.funnel-entry p {
+  margin: 5px 0;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* 🔄 FASE CICLO - Geometría circular */
+.fase-ciclo {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ciclo-geometry {
+  text-align: center;
+  color: white;
+}
+
+.circle-shape {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 107, 0, 0.3) 0deg,
+    rgba(255, 107, 0, 0.1) 72deg,
+    rgba(255, 107, 0, 0.05) 144deg,
+    rgba(255, 107, 0, 0.1) 216deg,
+    rgba(255, 107, 0, 0.3) 288deg,
+    rgba(255, 107, 0, 0.3) 360deg
+  );
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ciclo-stages {
+  padding: 20px;
+  text-align: center;
+}
+
+.ciclo-stages h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ciclo-stages p {
+  margin: 5px 0;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* 🎯 FASE CUBO - Geometría cúbica */
+.fase-cubo {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cubo-geometry {
+  text-align: center;
+  color: white;
+}
+
+.cube-shape {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, 
+    rgba(0, 255, 136, 0.3) 0%,
+    rgba(0, 255, 136, 0.1) 50%,
+    rgba(0, 255, 136, 0.05) 100%
+  );
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.cube-shape::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 20px;
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, 
+    rgba(0, 255, 136, 0.2) 0%,
+    rgba(0, 255, 136, 0.05) 100%
+  );
+  transform: rotateX(45deg) rotateY(-45deg);
+  z-index: -1;
+}
+
+.cube-faces {
+  padding: 20px;
+  text-align: center;
+}
+
+.cube-faces h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cube-faces p {
+  margin: 5px 0;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* 🔄 BOTONES DE TRANSICIÓN - Orden de prefijos correcto */
+.phase-transition-btn {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  /* Orden correcto de prefijos CSS */
+  -webkit-backdrop-filter: blur(10px);
+  -moz-backdrop-filter: blur(10px);
+  -ms-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.phase-transition-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+}
+
+/* 💎 UNIVERSAL BENCHMARK INTEGRADO - Orden de prefijos correcto */
+.universal-benchmark-integrated {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  z-index: 5;
+}
+
+.benchmark-crystal {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.3) 0%,
+    rgba(255, 215, 0, 0.1) 50%,
+    rgba(255, 215, 0, 0.05) 100%
+  );
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  /* Orden correcto de prefijos CSS */
+  -webkit-backdrop-filter: blur(10px);
+  -moz-backdrop-filter: blur(10px);
+  -ms-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.score-visualization {
+  color: #ffd700;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* 📊 INDICADOR DE SIMBIOSIS CUÁNTICA */
+.simbiosis-indicator {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  text-align: center;
+}
+
+.symbiosis-level {
+  width: 300px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.symbiosis-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #00ffff, #ff6b00);
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.phase-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.phase-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.phase-dot.active {
+  background: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  transform: scale(1.3);
+}
+
+.sequential-steps {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.step {
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+}
+
+.step.active {
+  background: rgba(0, 255, 255, 0.3);
+  color: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+/* 🎮 ARSENAL STATUS DISPLAY - Orden de prefijos correcto */
+.arsenal-status {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.arsenal-status > div {
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Orden correcto de prefijos CSS */
+  -webkit-backdrop-filter: blur(10px);
+  -moz-backdrop-filter: blur(10px);
+  -ms-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.arsenal-status span {
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 🌀 LOADING STATE */
+.triada-loading {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+}
+
+.quantum-emergence {
+  text-align: center;
+}
+
+.geometric-loader {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.triangle-emergence,
+.circle-formation,
+.cube-materialization {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.triangle-emergence {
+  width: 0;
+  height: 0;
+  border-left: 30px solid transparent;
+  border-right: 30px solid transparent;
+  border-bottom: 50px solid rgba(0, 255, 255, 0.6);
+  animation: triangleFloat 3s ease-in-out infinite;
+}
+
+.circle-formation {
+  width: 80px;
+  height: 80px;
+  border: 3px solid rgba(255, 107, 0, 0.6);
+  border-radius: 50%;
+  animation: circleRotate 2s linear infinite;
+}
+
+.cube-materialization {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 255, 136, 0.6);
+  animation: cubeScale 2.5s ease-in-out infinite;
+}
+
+@keyframes triangleFloat {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50% { transform: translate(-50%, -50%) translateY(-20px); }
+}
+
+@keyframes circleRotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes cubeScale {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.3); }
+}
+
+/* 📱 RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .context7-layers {
+    width: 400px;
+    height: 400px;
+  }
+  
+  .layer-1 { width: 50px; height: 50px; top: 175px; left: 175px; }
+  .layer-2 { width: 100px; height: 100px; top: 150px; left: 150px; }
+  .layer-3 { width: 150px; height: 150px; top: 125px; left: 125px; }
+  .layer-4 { width: 200px; height: 200px; top: 100px; left: 100px; }
+  .layer-5 { width: 250px; height: 250px; top: 75px; left: 75px; }
+  .layer-6 { width: 300px; height: 300px; top: 50px; left: 50px; }
+  .layer-7 { width: 350px; height: 350px; top: 25px; left: 25px; }
+  
+  .fases-simbiosis-cuantica {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .funnel-shape,
+  .circle-shape,
+  .cube-shape {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .symbiosis-level {
+    width: 250px;
+  }
+}
+
+/* 🌐 COMPATIBILIDAD ADICIONAL PARA NAVEGADORES ANTIGUOS */
+@supports not (backdrop-filter: blur(10px)) {
+  .phase-transition-btn,
+  .benchmark-crystal,
+  .arsenal-status > div {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* 🎨 MEJORAS VISUALES PARA SAFARI */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .marble-surface {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  .layer {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  .particle {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}

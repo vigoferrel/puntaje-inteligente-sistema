@@ -1,0 +1,58 @@
+{
+  "name": "paes-master-quantum",
+  "version": "1.0.0",
+  "description": "PAES MASTER QUANTUM - Sistema Cuántico Puro que respeta la estructura oficial PAES",
+  "type": "module",
+  "main": "quantum-core/quantum-engine.js",
+  "scripts": {
+    "quantum:init": "node quantum-core/quantum-engine.js",
+    "quantum:build": "node quantum-core/quantum-engine.js build",
+    "quantum:serve": "node quantum-server.js",
+    "quantum:test": "node quantum-server.js & echo 'Servidor ejecutándose en segundo plano en puerto 3001'",
+    "quantum:stop": "pkill -f 'node quantum-server.js'",
+    "quantum:status": "curl -s http://localhost:3001/api/quantum/status | jq .",
+    "quantum:structure": "curl -s http://localhost:3001/api/quantum/structure | jq .",
+    "quantum:progress": "curl -s 'http://localhost:3001/api/quantum/progress?userId=test-user-001' | jq .",
+    "quantum:recommendations": "curl -s 'http://localhost:3001/api/quantum/recommendations?userId=test-user-001' | jq .",
+    "quantum:demo": "npm run quantum:test && sleep 3 && npm run quantum:status && npm run quantum:structure",
+    "start": "npm run quantum:serve",
+    "dev": "npm run quantum:test",
+    "test": "npm run quantum:demo"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "typescript": "^5.3.0",
+    "@types/node": "^20.10.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "nodemon": "^3.0.1",
+    "@types/jest": "^29.5.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0"
+  },
+  "keywords": [
+    "paes",
+    "quantum",
+    "education",
+    "bloom",
+    "mathematics",
+    "spotify",
+    "neural",
+    "supabase"
+  ],
+  "author": "PAES MASTER QUANTUM Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tu-usuario/paes-master-quantum.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tu-usuario/paes-master-quantum/issues"
+  },
+  "homepage": "https://github.com/tu-usuario/paes-master-quantum#readme"
+} 

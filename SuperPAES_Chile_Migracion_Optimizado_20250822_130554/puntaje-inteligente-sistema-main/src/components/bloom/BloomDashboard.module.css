@@ -1,0 +1,335 @@
+/* ============================================================================ */
+/* 🎨 BLOOM DASHBOARD CINEMATOGRÁFICO - ESTILOS CSS MODULE 🎨 */
+/* Sistema de Estilos Profesional - Refactorización de Estilos Inline */
+/* ============================================================================ */
+
+/* Container principal */
+.container {
+  min-height: 100vh;
+  background: var(--gradient-dark);
+}
+
+/* Header cinematográfico */
+.headerIcon {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerIconPrimary {
+  background: var(--gradient-primary);
+}
+
+.headerIconSecondary {
+  background: var(--gradient-secondary);
+}
+
+/* Navegación principal PAES Master */
+.navButton {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  transition: all var(--transition-normal);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.navButtonStudio {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.navButtonAcceleration {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.navButtonDashboard {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.navButtonAssistant {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Panel de control premium */
+.controlButton {
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: none;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.controlButtonActive {
+  background: var(--gradient-secondary);
+}
+
+.controlButtonInactive {
+  background: var(--slate-600);
+}
+
+.controlButtonRefresh {
+  background: var(--gradient-accent);
+}
+
+/* Navegación cinematográfica */
+.tabButton {
+  backdrop-filter: var(--glass-backdrop);
+  transition: all 0.3s ease;
+}
+
+.tabButtonActive {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-glow);
+  border: none;
+}
+
+.tabButtonInactive {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-glass);
+}
+
+/* Botones de acción premium */
+.actionButton {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  transition: all var(--transition-normal);
+  border: none;
+  color: white;
+  font-weight: bold;
+}
+
+.actionButtonPrimary {
+  background: var(--gradient-primary);
+}
+
+.actionButtonSecondary {
+  background: var(--gradient-secondary);
+}
+
+.actionButtonAccent {
+  background: var(--gradient-accent);
+}
+
+/* Navegación a páginas específicas */
+.pageNavButton {
+  border-radius: var(--radius-lg);
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-weight: 600;
+}
+
+.pageNavButtonTraining {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.pageNavButtonCalendar {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.pageNavButtonAchievements {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.pageNavButtonPlanning {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Resultados de IA */
+.aiResultContainer {
+  padding: 1.5rem;
+  border-radius: var(--radius-xl);
+  overflow: auto;
+  max-height: 24rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Efectos hover para botones */
+.navButton:hover,
+.actionButton:hover,
+.pageNavButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.tabButton:hover:not(.tabButtonActive) {
+  transform: translateY(-2px);
+}
+
+.tabButtonActive {
+  transform: translateY(-4px);
+}
+
+/* Animaciones */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotateReverse {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.rotateIcon {
+  animation: rotate 20s linear infinite;
+}
+
+.rotateIconReverse {
+  animation: rotateReverse 20s linear infinite;
+}
+
+/* Estados de carga */
+.loadingState {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loadingState:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .headerIcon {
+    width: 4rem;
+    height: 4rem;
+  }
+  
+  .navButton,
+  .actionButton,
+  .pageNavButton {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .aiResultContainer {
+    font-size: 0.75rem;
+    max-height: 16rem;
+  }
+}
+
+/* Efectos glassmorphism mejorados */
+.glassEffect {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+.glassEffectStrong {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Utilidades de color */
+.gradientText {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.textPrimary {
+  color: var(--primary-400);
+}
+
+.textSecondary {
+  color: var(--text-secondary);
+}
+
+.textSuccess {
+  color: var(--success);
+}
+
+.textWarning {
+  color: var(--warning);
+}
+
+.textInfo {
+  color: var(--info);
+}
+
+/* Efectos de brillo */
+.glowEffect {
+  box-shadow: var(--shadow-glow);
+}
+
+.animateGlow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
+  }
+}
+
+/* Transiciones suaves */
+.smoothTransition {
+  transition: all var(--transition-normal);
+}
+
+.smoothTransitionSlow {
+  transition: all 0.5s ease;
+}
+
+/* Estados de focus para accesibilidad */
+.navButton:focus,
+.actionButton:focus,
+.pageNavButton:focus,
+.controlButton:focus {
+  outline: 2px solid var(--primary-400);
+  outline-offset: 2px;
+}
+
+/* Mejoras de contraste */
+.highContrast {
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Espaciado consistente */
+.spacing-sm {
+  padding: var(--space-sm);
+}
+
+.spacing-md {
+  padding: var(--space-md);
+}
+
+.spacing-lg {
+  padding: var(--space-lg);
+}
+
+.spacing-xl {
+  padding: var(--space-xl);
+}

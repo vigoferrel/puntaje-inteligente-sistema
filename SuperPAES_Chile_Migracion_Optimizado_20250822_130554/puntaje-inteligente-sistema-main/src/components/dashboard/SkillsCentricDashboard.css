@@ -1,0 +1,387 @@
+/* SkillsCentricDashboard - Estilos Cinematográficos Mejorados */
+
+.skills-centric-dashboard {
+  min-height: 100vh;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.skills-centric-dashboard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.skills-centric-dashboard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cinematic-text-glow {
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+.skill-card {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.skill-card:not(.selected) {
+  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.skill-card:not(.selected):hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.skill-card.selected {
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
+}
+
+.skill-card-cyan {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.125);
+}
+
+.skill-card-cyan:hover {
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.25);
+}
+
+.skill-card-purple {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.125);
+}
+
+.skill-card-purple:hover {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.25);
+}
+
+.skill-card-emerald {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.125);
+}
+
+.skill-card-emerald:hover {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
+}
+
+.skill-card-gold {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.125);
+}
+
+.skill-card-gold:hover {
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
+}
+
+.skill-card-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.125);
+}
+
+.skill-card-red:hover {
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.25);
+}
+
+.skill-card-violet {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.125);
+}
+
+.skill-card-violet:hover {
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+}
+
+.skill-card-orange {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.125);
+}
+
+.skill-card-orange:hover {
+  box-shadow: 0 0 30px rgba(249, 115, 22, 0.25);
+}
+
+.test-universe-card {
+  padding: 2rem;
+  border-radius: 0.75rem;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.test-universe-card:not(.selected) {
+  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.test-universe-card:not(.selected):hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.test-universe-card.selected {
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
+}
+
+.test-universe-card-cl {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.125);
+}
+
+.test-universe-card-cl:hover {
+  box-shadow: 0 0 40px rgba(6, 182, 212, 0.25);
+}
+
+.test-universe-card-m1 {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.125);
+}
+
+.test-universe-card-m1:hover {
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.25);
+}
+
+.test-universe-card-m2 {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.125);
+}
+
+.test-universe-card-m2:hover {
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.25);
+}
+
+.test-universe-card-hst {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.125);
+}
+
+.test-universe-card-hst:hover {
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.25);
+}
+
+.test-universe-card-cie {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.125);
+}
+
+.test-universe-card-cie:hover {
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.25);
+}
+
+/* Nombres de skills con colores específicos */
+.skill-name-cyan, .skill-name-loc {
+  color: #06b6d4;
+}
+
+.skill-name-purple, .skill-name-int {
+  color: #8b5cf6;
+}
+
+.skill-name-emerald, .skill-name-ana {
+  color: #10b981;
+}
+
+.skill-name-gold, .skill-name-eva {
+  color: #f59e0b;
+}
+
+.skill-name-red, .skill-name-res {
+  color: #ef4444;
+}
+
+.skill-name-violet, .skill-name-mod {
+  color: #a855f7;
+}
+
+.skill-name-orange, .skill-name-arg {
+  color: #f97316;
+}
+
+/* Nombres de tests */
+.test-name-cl {
+  color: #06b6d4;
+}
+
+.test-name-m1 {
+  color: #8b5cf6;
+}
+
+.test-name-m2 {
+  color: #a855f7;
+}
+
+.test-name-hst {
+  color: #f59e0b;
+}
+
+.test-name-cie {
+  color: #10b981;
+}
+
+/* Badges de skills */
+.skill-badge-cyan, .skill-badge-loc {
+  background-color: rgba(6, 182, 212, 0.2);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.skill-badge-purple, .skill-badge-int {
+  background-color: rgba(139, 92, 246, 0.2);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.skill-badge-emerald, .skill-badge-ana {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.skill-badge-gold, .skill-badge-eva {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.skill-badge-red, .skill-badge-res {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.skill-badge-violet, .skill-badge-mod {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.skill-badge-orange, .skill-badge-arg {
+  background-color: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+/* Mapeo específico de skills por código */
+.skill-card-loc {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.125);
+}
+
+.skill-card-loc:hover {
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.25);
+}
+
+.skill-card-int {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.125);
+}
+
+.skill-card-int:hover {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.25);
+}
+
+.skill-card-ana {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.125);
+}
+
+.skill-card-ana:hover {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
+}
+
+.skill-card-eva {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.125);
+}
+
+.skill-card-eva:hover {
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
+}
+
+.skill-card-res {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.125);
+}
+
+.skill-card-res:hover {
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.25);
+}
+
+.skill-card-mod {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.125);
+}
+
+.skill-card-mod:hover {
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+}
+
+.skill-card-arg {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.125);
+}
+
+.skill-card-arg:hover {
+  box-shadow: 0 0 30px rgba(249, 115, 22, 0.25);
+}
+
+/* Matriz de skills */
+.matrix-cell-active {
+  background-color: var(--skill-color);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.matrix-cell-inactive {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Mejoras de responsive design */
+@media (max-width: 768px) {
+  .skills-centric-dashboard {
+    padding: 1rem;
+  }
+  
+  .skill-card, .test-universe-card {
+    min-height: 150px;
+    padding: 1rem;
+  }
+}
+
+/* Animaciones suaves */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.skills-grid, .tests-grid, .skills-matrix {
+  animation: fadeInUp 0.5s ease-out;
+}

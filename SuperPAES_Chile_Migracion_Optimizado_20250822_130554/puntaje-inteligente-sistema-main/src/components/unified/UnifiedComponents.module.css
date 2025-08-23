@@ -1,0 +1,500 @@
+/* ============================================================================
+   🎨 UNIFIED COMPONENTS - ESTILOS PARA COMPONENTES BASE UNIFICADOS
+   Context7 + Pensamiento Secuencial - Sistema de Componentes Consistentes
+   ============================================================================ */
+
+/* 🎯 UNIFIED CARD - Tarjeta Base */
+.unified-card {
+  position: relative;
+  border-radius: 12px;
+  transition: all 0.3s var(--music-smooth);
+  overflow: hidden;
+}
+
+.card-default {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-glass {
+  background: var(--spotify-glass-bg);
+  backdrop-filter: var(--spotify-glass-blur);
+  border: 1px solid var(--spotify-glass-border);
+  box-shadow: var(--spotify-glass-shadow);
+}
+
+.card-neural {
+  background: linear-gradient(135deg,
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.card-spotify {
+  background: linear-gradient(135deg,
+    rgba(29, 185, 84, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(29, 185, 84, 0.3);
+}
+
+.card-sm { padding: 0.75rem; }
+.card-md { padding: 1rem; }
+.card-lg { padding: 1.5rem; }
+
+.card-hover:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.card-glow {
+  box-shadow: 0 0 20px rgba(29, 185, 84, 0.3);
+}
+
+/* ⚡ UNIFIED BUTTON - Botón Base */
+.unified-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s var(--music-bounce);
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #1db954, #1ed760);
+  color: white;
+  box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
+}
+
+.button-secondary {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+}
+
+.button-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.button-neural {
+  background: linear-gradient(135deg,
+    rgba(139, 92, 246, 0.2) 0%,
+    rgba(236, 72, 153, 0.2) 100%);
+  color: white;
+  border: 1px solid rgba(139, 92, 246, 0.5);
+}
+
+.button-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
+.button-md { padding: 0.75rem 1.5rem; font-size: 1rem; }
+.button-lg { padding: 1rem 2rem; font-size: 1.125rem; }
+
+.unified-button:hover {
+  transform: translateY(-2px);
+}
+
+.button-primary:hover {
+  box-shadow: 0 8px 25px rgba(29, 185, 84, 0.6);
+}
+
+.button-secondary:hover {
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+}
+
+.button-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(29, 185, 84, 0.5);
+}
+
+.button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.button-loading {
+  pointer-events: none;
+}
+
+.button-spinner {
+  animation: spin 1s linear infinite;
+}
+
+.button-icon {
+  font-size: 1.125rem;
+}
+
+/* 📊 UNIFIED METRIC - Métrica Base */
+.unified-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.metric-primary .metric-value { color: #1db954; }
+.metric-success .metric-value { color: #10b981; }
+.metric-warning .metric-value { color: #f59e0b; }
+.metric-error .metric-value { color: #ef4444; }
+
+.metric-sm { padding: 0.75rem; }
+.metric-md { padding: 1rem; }
+.metric-lg { padding: 1.5rem; }
+
+.metric-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 0 8px rgba(29, 185, 84, 0.5));
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.metric-trend {
+  font-size: 0.75rem;
+}
+
+.metric-animated .metric-value {
+  animation: metricPulse 2s ease-in-out infinite;
+}
+
+/* 🎵 UNIFIED PROGRESS - Barra de Progreso */
+.unified-progress {
+  width: 100%;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.progress-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1db954;
+}
+
+.progress-track {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-sm .progress-track { height: 4px; }
+.progress-md .progress-track { height: 6px; }
+.progress-lg .progress-track { height: 8px; }
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  position: relative;
+  transition: width 0.3s ease;
+}
+
+.progress-primary .progress-fill {
+  background: linear-gradient(90deg, #1db954, #1ed760);
+}
+
+.progress-success .progress-fill {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.progress-warning .progress-fill {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.progress-error .progress-fill {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%);
+  animation: progressShimmer 2s ease-in-out infinite;
+}
+
+.progress-animated .progress-glow {
+  animation: progressShimmer 2s ease-in-out infinite;
+}
+
+/* 🔔 UNIFIED NOTIFICATION - Notificación Base */
+.unified-notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border-left: 4px solid;
+  animation: notificationSlideIn 0.5s ease-out;
+  max-width: 400px;
+}
+
+.notification-success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg,
+    rgba(16, 185, 129, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%);
+}
+
+.notification-info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%);
+}
+
+.notification-warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg,
+    rgba(245, 158, 11, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%);
+}
+
+.notification-error {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg,
+    rgba(239, 68, 68, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%);
+}
+
+.notification-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.notification-message {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* 🎯 UNIFIED BADGE - Insignia Base */
+.unified-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-primary {
+  background: linear-gradient(135deg, #1db954, #1ed760);
+  color: white;
+}
+
+.badge-success {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white;
+}
+
+.badge-warning {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: white;
+}
+
+.badge-error {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: white;
+}
+
+.badge-neutral {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.badge-sm { padding: 0.125rem 0.5rem; font-size: 0.625rem; }
+.badge-md { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+.badge-lg { padding: 0.375rem 1rem; font-size: 0.875rem; }
+
+.badge-pulse {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+.badge-glow {
+  box-shadow: 0 0 15px rgba(29, 185, 84, 0.5);
+}
+
+/* 🌟 UNIFIED CONTAINER - Contenedor Base */
+.unified-container {
+  width: 100%;
+}
+
+.container-default {
+  background: transparent;
+}
+
+.container-glass {
+  background: var(--spotify-glass-bg);
+  backdrop-filter: var(--spotify-glass-blur);
+  border: 1px solid var(--spotify-glass-border);
+  border-radius: 16px;
+}
+
+.container-neural {
+  background: linear-gradient(135deg,
+    rgba(139, 92, 246, 0.05) 0%,
+    rgba(0, 0, 0, 0.95) 50%,
+    rgba(236, 72, 153, 0.05) 100%);
+}
+
+.container-spotify {
+  background: linear-gradient(135deg,
+    rgba(29, 185, 84, 0.05) 0%,
+    rgba(0, 0, 0, 0.95) 50%,
+    rgba(29, 185, 84, 0.05) 100%);
+}
+
+.container-padding-none { padding: 0; }
+.container-padding-sm { padding: 0.75rem; }
+.container-padding-md { padding: 1rem; }
+.container-padding-lg { padding: 1.5rem; }
+.container-padding-xl { padding: 2rem; }
+
+.container-max-sm { max-width: 640px; }
+.container-max-md { max-width: 768px; }
+.container-max-lg { max-width: 1024px; }
+.container-max-xl { max-width: 1280px; }
+.container-max-full { max-width: 100%; }
+
+.container-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 🎮 UNIFIED GRID - Grid Base */
+.unified-grid {
+  display: grid;
+  width: 100%;
+}
+
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+.grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+
+.grid-gap-sm { gap: 0.75rem; }
+.grid-gap-md { gap: 1rem; }
+.grid-gap-lg { gap: 1.5rem; }
+.grid-gap-xl { gap: 2rem; }
+
+.grid-responsive.grid-cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.grid-responsive.grid-cols-3 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.grid-responsive.grid-cols-4 {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+/* 🎨 ANIMACIONES KEYFRAMES */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes metricPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes progressShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes notificationSlideIn {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+/* 📱 RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .unified-notification {
+    max-width: 300px;
+  }
+  
+  .button-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+}

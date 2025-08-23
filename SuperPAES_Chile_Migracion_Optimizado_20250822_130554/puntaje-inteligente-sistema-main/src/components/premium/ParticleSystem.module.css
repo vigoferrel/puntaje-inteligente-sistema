@@ -1,0 +1,65 @@
+/* ============================================================================
+   🎨 PARTICLE SYSTEM - CSS MODULES OPTIMIZADO
+   Optimizaciones GPU y rendimiento para sistema de partículas
+   ============================================================================ */
+
+.particleCanvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  
+  /* Optimizaciones GPU */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  
+  /* Optimizaciones de renderizado */
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+  
+  /* Contenimiento para mejor rendimiento */
+  contain: layout style paint;
+}
+
+/* Variantes de rendimiento por dispositivo */
+@media (max-width: 768px) {
+  .particleCanvas {
+    /* Reducir optimizaciones en móviles para ahorrar batería */
+    will-change: auto;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particleCanvas {
+    /* Respetar preferencias de accesibilidad */
+    will-change: auto;
+    transform: none;
+  }
+}
+
+/* Optimización para dispositivos de bajo rendimiento */
+@media (max-width: 480px) {
+  .particleCanvas {
+    opacity: 0.7;
+    filter: blur(0.5px);
+  }
+}
+
+/* Soporte para modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .particleCanvas {
+    mix-blend-mode: screen;
+  }
+}
+
+/* Optimización para pantallas de alta densidad */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .particleCanvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}

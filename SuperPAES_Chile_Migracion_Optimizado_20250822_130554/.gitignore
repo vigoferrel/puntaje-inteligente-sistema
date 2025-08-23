@@ -1,0 +1,65 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+.cache/
+.next/
+out/
+coverage/
+
+# Python
+.venv/
+venv/
+venv*/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.pytype/
+.coverage*
+htmlcov/
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+*.iml
+
+# Env/Secrets
+.env
+.env.*
+!.env.example
+*.env.local
+*.env.production
+*.env.development
+*.env.test
+
+# Logs and runtime
+logs/
+*.log
+*.pid
+*.seed
+
+# Databases and storage
+*.db
+*.sqlite
+instance/
+
+# Binaries
+*.exe
+*.dll
+*.pdb
+
+# Project specific
+paes-agente/venv312/
+paes-agente/logs/
+paes-master/logs-arsenal-quantum/
+puntaje-inteligente-sistema-main/claves supabase.txt

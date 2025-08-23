@@ -1,0 +1,6 @@
+/* 🎵 SpotifyExercisePlayer.module.css - Estilos dinámicos para barra de progreso */
+/* Leonardo da Vinci: "La simplicidad es la máxima sofisticación" */
+
+.progressBar {
+  width: var(--progress-width, 0%);
+}

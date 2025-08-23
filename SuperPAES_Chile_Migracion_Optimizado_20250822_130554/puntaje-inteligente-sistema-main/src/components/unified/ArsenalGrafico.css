@@ -1,0 +1,221 @@
+/* ARSENAL GRÁFICO COMPLETO - Optimización Michelangelo */
+/* Context7 + Pensamiento Secuencial - Funcionalidad > Efectos */
+
+/* ==================== CONTENEDOR PRINCIPAL ==================== */
+.widget-arsenal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* ==================== NAVEGACIÓN CINEMATOGRÁFICA ==================== */
+.cinematic-navigation-hub {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  pointer-events: auto;
+  z-index: 1001;
+}
+
+.advanced-floating-navigation {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  pointer-events: auto;
+  z-index: 1001;
+}
+
+.immersive-navigation {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+  pointer-events: auto;
+  z-index: 1002;
+}
+
+/* ==================== WIDGETS ESPECIALIZADOS ==================== */
+.quick-navigation-widget {
+  position: fixed;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  z-index: 1001;
+  max-width: 280px;
+}
+
+.universe-navigation {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  z-index: 1001;
+}
+
+.neural-navigation-widget {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  z-index: 1001;
+  max-width: 280px;
+}
+
+/* ==================== NAVEGACIÓN PRINCIPAL ==================== */
+.unified-navigation {
+  position: fixed;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  z-index: 1003;
+}
+
+/* ==================== OPTIMIZACIONES DE RENDIMIENTO ==================== */
+.widget-arsenal-container * {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Reducir efectos en dispositivos de bajo rendimiento */
+@media (max-width: 768px) {
+  .quick-navigation-widget,
+  .neural-navigation-widget {
+    display: none;
+  }
+  
+  .universe-navigation {
+    top: 10px;
+    left: 10px;
+    transform: none;
+  }
+}
+
+/* ==================== ESTADOS DE INTERACCIÓN ==================== */
+.widget-arsenal-container .widget-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+}
+
+.widget-arsenal-container .widget-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ==================== ANIMACIONES CINEMATOGRÁFICAS ==================== */
+@keyframes arsenalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.widget-arsenal-container > * {
+  animation: arsenalFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.widget-arsenal-container > *:nth-child(1) { animation-delay: 0.1s; }
+.widget-arsenal-container > *:nth-child(2) { animation-delay: 0.2s; }
+.widget-arsenal-container > *:nth-child(3) { animation-delay: 0.3s; }
+.widget-arsenal-container > *:nth-child(4) { animation-delay: 0.4s; }
+.widget-arsenal-container > *:nth-child(5) { animation-delay: 0.5s; }
+
+/* ==================== MODO EMERGENCIA (Dispositivos Lentos) ==================== */
+.performance-mode-low .widget-arsenal-container {
+  animation: none;
+}
+
+.performance-mode-low .widget-arsenal-container * {
+  transition: none;
+  animation: none;
+  backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+/* ==================== ACCESIBILIDAD ==================== */
+@media (prefers-reduced-motion: reduce) {
+  .widget-arsenal-container * {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* ==================== TEMA OSCURO OPTIMIZADO ==================== */
+.theme-leonardo .widget-arsenal-container {
+  --primary-color: #4F46E5;
+  --secondary-color: #06B6D4;
+  --accent-color: #F97316;
+}
+
+.theme-paes .widget-arsenal-container {
+  --primary-color: #3B82F6;
+  --secondary-color: #10B981;
+  --accent-color: #8B5CF6;
+}
+
+.theme-neural .widget-arsenal-container {
+  --primary-color: #06B6D4;
+  --secondary-color: #4F46E5;
+  --accent-color: #F97316;
+}
+
+/* ==================== OVERLAYS Y CAPAS ==================== */
+.arsenal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.05) 50%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ==================== EFECTOS HOLOGRÁFICOS ==================== */
+.holographic-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.holographic-effect::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg);
+  animation: holographicSweep 3s infinite;
+}
+
+@keyframes holographicSweep {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}

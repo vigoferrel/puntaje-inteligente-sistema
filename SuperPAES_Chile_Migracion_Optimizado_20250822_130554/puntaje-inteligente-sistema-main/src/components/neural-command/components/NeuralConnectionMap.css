@@ -1,0 +1,312 @@
+/* Estilos para Neural Connection Map */
+
+.neural-connection-map {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #0f172a, #581c87, #1e3a8a);
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+.map-container {
+  height: 100%;
+}
+
+.map-header {
+  margin-bottom: 2rem;
+}
+
+.map-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.map-description {
+  color: #d1d5db;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  background-color: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border-width: 1px;
+}
+
+.stat-card.total {
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.stat-card.active {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.stat-card.modules {
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+.stat-card.flow {
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.stat-icon.total {
+  color: #06b6d4;
+}
+
+.stat-icon.active {
+  color: #22c55e;
+}
+
+.stat-icon.modules {
+  color: #a855f7;
+}
+
+.stat-icon.flow {
+  color: #eab308;
+}
+
+.stat-label {
+  color: white;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.stat-value.total {
+  color: #06b6d4;
+}
+
+.stat-value.active {
+  color: #22c55e;
+}
+
+.stat-value.modules {
+  color: #a855f7;
+}
+
+.stat-value.flow {
+  color: #eab308;
+}
+
+.stat-unit {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.connection-map-container {
+  background-color: rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 24rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.map-content {
+  position: absolute;
+  inset: 0;
+  padding: 1.5rem;
+}
+
+.grid-background {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  height: 100%;
+  width: 100%;
+}
+
+.grid-cell {
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.connections-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.connection-node {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+}
+
+.node-circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border-width: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-circle.active {
+  background-color: rgba(6, 182, 212, 0.2);
+  border-color: #06b6d4;
+}
+
+.node-circle.inactive {
+  background-color: rgba(107, 114, 128, 0.2);
+  border-color: #6b7280;
+}
+
+.node-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.node-dot.active {
+  background-color: #06b6d4;
+}
+
+.node-dot.inactive {
+  background-color: #6b7280;
+}
+
+.legend-container {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.legend-icon.data {
+  color: #4ECDC4;
+}
+
+.legend-icon.neural {
+  color: #9B59B6;
+}
+
+.legend-icon.feedback {
+  color: #E74C3C;
+}
+
+.legend-label {
+  color: white;
+  font-size: 0.875rem;
+}
+
+.legend-line {
+  width: 1rem;
+  height: 0.125rem;
+  border-radius: 9999px;
+}
+
+.legend-line.data {
+  background-color: #4ECDC4;
+}
+
+.legend-line.neural {
+  background-color: #9B59B6;
+}
+
+.legend-line.feedback {
+  background-color: #E74C3C;
+}
+
+/* Animaciones */
+@keyframes pulse-node {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+.node-dot.active {
+  animation: pulse-node 2s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .neural-connection-map {
+    padding: 1rem;
+  }
+  
+  .map-title {
+    font-size: 1.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .legend-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .connection-map-container {
+    height: 20rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .legend-container {
+    gap: 0.5rem;
+  }
+}

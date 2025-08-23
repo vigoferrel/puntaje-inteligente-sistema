@@ -1,0 +1,50 @@
+{
+  "project": {
+    "name": "PAES Sistema Educativo",
+    "version": "1.0.0",
+    "type": "educational-platform",
+    "description": "Sistema educativo que respeta la estructura oficial PAES"
+  },
+  "educational": {
+    "structure": "official-paes",
+    "subjects": [
+      "MATEMATICA_M1",
+      "MATEMATICA_M2",
+      "COMPETENCIA_LECTORA",
+      "CIENCIAS",
+      "HISTORIA"
+    ],
+    "bloom_levels": 6,
+    "learning_nodes": "enabled",
+    "neural_learning": "enabled"
+  },
+  "integrations": {
+    "supabase": {
+      "enabled": true,
+      "schema": "educational"
+    },
+    "spotify": {
+      "enabled": true,
+      "purpose": "educational_music"
+    },
+    "openrouter": {
+      "enabled": true,
+      "purpose": "educational_content_generation"
+    }
+  },
+  "features": {
+    "quantum_engine": true,
+    "ai_recommendations": true,
+    "progress_tracking": true,
+    "analytics": true
+  },
+  "security": {
+    "environment_variables": [
+      "SUPABASE_URL",
+      "SUPABASE_ANON_KEY",
+      "OPENROUTER_API_KEY",
+      "SPOTIFY_CLIENT_ID",
+      "SPOTIFY_CLIENT_SECRET"
+    ]
+  }
+}

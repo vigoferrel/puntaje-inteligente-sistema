@@ -1,0 +1,25 @@
+﻿{
+    "functions":  [
+                      "analyze_index_performance",
+                      "buscar_carreras_seguro",
+                      "calculate_weighted_score_ciencias",
+                      "exec_sql",
+                      "get_column_stats",
+                      "get_index_stats",
+                      "get_policies_for_table",
+                      "get_query_stats",
+                      "get_table_info",
+                      "neural_performance_stats",
+                      "obtener_examen_ciencias_completo",
+                      "obtener_examen_completo",
+                      "obtener_examen_historia_completo",
+                      "obtener_examen_matematica2_completo",
+                      "obtener_respuestas_correctas_examen",
+                      "obtener_respuestas_correctas_examen_f153",
+                      "production_readiness_check",
+                      "validate_nodes_coherence"
+                  ],
+    "timestamp":  "2025-08-22 15:40:53",
+    "total_calls":  2,
+    "unique_functions":  18
+}

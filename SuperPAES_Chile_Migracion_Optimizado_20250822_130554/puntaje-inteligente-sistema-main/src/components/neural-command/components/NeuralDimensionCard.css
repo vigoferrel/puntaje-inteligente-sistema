@@ -1,0 +1,280 @@
+/* Estilos para Neural Dimension Card */
+
+.neural-dimension-card {
+  position: relative;
+  cursor: pointer;
+  border-radius: 1rem;
+  border-width: 1px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.neural-dimension-card.inactive {
+  background-color: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.neural-dimension-card.inactive:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.neural-dimension-card.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(147, 51, 234, 0.2));
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon-container {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(147, 51, 234, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dimension-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #06b6d4;
+}
+
+.dimension-title {
+  color: white;
+  font-weight: bold;
+  font-size: 1.125rem;
+}
+
+.trend-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trend-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.trend-up {
+  color: #10b981;
+}
+
+.trend-down {
+  color: #ef4444;
+}
+
+.trend-stable {
+  color: #6b7280;
+}
+
+.value-section {
+  margin-bottom: 1rem;
+}
+
+.dimension-value {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.dimension-description {
+  font-size: 0.875rem;
+  color: #d1d5db;
+}
+
+.progress-section {
+  margin-bottom: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 0.5rem;
+  background-color: #374151;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #06b6d4, #a855f7);
+  border-radius: 9999px;
+}
+
+.connections-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connections-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.connections-dots {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.connection-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: rgba(6, 182, 212, 0.6);
+}
+
+.connection-dot.animated {
+  animation: pulse-dot 2s infinite;
+}
+
+.connection-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.connection-dot:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.connection-dot:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.connections-overflow {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.activation-effect {
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  background: linear-gradient(45deg, transparent, rgba(6, 182, 212, 0.1), transparent);
+  animation: activation-sweep 2s infinite;
+}
+
+.particles-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.activity-particle {
+  position: absolute;
+  width: 0.25rem;
+  height: 0.25rem;
+  background-color: #06b6d4;
+  border-radius: 50%;
+}
+
+.activity-particle:nth-child(1) {
+  left: 25%;
+  top: 30%;
+  animation: particle-float 2s infinite 0s;
+}
+
+.activity-particle:nth-child(2) {
+  left: 70%;
+  top: 25%;
+  animation: particle-float 2s infinite 0.3s;
+}
+
+.activity-particle:nth-child(3) {
+  left: 40%;
+  top: 60%;
+  animation: particle-float 2s infinite 0.6s;
+}
+
+.activity-particle:nth-child(4) {
+  left: 80%;
+  top: 70%;
+  animation: particle-float 2s infinite 0.9s;
+}
+
+.activity-particle:nth-child(5) {
+  left: 20%;
+  top: 80%;
+  animation: particle-float 2s infinite 1.2s;
+}
+
+.activity-particle:nth-child(6) {
+  left: 60%;
+  top: 45%;
+  animation: particle-float 2s infinite 1.5s;
+}
+
+/* Animaciones */
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes activation-sweep {
+  0% {
+    background: linear-gradient(45deg, transparent, rgba(6, 182, 212, 0.1), transparent);
+  }
+  50% {
+    background: linear-gradient(45deg, rgba(6, 182, 212, 0.05), transparent, rgba(6, 182, 212, 0.05));
+  }
+  100% {
+    background: linear-gradient(45deg, transparent, rgba(6, 182, 212, 0.1), transparent);
+  }
+}
+
+@keyframes particle-float {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.5) translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5) translateY(-10px);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .neural-dimension-card {
+    padding: 1rem;
+  }
+  
+  .dimension-title {
+    font-size: 1rem;
+  }
+  
+  .dimension-value {
+    font-size: 1.5rem;
+  }
+  
+  .icon-container {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .dimension-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

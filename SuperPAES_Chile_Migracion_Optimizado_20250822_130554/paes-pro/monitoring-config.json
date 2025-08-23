@@ -1,0 +1,279 @@
+{
+  "system": {
+    "name": "PAES-PRO Monitoring System",
+    "version": "2.0.0",
+    "environment": "development",
+    "platform": "windows",
+    "shell": "powershell"
+  },
+  "central_server": {
+    "host": "localhost",
+    "port": 3001,
+    "endpoints": {
+      "health": "/health",
+      "status": "/status",
+      "metrics": "/metrics",
+      "alerts": "/alerts",
+      "history": "/history"
+    },
+    "cors": {
+      "enabled": true,
+      "origins": ["*"]
+    },
+    "rate_limiting": {
+      "requests_per_window": 1000,
+      "window_minutes": 15
+    }
+  },
+  "processes": {
+    "target_processes": ["node", "npm", "next", "powershell"],
+    "monitoring_interval_seconds": 30,
+    "thresholds": {
+      "cpu_percent": 80.0,
+      "memory_mb": 2048,
+      "disk_percent": 85.0
+    },
+    "restart_policy": {
+      "enabled": true,
+      "max_attempts": 3,
+      "backoff_seconds": 60
+    }
+  },
+  "database": {
+    "type": "supabase",
+    "connection": {
+      "url_env_var": "NEXT_PUBLIC_SUPABASE_URL",
+      "anon_key_env_var": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "service_key_env_var": "SUPABASE_SERVICE_ROLE_KEY"
+    },
+    "health_check": {
+      "enabled": true,
+      "endpoint": "/rest/v1/",
+      "timeout_seconds": 10,
+      "retry_attempts": 3
+    },
+    "monitoring": {
+      "check_connections": true,
+      "log_slow_queries": true,
+      "slow_query_threshold_ms": 1000
+    }
+  },
+  "logging": {
+    "format": "ascii",
+    "encoding": "ascii",
+    "root_directory": "./logs",
+    "structure": {
+      "performance": "./logs/performance",
+      "server": "./logs/server",
+      "database": "./logs/database",
+      "central_metrics": "./logs/central-metrics",
+      "alerts": "./logs",
+      "startup": "./logs/startup"
+    },
+    "rotation": {
+      "enabled": true,
+      "max_file_size_mb": 50,
+      "retention_days": 7,
+      "backup_format": "{basename}_{timestamp}.log"
+    },
+    "levels": ["DEBUG", "INFO", "WARN", "ERROR", "CRITICAL", "METRICS", "ALERT"]
+  },
+  "nextjs": {
+    "app_name": "paes-pro-nextjs",
+    "dev_server": {
+      "port": 3000,
+      "host": "localhost",
+      "check_running": true
+    },
+    "build": {
+      "directory": ".next",
+      "monitor_size": true,
+      "track_build_time": true
+    },
+    "files": {
+      "package_json": "package.json",
+      "node_modules": "node_modules",
+      "components_dir": "components",
+      "pages_dir": ["app", "pages"],
+      "env_files": [".env", ".env.local", ".env.development"]
+    },
+    "performance": {
+      "memory_threshold_mb": 1024,
+      "build_size_threshold_mb": 100,
+      "startup_time_threshold_seconds": 30
+    }
+  },
+  "alerts": {
+    "enabled": true,
+    "channels": ["log", "json"],
+    "severities": ["warning", "critical"],
+    "rules": {
+      "high_cpu": {
+        "enabled": true,
+        "threshold": 80,
+        "duration_seconds": 300,
+        "severity": "warning"
+      },
+      "high_memory": {
+        "enabled": true,
+        "threshold": 90,
+        "duration_seconds": 180,
+        "severity": "warning"
+      },
+      "disk_full": {
+        "enabled": true,
+        "threshold": 85,
+        "severity": "critical"
+      },
+      "database_down": {
+        "enabled": true,
+        "severity": "critical"
+      },
+      "process_crashed": {
+        "enabled": true,
+        "severity": "critical"
+      },
+      "nextjs_not_running": {
+        "enabled": true,
+        "severity": "warning"
+      },
+      "missing_node_modules": {
+        "enabled": true,
+        "severity": "warning"
+      }
+    },
+    "retention": {
+      "max_alerts": 1000,
+      "cleanup_after_days": 7
+    }
+  },
+  "metrics": {
+    "collection_interval_seconds": 30,
+    "retention": {
+      "history_points": 1440,
+      "cleanup_after_hours": 72
+    },
+    "categories": {
+      "system": {
+        "cpu": true,
+        "memory": true,
+        "disk": true,
+        "uptime": true
+      },
+      "processes": {
+        "count": true,
+        "individual_metrics": true,
+        "command_lines": true
+      },
+      "database": {
+        "connection_status": true,
+        "response_time": true,
+        "query_performance": false
+      },
+      "nextjs": {
+        "server_status": true,
+        "build_metrics": true,
+        "file_counts": true
+      },
+      "network": {
+        "port_monitoring": true,
+        "connection_counts": false
+      }
+    },
+    "storage": {
+      "format": "json",
+      "compression": false,
+      "backup_enabled": true
+    }
+  },
+  "background_services": {
+    "process_monitor": {
+      "enabled": true,
+      "mode": "daemon",
+      "script": "background-process-monitor.ps1",
+      "auto_restart": true
+    },
+    "central_server": {
+      "enabled": true,
+      "script": "metrics-central-server.js",
+      "auto_restart": true,
+      "dependencies": []
+    },
+    "nextjs_client": {
+      "enabled": true,
+      "script": "nextjs-metrics-client.ps1",
+      "auto_restart": true,
+      "depends_on": ["central_server"]
+    }
+  },
+  "startup": {
+    "auto_start": false,
+    "startup_delay_seconds": 3,
+    "health_check_timeout_seconds": 30,
+    "services_start_order": [
+      "central_server",
+      "process_monitor", 
+      "nextjs_client"
+    ]
+  },
+  "shutdown": {
+    "graceful_timeout_seconds": 30,
+    "force_kill_after_seconds": 60,
+    "cleanup_temp_files": true,
+    "save_final_state": true
+  },
+  "security": {
+    "api_authentication": false,
+    "log_sensitive_data": false,
+    "secure_headers": true,
+    "input_validation": true
+  },
+  "performance": {
+    "max_concurrent_connections": 100,
+    "request_timeout_seconds": 30,
+    "memory_limit_mb": 512,
+    "cpu_limit_percent": 50
+  },
+  "development": {
+    "debug_mode": false,
+    "verbose_logging": false,
+    "mock_database": false,
+    "test_mode": false
+  },
+  "integrations": {
+    "supabase": {
+      "enabled": true,
+      "features": {
+        "realtime": true,
+        "auth": true,
+        "storage": false,
+        "edge_functions": false
+      }
+    },
+    "nextjs": {
+      "enabled": true,
+      "features": {
+        "dev_server_monitoring": true,
+        "build_tracking": true,
+        "performance_monitoring": true
+      }
+    },
+    "windows": {
+      "enabled": true,
+      "features": {
+        "powershell_jobs": true,
+        "wmi_queries": true,
+        "event_log": false,
+        "performance_counters": false
+      }
+    }
+  },
+  "metadata": {
+    "created": "2025-01-07",
+    "last_updated": "2025-01-07",
+    "config_version": "2.0.0",
+    "compatible_platforms": ["windows"],
+    "required_dependencies": ["node.js", "powershell", "supabase"],
+    "optional_dependencies": ["next.js", "npm"]
+  }
+}

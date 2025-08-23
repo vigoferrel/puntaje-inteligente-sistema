@@ -1,0 +1,113 @@
+/**
+ * QUANTUM MODULE INTEGRATOR CSS MODULES
+ * Context7 + Sequential Thinking - Estilos sin inline styles
+ */
+
+.moduleIntegrator {
+  width: 100%;
+}
+
+.moduleControls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.controlButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #e9ecef;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.controlButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.controlButtonActive {
+  background-color: #007bff;
+  color: white;
+}
+
+.integrationStatus {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.moduleContent {
+  width: 100%;
+}
+
+.integrationInfo {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.integrationInfo h5 {
+  margin: 0 0 10px 0;
+  color: #1976d2;
+}
+
+.integrationInfo p {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+.errorFallback {
+  padding: 20px;
+  border: 1px solid #ff6b6b;
+  border-radius: 8px;
+  background-color: #fff5f5;
+}
+
+.errorFallback h4 {
+  margin: 0 0 10px 0;
+  color: #d32f2f;
+}
+
+.errorFallback p {
+  margin: 10px 0;
+  color: #666;
+}
+
+.errorButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #ff6b6b;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.errorButton:hover {
+  background-color: #ff5252;
+}
+
+.loadingFallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.loadingFallback p {
+  margin-top: 15px;
+  color: #666;
+  font-size: 14px;
+}

@@ -1,0 +1,619 @@
+/**
+ * 🌌 QuantumBlackCubeEnhanced CSS Module - Funcionalidad Real y Visión Global
+ * Leonardo da Vinci: "La simplicidad es la máxima sofisticación"
+ */
+
+/* 🌌 Contenedor Principal */
+.quantumContainer {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: radial-gradient(circle at center, #000011 0%, #000000 100%);
+  overflow: hidden;
+  perspective: 1000px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 🌊 Campo Cuántico */
+.quantumField {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ⚛️ Partículas Cuánticas */
+.quantumParticle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color, #00ffff);
+  opacity: 0.6;
+  animation: quantumFloat 3s ease-in-out infinite;
+  animation-delay: var(--delay, 0ms);
+  transform: rotate(var(--phase, 0deg)) translateX(50px) rotate(calc(-1 * var(--phase, 0deg)));
+  box-shadow: 0 0 10px var(--color, #00ffff);
+}
+
+.quantumParticle.entangled {
+  animation: quantumEntangledFloat 2s ease-in-out infinite;
+  box-shadow: 
+    0 0 10px var(--color, #00ffff),
+    0 0 20px var(--color, #00ffff),
+    0 0 30px var(--color, #00ffff);
+  opacity: calc(0.6 + var(--coherence, 0) * 0.004);
+}
+
+/* 🎲 Cubo Principal */
+.quantumCube {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--quantum-phase, 0deg)) rotateY(var(--quantum-phase, 0deg));
+  z-index: 10;
+  filter: drop-shadow(0 0 20px var(--cube-color, #000000));
+}
+
+.quantumCube.entangled {
+  animation: quantumCubeEntanglement 4s ease-in-out infinite;
+  filter: 
+    drop-shadow(0 0 20px var(--cube-color, #000000))
+    drop-shadow(0 0 40px rgba(0, 255, 255, var(--entanglement-level, 0)))
+    hue-rotate(calc(var(--entanglement-level, 0) * 3.6deg));
+}
+
+/* 🔮 Caras del Cubo */
+.cubeFace {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, 
+    var(--face-color, #000000) 0%, 
+    rgba(0, 0, 0, var(--face-opacity, 1)) 100%);
+  border: 2px solid var(--face-color, #000000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+.cubeFace.active {
+  border-color: #00ffff;
+  box-shadow: 
+    inset 0 0 20px rgba(0, 255, 255, 0.3),
+    0 0 30px rgba(0, 255, 255, 0.5);
+  background: linear-gradient(135deg, 
+    var(--face-color, #000000) 0%, 
+    rgba(0, 255, 255, 0.1) 100%);
+}
+
+.cubeFace.entangled {
+  animation: quantumFaceEntanglement 3s ease-in-out infinite;
+  border-color: #ff00ff;
+  box-shadow: 
+    inset 0 0 20px rgba(255, 0, 255, 0.3),
+    0 0 30px rgba(255, 0, 255, 0.5),
+    0 0 50px rgba(0, 255, 255, 0.3);
+}
+
+.cubeFace.active.entangled {
+  border-color: #ffff00;
+  box-shadow: 
+    inset 0 0 20px rgba(255, 255, 0, 0.4),
+    0 0 30px rgba(255, 255, 0, 0.6),
+    0 0 50px rgba(255, 0, 255, 0.4);
+}
+
+/* Posicionamiento de caras */
+.face-0 { transform: rotateY(0deg) translateZ(150px); }
+.face-1 { transform: rotateY(90deg) translateZ(150px); }
+.face-2 { transform: rotateY(180deg) translateZ(150px); }
+.face-3 { transform: rotateY(-90deg) translateZ(150px); }
+.face-4 { transform: rotateX(90deg) translateZ(150px); }
+.face-5 { transform: rotateX(-90deg) translateZ(150px); }
+
+/* 📝 Contenido de las Caras */
+.faceContent {
+  text-align: center;
+  color: white;
+  z-index: 2;
+  position: relative;
+  padding: 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.faceIcon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+.faceName {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-shadow: 0 0 10px currentColor;
+}
+
+.faceData {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.faceAgent {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-bottom: 10px;
+  color: #00ffff;
+}
+
+/* 📊 Barra de Métricas */
+.faceMetric {
+  width: 80%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.metricBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--metric-color, #00ffff), rgba(255, 255, 255, 0.8));
+  width: var(--metric-width, 0%);
+  transition: width 0.5s ease;
+  border-radius: 3px;
+  box-shadow: 0 0 10px var(--metric-color, #00ffff);
+}
+
+.metricBar.entangled {
+  animation: quantumMetricPulse 2s ease-in-out infinite;
+  box-shadow: 
+    0 0 10px var(--metric-color, #00ffff),
+    0 0 20px var(--metric-color, #00ffff);
+}
+
+/* ✨ Destellos Cuánticos */
+.quantumGlow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, 
+    rgba(0, 255, 255, var(--glow-intensity, 0)) 0%, 
+    transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.quantumGlow.entangled {
+  background: radial-gradient(circle at center, 
+    rgba(255, 0, 255, calc(var(--glow-intensity, 0) * var(--entanglement-glow, 1))) 0%, 
+    rgba(0, 255, 255, calc(var(--glow-intensity, 0) * 0.5)) 50%,
+    transparent 70%);
+  animation: quantumGlowEntanglement 2s ease-in-out infinite;
+}
+
+/* 🌟 Núcleo Central */
+.quantumCore {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.coreOrb {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, 
+    var(--core-color, #ffffff) 0%, 
+    transparent 70%);
+  box-shadow: 
+    0 0 20px var(--core-color, #ffffff),
+    0 0 40px var(--core-color, #ffffff);
+}
+
+.coreOrb.entangled {
+  animation: quantumCoreEntanglement 3s ease-in-out infinite;
+  box-shadow: 
+    0 0 20px var(--core-color, #ffffff),
+    0 0 40px var(--core-color, #ffffff),
+    0 0 60px #ff00ff,
+    0 0 80px #00ffff;
+}
+
+/* 📊 HUD Cuántico */
+.quantumHUD {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #00ffff;
+}
+
+.hudItem {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: white;
+  font-size: 0.9rem;
+  min-width: 200px;
+}
+
+.hudItem span:first-child {
+  color: #00ffff;
+  font-weight: bold;
+}
+
+.hudItem span:last-child {
+  color: #ffffff;
+}
+
+/* 🎯 Ejercicio Activo */
+.activeExercise {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.95);
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid #00ffff;
+  max-width: 600px;
+  width: 90%;
+}
+
+.activeExercise h3 {
+  color: #00ffff;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.activeExercise p {
+  color: white;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.exerciseOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.quantumOption {
+  background: linear-gradient(135deg, #001122, #002244);
+  border: 2px solid #00ffff;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  animation-delay: var(--option-delay, 0ms);
+}
+
+.quantumOption:hover {
+  background: linear-gradient(135deg, #002244, #004488);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.quantumOption.entangled {
+  border-color: #ff00ff;
+  background: linear-gradient(135deg, #220011, #440022);
+  animation: quantumOptionEntanglement 2s ease-in-out infinite;
+}
+
+.quantumOption.entangled:hover {
+  background: linear-gradient(135deg, #440022, #880044);
+  box-shadow: 
+    0 0 20px rgba(255, 0, 255, 0.5),
+    0 0 40px rgba(0, 255, 255, 0.3);
+}
+
+/* 🌊 Animaciones Cuánticas */
+@keyframes quantumFloat {
+  0%, 100% { 
+    transform: rotate(var(--phase, 0deg)) translateX(50px) rotate(calc(-1 * var(--phase, 0deg))) translateY(0px); 
+  }
+  50% { 
+    transform: rotate(var(--phase, 0deg)) translateX(60px) rotate(calc(-1 * var(--phase, 0deg))) translateY(-10px); 
+  }
+}
+
+@keyframes quantumEntangledFloat {
+  0%, 100% { 
+    transform: rotate(var(--phase, 0deg)) translateX(50px) rotate(calc(-1 * var(--phase, 0deg))) translateY(0px) scale(1);
+    opacity: 0.6;
+  }
+  25% { 
+    transform: rotate(var(--phase, 0deg)) translateX(70px) rotate(calc(-1 * var(--phase, 0deg))) translateY(-15px) scale(1.2);
+    opacity: 1;
+  }
+  75% { 
+    transform: rotate(var(--phase, 0deg)) translateX(40px) rotate(calc(-1 * var(--phase, 0deg))) translateY(15px) scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+@keyframes quantumCubeEntanglement {
+  0%, 100% { 
+    transform: rotateX(var(--quantum-phase, 0deg)) rotateY(var(--quantum-phase, 0deg)) scale(1);
+  }
+  50% { 
+    transform: rotateX(calc(var(--quantum-phase, 0deg) + 10deg)) rotateY(calc(var(--quantum-phase, 0deg) + 10deg)) scale(1.05);
+  }
+}
+
+@keyframes quantumFaceEntanglement {
+  0%, 100% { 
+    box-shadow: 
+      inset 0 0 20px rgba(255, 0, 255, 0.3),
+      0 0 30px rgba(255, 0, 255, 0.5);
+  }
+  50% { 
+    box-shadow: 
+      inset 0 0 30px rgba(0, 255, 255, 0.4),
+      0 0 50px rgba(0, 255, 255, 0.7);
+  }
+}
+
+@keyframes quantumMetricPulse {
+  0%, 100% { 
+    box-shadow: 0 0 10px var(--metric-color, #00ffff);
+  }
+  50% { 
+    box-shadow: 
+      0 0 20px var(--metric-color, #00ffff),
+      0 0 30px var(--metric-color, #00ffff);
+  }
+}
+
+@keyframes quantumGlowEntanglement {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes quantumCoreEntanglement {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  33% { 
+    transform: translate(-50%, -50%) scale(1.2) rotate(120deg);
+  }
+  66% { 
+    transform: translate(-50%, -50%) scale(0.8) rotate(240deg);
+  }
+}
+
+@keyframes quantumOptionEntanglement {
+  0%, 100% { 
+    border-color: #ff00ff;
+    box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+  }
+  50% { 
+    border-color: #00ffff;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  }
+}
+
+/* 📱 Responsive Design */
+@media (max-width: 768px) {
+  .quantumCube {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .cubeFace {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .face-0 { transform: rotateY(0deg) translateZ(125px); }
+  .face-1 { transform: rotateY(90deg) translateZ(125px); }
+  .face-2 { transform: rotateY(180deg) translateZ(125px); }
+  .face-3 { transform: rotateY(-90deg) translateZ(125px); }
+  .face-4 { transform: rotateX(90deg) translateZ(125px); }
+  .face-5 { transform: rotateX(-90deg) translateZ(125px); }
+  
+  .quantumHUD {
+    top: 10px;
+    left: 10px;
+    padding: 10px;
+  }
+  
+  .hudItem {
+    font-size: 0.8rem;
+    min-width: 150px;
+  }
+  
+  .activeExercise {
+    bottom: 10px;
+    padding: 15px;
+  }
+  
+  .exerciseOptions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 🎨 Variables CSS Dinámicas */
+:root {
+  --quantum-primary: #00ffff;
+  --quantum-secondary: #ff00ff;
+  --quantum-accent: #ffff00;
+  --quantum-dark: #000011;
+  --quantum-light: #ffffff;
+}
+/* 🎨 Clases Dinámicas para Variables CSS - Sin Inline Styles */
+.quantumParticlePhase0 { --phase: 0deg; --color: #00ffff; --delay: 0ms; }
+.quantumParticlePhase30 { --phase: 30deg; --color: #00ffaa; --delay: 100ms; }
+.quantumParticlePhase60 { --phase: 60deg; --color: #00aaff; --delay: 200ms; }
+.quantumParticlePhase90 { --phase: 90deg; --color: #0080ff; --delay: 300ms; }
+.quantumParticlePhase120 { --phase: 120deg; --color: #0040ff; --delay: 400ms; }
+.quantumParticlePhase150 { --phase: 150deg; --color: #4000ff; --delay: 500ms; }
+.quantumParticlePhase180 { --phase: 180deg; --color: #8000ff; --delay: 600ms; }
+.quantumParticlePhase210 { --phase: 210deg; --color: #ff00ff; --delay: 700ms; }
+.quantumParticlePhase240 { --phase: 240deg; --color: #ff0080; --delay: 800ms; }
+.quantumParticlePhase270 { --phase: 270deg; --color: #ff0040; --delay: 900ms; }
+.quantumParticlePhase300 { --phase: 300deg; --color: #ff4000; --delay: 1000ms; }
+.quantumParticlePhase330 { --phase: 330deg; --color: #ff8000; --delay: 1100ms; }
+
+.quantumCubePhase0 { --quantum-phase: 0deg; --cube-color: #000000; }
+.quantumCubePhase10 { --quantum-phase: 10deg; --cube-color: #001122; }
+.quantumCubePhase20 { --quantum-phase: 20deg; --cube-color: #002244; }
+.quantumCubePhase30 { --quantum-phase: 30deg; --cube-color: #004488; }
+
+.faceColorBlack { --face-color: #000000; --face-opacity: 1.0; }
+.faceColorDarkBlue { --face-color: #001122; --face-opacity: 0.9; }
+.faceColorBlue { --face-color: #002244; --face-opacity: 0.8; }
+.faceColorCyan { --face-color: #004488; --face-opacity: 0.7; }
+.faceColorLightCyan { --face-color: #0088cc; --face-opacity: 0.6; }
+.faceColorBrightCyan { --face-color: #00ccff; --face-opacity: 0.5; }
+.faceColorWhiteCyan { --face-color: #00ffff; --face-opacity: 0.4; }
+
+.metricWidth0 { --metric-width: 0%; --metric-color: #ff0000; }
+.metricWidth10 { --metric-width: 10%; --metric-color: #ff4000; }
+.metricWidth20 { --metric-width: 20%; --metric-color: #ff8000; }
+.metricWidth30 { --metric-width: 30%; --metric-color: #ffff00; }
+.metricWidth40 { --metric-width: 40%; --metric-color: #80ff00; }
+.metricWidth50 { --metric-width: 50%; --metric-color: #40ff00; }
+.metricWidth60 { --metric-width: 60%; --metric-color: #00ff00; }
+.metricWidth70 { --metric-width: 70%; --metric-color: #00ff80; }
+.metricWidth80 { --metric-width: 80%; --metric-color: #00ffff; }
+.metricWidth90 { --metric-width: 90%; --metric-color: #0080ff; }
+.metricWidth100 { --metric-width: 100%; --metric-color: #0040ff; }
+
+.glowIntensity0 { --glow-intensity: 0; --entanglement-glow: 0; }
+.glowIntensity25 { --glow-intensity: 0.25; --entanglement-glow: 0.25; }
+.glowIntensity50 { --glow-intensity: 0.5; --entanglement-glow: 0.5; }
+.glowIntensity75 { --glow-intensity: 0.75; --entanglement-glow: 0.75; }
+.glowIntensity100 { --glow-intensity: 1; --entanglement-glow: 1; }
+
+.coreColorWhite { --core-color: #ffffff; }
+.coreColorCyan { --core-color: #00ffff; }
+.coreColorMagenta { --core-color: #ff00ff; }
+.coreColorYellow { --core-color: #ffff00; }
+
+.optionDelay0 { --option-delay: 0ms; }
+.optionDelay100 { --option-delay: 100ms; }
+.optionDelay200 { --option-delay: 200ms; }
+.optionDelay300 { --option-delay: 300ms; }
+
+.entanglementLevel0 { --entanglement-level: 0; }
+.entanglementLevel25 { --entanglement-level: 0.25; }
+.entanglementLevel50 { --entanglement-level: 0.5; }
+.entanglementLevel75 { --entanglement-level: 0.75; }
+.entanglementLevel100 { --entanglement-level: 1; }
+
+.coherenceLevel0 { --coherence: 0; }
+.coherenceLevel25 { --coherence: 25; }
+.coherenceLevel50 { --coherence: 50; }
+.coherenceLevel75 { --coherence: 75; }
+.coherenceLevel100 { --coherence: 100; }
+/* 🧠 Clases para Progreso Secuencial - Sin Inline Styles */
+.progressWidth0 { width: 0%; }
+.progressWidth10 { width: 10%; }
+.progressWidth20 { width: 20%; }
+.progressWidth30 { width: 30%; }
+.progressWidth40 { width: 40%; }
+.progressWidth50 { width: 50%; }
+.progressWidth60 { width: 60%; }
+.progressWidth70 { width: 70%; }
+.progressWidth80 { width: 80%; }
+.progressWidth90 { width: 90%; }
+.progressWidth100 { width: 100%; }
+
+/* 🔬 Estilos para Paneles Cuánticos */
+.sequentialPanel {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 17, 34, 0.9);
+  border: 1px solid #00ffff;
+  border-radius: 8px;
+  padding: 15px;
+  color: #ffffff;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.entanglementPanel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(34, 0, 17, 0.9);
+  border: 1px solid #ff00ff;
+  border-radius: 8px;
+  padding: 15px;
+  color: #ffffff;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.progressBar {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ffff, #ff00ff);
+  transition: width 0.3s ease;
+}
+
+.sequentialProgress span {
+  font-size: 12px;
+  color: #00ffff;
+}
+
+.entanglementMetrics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entanglementBar {
+  background: rgba(255, 0, 255, 0.3);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.entangledComponents {
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}

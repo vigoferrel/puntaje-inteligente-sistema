@@ -1,0 +1,1330 @@
+/* 🌌 CuboFrontal.module.css - Cubo Cuántico Contextual Leonardo */
+/* Context7 + Pensamiento Secuencial + Compatibilidad Universal */
+
+/* ===================================================================================== */
+/* 🌌 CONTENEDOR PRINCIPAL CUÁNTICO */
+/* ===================================================================================== */
+
+.quantumContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #000011 0%, #000000 100%);
+  overflow: hidden;
+  -webkit-perspective: 1000px;
+  -moz-perspective: 1000px;
+  perspective: 1000px;
+  -webkit-transform-style: preserve-3d;
+  -moz-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+/* ===================================================================================== */
+/* 🎲 CUBO PRINCIPAL CON CONTEXTOS */
+/* ===================================================================================== */
+
+.quantumCube {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(80vw, 400px);
+  height: min(80vw, 400px);
+  -webkit-transform: translate(-50%, -50%) var(--cube-rotation, rotateX(0deg) rotateY(0deg));
+  -moz-transform: translate(-50%, -50%) var(--cube-rotation, rotateX(0deg) rotateY(0deg));
+  -ms-transform: translate(-50%, -50%) var(--cube-rotation, rotateX(0deg) rotateY(0deg));
+  transform: translate(-50%, -50%) var(--cube-rotation, rotateX(0deg) rotateY(0deg));
+  -webkit-transform-style: preserve-3d;
+  -moz-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  z-index: 10;
+  will-change: transform;
+  -webkit-transition: transform var(--transition-duration, 0.3s) cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  -moz-transition: transform var(--transition-duration, 0.3s) cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  -ms-transition: transform var(--transition-duration, 0.3s) cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform var(--transition-duration, 0.3s) cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  -webkit-filter: drop-shadow(0 0 20px var(--primary-color, #00ffff));
+  filter: drop-shadow(0 0 20px var(--primary-color, #00ffff));
+}
+
+/* Contextos específicos */
+.contextDashboard {
+  --cube-rotation: rotateX(0deg) rotateY(0deg);
+  --primary-color: #00ffff;
+  --particle-density: 0.6;
+}
+
+.contextExercise {
+  --cube-rotation: rotateX(15deg) rotateY(45deg);
+  --primary-color: #1db954;
+  --particle-density: 0.8;
+}
+
+.contextProgress {
+  --cube-rotation: rotateX(-15deg) rotateY(-30deg);
+  --primary-color: #9333ea;
+  --particle-density: 0.5;
+}
+
+.contextAssessment {
+  --cube-rotation: rotateX(30deg) rotateY(60deg);
+  --primary-color: #f59e0b;
+  --particle-density: 1.0;
+}
+
+/* ===================================================================================== */
+/* 🔮 CARAS DEL CUBO */
+/* ===================================================================================== */
+
+.cubeFace {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    var(--primary-color, #000000) 0%, 
+    rgba(0, 0, 0, 0.9) 50%, 
+    var(--primary-color, #000000) 100%
+  );
+  border: 1px solid var(--primary-color, #00ffff);
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-transition: all 0.618s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  -moz-transition: all 0.618s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  -ms-transition: all 0.618s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.618s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+  opacity: 0.8;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* Posicionamiento 3D de las caras */
+.face0 { /* Portal */
+  -webkit-transform: translateZ(calc(min(40vw, 200px)));
+  -moz-transform: translateZ(calc(min(40vw, 200px)));
+  -ms-transform: translateZ(calc(min(40vw, 200px)));
+  transform: translateZ(calc(min(40vw, 200px)));
+}
+
+.face1 { /* Métricas */
+  -webkit-transform: rotateX(90deg) translateZ(calc(min(40vw, 200px)));
+  -moz-transform: rotateX(90deg) translateZ(calc(min(40vw, 200px)));
+  -ms-transform: rotateX(90deg) translateZ(calc(min(40vw, 200px)));
+  transform: rotateX(90deg) translateZ(calc(min(40vw, 200px)));
+}
+
+.face2 { /* Spotify */
+  -webkit-transform: rotateY(90deg) translateZ(calc(min(40vw, 200px)));
+  -moz-transform: rotateY(90deg) translateZ(calc(min(40vw, 200px)));
+  -ms-transform: rotateY(90deg) translateZ(calc(min(40vw, 200px)));
+  transform: rotateY(90deg) translateZ(calc(min(40vw, 200px)));
+}
+
+.face3 { /* Bloom */
+  -webkit-transform: rotateY(-90deg) translateZ(calc(min(40vw, 200px)));
+  -moz-transform: rotateY(-90deg) translateZ(calc(min(40vw, 200px)));
+  -ms-transform: rotateY(-90deg) translateZ(calc(min(40vw, 200px)));
+  transform: rotateY(-90deg) translateZ(calc(min(40vw, 200px)));
+}
+
+.face4 { /* OCR */
+  -webkit-transform: rotateY(180deg) translateZ(calc(min(40vw, 200px)));
+  -moz-transform: rotateY(180deg) translateZ(calc(min(40vw, 200px)));
+  -ms-transform: rotateY(180deg) translateZ(calc(min(40vw, 200px)));
+  transform: rotateY(180deg) translateZ(calc(min(40vw, 200px)));
+}
+
+.face5 { /* FUAS */
+  -webkit-transform: rotateX(-90deg) translateZ(calc(min(40vw, 200px)));
+  -moz-transform: rotateX(-90deg) translateZ(calc(min(40vw, 200px)));
+  -ms-transform: rotateX(-90deg) translateZ(calc(min(40vw, 200px)));
+  transform: rotateX(-90deg) translateZ(calc(min(40vw, 200px)));
+}
+
+/* Estados de interacción */
+.cubeFace:hover {
+  -webkit-transform: translateZ(10px);
+  -moz-transform: translateZ(10px);
+  -ms-transform: translateZ(10px);
+  transform: translateZ(10px);
+  -webkit-box-shadow: 0 0 30px var(--primary-color, #00ffff);
+  -moz-box-shadow: 0 0 30px var(--primary-color, #00ffff);
+  box-shadow: 0 0 30px var(--primary-color, #00ffff);
+  border-width: 2px;
+}
+
+.cubeFace:active {
+  -webkit-transform: translateZ(5px);
+  -moz-transform: translateZ(5px);
+  -ms-transform: translateZ(5px);
+  transform: translateZ(5px);
+  -webkit-filter: brightness(1.2);
+  filter: brightness(1.2);
+}
+
+/* ===================================================================================== */
+/* 🎨 CONTENIDO DE LAS CARAS */
+/* ===================================================================================== */
+
+.faceContent {
+  display: flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  -ms-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  -ms-justify-content: center;
+  justify-content: center;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
+  color: #ffffff;
+  position: relative;
+  z-index: 2;
+}
+
+.faceIcon {
+  font-size: clamp(2rem, 8vw, 4rem);
+  margin-bottom: 10px;
+  -webkit-filter: drop-shadow(0 0 10px currentColor);
+  filter: drop-shadow(0 0 10px currentColor);
+  -webkit-animation: iconPulse 1.618s infinite ease-in-out;
+  -moz-animation: iconPulse 1.618s infinite ease-in-out;
+  animation: iconPulse 1.618s infinite ease-in-out;
+}
+
+@-webkit-keyframes iconPulse {
+  0%, 100% { -webkit-transform: scale(1); }
+  50% { -webkit-transform: scale(1.1); }
+}
+
+@-moz-keyframes iconPulse {
+  0%, 100% { -moz-transform: scale(1); }
+  50% { -moz-transform: scale(1.1); }
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.faceName {
+  font-size: clamp(0.8rem, 3vw, 1.2rem);
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-shadow: 0 0 5px currentColor;
+}
+
+.faceData {
+  font-size: clamp(0.7rem, 2.5vw, 1rem);
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+/* ===================================================================================== */
+/* 📊 MÉTRICAS CUÁNTICAS */
+/* ===================================================================================== */
+
+.faceMetric {
+  width: 80%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 10px;
+}
+
+.metricBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color, #00ffff), rgba(255, 255, 255, 0.8));
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+  -webkit-transition: width 0.618s ease-out;
+  -moz-transition: width 0.618s ease-out;
+  -ms-transition: width 0.618s ease-out;
+  transition: width 0.618s ease-out;
+  -webkit-box-shadow: 0 0 10px var(--primary-color, #00ffff);
+  -moz-box-shadow: 0 0 10px var(--primary-color, #00ffff);
+  box-shadow: 0 0 10px var(--primary-color, #00ffff);
+}
+
+/* Clases dinámicas para métricas */
+.metricWidth0 { width: 0%; }
+.metricWidth10 { width: 10%; }
+.metricWidth20 { width: 20%; }
+.metricWidth30 { width: 30%; }
+.metricWidth40 { width: 40%; }
+.metricWidth50 { width: 50%; }
+.metricWidth60 { width: 60%; }
+.metricWidth70 { width: 70%; }
+.metricWidth75 { width: 75%; }
+.metricWidth80 { width: 80%; }
+.metricWidth85 { width: 85%; }
+.metricWidth90 { width: 90%; }
+.metricWidth95 { width: 95%; }
+.metricWidth76 { width: 76%; }
+.metricWidth77 { width: 77%; }
+.metricWidth78 { width: 78%; }
+.metricWidth79 { width: 79%; }
+.metricWidth81 { width: 81%; }
+.metricWidth82 { width: 82%; }
+.metricWidth83 { width: 83%; }
+.metricWidth84 { width: 84%; }
+.metricWidth86 { width: 86%; }
+.metricWidth87 { width: 87%; }
+.metricWidth88 { width: 88%; }
+.metricWidth89 { width: 89%; }
+.metricWidth91 { width: 91%; }
+.metricWidth92 { width: 92%; }
+.metricWidth93 { width: 93%; }
+.metricWidth94 { width: 94%; }
+.metricWidth96 { width: 96%; }
+.metricWidth97 { width: 97%; }
+.metricWidth98 { width: 98%; }
+.metricWidth99 { width: 99%; }
+/* Clases dinámicas para progreso FUAS */
+.fuasProgressWidth0 { width: 0%; }
+.fuasProgressWidth5 { width: 5%; }
+.fuasProgressWidth10 { width: 10%; }
+.fuasProgressWidth15 { width: 15%; }
+.fuasProgressWidth20 { width: 20%; }
+.fuasProgressWidth25 { width: 25%; }
+.fuasProgressWidth30 { width: 30%; }
+.fuasProgressWidth35 { width: 35%; }
+.fuasProgressWidth40 { width: 40%; }
+.fuasProgressWidth45 { width: 45%; }
+.fuasProgressWidth50 { width: 50%; }
+.fuasProgressWidth55 { width: 55%; }
+.fuasProgressWidth60 { width: 60%; }
+.fuasProgressWidth65 { width: 65%; }
+.fuasProgressWidth70 { width: 70%; }
+.fuasProgressWidth75 { width: 75%; }
+.fuasProgressWidth80 { width: 80%; }
+.fuasProgressWidth85 { width: 85%; }
+.fuasProgressWidth90 { width: 90%; }
+.fuasProgressWidth95 { width: 95%; }
+.fuasProgressWidth100 { width: 100%; }
+.ocrUploadZoneActive {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.2);
+  -webkit-transform: scale(1.02);
+  -moz-transform: scale(1.02);
+  -ms-transform: scale(1.02);
+  transform: scale(1.02);
+}
+
+.hiddenFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.metricWidth100 { width: 100%; }
+
+/* ===================================================================================== */
+/* ✨ PARTÍCULAS CUÁNTICAS */
+/* ===================================================================================== */
+
+.quantumField {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.quantumParticle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--primary-color, #00ffff);
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  border-radius: 50%;
+  opacity: 0.6;
+  will-change: transform;
+  -webkit-animation: quantumFloat calc(1618ms + var(--particle-delay, 0ms)) infinite ease-in-out;
+  -moz-animation: quantumFloat calc(1618ms + var(--particle-delay, 0ms)) infinite ease-in-out;
+  animation: quantumFloat calc(1618ms + var(--particle-delay, 0ms)) infinite ease-in-out;
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Posicionamiento de partículas */
+.particle0 { top: 10%; left: 10%; }
+.particle1 { top: 17.5%; left: 18.33%; }
+.particle2 { top: 25%; left: 26.66%; }
+.particle3 { top: 32.5%; left: 34.99%; }
+.particle4 { top: 40%; left: 43.32%; }
+.particle5 { top: 47.5%; left: 51.65%; }
+.particle6 { top: 55%; left: 59.98%; }
+.particle7 { top: 62.5%; left: 68.31%; }
+.particle8 { top: 70%; left: 76.64%; }
+.particle9 { top: 77.5%; left: 84.97%; }
+.particle10 { top: 85%; left: 93.3%; }
+.particle11 { top: 15%; left: 85%; }
+.particle12 { top: 35%; left: 75%; }
+.particle13 { top: 55%; left: 25%; }
+.particle14 { top: 75%; left: 15%; }
+.particle15 { top: 20%; left: 60%; }
+
+@-webkit-keyframes quantumFloat {
+  0%, 100% {
+    -webkit-transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    -webkit-transform: translate3d(20px, -15px, 0) scale(1.2);
+    opacity: 0.8;
+  }
+  50% {
+    -webkit-transform: translate3d(-10px, -30px, 0) scale(0.8);
+    opacity: 1;
+  }
+  75% {
+    -webkit-transform: translate3d(-25px, -10px, 0) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+@-moz-keyframes quantumFloat {
+  0%, 100% {
+    -moz-transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    -moz-transform: translate3d(20px, -15px, 0) scale(1.2);
+    opacity: 0.8;
+  }
+  50% {
+    -moz-transform: translate3d(-10px, -30px, 0) scale(0.8);
+    opacity: 1;
+  }
+  75% {
+    -moz-transform: translate3d(-25px, -10px, 0) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+@keyframes quantumFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate3d(20px, -15px, 0) scale(1.2);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(-10px, -30px, 0) scale(0.8);
+    opacity: 1;
+  }
+  75% {
+    transform: translate3d(-25px, -10px, 0) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+/* ===================================================================================== */
+/* 📊 HUD CUÁNTICO */
+/* ===================================================================================== */
+
+.quantumHUD {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 15;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(0.6rem, 2vw, 0.8rem);
+}
+
+.hudItem {
+  display: flex;
+  -webkit-justify-content: space-between;
+  -moz-justify-content: space-between;
+  -ms-justify-content: space-between;
+  justify-content: space-between;
+  gap: 10px;
+  color: #00ffff;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 4px 8px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  min-width: 150px;
+}
+
+.hudItem span:first-child {
+  opacity: 0.7;
+}
+
+.hudItem span:last-child {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+/* ===================================================================================== */
+/* 🔐 AUTH REQUIRED */
+/* ===================================================================================== */
+
+.authRequired {
+  display: flex;
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  -ms-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  -ms-justify-content: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #ff6b6b;
+  -webkit-border-radius: 12px;
+  -moz-border-radius: 12px;
+  border-radius: 12px;
+  color: #ffffff;
+}
+
+/* ===================================================================================== */
+/* 📱 OPTIMIZACIONES MÓVILES */
+/* ===================================================================================== */
+
+@media (max-width: 768px) {
+  .quantumCube {
+    width: 90vw;
+    height: 90vw;
+  }
+  
+  /* ===================================================================================== */
+  /* 🔄 ESTADOS DINÁMICOS ADICIONALES */
+  /* ===================================================================================== */
+  
+  .interacting {
+    -webkit-animation: quantumPulse 0.618s ease-out;
+    -moz-animation: quantumPulse 0.618s ease-out;
+    animation: quantumPulse 0.618s ease-out;
+  }
+  
+  @-webkit-keyframes quantumPulse {
+    0% { -webkit-transform: scale(1); }
+    50% { -webkit-transform: scale(1.05); }
+    100% { -webkit-transform: scale(1); }
+  }
+  
+  @-moz-keyframes quantumPulse {
+    0% { -moz-transform: scale(1); }
+    50% { -moz-transform: scale(1.05); }
+    100% { -moz-transform: scale(1); }
+  }
+  
+  @keyframes quantumPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  /* ===================================================================================== */
+  /* 🔄 OVERLAY DE CARGA */
+  /* ===================================================================================== */
+  
+  .loadingOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    -webkit-align-items: center;
+    -moz-align-items: center;
+    -ms-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    -moz-justify-content: center;
+    -ms-justify-content: center;
+    justify-content: center;
+    z-index: 20;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  
+  .loadingSpinner {
+    display: flex;
+    -webkit-flex-direction: column;
+    -moz-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-align-items: center;
+    -moz-align-items: center;
+    -ms-align-items: center;
+    align-items: center;
+    gap: 10px;
+    color: #00ffff;
+    font-size: 1rem;
+  }
+  
+  .spinnerIcon {
+    font-size: 2rem;
+    -webkit-animation: spinnerRotate 1s linear infinite;
+    -moz-animation: spinnerRotate 1s linear infinite;
+    animation: spinnerRotate 1s linear infinite;
+  }
+  
+  @-webkit-keyframes spinnerRotate {
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(360deg); }
+  }
+  
+  @-moz-keyframes spinnerRotate {
+    from { -moz-transform: rotate(0deg); }
+    to { -moz-transform: rotate(360deg); }
+  }
+  
+  @keyframes spinnerRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  /* ===================================================================================== */
+  /* 🎨 CLASES DINÁMICAS PARA ROTACIÓN */
+  /* ===================================================================================== */
+  
+  .cubeRotationDashboard {
+    --cube-rotation: rotateX(0deg) rotateY(0deg);
+  }
+  
+  .cubeRotationExercise {
+    --cube-rotation: rotateX(15deg) rotateY(45deg);
+  }
+  
+  .cubeRotationProgress {
+    --cube-rotation: rotateX(-15deg) rotateY(-30deg);
+  }
+  
+  .cubeRotationAssessment {
+    --cube-rotation: rotateX(30deg) rotateY(60deg);
+  }
+  
+  /* ===================================================================================== */
+  /* 🎨 CLASES DINÁMICAS PARA PARTÍCULAS */
+  /* ===================================================================================== */
+  
+  .particleDelay0 { --particle-delay: 0ms; }
+  .particleDelay100 { --particle-delay: 100ms; }
+  .particleDelay200 { --particle-delay: 200ms; }
+  .particleDelay300 { --particle-delay: 300ms; }
+  .particleDelay400 { --particle-delay: 400ms; }
+  .particleDelay500 { --particle-delay: 500ms; }
+  .particleDelay600 { --particle-delay: 600ms; }
+  .particleDelay700 { --particle-delay: 700ms; }
+  .particleDelay800 { --particle-delay: 800ms; }
+  .particleDelay900 { --particle-delay: 900ms; }
+  .particleDelay1000 { --particle-delay: 1000ms; }
+  
+  .quantumParticle {
+    width: 1px;
+    height: 1px;
+  }
+  
+  .faceContent {
+    padding: 15px;
+  }
+  
+  .quantumHUD {
+    top: 10px;
+    left: 10px;
+    font-size: 0.6rem;
+  }
+  
+  .hudItem {
+    min-width: 120px;
+    padding: 3px 6px;
+  }
+}
+
+/* ===================================================================================== */
+/* 🔋 OPTIMIZACIONES DE RENDIMIENTO */
+/* ===================================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .quantumParticle,
+  .faceIcon {
+    -webkit-animation: none;
+    -moz-animation: none;
+    animation: none;
+  }
+  
+  .cubeFace {
+    -webkit-transition: none;
+    -moz-transition: none;
+    -ms-transition: none;
+    transition: none;
+  }
+}
+
+/* ===================================================================================== */
+/* 🌙 MODO OSCURO MEJORADO */
+/* ===================================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  .quantumContainer {
+    background: radial-gradient(circle at center, #000022 0%, #000000 100%);
+  }
+}
+
+/* ===================================================================================== */
+/* ⚡ ACELERACIÓN HARDWARE FORZADA */
+/* ===================================================================================== */
+
+.quantumContainer *,
+.quantumContainer *::before,
+.quantumContainer *::after {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+/* ===================================================================================== */
+/* 🔄 ESTADOS DINÁMICOS ADICIONALES - FUERA DE MEDIA QUERY */
+/* ===================================================================================== */
+
+.interacting {
+  -webkit-animation: quantumPulse 0.618s ease-out;
+  -moz-animation: quantumPulse 0.618s ease-out;
+  animation: quantumPulse 0.618s ease-out;
+}
+
+@-webkit-keyframes quantumPulse {
+  0% { -webkit-transform: scale(1); }
+  50% { -webkit-transform: scale(1.05); }
+  100% { -webkit-transform: scale(1); }
+}
+
+@-moz-keyframes quantumPulse {
+  0% { -moz-transform: scale(1); }
+  50% { -moz-transform: scale(1.05); }
+  100% { -moz-transform: scale(1); }
+}
+
+@keyframes quantumPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ===================================================================================== */
+/* 🔄 OVERLAY DE CARGA - FUERA DE MEDIA QUERY */
+/* ===================================================================================== */
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  -ms-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  -ms-justify-content: center;
+  justify-content: center;
+  z-index: 20;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.loadingSpinner {
+  display: flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  -ms-align-items: center;
+  align-items: center;
+  gap: 10px;
+  color: #00ffff;
+  font-size: 1rem;
+}
+
+.spinnerIcon {
+  font-size: 2rem;
+  -webkit-animation: spinnerRotate 1s linear infinite;
+  -moz-animation: spinnerRotate 1s linear infinite;
+  animation: spinnerRotate 1s linear infinite;
+}
+
+@-webkit-keyframes spinnerRotate {
+  from { -webkit-transform: rotate(0deg); }
+  to { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes spinnerRotate {
+  from { -moz-transform: rotate(0deg); }
+  to { -moz-transform: rotate(360deg); }
+}
+
+@keyframes spinnerRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ===================================================================================== */
+/* 🎨 CLASES DINÁMICAS PARA ROTACIÓN - FUERA DE MEDIA QUERY */
+/* ===================================================================================== */
+
+.cubeRotationDashboard {
+  --cube-rotation: rotateX(0deg) rotateY(0deg);
+}
+
+.cubeRotationExercise {
+  --cube-rotation: rotateX(15deg) rotateY(45deg);
+}
+
+.cubeRotationProgress {
+  --cube-rotation: rotateX(-15deg) rotateY(-30deg);
+}
+
+.cubeRotationAssessment {
+  --cube-rotation: rotateX(30deg) rotateY(60deg);
+}
+
+/* ===================================================================================== */
+/* 🎵 SPOTIFY EDUCATIVO STYLES */
+/* ===================================================================================== */
+
+.spotifyContainer {
+  display: flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.playlistList {
+  max-height: 200px;
+  overflow-y: auto;
+  width: 100%;
+  margin-top: 10px;
+  -webkit-scrollbar-width: thin;
+  scrollbar-width: thin;
+}
+
+.playlistList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.playlistList::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.playlistList::-webkit-scrollbar-thumb {
+  background: rgba(29, 185, 84, 0.6);
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+}
+
+.playlistItem {
+  padding: 8px;
+  margin: 4px 0;
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  border: 1px solid transparent;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.playlistItem:hover {
+  background: rgba(29, 185, 84, 0.2);
+  border-color: rgba(29, 185, 84, 0.5);
+}
+
+.playlistItemSelected {
+  background: rgba(29, 185, 84, 0.3);
+  border-color: #1db954;
+}
+
+.playlistTitle {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.playlistMeta {
+  opacity: 0.8;
+  font-size: 0.7rem;
+}
+
+.playerControls {
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.trackInfo {
+  margin-bottom: 10px;
+  font-size: 0.7rem;
+}
+
+.trackTitle {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.trackArtist {
+  opacity: 0.8;
+  margin-bottom: 5px;
+}
+
+.trackTime {
+  margin-top: 5px;
+  font-family: 'Courier New', monospace;
+}
+
+.playButton {
+  background: #1db954;
+  border: none;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: white;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  -ms-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  -ms-justify-content: center;
+  justify-content: center;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.playButton:hover {
+  background: #1ed760;
+  -webkit-transform: scale(1.1);
+  -moz-transform: scale(1.1);
+  -ms-transform: scale(1.1);
+  transform: scale(1.1);
+}
+
+.playButton:disabled {
+  background: #666;
+  cursor: not-allowed;
+  -webkit-transform: none;
+  -moz-transform: none;
+  -ms-transform: none;
+  transform: none;
+}
+
+.controlsContainer {
+  display: flex;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  -ms-justify-content: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.createPlaylistButton {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(29, 185, 84, 0.2);
+  border: 1px solid #1db954;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  color: #1db954;
+  cursor: pointer;
+  font-size: 0.7rem;
+  width: 100%;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.createPlaylistButton:hover {
+  background: rgba(29, 185, 84, 0.3);
+  -webkit-transform: translateY(-1px);
+  -moz-transform: translateY(-1px);
+  -ms-transform: translateY(-1px);
+  transform: translateY(-1px);
+}
+
+.createPlaylistButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  -webkit-transform: none;
+  -moz-transform: none;
+  -ms-transform: none;
+  transform: none;
+}
+}
+/* ===================================================================================== */
+/* 🧠 BLOOM NAVIGATOR STYLES */
+/* ===================================================================================== */
+
+.bloomContainer {
+  display: flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.bloomProgressInfo {
+  font-size: 0.6rem;
+  opacity: 0.8;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.bloomLevelsList {
+  max-height: 180px;
+  overflow-y: auto;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.bloomLevelItem {
+  padding: 8px;
+  margin: 4px 0;
+  background: rgba(147, 51, 234, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.bloomLevelItem:hover {
+  background: rgba(147, 51, 234, 0.2);
+  border-color: #9333ea;
+}
+
+.bloomLevelItemSelected {
+  background: rgba(147, 51, 234, 0.3);
+  border-color: #9333ea;
+}
+
+.bloomLevelItemLocked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #666;
+}
+
+.bloomLevelTitle {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.bloomLevelMeta {
+  opacity: 0.8;
+  font-size: 0.7rem;
+}
+
+.bloomSkillsContainer {
+  margin-top: 10px;
+  padding: 8px;
+  background: rgba(147, 51, 234, 0.1);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+.bloomSkillsTitle {
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.bloomSkillsDescription {
+  font-size: 0.6rem;
+  margin-bottom: 8px;
+}
+
+.bloomSkillsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.bloomSkillButton {
+  padding: 2px 6px;
+  font-size: 0.6rem;
+  background: rgba(147, 51, 234, 0.2);
+  border: 1px solid #9333ea;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+  color: white;
+  cursor: pointer;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.bloomSkillButton:hover {
+  background: rgba(147, 51, 234, 0.3);
+  -webkit-transform: translateY(-1px);
+  -moz-transform: translateY(-1px);
+  -ms-transform: translateY(-1px);
+  transform: translateY(-1px);
+}
+
+.bloomSkillButtonCompleted {
+  background: rgba(34, 197, 94, 0.3);
+  border-color: #22c55e;
+}
+
+.bloomSkillButtonCompleted:hover {
+  background: rgba(34, 197, 94, 0.4);
+}
+
+.bloomExerciseButton {
+  margin-top: 5px;
+  font-size: 0.6rem;
+  padding: 4px 8px;
+}
+
+/* ===================================================================================== */
+/* 📸 OCR VALIDATOR STYLES */
+/* ===================================================================================== */
+
+.ocrContainer {
+  display: flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.ocrUploadZone {
+  margin-top: 10px;
+  padding: 20px;
+  border: 2px dashed rgba(245, 158, 11, 0.5);
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.ocrUploadZone:hover {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.ocrUploadIcon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.ocrUploadText {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.ocrResults {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.ocrAccuracy {
+  color: #f59e0b;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.ocrText {
+  background: rgba(245, 158, 11, 0.1);
+  padding: 8px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  margin-top: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.6rem;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+/* ===================================================================================== */
+/* 🎓 FUAS CUANTICO STYLES */
+/* ===================================================================================== */
+
+.fuasContainer {
+  display: flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.fuasProgress {
+  margin-top: 10px;
+}
+
+.fuasProgressBar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.fuasProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  -webkit-transition: width 0.5s ease;
+  -moz-transition: width 0.5s ease;
+  -ms-transition: width 0.5s ease;
+  transition: width 0.5s ease;
+}
+
+.fuasRequirements {
+  font-size: 0.6rem;
+  opacity: 0.8;
+}
+
+.fuasStatus {
+  margin-top: 8px;
+  padding: 6px;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.fuasStatusAvailable {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #22c55e;
+}
+
+.fuasStatusPending {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #f59e0b;
+}
+
+.fuasStatusNotEligible {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.fuasScholarshipList {
+  margin-top: 10px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.fuasScholarshipItem {
+  padding: 6px;
+  margin: 4px 0;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.fuasScholarshipName {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.fuasScholarshipAmount {
+  color: #f59e0b;
+  font-size: 0.6rem;
+}

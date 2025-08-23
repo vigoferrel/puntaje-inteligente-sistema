@@ -1,0 +1,508 @@
+.learningExperienceRenderer {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: white;
+  padding: 20px;
+}
+
+.learningModeSelector {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.modeButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.modeBtn {
+  padding: 12px 20px;
+  border: 2px solid #333;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.modeBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.modeBtn.active {
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  border-color: transparent;
+  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+}
+
+.adaptiveCompanions {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.companion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border-left: 4px solid;
+}
+
+.companion.priorityHigh { 
+  border-left-color: #ff6b6b; 
+}
+
+.companion.priorityMedium { 
+  border-left-color: #feca57; 
+}
+
+.companion.priorityLow { 
+  border-left-color: #48dbfb; 
+}
+
+.learningMode {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.classicMode {
+  border: 2px solid #4ecdc4;
+}
+
+.spotifyMode {
+  border: 2px solid #1db954;
+  background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(0, 0, 0, 0.3));
+}
+
+.immersiveMode {
+  border: 2px solid #ff6b6b;
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(78, 205, 196, 0.1));
+  perspective: 1000px;
+}
+
+.diagnosticMode {
+  border: 2px solid #feca57;
+}
+
+.gamifiedMode {
+  border: 2px solid #ff9ff3;
+  background: linear-gradient(135deg, rgba(255, 159, 243, 0.1), rgba(54, 54, 54, 0.3));
+}
+
+.soundWaves {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.wave {
+  width: 4px;
+  height: 40px;
+  background: #1db954;
+  animation: wave 1s ease-in-out infinite;
+}
+
+.wave:nth-child(2) { 
+  animation-delay: 0.2s; 
+}
+
+.wave:nth-child(3) { 
+  animation-delay: 0.4s; 
+}
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(2); }
+}
+
+.threeDSpace {
+  transform-style: preserve-3d;
+  height: 300px;
+  position: relative;
+}
+
+.floatingQuestion {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotateX(10deg);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(5px);
+}
+
+.options3d {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.option3d {
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.option3d:hover {
+  transform: rotateY(15deg) scale(1.05);
+}
+
+.realTimeMetrics {
+  display: flex;
+  gap: 20px;
+  margin: 15px 0;
+}
+
+.metric {
+  flex: 1;
+}
+
+.metricBar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.metricFill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ecdc4, #44a08d);
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.metricFill[data-width="0"] { width: 0%; }
+.metricFill[data-width="10"] { width: 10%; }
+.metricFill[data-width="20"] { width: 20%; }
+.metricFill[data-width="30"] { width: 30%; }
+.metricFill[data-width="40"] { width: 40%; }
+.metricFill[data-width="50"] { width: 50%; }
+.metricFill[data-width="60"] { width: 60%; }
+.metricFill[data-width="70"] { width: 70%; }
+.metricFill[data-width="80"] { width: 80%; }
+.metricFill[data-width="90"] { width: 90%; }
+.metricFill[data-width="100"] { width: 100%; }
+
+/* Rotaciones para opciones 3D */
+.option3d[data-rotation="0"] { transform: rotateY(0deg); }
+.option3d[data-rotation="1"] { transform: rotateY(90deg); }
+.option3d[data-rotation="2"] { transform: rotateY(180deg); }
+.option3d[data-rotation="3"] { transform: rotateY(270deg); }
+
+.gameStats {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+.gameStats > div {
+  padding: 8px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  font-weight: bold;
+}
+
+.optionsGame {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.optionCard {
+  height: 100px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+  cursor: pointer;
+}
+
+.optionCard:hover {
+  transform: rotateY(180deg);
+}
+
+.cardFront, .cardBack {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+}
+
+.cardFront {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+.cardBack {
+  background: linear-gradient(45deg, #f093fb, #f5576c);
+  transform: rotateY(180deg);
+  font-size: 2em;
+}
+
+.powerUps {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.powerUp {
+  padding: 10px 15px;
+  background: linear-gradient(45deg, #ff9a9e, #fecfef);
+  border: none;
+  border-radius: 20px;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.powerUp:hover {
+  transform: scale(1.1);
+}
+
+.exerciseHeader {
+  margin-bottom: 20px;
+}
+
+.exerciseContent {
+  margin-top: 20px;
+}
+
+.question {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.option:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.spotifyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.audioControls button {
+  padding: 10px 20px;
+  background: #1db954;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.spotifyContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.audioVisualization {
+  text-align: center;
+}
+
+.exerciseWithRhythm {
+  background: rgba(29, 185, 84, 0.1);
+  padding: 20px;
+  border-radius: 15px;
+}
+
+.questionSpotify {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.optionsSpotify {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.optionSpotify {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.optionSpotify:hover {
+  background: rgba(29, 185, 84, 0.3);
+  transform: translateX(10px);
+}
+
+.optionBeat {
+  width: 20px;
+  height: 20px;
+  background: #1db954;
+  border-radius: 50%;
+  animation: beat 1s ease-in-out infinite;
+}
+
+@keyframes beat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.immersiveHeader {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.immersiveContent {
+  position: relative;
+}
+
+.visualEnhancements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.diagnosticHeader {
+  margin-bottom: 20px;
+}
+
+.diagnosticContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.exerciseAnalysis {
+  background: rgba(254, 202, 87, 0.1);
+  padding: 20px;
+  border-radius: 15px;
+}
+
+.questionDiagnostic {
+  font-size: 1.2em;
+  margin-bottom: 15px;
+}
+
+.cognitiveAnalysis {
+  display: flex;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.bloomIndicator, .difficultyIndicator {
+  padding: 8px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.bloomLevel, .difficulty {
+  font-weight: bold;
+  color: #feca57;
+}
+
+.gamifiedHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.gamifiedContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.gameArena {
+  background: rgba(255, 159, 243, 0.1);
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+}
+
+.questQuestion {
+  font-size: 1.3em;
+  margin-bottom: 20px;
+}
+
+.companionIcon {
+  font-size: 1.2em;
+}
+
+.companionMessage {
+  flex: 1;
+  font-size: 0.9em;
+}
+
+.companionAction {
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.playAudio {
+  background: #1db954;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.immersionLevel {
+  color: #ff6b6b;
+  font-weight: bold;
+}

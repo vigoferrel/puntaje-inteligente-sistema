@@ -1,0 +1,258 @@
+{
+  "monitoreo": {
+    "nombre": "Monitor Sistema Educativo SUPERPAES",
+    "version": "1.0.0",
+    "descripcion": "Sistema de monitoreo en segundo plano para plataforma educativa PAES",
+    "objetivo": "Facilitar depuración y mantención del código mediante reportes ASCII"
+  },
+  "configuracion": {
+    "intervalo_monitoreo_ms": 30000,
+    "timeout_verificacion_ms": 10000,
+    "max_logs_memoria": 1000,
+    "retencion_logs_dias": 7,
+    "formato_reporte": "ascii",
+    "actualizacion_reporte_ciclos": 10
+  },
+  "componentes_monitoreados": {
+    "context7": {
+      "nombre": "Context7",
+      "descripcion": "Sistema de estructura PAES oficial con taxonomía Bloom",
+      "archivos_criticos": [
+        "paes-master/config/educational.json",
+        "paes-master/package.json"
+      ],
+      "verificaciones": {
+        "asignaturas_paes": [
+          "MATEMATICA_M1",
+          "MATEMATICA_M2", 
+          "COMPETENCIA_LECTORA",
+          "CIENCIAS",
+          "HISTORIA"
+        ],
+        "bloom_levels_requeridos": 6,
+        "neural_learning": "enabled"
+      },
+      "umbrales": {
+        "tiempo_respuesta_max_ms": 1000,
+        "errores_consecutivos_max": 5,
+        "disponibilidad_min_porcentaje": 95
+      }
+    },
+    "sistema_cuantico": {
+      "nombre": "Sistema Cuántico Educativo",
+      "descripcion": "Motor cuántico para procesamiento de datos educativos",
+      "verificaciones": {
+        "quantum_engine": true,
+        "neural_learning": "enabled",
+        "learning_nodes": "enabled"
+      },
+      "umbrales": {
+        "tiempo_respuesta_max_ms": 800,
+        "errores_consecutivos_max": 3,
+        "disponibilidad_min_porcentaje": 90
+      }
+    },
+    "triada_renacentista": {
+      "nombre": "Triada Renacentista",
+      "descripcion": "Integración de Arte, Ciencia y Tecnología en educación",
+      "pilares": {
+        "ciencia": {
+          "asignaturas": ["MATEMATICA_M1", "MATEMATICA_M2", "CIENCIAS"]
+        },
+        "humanidades": {
+          "asignaturas": ["HISTORIA", "COMPETENCIA_LECTORA"]
+        },
+        "tecnologia": {
+          "integraciones": ["spotify"]
+        }
+      },
+      "umbrales": {
+        "tiempo_respuesta_max_ms": 1200,
+        "errores_consecutivos_max": 4,
+        "disponibilidad_min_porcentaje": 85
+      }
+    },
+    "multimodalidad_gemini": {
+      "nombre": "Multimodalidad Gemini",
+      "descripcion": "Sistema de AI multimodal para generación de contenido educativo",
+      "verificaciones": {
+        "openrouter_enabled": true,
+        "openrouter_purpose": "educational_content_generation",
+        "ai_recommendations": true
+      },
+      "umbrales": {
+        "tiempo_respuesta_max_ms": 2000,
+        "errores_consecutivos_max": 6,
+        "disponibilidad_min_porcentaje": 80
+      }
+    },
+    "plataforma_paes": {
+      "nombre": "Plataforma PAES",
+      "descripcion": "Sistema base de la plataforma educativa PAES",
+      "verificaciones": {
+        "package_name": "paes-educativo",
+        "keywords_educativas": ["paes", "education", "bloom", "mathematics"],
+        "supabase_schema": "educational",
+        "dependencias_criticas": ["@supabase/supabase-js", "typescript", "dotenv"]
+      },
+      "umbrales": {
+        "tiempo_respuesta_max_ms": 1500,
+        "errores_consecutivos_max": 5,
+        "disponibilidad_min_porcentaje": 95
+      }
+    },
+    "integridad_sistema": {
+      "nombre": "Integridad del Sistema",
+      "descripcion": "Verificación de integridad y seguridad del sistema educativo",
+      "componentes_prohibidos": [
+        "quantum-core",
+        "quantum-ui", 
+        "trading",
+        "binance",
+        "leonardo"
+      ],
+      "archivos_esenciales": [
+        "paes-master/config/educational.json",
+        "paes-master/package.json",
+        "paes-master/README.md"
+      ],
+      "umbrales": {
+        "tiempo_respuesta_max_ms": 500,
+        "errores_consecutivos_max": 2,
+        "disponibilidad_min_porcentaje": 100
+      }
+    }
+  },
+  "alertas": {
+    "niveles": {
+      "info": {
+        "color": "cyan",
+        "prefijo": "ℹ️ ",
+        "log_level": "INFO"
+      },
+      "warning": {
+        "color": "yellow", 
+        "prefijo": "⚠️ ",
+        "log_level": "WARN"
+      },
+      "error": {
+        "color": "red",
+        "prefijo": "❌",
+        "log_level": "ERROR"
+      },
+      "critical": {
+        "color": "magenta",
+        "prefijo": "💥",
+        "log_level": "CRITICAL"
+      },
+      "success": {
+        "color": "green",
+        "prefijo": "✅",
+        "log_level": "INFO"
+      }
+    },
+    "escalamiento": {
+      "errores_consecutivos_warning": 3,
+      "errores_consecutivos_critical": 5,
+      "tiempo_respuesta_warning_ms": 2000,
+      "tiempo_respuesta_critical_ms": 5000,
+      "disponibilidad_warning_porcentaje": 85,
+      "disponibilidad_critical_porcentaje": 70
+    }
+  },
+  "reportes": {
+    "ascii": {
+      "ancho_columnas": 80,
+      "charset": "unicode_box_drawing",
+      "formato_timestamp": "es-CL",
+      "mostrar_estadisticas": true,
+      "mostrar_eventos_recientes": 5,
+      "actualizar_consola_cada": 10
+    },
+    "json": {
+      "incluir_historial_eventos": 50,
+      "incluir_estadisticas_detalladas": true,
+      "formato_timestamp": "ISO8601",
+      "precision_decimales": 2
+    }
+  },
+  "archivos_salida": {
+    "directorio_base": "logs",
+    "archivos": {
+      "log_principal": "monitor-educativo.log",
+      "metricas_json": "metricas-educativo.json",
+      "reporte_ascii": "reporte-ascii-educativo.txt",
+      "pid_file": "monitor-educativo.pid",
+      "stdout_log": "monitor-stdout.log",
+      "stderr_log": "monitor-stderr.log"
+    },
+    "rotacion": {
+      "habilitada": true,
+      "tamaño_max_mb": 10,
+      "archivos_backup": 5,
+      "patron_fecha": "YYYYMMDD"
+    }
+  },
+  "integraciones": {
+    "powershell": {
+      "habilitado": true,
+      "script_launcher": "lanzar-monitor-background.ps1",
+      "execution_policy": "Bypass",
+      "soporte_servicio_windows": true,
+      "nombre_servicio": "SuperpaesMonitor"
+    },
+    "node_js": {
+      "version_minima": "14.0.0",
+      "modulos_requeridos": [
+        "fs",
+        "path", 
+        "child_process",
+        "perf_hooks"
+      ],
+      "tipo_modulo": "ESM"
+    }
+  },
+  "depuracion": {
+    "nivel_verbosidad": "INFO",
+    "mostrar_debug_ciclos": false,
+    "incluir_stack_traces": true,
+    "timeout_debug_ms": 30000,
+    "archivo_debug": "logs/debug-monitor.log"
+  },
+  "mantencion": {
+    "limpieza_automatica": {
+      "habilitada": true,
+      "frecuencia_horas": 24,
+      "eliminar_logs_antiguos": true,
+      "dias_retencion": 7,
+      "comprimir_logs_antiguos": false
+    },
+    "verificacion_salud": {
+      "habilitada": true,
+      "intervalo_verificacion_minutos": 5,
+      "reinicio_automatico_en_fallo": false,
+      "notificar_administrador": false
+    }
+  },
+  "seguridad": {
+    "validacion_rutas": true,
+    "sandbox_mode": false,
+    "logs_contienen_datos_sensibles": false,
+    "encriptar_logs": false,
+    "permisos_archivos": "644"
+  },
+  "metadata": {
+    "autor": "Sistema SUPERPAES",
+    "fecha_creacion": "2025-08-09",
+    "version_configuracion": "1.0.0",
+    "proposito": "Facilitar depuración y mantención mediante monitoreo en segundo plano",
+    "cumple_reglas": {
+      "ejecucion_segundo_plano": true,
+      "reportes_metricas_desempeño": true,
+      "formato_ascii_depuracion": true,
+      "mantencion_codigo_facilitada": true,
+      "uso_powershell_windows": true,
+      "evitar_emojis_salida": false
+    }
+  }
+}

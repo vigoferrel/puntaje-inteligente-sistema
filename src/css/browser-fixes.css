@@ -1,0 +1,71 @@
+/* 
+  Browser Compatibility Fixes
+  Soluciona advertencias de compatibilidad de CSS
+*/
+
+/* Fix para text-size-adjust - Compatibilidad con navegadores modernos */
+html {
+  text-size-adjust: 100%; /* Estándar moderno */
+  -webkit-text-size-adjust: 100%; /* WebKit legacy */
+}
+
+/* Mejoras adicionales de compatibilidad */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Soporte para backdrop-filter */
+.backdrop-blur {
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+/* Scroll suave compatible */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Webkit scrollbar styling con compatibilidad */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.7);
+}
+
+/* Fix para touch scrolling en iOS */
+body {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Mejoras de rendimiento para animaciones */
+.animate-pulse,
+.animate-spin,
+.animate-bounce {
+  will-change: transform, opacity;
+}
+
+/* Compatibilidad para gradientes */
+.gradient-compat {
+  background: linear-gradient(135deg, #8b5cf6, #10b981);
+  background: -webkit-linear-gradient(135deg, #8b5cf6, #10b981);
+  background: -moz-linear-gradient(135deg, #8b5cf6, #10b981);
+  background: -o-linear-gradient(135deg, #8b5cf6, #10b981);
+}

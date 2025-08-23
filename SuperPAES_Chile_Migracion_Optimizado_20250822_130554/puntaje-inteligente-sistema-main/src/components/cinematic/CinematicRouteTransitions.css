@@ -1,0 +1,69 @@
+/* Estilos para CinematicRouteTransitions */
+.cinematic-route-container {
+  min-height: 100vh;
+  position: relative;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.cinematic-route-content {
+  min-height: 100vh;
+  position: relative;
+  background: rgba(0, 0, 0, 0.15);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transform-style: preserve-3d;
+}
+
+/* Efectos adicionales para inmersión completa */
+.cinematic-route-content--full-immersion {
+  box-shadow: 
+    0 0 50px rgba(139, 92, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Optimización para dispositivos móviles */
+@media (max-width: 768px) {
+  .cinematic-route-container {
+    perspective: 800px;
+  }
+}
+
+/* Reducir efectos para bajo rendimiento */
+.cinematic-route-content--low-performance {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Partículas de transición */
+.transition-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.transition-particle {
+  position: absolute;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: rgb(34, 211, 238);
+  border-radius: 50%;
+}
+
+/* Overlay de transición */
+.transition-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    rgba(2, 6, 23, 0.8),
+    rgba(15, 23, 42, 0.6),
+    rgba(30, 27, 75, 0.8)
+  );
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  z-index: 40;
+  pointer-events: none;
+}

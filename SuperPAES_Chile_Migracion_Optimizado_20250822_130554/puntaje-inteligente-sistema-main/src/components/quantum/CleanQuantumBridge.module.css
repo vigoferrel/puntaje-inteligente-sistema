@@ -1,0 +1,159 @@
+/* ============================================================================
+   🎯 CleanQuantumBridge Styles - Context7 + Pensamiento Secuencial
+   CSS Modules para eliminar inline styles
+   ============================================================================ */
+
+.cleanQuantumBridge {
+  width: 100%;
+  height: 100vh;
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
+
+.cleanMobileView {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileTabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.tab.active {
+  background: rgba(102, 126, 234, 0.3);
+}
+
+.cleanDesktopView {
+  height: 100%;
+  display: flex;
+}
+
+.canvasContainer {
+  flex: 1;
+  height: 100%;
+}
+
+.sidePanel {
+  width: 300px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+}
+
+.performanceIndicator {
+  margin-bottom: 20px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.optimal {
+  color: #4ade80;
+}
+
+.warning {
+  color: #f59e0b;
+}
+
+.arsenalControls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.arsenalControls button {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.arsenalControls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.arsenalControls button.active {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: #667eea;
+}
+
+.cerebroPlaceholder,
+.bloomPlaceholder {
+  padding: 20px;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.placeholderContent {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.neuralNode {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+  animation: pulse 2s infinite;
+}
+
+.bloomLevels {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.bloomLevel {
+  padding: 12px;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Clases dinámicas para colores de Bloom */
+.bloomLevel0 { background-color: hsl(0, 70%, 60%); }
+.bloomLevel1 { background-color: hsl(60, 70%, 60%); }
+.bloomLevel2 { background-color: hsl(120, 70%, 60%); }
+.bloomLevel3 { background-color: hsl(180, 70%, 60%); }
+.bloomLevel4 { background-color: hsl(240, 70%, 60%); }
+.bloomLevel5 { background-color: hsl(300, 70%, 60%); }
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.7; 
+  }
+  50% { 
+    transform: scale(1.1); 
+    opacity: 1; 
+  }
+}

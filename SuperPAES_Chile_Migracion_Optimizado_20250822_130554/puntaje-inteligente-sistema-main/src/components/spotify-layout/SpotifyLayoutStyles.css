@@ -1,0 +1,264 @@
+/* SPOTIFY-PAES LAYOUT STYLES */
+
+:root {
+  --spotify-black: #121212;
+  --spotify-dark-gray: #181818;
+  --spotify-gray: #282828;
+  --spotify-light-gray: #b3b3b3;
+  --spotify-white: #ffffff;
+  --spotify-green: #1DB954;
+  
+  --paes-purple: #6366f1;
+  --paes-cyan: #06b6d4;
+  --paes-pink: #ec4899;
+  --paes-orange: #f97316;
+  
+  --holo-blue: #00d4ff;
+  --holo-purple: #8b5cf6;
+  --holo-green: #10b981;
+  
+  --sidebar-width: 240px;
+  --header-height: 60px;
+  --analytics-width: 320px;
+}
+
+.spotify-paes-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr var(--analytics-width);
+  grid-template-rows: var(--header-height) 1fr;
+  grid-template-areas: 
+    "header header header"
+    "sidebar main analytics";
+  height: 100vh;
+  width: 100vw;
+  background: var(--spotify-black);
+  color: var(--spotify-white);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+}
+
+.spotify-header {
+  grid-area: header;
+  background: var(--spotify-dark-gray);
+  border-bottom: 1px solid var(--spotify-gray);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.spotify-sidebar {
+  grid-area: sidebar;
+  background: var(--spotify-black);
+  border-right: 1px solid var(--spotify-gray);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 0;
+}
+
+.spotify-main {
+  grid-area: main;
+  background: linear-gradient(135deg, var(--spotify-dark-gray) 0%, var(--spotify-black) 100%);
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.spotify-main.sidebar-collapsed {
+  grid-column: 1 / -1;
+}
+
+.spotify-main.panel-hidden {
+  grid-column: 2 / -1;
+}
+
+.spotify-analytics {
+  grid-area: analytics;
+  background: var(--spotify-dark-gray);
+  border-left: 1px solid var(--spotify-gray);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 16px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 24px;
+  color: var(--spotify-light-gray);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar-item:hover {
+  color: var(--spotify-white);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-item.active {
+  color: var(--spotify-white);
+  background: var(--spotify-gray);
+  border-right: 3px solid var(--spotify-green);
+}
+
+.holographic-container {
+  background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.holographic-glow {
+  box-shadow: 
+    0 0 20px rgba(0, 212, 255, 0.3),
+    0 0 40px rgba(139, 92, 246, 0.2),
+    inset 0 0 20px rgba(16, 185, 129, 0.1);
+  animation: holographicPulse 3s ease-in-out infinite;
+}
+
+@keyframes holographicPulse {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px rgba(0, 212, 255, 0.3),
+      0 0 40px rgba(139, 92, 246, 0.2),
+      inset 0 0 20px rgba(16, 185, 129, 0.1);
+  }
+  50% { 
+    box-shadow: 
+      0 0 30px rgba(0, 212, 255, 0.5),
+      0 0 60px rgba(139, 92, 246, 0.3),
+      inset 0 0 30px rgba(16, 185, 129, 0.2);
+  }
+}
+
+.mobile-nav-overlay {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 300;
+}
+
+.mobile-nav-toggle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--spotify-green);
+  border: none;
+  color: var(--spotify-white);
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(29, 185, 84, 0.4);
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(29, 185, 84, 0.6);
+}
+
+@media (max-width: 1024px) {
+  .spotify-paes-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "header"
+      "main";
+  }
+  
+  .spotify-sidebar,
+  .spotify-analytics {
+    position: fixed;
+    top: var(--header-height);
+    height: calc(100vh - var(--header-height));
+    z-index: 200;
+  }
+  
+  .spotify-sidebar {
+    left: 0;
+    width: var(--sidebar-width);
+  }
+  
+  .spotify-analytics {
+    right: 0;
+    width: var(--analytics-width);
+  }
+}
+
+/* Nuevas clases para eliminar estilos inline */
+.section-title-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 24px;
+  background: none;
+  border: none;
+  color: var(--spotify-light-gray);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.section-title-button:hover {
+  color: var(--spotify-white);
+}
+
+.section-title-button:focus-visible {
+  outline: 2px solid var(--spotify-green);
+  outline-offset: 2px;
+}
+
+.sidebar-item-badge {
+  margin-left: auto;
+  background: var(--spotify-green);
+  color: var(--spotify-black);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.sidebar-item-badge:hover {
+  background: var(--holo-green);
+  transform: scale(1.05);
+}
+
+/* Mejoras de accesibilidad para botones del header */
+.header-button {
+  padding: 8px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--spotify-white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.header-button:focus-visible {
+  outline: 2px solid var(--spotify-green);
+  outline-offset: 2px;
+}

@@ -1,0 +1,220 @@
+{
+  "name": "PAES Inteligente - Sistema Neural",
+  "short_name": "PAES Neural",
+  "description": "Sistema inteligente de preparación PAES con neuroeducación avanzada, IA y análisis predictivo",
+  "theme_color": "#667eea",
+  "background_color": "#1e1b4b",
+  "display": "standalone",
+  "orientation": "any",
+  "scope": "/",
+  "start_url": "/?source=pwa",
+  "id": "paes-intelligent-neural-system",
+  
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  
+  "categories": [
+    "education",
+    "productivity",
+    "utilities",
+    "learning"
+  ],
+  
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard Principal con Métricas Neurales"
+    },
+    {
+      "src": "/screenshots/mobile-dashboard.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard Móvil Adaptativo"
+    },
+    {
+      "src": "/screenshots/lectoguia-chat.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "LectoGuía IA Chat Inteligente"
+    },
+    {
+      "src": "/screenshots/diagnostic-system.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Sistema de Diagnósticos Adaptativos"
+    }
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Dashboard Neural",
+      "short_name": "Dashboard",
+      "description": "Acceso directo al dashboard con métricas neurales",
+      "url": "/?shortcut=dashboard",
+      "icons": [
+        {
+          "src": "/icons/shortcut-dashboard.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "LectoGuía IA",
+      "short_name": "LectoGuía",
+      "description": "Chat inteligente especializado en PAES",
+      "url": "/lectoguia?shortcut=chat",
+      "icons": [
+        {
+          "src": "/icons/shortcut-lectoguia.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Diagnósticos",
+      "short_name": "Diagnósticos",
+      "description": "Sistema de evaluación adaptativa",
+      "url": "/diagnostic?shortcut=test",
+      "icons": [
+        {
+          "src": "/icons/shortcut-diagnostic.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Universo 3D",
+      "short_name": "Universo",
+      "description": "Experiencia inmersiva de aprendizaje",
+      "url": "/paes-universe?shortcut=3d",
+      "icons": [
+        {
+          "src": "/icons/shortcut-universe.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://paes-inteligente.app/manifest.json"
+    }
+  ],
+  
+  "prefer_related_applications": false,
+  
+  "lang": "es-CL",
+  "dir": "ltr",
+  
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  
+  "protocol_handlers": [
+    {
+      "protocol": "web+paes",
+      "url": "/?handler=paes&url=%s"
+    }
+  ],
+  
+  "file_handlers": [
+    {
+      "action": "/handle-file",
+      "accept": {
+        "application/json": [".json"],
+        "text/plain": [".txt"],
+        "application/pdf": [".pdf"]
+      }
+    }
+  ],
+  
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": [
+            "image/*",
+            "application/pdf",
+            "text/plain"
+          ]
+        }
+      ]
+    }
+  },
+  
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  
+  "handle_links": "preferred"
+}
