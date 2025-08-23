@@ -1,233 +1,220 @@
-# 📚 **Sistema Puntaje Inteligente - Documentación Técnica**
+# 🧠 Sistema PAES Neural - Plataforma Educativa Inteligente
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Tests](https://img.shields.io/badge/tests-✓_passing-brightgreen.svg)
-![Coverage](https://img.shields.io/badge/coverage-85%25-green.svg)
+[![React](https://img.shields.io/badge/React-18.0-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-green.svg)](https://supabase.com/)
+[![Vite](https://img.shields.io/badge/Vite-Build%20Tool-yellow.svg)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC.svg)](https://tailwindcss.com/)
 
-## 🎯 **Descripción General**
+## 🎯 Descripción
 
-**Puntaje Inteligente** es una plataforma educativa de vanguardia diseñada específicamente para la preparación de la Prueba de Acceso a la Educación Superior (PAES) de Chile. Combina inteligencia artificial, visualizaciones inmersivas y un sistema de análisis psicométrico avanzado para proporcionar una experiencia de aprendizaje personalizada y efectiva.
+**Sistema PAES Neural** es una plataforma educativa revolucionaria diseñada para la preparación integral de la Prueba de Acceso a la Educación Superior (PAES) de Chile. Combina inteligencia artificial, gamificación y análisis de datos para crear una experiencia de aprendizaje personalizada y efectiva.
 
-### **🌟 Características Principales**
+## ✨ Características Principales
 
-- **🧠 Sistema Neural Integrado**: IA contextual para personalización de contenido
-- **🌌 Universo Educativo 3D**: Visualizaciones inmersivas del progreso de aprendizaje
-- **📊 Análisis Psicométrico**: Evaluaciones adaptativas con IRT (Item Response Theory)
-- **💰 Centro Financiero**: Simulador de costos universitarios y becas
-- **📚 LectoGuía**: Asistente AI especializado por materias PAES
-- **🎯 Diagnósticos Inteligentes**: Evaluaciones que se adaptan al nivel del estudiante
+### 🧠 Inteligencia Artificial Integrada
+- **Asistente IA Personalizado**: LectoGuía con análisis contextual
+- **Generación Automática de Ejercicios**: Basada en el nivel del estudiante
+- **Recomendaciones Inteligentes**: Adaptadas al progreso individual
+- **Análisis de Imágenes**: Reconocimiento inteligente de contenido visual
 
----
+### 📊 Sistema de Diagnósticos Avanzado
+- **Evaluaciones Personalizadas**: Por materia y nivel de dificultad
+- **Análisis de Competencias**: Mapeo de habilidades según taxonomía de Bloom
+- **Progreso en Tiempo Real**: Seguimiento detallado del aprendizaje
+- **Reportes Detallados**: Con recomendaciones específicas
 
-## 🏗️ **Arquitectura del Sistema**
+### 🎮 Gamificación Educativa
+- **Sistema de Logros**: Desbloqueo de badges y recompensas
+- **Competencia Saludable**: Rankings y desafíos entre estudiantes
+- **Progresión Visual**: Mapas de habilidades interactivos
+- **Motivación Continua**: Sistema de puntos y niveles
 
-### **Stack Tecnológico**
+### 📚 Contenido PAES Oficial
+- **5 Materias Principales**: Matemática M1/M2, Comprensión Lectora, Ciencias, Historia
+- **Ejercicios Validados**: Basados en exámenes oficiales
+- **Contenido Actualizado**: Según las últimas modificaciones PAES
+- **Múltiples Formatos**: Preguntas, simulaciones, material multimedia
 
-```typescript
-// Frontend
-React 18 + TypeScript + Vite
-shadcn/ui + Tailwind CSS + Framer Motion
-Three.js + React Three Fiber
-Zustand + React Query
+## 🚀 Tecnologías Utilizadas
 
-// Backend
-Supabase (PostgreSQL + Auth + Edge Functions)
-OpenRouter API para modelos de IA
+### Frontend
+- **React 18** - Biblioteca de interfaz de usuario
+- **TypeScript** - Tipado estático para mayor robustez
+- **Vite** - Herramienta de construcción rápida
+- **Tailwind CSS** - Framework CSS utilitario
+- **Framer Motion** - Animaciones fluidas
+- **Three.js** - Visualizaciones 3D
+- **Zustand** - Gestión de estado
 
-// Testing & Quality
-Vitest + Testing Library
-ESLint + Prettier + TypeScript
-```
+### Backend & Base de Datos
+- **Supabase** - Backend-as-a-Service
+- **PostgreSQL** - Base de datos relacional
+- **Edge Functions** - Funciones serverless
+- **Real-time Subscriptions** - Actualizaciones en tiempo real
 
-### **Estructura de Directorios**
+### IA & Machine Learning
+- **OpenRouter API** - Acceso a modelos de IA avanzados
+- **Análisis de Sentimientos** - Evaluación emocional del aprendizaje
+- **Recomendaciones Personalizadas** - Algoritmos de recomendación
 
-```
-src/
-├── components/          # Componentes UI organizados por dominio
-│   ├── ui/             # Componentes base shadcn/ui
-│   ├── neural/         # Sistema neural e IA
-│   ├── diagnostic/     # Sistema de diagnósticos
-│   ├── lectoguia/      # LectoGuía y chat educativo
-│   ├── financial/      # Centro financiero
-│   └── cinematic/      # Efectos visuales y 3D
-├── contexts/           # Providers React Context
-├── core/              # Sistemas críticos
-│   ├── storage/       # Sistema de almacenamiento unificado
-│   ├── performance/   # Monitoreo de rendimiento
-│   ├── logging/       # Sistema de logging
-│   └── error-handling/ # Manejo de errores
-├── hooks/             # Custom hooks reutilizables
-├── modules/           # Módulos de alto nivel
-├── pages/             # Páginas principales de la aplicación
-├── services/          # Servicios de API y lógica de negocio
-├── store/             # Estado global con Zustand
-├── types/             # Definiciones TypeScript
-└── utils/             # Utilidades y helpers
-```
+## 📦 Instalación
 
----
-
-## 🚀 **Instalación y Configuración**
-
-### **Prerrequisitos**
-
+### Prerrequisitos
 - Node.js 18+ 
 - npm o yarn
-- Git
+- Cuenta de Supabase
+- Claves de API de OpenRouter
 
-### **Instalación Local**
+### Pasos de Instalación
 
+1. **Clonar el repositorio**
 ```bash
-# 1. Clonar el repositorio
-git clone <YOUR_GIT_URL>
+git clone https://github.com/vigoferrel/puntaje-inteligente-sistema.git
 cd puntaje-inteligente-sistema
+```
 
-# 2. Instalar dependencias
+2. **Instalar dependencias**
+```bash
 npm install
+```
 
-# 3. Configurar variables de entorno
-cp .env.example .env.local
-# Editar .env.local con tus credenciales
+3. **Configurar variables de entorno**
+```bash
+cp .env.example .env
+```
 
-# 4. Ejecutar en desarrollo
+Editar `.env` con tus credenciales:
+```env
+VITE_SUPABASE_URL=tu_url_de_supabase
+VITE_SUPABASE_ANON_KEY=tu_clave_anonima
+OPENROUTER_API_KEY=tu_clave_de_openrouter
+```
+
+4. **Configurar base de datos**
+```bash
+# Ejecutar script de configuración
+node setup-paes-db.js
+```
+
+5. **Iniciar desarrollo**
+```bash
 npm run dev
+```
 
-# 5. Ejecutar tests
+El sistema estará disponible en `http://localhost:8080`
+
+## 🗄️ Estructura de Base de Datos
+
+### Tablas Principales
+- **users** - Información de usuarios
+- **user_progress** - Progreso individual
+- **user_preferences** - Preferencias personalizadas
+- **learning_nodes** - Nodos de aprendizaje
+- **exercises** - Banco de ejercicios
+- **diagnostic_results** - Resultados de evaluaciones
+- **achievements** - Sistema de logros
+
+### Funciones RPC
+- 18 funciones especializadas para análisis y procesamiento
+- Optimización de consultas y rendimiento
+- Seguridad con Row Level Security (RLS)
+
+## 🎨 Características de UI/UX
+
+### Diseño Responsivo
+- **Mobile-First**: Optimizado para dispositivos móviles
+- **Adaptativo**: Se adapta a diferentes tamaños de pantalla
+- **Accesible**: Cumple estándares de accesibilidad
+
+### Temas y Personalización
+- **Modo Oscuro/Claro**: Cambio automático según preferencias
+- **Temas Personalizables**: Colores y estilos adaptables
+- **Interfaz Intuitiva**: Navegación clara y fácil de usar
+
+### Animaciones y Transiciones
+- **Transiciones Suaves**: Mejora la experiencia de usuario
+- **Feedback Visual**: Respuestas inmediatas a acciones
+- **Carga Optimizada**: Lazy loading y preloading inteligente
+
+## 📈 Funcionalidades Avanzadas
+
+### Análisis de Rendimiento
+- **Métricas en Tiempo Real**: Seguimiento de progreso
+- **Gráficos Interactivos**: Visualización de datos
+- **Reportes Detallados**: Análisis completo del aprendizaje
+
+### Integración de Herramientas
+- **Calendario Inteligente**: Planificación de estudio
+- **Notificaciones**: Recordatorios personalizados
+- **Exportación de Datos**: Reportes en múltiples formatos
+
+### Colaboración
+- **Compartir Progreso**: Con padres y tutores
+- **Foros de Discusión**: Comunidad de estudiantes
+- **Tutores Virtuales**: Asistencia 24/7
+
+## 🔧 Configuración Avanzada
+
+### Desarrollo
+```bash
+# Ejecutar tests
 npm run test
 
-# 6. Generar coverage
-npm run test:coverage
+# Build de producción
+npm run build
+
+# Análisis de código
+npm run lint
 ```
 
-### **Variables de Entorno**
-
+### Despliegue
 ```bash
-# Supabase Configuration
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+# Build optimizado
+npm run build
 
-# OpenRouter Configuration (opcional)
-VITE_OPENROUTER_API_KEY=your-openrouter-key
+# Servir archivos estáticos
+npm run preview
 ```
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## 👥 Autores
+
+- **vigoferrel** - *Desarrollo inicial* - [GitHub](https://github.com/vigoferrel)
+
+## 🙏 Agradecimientos
+
+- Comunidad educativa chilena
+- Desarrolladores de las librerías utilizadas
+- Estudiantes que han probado y mejorado el sistema
+
+## 📞 Contacto
+
+- **GitHub**: [@vigoferrel](https://github.com/vigoferrel)
+- **Proyecto**: [Sistema PAES Neural](https://github.com/vigoferrel/puntaje-inteligente-sistema)
+
+## 🚀 Roadmap
+
+- [ ] Integración con más modelos de IA
+- [ ] Aplicación móvil nativa
+- [ ] Análisis predictivo avanzado
+- [ ] Integración con sistemas educativos
+- [ ] Soporte multiidioma
+- [ ] Realidad aumentada para ejercicios
 
 ---
 
-## 🐛 **Debugging y Troubleshooting**
+⭐ **¡Dale una estrella al proyecto si te ha sido útil!**
 
-### **Herramientas de Debug**
-
-```typescript
-// Logger del sistema
-import { logger } from '@/core/logging/SystemLogger';
-
-logger.debug('Component', 'Debug info', { data });
-logger.error('Component', 'Error occurred', error);
-
-// Performance monitoring
-const { metrics } = usePerformance();
-console.log('Memory usage:', metrics.memoryUsage);
-
-// Storage status
-const storageStatus = unifiedStorageSystem.getStatus();
-console.log('Storage health:', storageStatus);
-```
-
-### **Problemas Comunes**
-
-**1. Error de Storage**
-```bash
-# Síntoma: Circuit breaker activado
-# Solución: Reset del sistema de storage
-unifiedStorageSystem.forceReset();
-```
-
-**2. Performance Issues**
-```typescript
-// Verificar métricas
-const { isHealthy, metrics } = usePerformance();
-if (!isHealthy) {
-  console.log('Performance degraded:', metrics);
-}
-```
-
-**3. Supabase Connection**
-```typescript
-// Test de conexión
-const { data, error } = await supabase.from('learning_nodes').select('count');
-if (error) console.error('DB connection failed:', error);
-```
-
----
-
-## 🤝 **Contribución**
-
-### **Guía para Contribuidores**
-
-1. **Fork del repositorio**
-2. **Crear feature branch**: `git checkout -b feature/amazing-feature`
-3. **Seguir convenciones de código**
-4. **Escribir tests para nueva funcionalidad**
-5. **Ejecutar tests**: `npm run test`
-6. **Commit changes**: `git commit -m 'feat: add amazing feature'`
-7. **Push to branch**: `git push origin feature/amazing-feature`
-8. **Crear Pull Request**
-
-### **Standards de Código**
-
-```typescript
-// ✅ Bueno
-export const useUserProgress = (userId: string): UserProgress => {
-  const [progress, setProgress] = useState<UserProgress | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Implementation...
-  
-  return { progress, isLoading };
-};
-
-// ❌ Malo
-export const getUserProgress = (userId) => {
-  // Sin tipos, sin naming convention
-};
-```
-
----
-
-## 📄 **Licencia**
-
-MIT License - ver [LICENSE](LICENSE) para detalles.
-
----
-
-## 📞 **Soporte y Contacto**
-
-- **Issues**: [GitHub Issues](link-to-issues)
-- **Documentación**: [Wiki](link-to-wiki)
-- **Email**: team@puntajeinteligente.cl
-
----
-
-## 🗺️ **Roadmap**
-
-### **V2.1 - Q1 2024**
-- [ ] PWA Implementation
-- [ ] Offline mode
-- [ ] Push notifications
-- [ ] Mobile app (React Native)
-
-### **V2.2 - Q2 2024**
-- [ ] Microservices architecture
-- [ ] Advanced analytics
-- [ ] A/B testing framework
-- [ ] Internationalization
-
-### **V3.0 - Q3 2024**
-- [ ] Machine Learning models propios
-- [ ] Real-time collaboration
-- [ ] Advanced AI tutoring
-- [ ] Blockchain certificates
-
----
-
-*Última actualización: Agosto 2025*
+🔗 **Comparte este proyecto con otros educadores y estudiantes**

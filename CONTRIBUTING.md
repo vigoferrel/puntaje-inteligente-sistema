@@ -1,487 +1,246 @@
-# 🤝 **Guía de Contribución**
+# 🤝 Guía de Contribución
 
-¡Gracias por tu interés en contribuir al Sistema Puntaje Inteligente! Esta guía te ayudará a empezar y contribuir de manera efectiva.
+¡Gracias por tu interés en contribuir al **Sistema PAES Neural**! Este documento te ayudará a comenzar.
 
-## 📋 **Tabla de Contenidos**
+## 🚀 Cómo Contribuir
 
-- [Código de Conducta](#código-de-conducta)
-- [¿Cómo puedo contribuir?](#cómo-puedo-contribuir)
-- [Configuración del Entorno](#configuración-del-entorno)
-- [Proceso de Desarrollo](#proceso-de-desarrollo)
-- [Standards de Código](#standards-de-código)
-- [Proceso de Pull Request](#proceso-de-pull-request)
-- [Reporte de Bugs](#reporte-de-bugs)
-- [Solicitud de Features](#solicitud-de-features)
-
----
-
-## 📜 **Código de Conducta**
-
-Este proyecto adhiere al [Contributor Covenant](https://www.contributor-covenant.org/). Al participar, se espera que mantengas este código. Por favor reporta comportamientos inaceptables a [conduct@puntajeinteligente.cl](mailto:conduct@puntajeinteligente.cl).
-
-### **Nuestros Estándares**
-
-- Usar lenguaje inclusivo y respetuoso
-- Respetar diferentes puntos de vista y experiencias
-- Aceptar críticas constructivas con gracia
-- Enfocarse en lo que es mejor para la comunidad
-- Mostrar empatía hacia otros miembros de la comunidad
-
----
-
-## 🛠️ **¿Cómo puedo contribuir?**
-
-### **Reportar Bugs**
-- Busca primero en [Issues existentes](https://github.com/tu-org/repo/issues)
-- Usa la plantilla de bug report
-- Incluye pasos para reproducir
-- Agrega screenshots si es visual
-
-### **Sugerir Features**
-- Busca en issues existentes
-- Usa la plantilla de feature request
-- Explica el caso de uso
-- Considera la implementación
-
-### **Contribuciones de Código**
-- Correcciones de bugs
-- Nuevas features
-- Mejoras de performance
-- Tests adicionales
-- Documentación
-
-### **Contribuciones de Documentación**
-- Mejoras al README
-- Guías de usuario
-- Documentación técnica
-- Comentarios en código
-- Traducciones
-
----
-
-## 🚀 **Configuración del Entorno**
-
-### **Prerequisitos**
-- Node.js 18+
-- npm 8+ (o yarn/pnpm)
-- Git 2.25+
-
-### **Setup Inicial**
-
+### 1. Fork y Clone
 ```bash
-# 1. Fork del repositorio en GitHub
-
-# 2. Clonar tu fork
-git clone https://github.com/TU-USERNAME/puntaje-inteligente-sistema.git
+# Fork el repositorio en GitHub
+# Luego clona tu fork
+git clone https://github.com/TU_USUARIO/puntaje-inteligente-sistema.git
 cd puntaje-inteligente-sistema
+```
 
-# 3. Agregar upstream
-git remote add upstream https://github.com/ORIGINAL-OWNER/puntaje-inteligente-sistema.git
-
-# 4. Instalar dependencias
+### 2. Configurar el Entorno
+```bash
+# Instalar dependencias
 npm install
 
-# 5. Copiar variables de entorno
-cp .env.example .env.local
-# Editar .env.local con tus valores
-
-# 6. Ejecutar tests
-npm run test
-
-# 7. Iniciar desarrollo
-npm run dev
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales
 ```
 
-### **Verificación de Setup**
-
+### 3. Crear una Rama
 ```bash
-# Verificar que todo funciona
-npm run type-check
-npm run lint
-npm run test:run
-npm run build
+# Crear y cambiar a una nueva rama
+git checkout -b feature/nombre-de-tu-feature
+# o
+git checkout -b fix/nombre-del-fix
 ```
 
----
+### 4. Desarrollar
+- Escribe código limpio y bien documentado
+- Sigue las convenciones de TypeScript
+- Añade tests para nueva funcionalidad
+- Actualiza la documentación si es necesario
 
-## 🔄 **Proceso de Desarrollo**
-
-### **Workflow Git**
-
+### 5. Commit y Push
 ```bash
-# 1. Sincronizar con upstream
-git fetch upstream
-git checkout main
-git merge upstream/main
-
-# 2. Crear feature branch
-git checkout -b feature/nombre-descriptivo
-
-# 3. Desarrollar con commits frecuentes
+# Agregar cambios
 git add .
-git commit -m "feat: descripción de la funcionalidad"
 
-# 4. Push a tu fork
-git push origin feature/nombre-descriptivo
+# Commit con mensaje descriptivo
+git commit -m "feat: añadir nueva funcionalidad de análisis"
 
-# 5. Crear Pull Request en GitHub
+# Push a tu fork
+git push origin feature/nombre-de-tu-feature
 ```
 
-### **Naming Conventions**
+### 6. Crear Pull Request
+- Ve a tu fork en GitHub
+- Crea un Pull Request hacia la rama `main`
+- Describe claramente los cambios realizados
 
-#### **Branches**
-- `feature/descripcion-feature` - Nueva funcionalidad
-- `bugfix/descripcion-bug` - Corrección de bug
-- `hotfix/descripcion-hotfix` - Corrección urgente
-- `docs/descripcion-docs` - Documentación
-- `refactor/descripcion-refactor` - Refactoring
-- `test/descripcion-test` - Tests
+## 📋 Convenciones de Código
 
-#### **Commits (Conventional Commits)**
-```bash
-# Tipos de commit
+### Estructura de Commits
+```
+tipo(alcance): descripción
+
 feat: nueva funcionalidad
 fix: corrección de bug
-docs: documentación
-style: formato, punto y coma, etc.
-refactor: cambio de código que no agrega funcionalidad ni corrige bugs
-test: agregar tests
-chore: cambios en el build, herramientas auxiliares, etc.
-
-# Ejemplos
-git commit -m "feat: agregar sistema de notificaciones push"
-git commit -m "fix: corregir cálculo de puntaje PAES"
-git commit -m "docs: actualizar guía de instalación"
-git commit -m "test: agregar tests para AuthContext"
+docs: cambios en documentación
+style: cambios de formato
+refactor: refactorización de código
+test: añadir o modificar tests
+chore: cambios en build o herramientas
 ```
 
----
-
-## 📏 **Standards de Código**
-
-### **TypeScript**
-
+### Naming Conventions
 ```typescript
-// ✅ Bueno
-interface UserProgress {
-  readonly nodeId: string;
-  readonly masteryLevel: number;
-  readonly completedAt: string;
+// Componentes: PascalCase
+export const UserProfile = () => {};
+
+// Hooks: camelCase con prefijo 'use'
+export const useUserData = () => {};
+
+// Funciones: camelCase
+export const calculateScore = () => {};
+
+// Constantes: UPPER_SNAKE_CASE
+export const MAX_ATTEMPTS = 3;
+
+// Interfaces: PascalCase con prefijo 'I'
+export interface IUserProgress {
+  userId: string;
+  progress: number;
 }
-
-export const calculateProgress = (
-  progress: UserProgress[]
-): number => {
-  return progress.reduce((acc, p) => acc + p.masteryLevel, 0) / progress.length;
-};
-
-// ❌ Malo
-const calculateProgress = (progress: any) => {
-  return progress.reduce((acc, p) => acc + p.masteryLevel, 0) / progress.length;
-};
 ```
 
-### **React Components**
-
-```typescript
-// ✅ Bueno
-interface ButtonProps {
-  readonly children: React.ReactNode;
-  readonly variant?: 'primary' | 'secondary';
-  readonly disabled?: boolean;
-  readonly onClick?: () => void;
-}
-
-export const Button: React.FC<ButtonProps> = ({ 
-  children, 
-  variant = 'primary', 
-  disabled = false,
-  onClick 
-}) => {
-  return (
-    <button
-      className={`btn btn-${variant}`}
-      disabled={disabled}
-      onClick={onClick}
-      type="button"
-    >
-      {children}
-    </button>
-  );
-};
-
-// ❌ Malo
-export const Button = ({ children, variant, disabled, onClick }) => {
-  return (
-    <button 
-      className={`btn btn-${variant || 'primary'}`}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-};
+### Estructura de Archivos
+```
+src/
+├── components/
+│   ├── ui/           # Componentes base
+│   ├── feature/      # Componentes específicos
+│   └── layout/       # Componentes de layout
+├── hooks/            # Custom hooks
+├── services/         # Servicios y APIs
+├── types/            # Definiciones TypeScript
+└── utils/            # Utilidades
 ```
 
-### **Custom Hooks**
+## 🧪 Testing
 
-```typescript
-// ✅ Bueno
-interface UseUserProgressOptions {
-  readonly userId: string;
-  readonly autoRefresh?: boolean;
-}
+### Ejecutar Tests
+```bash
+# Tests unitarios
+npm run test
 
-interface UseUserProgressReturn {
-  readonly progress: UserProgress[];
-  readonly isLoading: boolean;
-  readonly error: string | null;
-  readonly refreshProgress: () => Promise<void>;
-}
+# Tests con coverage
+npm run test:coverage
 
-export const useUserProgress = ({
-  userId,
-  autoRefresh = false
-}: UseUserProgressOptions): UseUserProgressReturn => {
-  // Implementation...
-};
+# Tests en modo watch
+npm run test:watch
 ```
 
-### **File Organization**
-
+### Escribir Tests
 ```typescript
-// Orden de imports
-import React from 'react';                    // React
-import { useState, useEffect } from 'react';  // React hooks
-import { motion } from 'framer-motion';       // Third party
-import { Button } from '@/components/ui';     // UI components
-import { useAuth } from '@/contexts/AuthContext'; // Contexts
-import { UserProgress } from '@/types';       // Types
-import { logger } from '@/core/logging';      // Core systems
-import { cn } from '@/lib/utils';            // Utils
+import { render, screen } from '@testing-library/react';
+import { UserProfile } from './UserProfile';
 
-// Orden dentro del archivo
-// 1. Interfaces/Types
-// 2. Constants
-// 3. Main component
-// 4. Sub-components (if any)
-// 5. Default export
-```
-
-### **Testing Standards**
-
-```typescript
-// ✅ Bueno
-describe('UserProgress Component', () => {
-  const mockProps = {
-    userId: 'test-user-id',
-    onProgressUpdate: vi.fn(),
-  };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('should render progress correctly', () => {
-    render(<UserProgress {...mockProps} />);
-    
-    expect(screen.getByText('Progress')).toBeInTheDocument();
-  });
-
-  it('should call onProgressUpdate when progress changes', async () => {
-    render(<UserProgress {...mockProps} />);
-    
-    const updateButton = screen.getByRole('button', { name: /update/i });
-    await user.click(updateButton);
-    
-    expect(mockProps.onProgressUpdate).toHaveBeenCalledTimes(1);
+describe('UserProfile', () => {
+  it('should render user information', () => {
+    render(<UserProfile userId="123" />);
+    expect(screen.getByText('Perfil de Usuario')).toBeInTheDocument();
   });
 });
 ```
 
----
+## 📝 Documentación
 
-## 🔍 **Proceso de Pull Request**
-
-### **Antes de crear el PR**
-
-```bash
-# 1. Asegúrate de que todos los tests pasen
-npm run test:run
-
-# 2. Verifica el linting
-npm run lint
-
-# 3. Verifica tipos
-npm run type-check
-
-# 4. Verifica el build
-npm run build
-
-# 5. Actualiza documentación si es necesario
+### Comentarios de Código
+```typescript
+/**
+ * Calcula el puntaje ponderado del estudiante
+ * @param scores - Array de puntajes por materia
+ * @param weights - Array de pesos por materia
+ * @returns Puntaje ponderado final
+ */
+export const calculateWeightedScore = (
+  scores: number[],
+  weights: number[]
+): number => {
+  // Implementation...
+};
 ```
 
-### **Plantilla de PR**
-
+### README de Componentes
 ```markdown
-## 📝 Descripción
-Descripción clara y concisa de los cambios realizados.
+# Componente UserProfile
 
-## 🔧 Tipo de Cambio
-- [ ] Bug fix (cambio que corrige un issue)
-- [ ] Nueva feature (cambio que agrega funcionalidad)
-- [ ] Breaking change (fix o feature que causa que funcionalidad existente no funcione como antes)
-- [ ] Documentación
+## Propósito
+Muestra el perfil completo del usuario con estadísticas de progreso.
 
-## 🧪 ¿Cómo se ha probado?
-Describe las pruebas que ejecutaste para verificar tus cambios.
+## Props
+- `userId: string` - ID del usuario
+- `showStats?: boolean` - Mostrar estadísticas (opcional)
 
-## 📋 Checklist
-- [ ] Mi código sigue las guías de estilo del proyecto
-- [ ] He realizado una auto-revisión de mi código
-- [ ] He comentado mi código, particularmente en áreas difíciles de entender
-- [ ] He realizado los cambios correspondientes a la documentación
-- [ ] Mis cambios no generan nuevas advertencias
-- [ ] He agregado tests que prueban que mi fix es efectivo o que mi feature funciona
-- [ ] Tests unitarios nuevos y existentes pasan localmente con mis cambios
-
-## 📸 Screenshots (si aplica)
-Agrega screenshots para ayudar a explicar tu cambio.
+## Uso
+```tsx
+<UserProfile userId="123" showStats={true} />
+```
 ```
 
-### **Revisión de Código**
+## 🐛 Reportar Bugs
 
-Los maintainers revisarán tu PR considerando:
+### Crear un Issue
+1. Ve a la sección Issues en GitHub
+2. Busca si ya existe un issue similar
+3. Crea un nuevo issue con:
+   - Título descriptivo
+   - Descripción detallada del problema
+   - Pasos para reproducir
+   - Comportamiento esperado vs actual
+   - Screenshots si aplica
 
-- **Funcionalidad**: ¿Funciona como se espera?
-- **Tests**: ¿Está bien probado?
-- **Performance**: ¿Impacta la performance?
-- **Security**: ¿Introduce vulnerabilidades?
-- **Style**: ¿Sigue los standards del proyecto?
-- **Documentation**: ¿Está bien documentado?
-
----
-
-## 🐛 **Reporte de Bugs**
-
-### **Antes de reportar**
-1. Actualiza a la última versión
-2. Busca en issues existentes
-3. Verifica que no sea un problema de configuración
-
-### **Información a incluir**
-
+### Template de Bug Report
 ```markdown
-**Describe el bug**
-Descripción clara y concisa del bug.
+## 🐛 Descripción del Bug
+Descripción clara y concisa del problema.
 
-**Para Reproducir**
-Pasos para reproducir el comportamiento:
+## 🔄 Pasos para Reproducir
 1. Ve a '...'
-2. Haz click en '....'
-3. Scroll hacia abajo hasta '....'
+2. Haz clic en '...'
+3. Desplázate hacia abajo hasta '...'
 4. Ve el error
 
-**Comportamiento Esperado**
-Descripción clara de lo que esperabas que pasara.
+## ✅ Comportamiento Esperado
+Lo que debería suceder.
 
-**Screenshots**
-Si aplica, agrega screenshots para ayudar a explicar tu problema.
-
-**Información del Sistema:**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
- - Node.js version
- - npm/yarn version
-
-**Contexto Adicional**
-Agrega cualquier otro contexto sobre el problema aquí.
+## 📱 Información Adicional
+- Sistema operativo: [ej. Windows 10]
+- Navegador: [ej. Chrome 91]
+- Versión: [ej. 2.0.0]
 ```
 
----
+## 💡 Solicitar Features
 
-## ✨ **Solicitud de Features**
+### Crear Feature Request
+1. Ve a la sección Issues en GitHub
+2. Crea un nuevo issue con etiqueta "enhancement"
+3. Describe la funcionalidad deseada
+4. Explica el beneficio para los usuarios
 
-### **Plantilla de Feature Request**
-
+### Template de Feature Request
 ```markdown
-**¿Tu feature request está relacionado a un problema? Describe.**
-Descripción clara y concisa del problema. Ej. Me frustra cuando [...]
+## 💡 Descripción de la Feature
+Descripción clara de la funcionalidad deseada.
 
-**Describe la solución que te gustaría**
-Descripción clara y concisa de lo que quieres que pase.
+## 🎯 Problema que Resuelve
+Explicación del problema o necesidad.
 
-**Describe alternativas que has considerado**
-Descripción clara y concisa de cualquier solución o feature alternativa que hayas considerado.
+## 💭 Solución Propuesta
+Descripción de la solución propuesta.
 
-**Contexto adicional**
-Agrega cualquier otro contexto o screenshots sobre el feature request aquí.
+## 🔄 Alternativas Consideradas
+Otras soluciones que se consideraron.
+
+## 📱 Información Adicional
+Capturas de pantalla, mockups, etc.
 ```
 
----
+## 🏷️ Etiquetas de Issues
 
-## 🏷️ **Labels y Prioridades**
+- `bug` - Error o problema
+- `enhancement` - Nueva funcionalidad
+- `documentation` - Mejoras en documentación
+- `good first issue` - Ideal para principiantes
+- `help wanted` - Necesita ayuda
+- `question` - Pregunta o duda
 
-### **Labels de Tipo**
-- `bug` - Algo no está funcionando
-- `enhancement` - Nueva feature o request
-- `documentation` - Mejoras o adiciones a documentación
-- `good first issue` - Bueno para newcomers
-- `help wanted` - Se necesita ayuda extra
-- `question` - Información adicional es requerida
+## 📞 Contacto
 
-### **Labels de Prioridad**
-- `priority: critical` - Debe ser arreglado inmediatamente
-- `priority: high` - Debe ser arreglado pronto
-- `priority: medium` - Debe ser arreglado eventualmente
-- `priority: low` - Sería bueno arreglarlo
+- **Discusiones**: [GitHub Discussions](https://github.com/vigoferrel/puntaje-inteligente-sistema/discussions)
+- **Issues**: [GitHub Issues](https://github.com/vigoferrel/puntaje-inteligente-sistema/issues)
+- **Email**: vigoferrel@github.com
 
-### **Labels de Área**
-- `area: neural` - Sistema neural/IA
-- `area: lectoguia` - LectoGuía
-- `area: diagnostic` - Sistema de diagnósticos
-- `area: financial` - Centro financiero
-- `area: ui` - Interfaz de usuario
-- `area: performance` - Performance
-- `area: security` - Seguridad
+## 🙏 Agradecimientos
+
+¡Gracias por contribuir al Sistema PAES Neural! Tu trabajo ayuda a mejorar la educación en Chile.
 
 ---
 
-## 📞 **Obtener Ayuda**
-
-### **Canales de Comunicación**
-- **GitHub Issues**: Para bugs y feature requests
-- **GitHub Discussions**: Para preguntas generales
-- **Discord**: [Servidor de la comunidad](link)
-- **Email**: [dev@puntajeinteligente.cl](mailto:dev@puntajeinteligente.cl)
-
-### **Recursos Útiles**
-- [Documentación del Proyecto](README.md)
-- [Guía de Instalación](INSTALLATION.md)
-- [Arquitectura del Sistema](ARCHITECTURE.md)
-- [API Reference](API.md)
-
----
-
-## 🎉 **Reconocimiento**
-
-Todos los contribuidores serán agregados al README y recibirán reconocimiento por sus contribuciones. Las contribuciones significativas serán destacadas en releases.
-
-### **Tipos de Contribución**
-- 💻 Código
-- 📖 Documentación
-- 🐛 Reporte de bugs
-- 💡 Ideas
-- 🤔 Answering Questions
-- ⚠️ Tests
-- 🌍 Traducciones
-
----
-
-**¡Gracias por contribuir al Sistema Puntaje Inteligente! 🚀**
-
----
-
-*Guía actualizada: Agosto 2025*
+**¿Necesitas ayuda?** No dudes en preguntar en las discusiones o crear un issue.
