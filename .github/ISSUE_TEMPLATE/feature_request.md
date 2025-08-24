@@ -1,83 +1,52 @@
 ---
 name: ✨ Feature Request
-about: Sugerir una nueva feature para el proyecto
+about: Sugerir una nueva funcionalidad para el Sistema PAES Neural
 title: '[FEATURE] '
-labels: ['enhancement', 'needs-discussion']
-assignees: ''
+labels: ['enhancement', 'needs-triage']
+assignees: ['vigoferrel']
 ---
 
-## 🎯 **¿Cuál es el problema que resolvería esta feature?**
+## ✨ Descripción de la Funcionalidad
 
-<!-- Descripción clara del problema o necesidad que motivó esta solicitud -->
-<!-- Ejemplo: "Me frustra cuando tengo que hacer X porque..." -->
+**Descripción clara y concisa de la funcionalidad que te gustaría ver implementada:**
 
-## 💡 **Describe la solución que te gustaría**
+## 🎯 Problema que Resuelve
 
-<!-- Descripción clara y concisa de lo que quieres que pase -->
+**Descripción del problema que esta funcionalidad resolvería:**
 
-## 🔄 **Describe alternativas que has considerado**
+## 💡 Solución Propuesta
 
-<!-- Descripción de cualquier solución o feature alternativa que hayas considerado -->
+**Descripción de cómo te gustaría que funcione esta característica:**
 
-## 📊 **¿Cómo beneficiaría esto a los usuarios?**
+## 🔄 Alternativas Consideradas
 
-<!-- Explica el impacto positivo en la experiencia del usuario -->
+**Descripción de cualquier solución alternativa que hayas considerado:**
 
-- [ ] Mejora la eficiencia/productividad
-- [ ] Reduce la fricción en el flujo de trabajo
-- [ ] Proporciona nueva funcionalidad valiosa
-- [ ] Mejora la accesibilidad
-- [ ] Otro: ____
+## 📸 Mockups/Diseños
 
-## 🎨 **Mockups/Diseños (si aplica)**
+Si tienes algún diseño o mockup, puedes adjuntarlo aquí.
 
-<!-- Agrega cualquier mockup, wireframe o diseño que tengas -->
+## 🎓 Contexto Educativo
 
-## 🔧 **Detalles Técnicos**
+**¿Cómo se relaciona esta funcionalidad con el aprendizaje PAES?**
+- ¿Mejora la experiencia de estudio?
+- ¿Facilita la evaluación?
+- ¿Optimiza el seguimiento del progreso?
 
-**Complejidad estimada:**
-- [ ] 🟢 Baja (1-2 días)
-- [ ] 🟡 Media (1 semana)
-- [ ] 🟠 Alta (2-4 semanas)
-- [ ] 🔴 Muy alta (1+ mes)
+## 🏷️ Prioridad
 
-**Áreas del código afectadas:**
-- [ ] Frontend/UI
-- [ ] Backend/API
-- [ ] Base de datos
-- [ ] Sistema neural/IA
-- [ ] Documentación
-- [ ] Tests
+- [ ] 🔥 Crítica (Esencial para el funcionamiento básico)
+- [ ] ⚡ Alta (Mejora significativa de la experiencia)
+- [ ] 📋 Media (Funcionalidad útil pero no esencial)
+- [ ] 📝 Baja (Mejora menor o cosmética)
 
-## 📱 **Consideraciones de UX**
+## 📋 Checklist
 
-<!-- ¿Cómo afectaría esto a la experiencia del usuario? -->
+- [ ] He verificado que esta funcionalidad no ha sido solicitada anteriormente
+- [ ] He proporcionado una descripción clara del problema y la solución
+- [ ] He considerado el impacto educativo de la funcionalidad
+- [ ] He incluido cualquier información adicional relevante
 
-## 🔒 **Consideraciones de Seguridad**
+## 🔗 Información Adicional
 
-<!-- ¿Hay algún aspecto de seguridad a considerar? -->
-
-## 📈 **Métricas de Éxito**
-
-<!-- ¿Cómo mediríamos el éxito de esta feature? -->
-
-## 🔗 **Enlaces/Referencias**
-
-<!-- Links a documentación, ejemplos, competitors, etc. -->
-
-## 💬 **Contexto Adicional**
-
-<!-- Cualquier otra información relevante -->
-
-## 🏷️ **Prioridad**
-
-- [ ] 🔥 Alta (Necesaria para objetivo próximo)
-- [ ] 📋 Media (Sería muy beneficiosa)
-- [ ] 📝 Baja (Nice to have)
-
-## ✅ **Checklist**
-
-- [ ] He buscado en issues existentes para evitar duplicados
-- [ ] He considerado alternativas y workarounds
-- [ ] He proporcionado suficiente contexto y detalles
-- [ ] He considerado el impacto en usuarios existentes
+**Cualquier otra información que pueda ser útil:**

@@ -1,69 +1,49 @@
-## 🎯 **¿Qué hace este Pull Request?**
+## 📝 Descripción
 
-<!-- Descripción clara y concisa de los cambios realizados -->
+**Descripción clara y concisa de los cambios realizados:**
 
-## 🔧 **Tipo de Cambio**
+## 🎯 Tipo de Cambio
 
-- [ ] 🐛 Bug fix (cambio que corrige un issue)
-- [ ] ✨ Nueva feature (cambio que agrega funcionalidad)
-- [ ] 💥 Breaking change (fix o feature que causa que funcionalidad existente no funcione como antes)
-- [ ] 📚 Documentación (cambios solo en documentación)
-- [ ] 🎨 Refactor (cambio de código que no corrige bugs ni agrega features)
+- [ ] 🐛 Bug fix (cambio que corrige un problema)
+- [ ] ✨ Nueva funcionalidad (cambio que añade funcionalidad)
+- [ ] 💥 Breaking change (cambio que rompe funcionalidad existente)
+- [ ] 📚 Documentación (cambio en documentación)
+- [ ] 🎨 Refactoring (cambio que no corrige bug ni añade funcionalidad)
 - [ ] ⚡ Performance (cambio que mejora el rendimiento)
-- [ ] 🧪 Tests (agregar tests faltantes o corregir tests existentes)
+- [ ] 🧪 Test (añadir o corregir tests)
+- [ ] 🔧 Build (cambio en sistema de build o dependencias)
 
-## 🧪 **¿Cómo se ha probado?**
+## 🔗 Issue Relacionado
 
-<!-- Describe las pruebas que ejecutaste para verificar tus cambios -->
+**Cierra el issue relacionado:**
+Closes #(issue number)
 
-- [ ] Tests unitarios
-- [ ] Tests de integración
-- [ ] Tests manuales
-- [ ] Tests E2E
+## 🧪 Testing
 
-**Detalles de testing:**
-<!-- Describe los casos de prueba específicos -->
+- [ ] He ejecutado los tests locales
+- [ ] He verificado que no hay errores de linting
+- [ ] He probado la funcionalidad en diferentes navegadores
+- [ ] He verificado que el build funciona correctamente
 
-## 📱 **Screenshots/Videos (si aplica)**
+## 📸 Capturas de Pantalla
 
-<!-- Agrega screenshots o videos para cambios visuales -->
+**Si es aplicable, añade capturas de pantalla de los cambios:**
 
-## 📋 **Checklist**
+## 🔍 Checklist
 
 - [ ] Mi código sigue las guías de estilo del proyecto
 - [ ] He realizado una auto-revisión de mi código
-- [ ] He comentado mi código, particularmente en áreas difíciles de entender
-- [ ] He realizado los cambios correspondientes a la documentación
-- [ ] Mis cambios no generan nuevas advertencias de TypeScript
-- [ ] He agregado tests que prueban que mi fix es efectivo o que mi feature funciona
-- [ ] Tests unitarios nuevos y existentes pasan localmente con mis cambios
-- [ ] He verificado que no hay regresiones en la performance
+- [ ] He comentado mi código, especialmente en áreas difíciles de entender
+- [ ] He hecho los cambios correspondientes en la documentación
+- [ ] Mis cambios no generan nuevos warnings
+- [ ] He añadido tests que prueban que mi corrección funciona o que mi funcionalidad funciona
+- [ ] Los tests nuevos y existentes pasan localmente con mis cambios
+- [ ] Cualquier cambio dependiente ha sido mergeado y publicado en módulos downstream
 
-## 🔗 **Issues Relacionados**
+## 📋 Información Adicional
 
-<!-- Agrega links a issues relacionados -->
-Fixes #(issue_number)
-Closes #(issue_number)
-Related to #(issue_number)
+**Cualquier otra información que sea relevante para los revisores:**
 
-## 📝 **Notas Adicionales**
+## 🎓 Impacto Educativo
 
-<!-- Cualquier información adicional que los reviewers deberían saber -->
-
-## 🔍 **Impacto en Performance**
-
-- [ ] Sin impacto en performance
-- [ ] Mejora la performance
-- [ ] Podría impactar la performance (explicar abajo)
-
-<!-- Si hay impacto, explica los detalles -->
-
-## 🌐 **Compatibilidad**
-
-- [ ] Compatible con versiones anteriores
-- [ ] Requiere migración (documentada)
-- [ ] Breaking change (documentado)
-
----
-
-**Para los Reviewers:** Por favor revisen especialmente [área específica] ya que [razón específica].
+**¿Cómo afectan estos cambios a la experiencia educativa PAES?**

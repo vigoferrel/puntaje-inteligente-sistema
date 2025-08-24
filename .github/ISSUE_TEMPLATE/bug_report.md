@@ -1,72 +1,51 @@
 ---
 name: 🐛 Bug Report
-about: Reportar un bug para ayudar a mejorar el proyecto
+about: Reportar un problema en el Sistema PAES Neural
 title: '[BUG] '
 labels: ['bug', 'needs-triage']
-assignees: ''
+assignees: ['vigoferrel']
 ---
 
-## 🐛 **Descripción del Bug**
+## 🐛 Descripción del Bug
 
-<!-- Descripción clara y concisa del bug -->
+**Descripción clara y concisa del problema:**
 
-## 🔄 **Pasos para Reproducir**
+## 🔄 Pasos para Reproducir
 
-1. Ve a '...'
-2. Haz click en '....'
-3. Scroll hacia abajo hasta '....'
-4. Ve el error
+1. Ir a '...'
+2. Hacer clic en '...'
+3. Desplazarse hacia abajo hasta '...'
+4. Ver error
 
-## ✅ **Comportamiento Esperado**
+## ✅ Comportamiento Esperado
 
-<!-- Descripción clara de lo que esperabas que pasara -->
+**Descripción clara de lo que debería suceder:**
 
-## ❌ **Comportamiento Actual**
+## 📸 Capturas de Pantalla
 
-<!-- Descripción clara de lo que está pasando actualmente -->
+Si es aplicable, añade capturas de pantalla para ayudar a explicar el problema.
 
-## 📱 **Screenshots**
+## 🖥️ Información del Sistema
 
-<!-- Si aplica, agrega screenshots para ayudar a explicar tu problema -->
+- **Sistema Operativo:** [ej. Windows 10, macOS, Ubuntu]
+- **Navegador:** [ej. Chrome, Firefox, Safari]
+- **Versión:** [ej. 22]
+- **Dispositivo:** [ej. Desktop, Mobile, Tablet]
 
-## 🔧 **Información del Sistema**
+## 📱 Información Adicional
 
-**Desktop:**
-- OS: [e.g. Windows 10, macOS Big Sur, Ubuntu 20.04]
-- Browser: [e.g. Chrome 91, Firefox 89, Safari 14]
-- Version: [e.g. 91.0.4472.124]
+**Cualquier otra información sobre el problema:**
 
-**Mobile:**
-- Device: [e.g. iPhone 12, Samsung Galaxy S21]
-- OS: [e.g. iOS 14.6, Android 11]
-- Browser: [e.g. Safari, Chrome Mobile]
-- Version: [e.g. 14.6]
+## 🔍 Contexto Adicional
 
-**Entorno de Desarrollo:**
-- Node.js version: [e.g. 18.15.0]
-- npm/yarn version: [e.g. 8.5.5]
-- Sistema Operativo: [e.g. Windows 11]
+**Información adicional que podría ser útil:**
+- ¿Ocurre en todas las páginas o solo en algunas específicas?
+- ¿Está relacionado con alguna funcionalidad específica del PAES?
+- ¿Ocurre con datos específicos?
 
-## 📊 **Logs/Errores de Consola**
+## 📋 Checklist
 
-```
-Pega aquí cualquier error de consola relevante
-```
-
-## 🔍 **Información Adicional**
-
-<!-- Agrega cualquier otro contexto sobre el problema aquí -->
-
-## 🏷️ **Prioridad Estimada**
-
-- [ ] 🔥 Crítico (Bloquea funcionalidad principal)
-- [ ] ⚡ Alto (Impacta significativamente la UX)
-- [ ] 📋 Medio (Funcionalidad afectada pero hay workarounds)
-- [ ] 📝 Bajo (Problema menor o cosmético)
-
-## ✅ **Checklist**
-
-- [ ] He buscado en issues existentes antes de crear este reporte
-- [ ] He incluido toda la información relevante
-- [ ] He probado con la última versión del proyecto
-- [ ] He incluido pasos claros para reproducir el problema
+- [ ] He verificado que este problema no ha sido reportado anteriormente
+- [ ] He incluido todos los pasos necesarios para reproducir el problema
+- [ ] He proporcionado información del sistema
+- [ ] He adjuntado capturas de pantalla si es aplicable
