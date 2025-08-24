@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react'
+// 🔥 APP PRINCIPAL - CONECTADA A SUPABASE REAL
+// Sistema SuperPAES con backend real y datos reales
 
-// Componentes
-import { NotificationSystem } from './components/NotificationSystem'
-import CalendarCenter from './components/CalendarCenter'
-// Header profesional eliminado - usando header integrado
-import { AccessibilityProvider } from './components/AccessibilityProvider'
-import { ExerciseSystem } from './components/ExerciseSystem'
-import { Sidebar } from './components/layout/Sidebar'
-import { DashboardSection } from './components/sections/DashboardSection'
+import React, { useState, useEffect } from 'react';
+import RealSupabaseDashboard from './components/RealSupabaseDashboard';
+import RealExerciseSystem from './components/RealExerciseSystem';
+import { testRealConnection } from './lib/supabase';
+
+// Componentes existentes
+import { NotificationSystem } from './components/NotificationSystem';
+import CalendarCenter from './components/CalendarCenter';
+import { AccessibilityProvider } from './components/AccessibilityProvider';
+import { Sidebar } from './components/layout/Sidebar';
+import { DashboardSection } from './components/sections/DashboardSection';
 import IntegratedSystemDashboard from './components/IntegratedSystemDashboard';
 import DiagnosticoSection from './components/sections/DiagnosticoSection';
 import PAESNodesDashboard from './components/PAESNodesDashboard';
@@ -15,75 +19,112 @@ import { NeuralPredictionDashboard } from './components/dashboards/NeuralPredict
 import UnifiedNodesDashboard from './components/UnifiedNodesDashboard';
 
 // Estilos
-import './App.css'
-// CSS Global ya incluye todos los estilos de accesibilidad
-// CSS Global ya incluye los estilos del header profesional
-// CSS Global ya incluye todos los estilos específicos
+import './App.css';
 
-// Datos oficiales PAES
-import { PAES_EXERCISES } from './data/paes-exercises'
-import { NODOS_COMPETENCIA_LECTORA, NODOS_MATEMATICA_M1, BLOOM_LEVELS } from './data/paesStructure'
-import { officialData } from './data/officialData'
-import type { PAESGoal, SpotifyPlaylist, AgentStatus, LearningMetrics, UserProfile, Notification } from './data/officialData'
-
-// ========================================
-// COMPONENTE PRINCIPAL
-// ========================================
+// Datos (mantener como fallback)
+import { officialData } from './data/officialData';
+import type { PAESGoal, SpotifyPlaylist, AgentStatus, LearningMetrics, UserProfile, Notification } from './data/officialData';
 
 function App() {
   // ========================================
   // ESTADO PRINCIPAL
   // ========================================
   
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [activeTab, setActiveTab] = useState('dashboard')
-  const [notifications, setNotifications] = useState<Notification[]>(officialData.notifications)
-
-  const handleDismissNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id))
-  }
-  
-  // Filtros de ejercicios
-  const [selectedSubject, setSelectedSubject] = useState('')
-  const [selectedBloomLevel, setSelectedBloomLevel] = useState('')
-  const [selectedDifficulty, setSelectedDifficulty] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState('real-connection');
+  const [notifications, setNotifications] = useState<Notification[]>(officialData.notifications);
+  const [supabaseConnected, setSupabaseConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('testing');
 
   // ========================================
-  // DATOS DE LA APLICACIÓN
-  // ========================================
-  
-  const userProfile: UserProfile = officialData.userProfile
-  const paesGoals: PAESGoal[] = officialData.paesGoals
-  const spotifyPlaylists: SpotifyPlaylist[] = officialData.spotifyPlaylists
-  const agents: AgentStatus[] = officialData.agents
-  const learningMetrics: LearningMetrics = officialData.learningMetrics
-
-  // ========================================
-  // EFECTOS
+  // TEST DE CONEXIÓN AUTOMÁTICO
   // ========================================
   
   useEffect(() => {
-    // Aplicar modo oscuro por defecto
-    document.documentElement.classList.add('dark-mode')
-    document.documentElement.style.setProperty('--color-scheme', 'dark')
-  }, [])
+    const checkConnection = async () => {
+      try {
+        const result = await testRealConnection();
+        setSupabaseConnected(result.success);
+        setConnectionStatus(result.success ? 'connected' : 'failed');
+        
+        if (result.success) {
+          console.log('🚀 SuperPAES conectado exitosamente a Supabase');
+          // Agregar notificación de conexión exitosa
+          setNotifications(prev => [{
+            id: 'supabase-connected',
+            type: 'success',
+            title: '🚀 Conexión Establecida',
+            message: 'SuperPAES conectado exitosamente a Supabase',
+            timestamp: new Date().toISOString()
+          }, ...prev]);
+        } else {
+          console.error('💥 Error conectando a Supabase:', result.error);
+          // Agregar notificación de error
+          setNotifications(prev => [{
+            id: 'supabase-error',
+            type: 'error',
+            title: '⚠️ Error de Conexión',
+            message: 'No se pudo conectar a Supabase. Usando datos locales.',
+            timestamp: new Date().toISOString()
+          }, ...prev]);
+        }
+      } catch (error) {
+        console.error('💥 Error crítico:', error);
+        setConnectionStatus('failed');
+      }
+    };
+
+    checkConnection();
+  }, []);
+
+  // ========================================
+  // DATOS DE LA APLICACIÓN (fallback)
+  // ========================================
+  
+  const userProfile: UserProfile = officialData.userProfile;
+  const paesGoals: PAESGoal[] = officialData.paesGoals;
+  const spotifyPlaylists: SpotifyPlaylist[] = officialData.spotifyPlaylists;
+  const agents: AgentStatus[] = officialData.agents;
+  const learningMetrics: LearningMetrics = officialData.learningMetrics;
 
   // ========================================
   // MANEJADORES DE EVENTOS
   // ========================================
   
+  const handleDismissNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
-  }
+    setActiveTab(tab);
+  };
 
   const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen)
-  }
+    setSidebarOpen(!sidebarOpen);
+  };
 
   const handleExerciseComplete = (score: number, totalQuestions: number) => {
-    console.log(`Sesión completada: ${score} puntos de ${totalQuestions} preguntas`)
-    // Aquí se puede integrar con el sistema de scoring
-  }
+    console.log(`🎉 Sesión completada: ${score}% de acierto en ${totalQuestions} preguntas`);
+    
+    // Agregar notificación de logro
+    setNotifications(prev => [{
+      id: `exercise-complete-${Date.now()}`,
+      type: 'success',
+      title: '🎉 ¡Ejercicio Completado!',
+      message: `Obtuviste ${score}% de acierto. ¡Excelente trabajo!`,
+      timestamp: new Date().toISOString()
+    }, ...prev]);
+  };
+
+  // ========================================
+  // SIDEBAR MEJORADO CON OPCIONES REALES
+  // ========================================
+  
+  const enhancedUserProfile = {
+    ...userProfile,
+    connectionStatus: supabaseConnected ? 'connected' : 'offline',
+    lastSync: new Date().toISOString()
+  };
 
   // ========================================
   // RENDERIZADO DE CONTENIDO
@@ -91,28 +132,56 @@ function App() {
   
   const renderContent = () => {
     switch (activeTab) {
+      case 'real-connection':
+        return (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                🚀 SuperPAES Chile - Conexión Real Supabase
+              </h1>
+              <p className="text-gray-600 mb-4">
+                Sistema conectado directamente al backend de Supabase con datos reales.
+                Estado de conexión: <span className={`font-semibold ${
+                  supabaseConnected ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {supabaseConnected ? '✅ Conectado' : '❌ Desconectado'}
+                </span>
+              </p>
+            </div>
+            <RealSupabaseDashboard />
+          </div>
+        );
+      
+      case 'real-exercises':
+        return (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                📚 Ejercicios PAES Reales
+              </h1>
+              <p className="text-gray-600 mb-4">
+                Ejercicios cargados directamente desde la base de datos Supabase.
+              </p>
+            </div>
+            <RealExerciseSystem 
+              userId="user-real-001"
+              onComplete={handleExerciseComplete}
+            />
+          </div>
+        );
+      
       case 'dashboard':
-        return <DashboardSection learningMetrics={learningMetrics} />
+        return <DashboardSection learningMetrics={learningMetrics} />;
       case 'goals':
-        return <GoalsContent paesGoals={paesGoals} />
+        return <GoalsContent paesGoals={paesGoals} />;
       case 'playlists':
-        return <PlaylistsContent spotifyPlaylists={spotifyPlaylists} />
+        return <PlaylistsContent spotifyPlaylists={spotifyPlaylists} />;
       case 'agents':
-        return <AgentsContent agents={agents} />
+        return <AgentsContent agents={agents} />;
       case 'analytics':
-        return <AnalyticsContent learningMetrics={learningMetrics} />
+        return <AnalyticsContent learningMetrics={learningMetrics} />;
       case 'calendar':
-        return <CalendarContent />
-      case 'exercises':
-        return <ExercisesContent 
-          selectedSubject={selectedSubject}
-          selectedBloomLevel={selectedBloomLevel}
-          selectedDifficulty={selectedDifficulty}
-          onSubjectChange={setSelectedSubject}
-          onBloomLevelChange={setSelectedBloomLevel}
-          onDifficultyChange={setSelectedDifficulty}
-          onComplete={handleExerciseComplete}
-        />
+        return <CalendarContent />;
       case 'integrated-system':
         return <IntegratedSystemDashboard />;
       case 'diagnostico':
@@ -124,9 +193,36 @@ function App() {
       case 'unified-nodes':
         return <UnifiedNodesDashboard />;
       default:
-        return <DashboardSection learningMetrics={learningMetrics} />
+        return <DashboardSection learningMetrics={learningMetrics} />;
     }
-  }
+  };
+
+  // ========================================
+  // SIDEBAR CON OPCIONES REALES
+  // ========================================
+  
+  const sidebarProps = {
+    sidebarOpen,
+    activeTab,
+    userProfile: enhancedUserProfile,
+    onTabChange: handleTabChange,
+    onToggle: handleSidebarToggle,
+    // Agregar opciones del sistema real
+    extraOptions: [
+      {
+        id: 'real-connection',
+        label: '🔌 Conexión Real',
+        description: 'Dashboard de Supabase',
+        badge: supabaseConnected ? 'Conectado' : 'Offline'
+      },
+      {
+        id: 'real-exercises',
+        label: '📚 Ejercicios Reales',
+        description: 'PAES desde Supabase',
+        badge: 'Nuevo'
+      }
+    ]
+  };
 
   // ========================================
   // RENDERIZADO PRINCIPAL
@@ -143,19 +239,27 @@ function App() {
           Saltar a la navegación
         </a>
 
-        {/* Sidebar */}
-        <Sidebar 
-          sidebarOpen={sidebarOpen}
-          activeTab={activeTab}
-          userProfile={userProfile}
-          onTabChange={handleTabChange}
-          onToggle={handleSidebarToggle}
-        />
+        {/* Banner de Estado de Conexión */}
+        <div className={`w-full py-2 px-4 text-center text-sm font-medium ${
+          supabaseConnected 
+            ? 'bg-green-600 text-white' 
+            : 'bg-red-600 text-white'
+        }`}>
+          {supabaseConnected 
+            ? '🚀 SuperPAES Chile - Conectado a Supabase' 
+            : '⚠️ SuperPAES Chile - Sin conexión a Supabase (usando datos locales)'
+          }
+        </div>
+
+        {/* Sidebar Mejorado */}
+        <Sidebar {...sidebarProps} />
 
         {/* Main Content */}
-        <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} id="main-content" role="main">
-          {/* Header integrado en el layout principal */}
-
+        <main 
+          className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} 
+          id="main-content" 
+          role="main"
+        >
           {/* Content Area */}
           <div className="content-area">
             {renderContent()}
@@ -163,17 +267,19 @@ function App() {
         </main>
 
         {/* Notification System */}
-        <NotificationSystem notifications={notifications} onDismiss={handleDismissNotification} />
+        <NotificationSystem 
+          notifications={notifications} 
+          onDismiss={handleDismissNotification} 
+        />
       </div>
     </AccessibilityProvider>
-  )
+  );
 }
 
 // ========================================
-// COMPONENTES INTERNOS TEMPORALES
+// COMPONENTES INTERNOS (mantenidos como fallback)
 // ========================================
 
-// Goals Content
 const GoalsContent: React.FC<{ paesGoals: PAESGoal[] }> = ({ paesGoals }) => (
   <div className="goals-section">
     <h1 className="section-title">Metas PAES</h1>
@@ -194,9 +300,8 @@ const GoalsContent: React.FC<{ paesGoals: PAESGoal[] }> = ({ paesGoals }) => (
       ))}
     </div>
   </div>
-)
+);
 
-// Playlists Content
 const PlaylistsContent: React.FC<{ spotifyPlaylists: SpotifyPlaylist[] }> = ({ spotifyPlaylists }) => (
   <div className="playlists-section">
     <h1 className="section-title">Playlists Neural</h1>
@@ -219,9 +324,8 @@ const PlaylistsContent: React.FC<{ spotifyPlaylists: SpotifyPlaylist[] }> = ({ s
       ))}
     </div>
   </div>
-)
+);
 
-// Agents Content
 const AgentsContent: React.FC<{ agents: AgentStatus[] }> = ({ agents }) => (
   <div className="agents-section">
     <h1 className="section-title">Agentes IA</h1>
@@ -240,9 +344,8 @@ const AgentsContent: React.FC<{ agents: AgentStatus[] }> = ({ agents }) => (
       ))}
     </div>
   </div>
-)
+);
 
-// Analytics Content
 const AnalyticsContent: React.FC<{ learningMetrics: LearningMetrics }> = ({ learningMetrics }) => (
   <div className="analytics-section">
     <h1 className="section-title">Analytics</h1>
@@ -266,82 +369,12 @@ const AnalyticsContent: React.FC<{ learningMetrics: LearningMetrics }> = ({ lear
       </div>
     </div>
   </div>
-)
+);
 
-// Calendar Content
 const CalendarContent: React.FC = () => (
   <div className="calendar-section">
     <CalendarCenter />
   </div>
-)
+);
 
-// Exercises Content
-const ExercisesContent: React.FC<{
-  selectedSubject: string;
-  selectedBloomLevel: string;
-  selectedDifficulty: string;
-  onSubjectChange: (subject: string) => void;
-  onBloomLevelChange: (level: string) => void;
-  onDifficultyChange: (difficulty: string) => void;
-  onComplete: (score: number, totalQuestions: number) => void;
-}> = ({ 
-  selectedSubject, 
-  selectedBloomLevel, 
-  selectedDifficulty, 
-  onSubjectChange, 
-  onBloomLevelChange, 
-  onDifficultyChange, 
-  onComplete 
-}) => (
-  <div className="exercises-section">
-    <h1 className="section-title">Ejercicios PAES</h1>
-    <div className="exercise-controls">
-      <div className="exercise-filters">
-        <select 
-          className="filter-select"
-          onChange={(e) => onSubjectChange(e.target.value)}
-          value={selectedSubject}
-        >
-          <option value="">Todas las materias</option>
-          <option value="Competencia Lectora">Competencia Lectora</option>
-          <option value="Matemática M1">Matemática M1</option>
-          <option value="Matemática M2">Matemática M2</option>
-          <option value="Ciencias">Ciencias</option>
-          <option value="Historia">Historia</option>
-        </select>
-        <select 
-          className="filter-select"
-          onChange={(e) => onBloomLevelChange(e.target.value)}
-          value={selectedBloomLevel}
-        >
-          <option value="">Todos los niveles Bloom</option>
-          <option value="Recordar">Recordar</option>
-          <option value="Comprender">Comprender</option>
-          <option value="Aplicar">Aplicar</option>
-          <option value="Analizar">Analizar</option>
-          <option value="Evaluar">Evaluar</option>
-          <option value="Crear">Crear</option>
-        </select>
-        <select 
-          className="filter-select"
-          onChange={(e) => onDifficultyChange(e.target.value)}
-          value={selectedDifficulty}
-        >
-          <option value="">Todas las dificultades</option>
-          <option value="Básico">Básico</option>
-          <option value="Intermedio">Intermedio</option>
-          <option value="Avanzado">Avanzado</option>
-          <option value="Excelencia">Excelencia</option>
-        </select>
-      </div>
-    </div>
-    <ExerciseSystem
-      subject={selectedSubject || undefined}
-      bloomLevel={selectedBloomLevel || undefined}
-      difficulty={selectedDifficulty || undefined}
-      onComplete={onComplete}
-    />
-  </div>
-)
-
-export default App
+export default App;

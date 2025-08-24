@@ -20,6 +20,9 @@ const SciencesPage = React.lazy(() => import('@/pages/SciencesPage'));
 const HistoryPage = React.lazy(() => import('@/pages/HistoryPage'));
 const EvaluationsPage = React.lazy(() => import('@/pages/EvaluationsPage'));
 
+// Dashboard educativo avanzado
+const AdvancedEducationalPage = React.lazy(() => import('@/pages/AdvancedEducationalPage'));
+
 // Nuevas páginas de sistemas avanzados
 const AIRecommendationsPage = React.lazy(() => import('@/pages/AIRecommendationsPage'));
 const GamificationPage = React.lazy(() => import('@/pages/GamificationPage'));
@@ -73,6 +76,7 @@ function App() {
                       <Route path="/paes-universe" element={<PAESUniversePage />} />
                       <Route path="/paes" element={<PAESPage />} />
                       <Route path="/paes-dashboard" element={<PAESDashboard />} />
+                      <Route path="/advanced-educational" element={<AdvancedEducationalPage />} />
                       
                       {/* Rutas educativas */}
                       <Route path="/unified" element={<UnifiedEducationalHubPage />} />
